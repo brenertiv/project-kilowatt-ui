@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+*.local
+.cursor
+.env
+.env.*
+Enertiv UI examples
+enertiv-frontend-overview copy.md
