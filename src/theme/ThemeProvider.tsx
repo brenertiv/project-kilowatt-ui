@@ -39,6 +39,13 @@ function persist(state: ThemeState) {
 function applyCssVars(values: ThemeValues, scheme: ColorScheme) {
   const root = document.documentElement;
   const vars = themeToCssVars(values, scheme);
+  const next = new Set(Object.keys(vars));
+  for (let index = root.style.length - 1; index >= 0; index -= 1) {
+    const name = root.style.item(index);
+    if (name.startsWith('--') && !next.has(name)) {
+      root.style.removeProperty(name);
+    }
+  }
   for (const [name, value] of Object.entries(vars)) {
     root.style.setProperty(name, value);
   }

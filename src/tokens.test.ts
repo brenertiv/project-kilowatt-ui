@@ -53,13 +53,25 @@ describe('theme tokens', () => {
     expect(vars['--radius-inner']).toBe('6px');
   });
 
+  it('exposes sans, serif, and mono families without a font-family alias', () => {
+    const customSans = '"IBM Plex Sans", system-ui, sans-serif';
+    const vars = themeToCssVars({ ...defaultTheme, fontSans: customSans }, 'light');
+
+    expect(vars['--font-sans']).toBe(customSans);
+    expect(vars['--font-serif']).toBe(defaultTheme.fontSerif);
+    expect(vars['--font-mono']).toBe(defaultTheme.fontMono);
+    expect(vars).not.toHaveProperty('--font-family');
+  });
+
   it('separates primary variables from semantic tokens', () => {
     expect(primitiveTokens.map((token) => token.id)).toEqual([
       'bg',
       'text',
       'accent',
       'positive',
-      'fontFamily',
+      'fontSans',
+      'fontSerif',
+      'fontMono',
       'radius',
       'controlHeight',
       'shadow',

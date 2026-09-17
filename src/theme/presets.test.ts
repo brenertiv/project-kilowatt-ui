@@ -68,4 +68,20 @@ describe('theme presets', () => {
 
     expect(resetActivePreset(dirtied).values.radius).toBe('20px');
   });
+
+  it('migrates a stored fontFamily onto Font Sans', () => {
+    const { fontSans: _sans, fontSerif: _serif, fontMono: _mono, ...legacyTokens } = defaultTheme;
+    const stored = JSON.stringify({
+      version: 2,
+      values: { ...legacyTokens, fontFamily: '"IBM Plex Sans", system-ui, sans-serif' },
+      darkColors: defaultDarkColors,
+    });
+
+    const state = parseStoredTheme(stored);
+
+    expect(state.values.fontSans).toBe('"IBM Plex Sans", system-ui, sans-serif');
+    expect(state.values.fontSerif).toBe(defaultTheme.fontSerif);
+    expect(state.values.fontMono).toBe(defaultTheme.fontMono);
+    expect(Object.keys(state.values)).not.toContain('fontFamily');
+  });
 });

@@ -35,9 +35,25 @@ type StoredThemeV3 = {
   customPresets: StoredCustomPreset[];
 };
 
+type LegacyThemeValues = ThemeValues & { fontFamily?: string };
+
+function hydrateValues(raw: ThemeValues | LegacyThemeValues | undefined): ThemeValues {
+  const incoming = raw ?? {};
+  const merged = { ...defaultTheme, ...incoming };
+  if (incoming.fontFamily && incoming.fontSans === undefined) {
+    merged.fontSans = incoming.fontFamily;
+  }
+  return Object.fromEntries(
+    Object.keys(defaultTheme).map((id) => [
+      id,
+      merged[id as keyof ThemeValues] ?? defaultTheme[id as keyof ThemeValues],
+    ]),
+  ) as ThemeValues;
+}
+
 export function cloneSnapshot(snapshot: ThemeSnapshot): ThemeSnapshot {
   return {
-    values: { ...defaultTheme, ...snapshot.values },
+    values: hydrateValues(snapshot.values),
     darkColors: { ...defaultDarkColors, ...snapshot.darkColors },
   };
 }
@@ -113,15 +129,18 @@ export function parseStoredTheme(raw: string | null): ThemeState {
 
   if (record.version === 3) {
     const customPresets = Array.isArray(record.customPresets)
-      ? record.customPresets.map((item) => hydrateCustomPreset(item as StoredCustomPreset)).filter((item): item is ThemePreset => item !== null)
+      ? record.customPresets
+          .map((item) => hydrateCustomPreset(item as StoredCustomPreset))
+          .filter((item): item is ThemePreset => item !== null)
       : [];
     const snapshot = cloneSnapshot({
       values: (record.values as ThemeValues) ?? fallback.values,
       darkColors: (record.darkColors as Record<string, string>) ?? fallback.darkColors,
     });
-    const activePresetId = typeof record.activePresetId === 'string' && findPreset(customPresets, record.activePresetId)
-      ? record.activePresetId
-      : KILOWATT_PRESET_ID;
+    const activePresetId =
+      typeof record.activePresetId === 'string' && findPreset(customPresets, record.activePresetId)
+        ? record.activePresetId
+        : KILOWATT_PRESET_ID;
     return { colorScheme, activePresetId, customPresets, ...snapshot };
   }
 

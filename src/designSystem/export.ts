@@ -5,7 +5,9 @@ import {
   contrastPairs,
   derivedTokens,
   derivedValue,
+  fontFamilyCssVar,
   fontLabels,
+  fontRoles,
   layoutGrid,
   resolveTheme,
   tokenById,
@@ -46,12 +48,23 @@ export function buildSystemSnapshot(values: ThemeValues, darkColors: Record<stri
   }));
 
   const typography = {
-    fontFamily: values.fontFamily,
-    fontLabel: fontLabels[values.fontFamily] ?? values.fontFamily,
+    families: fontRoles.map((role) => {
+      const token = tokenById[role.id];
+      const stack = values[role.id] ?? token.defaultValue;
+      return {
+        id: role.id,
+        label: token.label,
+        cssVar: token.cssVar,
+        value: stack,
+        fontLabel: fontLabels[stack] ?? stack,
+        usage: role.usage,
+      };
+    }),
     roles: typeRoles.map((role) => ({
       ...role,
       size: values[role.sizeToken] ?? tokenById[role.sizeToken]?.defaultValue,
       sizeVar: tokenById[role.sizeToken]?.cssVar,
+      familyVar: fontFamilyCssVar[role.familyToken],
     })),
   };
 
@@ -163,17 +176,25 @@ export function systemToMarkdown(values: ThemeValues, darkColors: Record<string,
     '',
   );
 
+  sections.push('## Typography', '');
   sections.push(
-    '## Typography',
-    '',
-    `Font family: ${snapshot.typography.fontLabel} (\`${snapshot.typography.fontFamily}\`)`,
+    mdTable(
+      ['Token', 'CSS variable', 'Family', 'Stack'],
+      snapshot.typography.families.map((family) => [
+        family.label,
+        `\`${family.cssVar}\``,
+        family.fontLabel,
+        `\`${family.value}\``,
+      ]),
+    ),
     '',
   );
   sections.push(
     mdTable(
-      ['Role', 'Size', 'Weight', 'Line height', 'Usage'],
+      ['Role', 'Font', 'Size', 'Weight', 'Line height', 'Usage'],
       snapshot.typography.roles.map((role) => [
         role.label,
+        `\`${role.familyVar}\``,
         `${role.size} (\`${role.sizeVar}\`)`,
         String(role.weight),
         String(role.lineHeight),

@@ -14,7 +14,9 @@
   --color-on-solid: #ffffff;
   --color-hover: #f3f4f6;
   --color-track: #e7e8ea;
-  --font-family: Inter, 'SF Pro Text', system-ui, sans-serif;
+  --font-sans: Inter, 'SF Pro Text', system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-size-title: 20px;
   --font-size: 14px;
   --font-size-sm: 12px;
@@ -72,7 +74,7 @@ html {
 
 body {
   position: relative;
-  font-family: var(--font-family);
+  font-family: var(--font-sans);
   font-optical-sizing: auto;
   background: var(--color-bg);
   color: var(--color-text);
@@ -100,7 +102,7 @@ select {
   flex-direction: column;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: var(--font-family);
+  font-family: var(--font-sans);
   font-size: var(--font-size);
   line-height: 1.5;
 }
@@ -1502,7 +1504,7 @@ select {
 
 .map-host.leaflet-container {
   overflow: hidden;
-  font-family: var(--font-family);
+  font-family: var(--font-sans);
 }
 
 .map-marker {
@@ -1518,7 +1520,7 @@ select {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-family: var(--font-family);
+  font-family: var(--font-sans);
   font-size: var(--font-size-sm);
 }
 
@@ -1580,7 +1582,7 @@ select {
   color: var(--color-text);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius);
-  font-family: var(--font-family);
+  font-family: var(--font-sans);
 }
 
 .driver-popover.ui-tour .driver-popover-title {
@@ -1729,14 +1731,10 @@ select {
 }
 
 .system-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
-}
-
-.system-code-line {
-  margin: 0 0 var(--space-4);
 }
 
 .system-meta,

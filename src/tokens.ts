@@ -147,9 +147,9 @@ export const tokens: Token[] = [
     darkValue: '#2E3036',
   },
   {
-    id: 'fontFamily',
-    cssVar: '--font-family',
-    label: 'Font family',
+    id: 'fontSans',
+    cssVar: '--font-sans',
+    label: 'Font Sans',
     group: 'Typography',
     type: 'font',
     defaultValue: 'Inter, "SF Pro Text", system-ui, sans-serif',
@@ -160,6 +160,34 @@ export const tokens: Token[] = [
       'Roboto, system-ui, sans-serif',
       '"Source Sans 3", system-ui, sans-serif',
       'system-ui, sans-serif',
+    ],
+  },
+  {
+    id: 'fontSerif',
+    cssVar: '--font-serif',
+    label: 'Font Serif',
+    group: 'Typography',
+    type: 'font',
+    defaultValue: '"Source Serif 4", Georgia, serif',
+    options: [
+      '"Source Serif 4", Georgia, serif',
+      '"IBM Plex Serif", Georgia, serif',
+      'Georgia, "Times New Roman", Times, serif',
+      'ui-serif, Georgia, serif',
+    ],
+  },
+  {
+    id: 'fontMono',
+    cssVar: '--font-mono',
+    label: 'Font Mono',
+    group: 'Typography',
+    type: 'font',
+    defaultValue: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    options: [
+      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+      '"IBM Plex Mono", ui-monospace, monospace',
+      '"Source Code Pro", ui-monospace, monospace',
+      '"Roboto Mono", ui-monospace, monospace',
     ],
   },
   {
@@ -233,7 +261,9 @@ export const primitiveTokenIds = [
   'text',
   'accent',
   'positive',
-  'fontFamily',
+  'fontSans',
+  'fontSerif',
+  'fontMono',
   'radius',
   'controlHeight',
   'shadow',
@@ -407,11 +437,40 @@ export const colorRoles: ColorRoleGroup[] = [
   },
 ];
 
+export const fontFamilyIds = ['fontSans', 'fontSerif', 'fontMono'] as const;
+
+export type FontFamilyId = (typeof fontFamilyIds)[number];
+
+export const fontFamilyCssVar: Record<FontFamilyId, string> = {
+  fontSans: '--font-sans',
+  fontSerif: '--font-serif',
+  fontMono: '--font-mono',
+};
+
+/** A named typeface stack: sans for UI, serif for reading, mono for code. */
+export type FontRole = {
+  id: FontFamilyId;
+  usage: string;
+  sample: string;
+};
+
+export const fontRoles: FontRole[] = [
+  { id: 'fontSans', usage: 'Interface, body, and controls.', sample: 'Portfolio performance' },
+  {
+    id: 'fontSerif',
+    usage: 'Editorial passages and long reading.',
+    sample: 'Chilled water loop is running 4°F above setpoint.',
+  },
+  { id: 'fontMono', usage: 'Code, token names, and identifiers.', sample: '--font-mono' },
+];
+
 /** A named text style: a size token plus the weight and leading applied to it. */
 export type TypeRole = {
   id: string;
   label: string;
   sizeToken: string;
+  /** Point at fontSans, fontSerif, or fontMono to restyle this role. */
+  familyToken: FontFamilyId;
   weight: number;
   lineHeight: number;
   letterSpacing?: string;
@@ -426,6 +485,7 @@ export const typeRoles: TypeRole[] = [
     id: 'title',
     label: 'Title',
     sizeToken: 'fontSizeTitle',
+    familyToken: 'fontSans',
     weight: 500,
     lineHeight: 1.2,
     letterSpacing: '-0.02em',
@@ -436,6 +496,7 @@ export const typeRoles: TypeRole[] = [
     id: 'cardTitle',
     label: 'Card title',
     sizeToken: 'fontSize',
+    familyToken: 'fontSans',
     weight: 500,
     lineHeight: 1.3,
     usage: 'Card, dialog, and popover headings.',
@@ -445,6 +506,7 @@ export const typeRoles: TypeRole[] = [
     id: 'body',
     label: 'Body',
     sizeToken: 'fontSize',
+    familyToken: 'fontSans',
     weight: 400,
     lineHeight: 1.5,
     usage: 'Default UI text, controls, and table cells.',
@@ -454,6 +516,7 @@ export const typeRoles: TypeRole[] = [
     id: 'label',
     label: 'Label',
     sizeToken: 'fontSizeSm',
+    familyToken: 'fontSans',
     weight: 400,
     lineHeight: 1.4,
     usage: 'Field labels, descriptions, and card meta.',
@@ -463,6 +526,7 @@ export const typeRoles: TypeRole[] = [
     id: 'eyebrow',
     label: 'Section eyebrow',
     sizeToken: 'fontSizeSm',
+    familyToken: 'fontSans',
     weight: 500,
     lineHeight: 1.4,
     letterSpacing: '0.05em',
@@ -474,6 +538,7 @@ export const typeRoles: TypeRole[] = [
     id: 'metric',
     label: 'Metric',
     sizeToken: 'fontSizeMetric',
+    familyToken: 'fontSans',
     weight: 500,
     lineHeight: 1.1,
     letterSpacing: '-0.02em',
@@ -522,4 +587,12 @@ export const fontLabels: Record<string, string> = {
   'Roboto, system-ui, sans-serif': 'Roboto',
   '"Source Sans 3", system-ui, sans-serif': 'Source Sans 3',
   'system-ui, sans-serif': 'System',
+  '"Source Serif 4", Georgia, serif': 'Source Serif 4',
+  '"IBM Plex Serif", Georgia, serif': 'IBM Plex Serif',
+  'Georgia, "Times New Roman", Times, serif': 'Georgia',
+  'ui-serif, Georgia, serif': 'System',
+  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace': 'System',
+  '"IBM Plex Mono", ui-monospace, monospace': 'IBM Plex Mono',
+  '"Source Code Pro", ui-monospace, monospace': 'Source Code Pro',
+  '"Roboto Mono", ui-monospace, monospace': 'Roboto Mono',
 };

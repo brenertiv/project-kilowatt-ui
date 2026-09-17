@@ -26,5 +26,12 @@ describe('design system export', () => {
     expect(markdown).toContain('## Space');
     expect(markdown).toContain('## Shape');
     expect(markdown).toContain('## Layout');
+    expect(markdown).toContain('Font Sans');
+    expect(markdown).toContain('Font Serif');
+    expect(markdown).toContain('Font Mono');
+    expect(markdown).toContain('`--font-sans`');
+    expect(markdown).toContain('`--font-serif`');
+    expect(markdown).toContain('`--font-mono`');
+    expect(markdown).toContain('| Role | Font | Size |');
   });
 });

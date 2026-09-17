@@ -133,7 +133,7 @@ function ChartDemo() {
     xAxis.get('renderer').labels.template.setAll({
       fill: am5.color(values.textSecondary),
       fontSize: 11,
-      fontFamily: values.fontFamily,
+      fontFamily: values.fontSans,
     });
     xAxis.get('renderer').grid.template.setAll({ strokeOpacity: 0 });
 
@@ -145,7 +145,7 @@ function ChartDemo() {
     yAxis.get('renderer').labels.template.setAll({
       fill: am5.color(values.textMuted),
       fontSize: 11,
-      fontFamily: values.fontFamily,
+      fontFamily: values.fontSans,
     });
     yAxis.get('renderer').grid.template.setAll({
       stroke: am5.color(values.border),
@@ -190,7 +190,7 @@ function ChartDemo() {
       observer.disconnect();
       root.dispose();
     };
-  }, [values.accent, values.border, values.fontFamily, values.textMuted, values.textSecondary, values.track]);
+  }, [values.accent, values.border, values.fontSans, values.textMuted, values.textSecondary, values.track]);
 
   return <div ref={hostRef} className="chart-host" role="img" aria-label="Demand by period, period 5 highlighted" />;
 }

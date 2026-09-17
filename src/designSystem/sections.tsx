@@ -8,7 +8,9 @@ import {
   contrastPairs,
   derivedTokens,
   derivedValue,
+  fontFamilyCssVar,
   fontLabels,
+  fontRoles,
   layoutGrid,
   tokenById,
   tokens,
@@ -162,44 +164,80 @@ function formatLevel(formatted?: string, level?: WcagLevel) {
 
 export function TypographySection({ values }: { values: ThemeValues }) {
   const { t } = useTranslation();
-  const family = values.fontFamily;
-  const familyLabel = fontLabels[family] ?? family;
 
   return (
     <section id="typography" className="system-section">
       <h2>{t('system.sections.typography')}</h2>
-      <p className="ui-description">{t('system.type.lead', { family: familyLabel })}</p>
-      <p className="system-code-line">
-        <code className="system-code">{family}</code>
-      </p>
-      <div className="system-type-list">
-        {typeRoles.map((role) => {
-          const sizeToken = tokenById[role.sizeToken];
-          const style: CSSProperties = {
-            fontSize: `var(${sizeToken.cssVar})`,
-            fontWeight: role.weight,
-            lineHeight: role.lineHeight,
-            letterSpacing: role.letterSpacing,
-            textTransform: role.transform,
-            fontVariantNumeric: role.tabularNums ? 'tabular-nums' : undefined,
-          };
-          return (
-            <article key={role.id} className="card system-type-card">
-              <p className="system-type-sample" style={style}>
-                {role.sample}
-              </p>
-              <h3>{role.label}</h3>
-              <p className="ui-description">{role.usage}</p>
-              <p className="system-meta">
-                <span>{values[role.sizeToken] ?? sizeToken.defaultValue}</span>
-                <span>{role.weight}</span>
-                <span>{role.lineHeight}</span>
-                {role.tabularNums ? <span>tabular</span> : null}
-              </p>
-              <code className="system-code">{sizeToken.cssVar}</code>
-            </article>
-          );
-        })}
+      <p className="ui-description">{t('system.type.lead')}</p>
+
+      <div className="system-role">
+        <div className="system-role-head">
+          <h3>{t('system.type.families')}</h3>
+        </div>
+        <div className="system-type-list">
+          {fontRoles.map((role) => {
+            const token = tokenById[role.id];
+            if (!token) return null;
+            const stack = values[role.id] ?? token.defaultValue;
+            const sampleStyle: CSSProperties = {
+              fontFamily: `var(${token.cssVar})`,
+              fontSize: 'var(--font-size-title)',
+            };
+            return (
+              <article key={role.id} className="card system-type-card">
+                <p className="system-type-sample" style={sampleStyle}>
+                  {role.sample}
+                </p>
+                <h3>{token.label}</h3>
+                <p className="ui-description">{role.usage}</p>
+                <p className="system-meta">
+                  <span>{fontLabels[stack] ?? stack}</span>
+                </p>
+                <code className="system-code">{token.cssVar}</code>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="system-role">
+        <div className="system-role-head">
+          <h3>{t('system.type.roles')}</h3>
+        </div>
+        <div className="system-type-list">
+          {typeRoles.map((role) => {
+            const sizeToken = tokenById[role.sizeToken];
+            const familyVar = fontFamilyCssVar[role.familyToken];
+            const style: CSSProperties = {
+              fontFamily: `var(${familyVar})`,
+              fontSize: `var(${sizeToken.cssVar})`,
+              fontWeight: role.weight,
+              lineHeight: role.lineHeight,
+              letterSpacing: role.letterSpacing,
+              textTransform: role.transform,
+              fontVariantNumeric: role.tabularNums ? 'tabular-nums' : undefined,
+            };
+            return (
+              <article key={role.id} className="card system-type-card">
+                <p className="system-type-sample" style={style}>
+                  {role.sample}
+                </p>
+                <h3>{role.label}</h3>
+                <p className="ui-description">{role.usage}</p>
+                <p className="system-meta">
+                  <span>{values[role.sizeToken] ?? sizeToken.defaultValue}</span>
+                  <span>{role.weight}</span>
+                  <span>{role.lineHeight}</span>
+                  {role.tabularNums ? <span>tabular</span> : null}
+                </p>
+                <p className="system-meta">
+                  <code className="system-code">{familyVar}</code>
+                  <code className="system-code">{sizeToken.cssVar}</code>
+                </p>
+              </article>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
