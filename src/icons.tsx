@@ -13,6 +13,7 @@ import SaveOutlined from '@mui/icons-material/SaveOutlined';
 import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
+import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
 import UnfoldMoreOutlined from '@mui/icons-material/UnfoldMoreOutlined';
 
 type IconProps = SvgIconProps;
@@ -69,6 +70,10 @@ export function TrendUpIcon({ className, ...props }: IconProps) {
   return <TrendingUpOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
 }
 
+export function WarningIcon({ className, ...props }: IconProps) {
+  return <WarningAmberOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
+}
+
 export function ArrowOutwardIcon({ className, ...props }: IconProps) {
   return <ArrowOutwardOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
 }
@@ -90,6 +95,7 @@ export const iconCatalog: { name: string; Icon: ComponentType<IconProps> }[] = [
   { name: 'SaveIcon', Icon: SaveIcon },
   { name: 'DeleteIcon', Icon: DeleteIcon },
   { name: 'TrendUpIcon', Icon: TrendUpIcon },
+  { name: 'WarningIcon', Icon: WarningIcon },
   { name: 'ArrowOutwardIcon', Icon: ArrowOutwardIcon },
   { name: 'TuneIcon', Icon: TuneIcon },
 ];

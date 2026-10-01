@@ -29,8 +29,8 @@ describe('theme tokens', () => {
 
     expect(css).toContain(':root {');
     expect(css).toContain('html.dark {');
-    expect(css).toContain('--color-bg: #F6F7F8;');
-    expect(css).toContain('--color-bg: #121316;');
+    expect(css).toContain('--color-bg: #F9FAFC;');
+    expect(css).toContain('--color-bg: #0D212A;');
   });
 
   it('documents every CSS variable themeToCssVars emits', () => {
@@ -69,6 +69,8 @@ describe('theme tokens', () => {
       'text',
       'accent',
       'positive',
+      'negative',
+      'warning',
       'fontSans',
       'fontSerif',
       'fontMono',

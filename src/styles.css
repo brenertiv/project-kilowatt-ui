@@ -1,22 +1,24 @@
 :root {
   color-scheme: light;
-  --color-bg: #f6f7f8;
+  --color-bg: #f9fafc;
   --color-surface: #ffffff;
-  --color-border: #e7e8ea;
-  --color-text: #111214;
-  --color-text-secondary: #6f7277;
-  --color-text-muted: #a9adb3;
-  --color-accent: #1254f6;
-  --color-accent-tint: #eaf0ff;
-  --color-on-accent: #ffffff;
-  --color-positive: #178a4d;
-  --color-solid: #111214;
+  --color-border: #dce3ec;
+  --color-text: #0d212a;
+  --color-text-secondary: #365670;
+  --color-text-muted: #426a8a;
+  --color-accent: #2ea6e1;
+  --color-accent-tint: #dcf0fa;
+  --color-on-accent: #0d212a;
+  --color-positive: #008459;
+  --color-negative: #d61a1a;
+  --color-warning: #e16a2e;
+  --color-solid: #112a36;
   --color-on-solid: #ffffff;
-  --color-hover: #f3f4f6;
-  --color-track: #e7e8ea;
-  --font-sans: Inter, 'SF Pro Text', system-ui, sans-serif;
-  --font-serif: 'Source Serif 4', Georgia, serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --color-hover: #edf1f5;
+  --color-track: #d6dee8;
+  --font-sans: Roboto, system-ui, sans-serif;
+  --font-serif: 'IBM Plex Serif', Georgia, serif;
+  --font-mono: 'Roboto Mono', ui-monospace, monospace;
   --font-size-title: 20px;
   --font-size: 14px;
   --font-size-sm: 12px;
@@ -326,18 +328,6 @@ select {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-}
-
-.preset-block {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.preset-status {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
 }
 
 .editor-group + .editor-group {
@@ -1242,6 +1232,14 @@ select {
   font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.panel-meta.is-warning {
+  color: var(--color-warning);
+}
+
+.panel-meta.is-negative {
+  color: var(--color-negative);
 }
 
 .metric-chart {

@@ -1,23 +1,11 @@
-import { useState, type FormEvent } from 'react';
-import { AlertDialog } from '@base-ui/react/alert-dialog';
+import { useState } from 'react';
 import { Button } from '@base-ui/react/button';
 import { Dialog } from '@base-ui/react/dialog';
-import { Field } from '@base-ui/react/field';
 import { Input } from '@base-ui/react/input';
 import { Select } from '@base-ui/react/select';
 import { fontLabels, primitiveTokens, type Token } from '../tokens';
 import { useTheme } from './ThemeProvider';
-import {
-  CheckIcon,
-  ChevronUpDownIcon,
-  CopyIcon,
-  DeleteIcon,
-  PlusIcon,
-  ResetIcon,
-  SaveIcon,
-  TuneIcon,
-  XIcon,
-} from '../icons';
+import { CheckIcon, ChevronUpDownIcon, CopyIcon, ResetIcon, TuneIcon, XIcon } from '../icons';
 
 const panelGroups: { id: string; label: string; tokens: Token[] }[] = [
   { id: 'Color', label: 'Color', tokens: primitiveTokens.filter((token) => token.group === 'Color') },
@@ -126,128 +114,10 @@ function FontControl({ token, value, onChange }: { token: Token; value: string; 
   );
 }
 
-function PresetSelect() {
-  const { presets, activePresetId, applyPreset } = useTheme();
-  const items = presets.map((preset) => ({ label: preset.name, value: preset.id }));
-
-  return (
-    <Select.Root items={items} value={activePresetId} onValueChange={(next) => next && applyPreset(next)}>
-      <Select.Trigger className="ui-select" aria-label="Theme preset">
-        <Select.Value />
-        <Select.Icon className="ui-select-icon">
-          <ChevronUpDownIcon />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Positioner className="ui-positioner" sideOffset={4}>
-          <Select.Popup className="ui-popup">
-            <Select.List>
-              {presets.map((preset) => (
-                <Select.Item key={preset.id} value={preset.id} className="ui-item">
-                  <Select.ItemIndicator className="ui-item-indicator">
-                    <CheckIcon />
-                  </Select.ItemIndicator>
-                  <Select.ItemText>{preset.name}</Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
-  );
-}
-
-function SavePresetDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const { savePresetAs } = useTheme();
-  const [name, setName] = useState('');
-  const trimmed = name.trim();
-
-  function handleOpenChange(next: boolean) {
-    if (next) setName('');
-    onOpenChange(next);
-  }
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!trimmed) return;
-    savePresetAs(trimmed);
-    onOpenChange(false);
-  }
-
-  return (
-    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Backdrop className="ui-backdrop" />
-        <Dialog.Viewport className="ui-dialog-viewport">
-          <Dialog.Popup className="ui-dialog">
-            <form className="ui-dialog-form" onSubmit={handleSubmit}>
-              <Dialog.Title className="ui-dialog-title">Save theme</Dialog.Title>
-              <Dialog.Description className="ui-description">
-                Name this preset to switch back to it later.
-              </Dialog.Description>
-              <Field.Root className="ui-field" name="preset-name">
-                <Field.Label className="ui-label">Name</Field.Label>
-                <Input className="ui-input" value={name} onValueChange={setName} placeholder="Night ops" autoFocus />
-              </Field.Root>
-              <div className="demo-row demo-end">
-                <Dialog.Close className="ui-btn">Cancel</Dialog.Close>
-                <Button className="ui-btn ui-btn-solid" type="submit" disabled={!trimmed}>
-                  Save
-                </Button>
-              </div>
-            </form>
-          </Dialog.Popup>
-        </Dialog.Viewport>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
-
-function DeletePresetDialog({
-  open,
-  name,
-  onOpenChange,
-  onConfirm,
-}: {
-  open: boolean;
-  name: string;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-}) {
-  return (
-    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Portal>
-        <AlertDialog.Backdrop className="ui-backdrop" />
-        <AlertDialog.Viewport className="ui-dialog-viewport">
-          <AlertDialog.Popup className="ui-dialog">
-            <AlertDialog.Title className="ui-dialog-title">Delete {name}?</AlertDialog.Title>
-            <AlertDialog.Description className="ui-description">
-              This removes the saved preset. The Kilowatt theme stays available.
-            </AlertDialog.Description>
-            <div className="demo-row demo-end">
-              <AlertDialog.Close className="ui-btn">Keep</AlertDialog.Close>
-              <AlertDialog.Close className="ui-btn ui-btn-solid" onClick={onConfirm}>
-                Delete
-              </AlertDialog.Close>
-            </div>
-          </AlertDialog.Popup>
-        </AlertDialog.Viewport>
-      </AlertDialog.Portal>
-    </AlertDialog.Root>
-  );
-}
-
 export function ThemeEditor() {
-  const { values, setToken, reset, exportCss, colorScheme, presets, activePresetId, dirty, savePreset, deletePreset } =
-    useTheme();
+  const { values, setToken, reset, exportCss, colorScheme, dirty } = useTheme();
   const [copied, setCopied] = useState(false);
-  const [saveOpen, setSaveOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const editingDark = colorScheme === 'dark';
-  const activePreset = presets.find((preset) => preset.id === activePresetId);
-  const canSave = Boolean(dirty && activePreset && !activePreset.builtIn);
-  const canDelete = Boolean(activePreset && !activePreset.builtIn);
 
   async function copyCss() {
     await navigator.clipboard.writeText(exportCss());
@@ -285,33 +155,7 @@ export function ThemeEditor() {
             </div>
 
             <div className="editor-panel-toolbar">
-              <div className="preset-block">
-                <span className="token-label">Preset</span>
-                <PresetSelect />
-                {dirty ? <p className="preset-status">Unsaved changes</p> : null}
-              </div>
               <div className="editor-actions">
-                <Button className="ui-btn ui-btn-ghost" onClick={() => setSaveOpen(true)}>
-                  <PlusIcon />
-                  Save as
-                </Button>
-                <Button
-                  className="ui-btn ui-btn-ghost"
-                  onClick={savePreset}
-                  disabled={!canSave}
-                  aria-label="Save preset"
-                >
-                  <SaveIcon />
-                  Save
-                </Button>
-                <Button
-                  className="ui-btn ui-btn-ghost"
-                  onClick={() => setDeleteOpen(true)}
-                  disabled={!canDelete}
-                  aria-label="Delete preset"
-                >
-                  <DeleteIcon />
-                </Button>
                 <Button className="ui-btn ui-btn-ghost" onClick={copyCss}>
                   <CopyIcon />
                   {copied ? 'Copied' : 'CSS'}
@@ -366,14 +210,6 @@ export function ThemeEditor() {
           </Dialog.Popup>
         </Dialog.Viewport>
       </Dialog.Portal>
-
-      <SavePresetDialog open={saveOpen} onOpenChange={setSaveOpen} />
-      <DeletePresetDialog
-        open={deleteOpen}
-        name={activePreset?.name ?? 'preset'}
-        onOpenChange={setDeleteOpen}
-        onConfirm={() => activePreset && deletePreset(activePreset.id)}
-      />
     </Dialog.Root>
   );
 }

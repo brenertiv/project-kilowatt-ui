@@ -8,19 +8,7 @@ import {
   type ColorScheme,
   type ThemeValues,
 } from '../tokens';
-import {
-  applyPreset,
-  deletePreset,
-  isPresetDirty,
-  listPresets,
-  parseStoredTheme,
-  resetActivePreset,
-  saveActivePreset,
-  savePresetAs,
-  serializeTheme,
-  type ThemePreset,
-  type ThemeState,
-} from './presets';
+import { isThemeDirty, parseStoredTheme, resetTheme, serializeTheme, type ThemeState } from './presets';
 
 const STORAGE_KEY = 'kilowatt-theme';
 
@@ -70,13 +58,7 @@ type ThemeContextValue = {
   lightValues: ThemeValues;
   darkColors: Record<string, string>;
   setToken: (id: string, value: string) => void;
-  presets: ThemePreset[];
-  activePresetId: string;
   dirty: boolean;
-  applyPreset: (id: string) => void;
-  savePreset: () => void;
-  savePresetAs: (name: string) => void;
-  deletePreset: (id: string) => void;
   reset: () => void;
   exportCss: () => string;
 };
@@ -86,24 +68,21 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ThemeState>(loadTheme);
   const previousScheme = useRef(state.colorScheme);
-  const previousPreset = useRef(state.activePresetId);
   const activeValues = useMemo(
     () => resolveTheme(state.values, state.darkColors, state.colorScheme),
     [state.values, state.darkColors, state.colorScheme],
   );
-  const presets = listPresets(state.customPresets);
-  const dirty = isPresetDirty(state);
+  const dirty = isThemeDirty(state);
 
   useLayoutEffect(() => {
     const apply = () => applyCssVars(activeValues, state.colorScheme);
-    if (previousScheme.current !== state.colorScheme || previousPreset.current !== state.activePresetId) {
+    if (previousScheme.current !== state.colorScheme) {
       previousScheme.current = state.colorScheme;
-      previousPreset.current = state.activePresetId;
       withoutThemeTransitions(apply);
       return;
     }
     apply();
-  }, [activeValues, state.colorScheme, state.activePresetId]);
+  }, [activeValues, state.colorScheme]);
 
   function commit(next: ThemeState) {
     persist(next);
@@ -144,14 +123,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         lightValues: state.values,
         darkColors: state.darkColors,
         setToken,
-        presets,
-        activePresetId: state.activePresetId,
         dirty,
-        applyPreset: (id) => commit(applyPreset(state, id)),
-        savePreset: () => commit(saveActivePreset(state)),
-        savePresetAs: (name) => commit(savePresetAs(state, name, crypto.randomUUID())),
-        deletePreset: (id) => commit(deletePreset(state, id)),
-        reset: () => commit(resetActivePreset(state)),
+        reset: () => commit(resetTheme(state)),
         exportCss,
       }}
     >
