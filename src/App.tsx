@@ -10,7 +10,10 @@ import { ThemeProvider, useTheme } from './theme/ThemeProvider';
 import { ThemeEditor } from './theme/ThemeEditor';
 import { Gallery } from './gallery/Gallery';
 import { DesignSystem } from './designSystem/DesignSystem';
+import { DocsPage } from './docs/DocsPage';
+import { Workbench } from './workbench/Workbench';
 import { XIcon } from './icons';
+import EnertivAvatar from './assets/enertiv-avatar.svg?react';
 
 function ToastList() {
   const { toasts } = Toast.useToastManager();
@@ -58,6 +61,9 @@ function MainNav() {
       <NavLink to="/design-system" className="topbar-nav-link">
         {t('nav.designSystem')}
       </NavLink>
+      <NavLink to="/docs" className="topbar-nav-link">
+        {t('nav.docs')}
+      </NavLink>
     </nav>
   );
 }
@@ -67,7 +73,7 @@ function Shell() {
     <div className="root">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-mark" />
+          <EnertivAvatar className="brand-mark" aria-hidden="true" />
           Kilowatt
         </div>
         <MainNav />
@@ -81,6 +87,11 @@ function Shell() {
           <Route path="/" element={<Navigate to="/components" replace />} />
           <Route path="/components" element={<Gallery />} />
           <Route path="/design-system" element={<DesignSystem />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/docs/:slug" element={<DocsPage />} />
+          <Route path="/workbench" element={<Workbench />} />
+          <Route path="/workbench/:slug" element={<Workbench />} />
+          <Route path="/workbench/:slug/:name" element={<Workbench />} />
           <Route path="*" element={<Navigate to="/components" replace />} />
         </Routes>
       </div>

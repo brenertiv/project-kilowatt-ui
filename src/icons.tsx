@@ -1,101 +1,107 @@
-import type { ComponentType } from 'react';
-import type { SvgIconProps } from '@mui/material/SvgIcon';
-import AddOutlined from '@mui/icons-material/AddOutlined';
-import ArrowOutwardOutlined from '@mui/icons-material/ArrowOutwardOutlined';
-import CheckOutlined from '@mui/icons-material/CheckOutlined';
-import CloseOutlined from '@mui/icons-material/CloseOutlined';
-import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
-import ExpandMoreOutlined from '@mui/icons-material/ExpandMoreOutlined';
-import RemoveOutlined from '@mui/icons-material/RemoveOutlined';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import RestartAltOutlined from '@mui/icons-material/RestartAltOutlined';
-import SaveOutlined from '@mui/icons-material/SaveOutlined';
-import SearchOutlined from '@mui/icons-material/SearchOutlined';
-import TuneOutlined from '@mui/icons-material/TuneOutlined';
-import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
-import WarningAmberOutlined from '@mui/icons-material/WarningAmberOutlined';
-import UnfoldMoreOutlined from '@mui/icons-material/UnfoldMoreOutlined';
+import type { ComponentType, CSSProperties, HTMLAttributes } from 'react';
 
-type IconProps = SvgIconProps;
+/**
+ * The one icon set for the whole surface: Material Symbols Outlined, Google's
+ * variable icon font. Each icon is a ligature rendered by the font, so a glyph
+ * costs no SVG and recolors with `currentColor`. The variable axes are set in
+ * CSS on `.ui-icon`: weight follows text weight, optical size matches 16px,
+ * and `FILL` marks the active state.
+ *
+ * Add icons here by ligature name, never write a ligature elsewhere.
+ */
 
-function uiIcon(className?: string) {
-  return ['ui-icon', className].filter(Boolean).join(' ');
+export type IconProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children'> & {
+  /** Filled variant, for the active state of a toggle or tab. */
+  fill?: boolean;
+  /** Font weight on the `wght` axis. Defaults to the text weight (400). */
+  weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700;
+  /** Rendered size. The `.ui-icon` class pins 16px; pass a size only off-grid. */
+  size?: number;
+};
+
+function define(ligature: string): ComponentType<IconProps> {
+  function Icon({ className, fill, weight, size, style, ...props }: IconProps) {
+    const variation: CSSProperties | undefined =
+      fill || weight || size
+        ? {
+            ...(size ? { width: size, height: size, fontSize: size } : {}),
+            fontVariationSettings: [
+              `'FILL' ${fill ? 1 : 0}`,
+              `'wght' ${weight ?? 400}`,
+              `'GRAD' 0`,
+              `'opsz' ${size && size >= 40 ? 48 : size && size >= 24 ? 24 : 20}`,
+            ].join(', '),
+          }
+        : undefined;
+    return (
+      <span
+        className={['ui-icon', 'material-symbols-outlined', className].filter(Boolean).join(' ')}
+        aria-hidden="true"
+        translate="no"
+        data-fill={fill || undefined}
+        style={variation ? { ...variation, ...style } : style}
+        {...props}
+      >
+        {ligature}
+      </span>
+    );
+  }
+  Icon.displayName = `Icon(${ligature})`;
+  return Icon;
 }
 
-export function CheckIcon({ className, ...props }: IconProps) {
-  return <CheckOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function ChevronDownIcon({ className, ...props }: IconProps) {
-  return <ExpandMoreOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function ChevronUpDownIcon({ className, ...props }: IconProps) {
-  return <UnfoldMoreOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function PlusIcon({ className, ...props }: IconProps) {
-  return <AddOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function MinusIcon({ className, ...props }: IconProps) {
-  return <RemoveOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function XIcon({ className, ...props }: IconProps) {
-  return <CloseOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function SearchIcon({ className, ...props }: IconProps) {
-  return <SearchOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function CopyIcon({ className, ...props }: IconProps) {
-  return <ContentCopyOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function ResetIcon({ className, ...props }: IconProps) {
-  return <RestartAltOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function SaveIcon({ className, ...props }: IconProps) {
-  return <SaveOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function DeleteIcon({ className, ...props }: IconProps) {
-  return <DeleteOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function TrendUpIcon({ className, ...props }: IconProps) {
-  return <TrendingUpOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function WarningIcon({ className, ...props }: IconProps) {
-  return <WarningAmberOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function ArrowOutwardIcon({ className, ...props }: IconProps) {
-  return <ArrowOutwardOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
-
-export function TuneIcon({ className, ...props }: IconProps) {
-  return <TuneOutlined className={uiIcon(className)} fontSize="inherit" {...props} />;
-}
+export const CheckIcon = define('check');
+export const ChevronDownIcon = define('expand_more');
+export const ChevronUpDownIcon = define('unfold_more');
+export const PlusIcon = define('add');
+export const MinusIcon = define('remove');
+export const XIcon = define('close');
+export const SearchIcon = define('search');
+export const CopyIcon = define('content_copy');
+export const ResetIcon = define('restart_alt');
+export const SaveIcon = define('save');
+export const DeleteIcon = define('delete');
+export const TrendUpIcon = define('trending_up');
+export const WarningIcon = define('warning');
+export const ArrowOutwardIcon = define('arrow_outward');
+export const TuneIcon = define('tune');
+export const ArrowUpIcon = define('arrow_upward');
+export const ArrowDownIcon = define('arrow_downward');
+export const ChevronLeftIcon = define('chevron_left');
+export const ChevronRightIcon = define('chevron_right');
+export const MoreIcon = define('more_horiz');
+export const ColumnsIcon = define('view_column');
+export const DownloadIcon = define('download');
+export const DensityComfortableIcon = define('density_medium');
+export const DensityCompactIcon = define('density_small');
+export const ErrorIcon = define('error');
+export const BuildingIcon = define('apartment');
 
 export const iconCatalog: { name: string; Icon: ComponentType<IconProps> }[] = [
   { name: 'CheckIcon', Icon: CheckIcon },
   { name: 'ChevronDownIcon', Icon: ChevronDownIcon },
   { name: 'ChevronUpDownIcon', Icon: ChevronUpDownIcon },
+  { name: 'ChevronLeftIcon', Icon: ChevronLeftIcon },
+  { name: 'ChevronRightIcon', Icon: ChevronRightIcon },
+  { name: 'ArrowUpIcon', Icon: ArrowUpIcon },
+  { name: 'ArrowDownIcon', Icon: ArrowDownIcon },
+  { name: 'ArrowOutwardIcon', Icon: ArrowOutwardIcon },
   { name: 'PlusIcon', Icon: PlusIcon },
   { name: 'MinusIcon', Icon: MinusIcon },
   { name: 'XIcon', Icon: XIcon },
+  { name: 'MoreIcon', Icon: MoreIcon },
   { name: 'SearchIcon', Icon: SearchIcon },
   { name: 'CopyIcon', Icon: CopyIcon },
   { name: 'ResetIcon', Icon: ResetIcon },
   { name: 'SaveIcon', Icon: SaveIcon },
   { name: 'DeleteIcon', Icon: DeleteIcon },
+  { name: 'DownloadIcon', Icon: DownloadIcon },
+  { name: 'ColumnsIcon', Icon: ColumnsIcon },
+  { name: 'DensityComfortableIcon', Icon: DensityComfortableIcon },
+  { name: 'DensityCompactIcon', Icon: DensityCompactIcon },
+  { name: 'TuneIcon', Icon: TuneIcon },
   { name: 'TrendUpIcon', Icon: TrendUpIcon },
   { name: 'WarningIcon', Icon: WarningIcon },
-  { name: 'ArrowOutwardIcon', Icon: ArrowOutwardIcon },
-  { name: 'TuneIcon', Icon: TuneIcon },
+  { name: 'ErrorIcon', Icon: ErrorIcon },
+  { name: 'BuildingIcon', Icon: BuildingIcon },
 ];

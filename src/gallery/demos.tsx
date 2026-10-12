@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentType } from 'react';
 import { Accordion } from '@base-ui/react/accordion';
 import { AlertDialog } from '@base-ui/react/alert-dialog';
 import { Avatar } from '@base-ui/react/avatar';
@@ -28,13 +28,18 @@ import { ToggleGroup } from '@base-ui/react/toggle-group';
 import { Tooltip } from '@base-ui/react/tooltip';
 import { buildings, meters, tickets } from '../data';
 import { CheckIcon, ChevronDownIcon, ChevronUpDownIcon, MinusIcon, PlusIcon, XIcon } from '../icons';
+import { chartDemos } from './chartDemos';
 import { stackDemos } from './stackDemos';
+import { tableDemos } from './tableDemos';
 
 export type Demo = {
   id: string;
   title: string;
   group: string;
-  render: () => ReactNode;
+  /** Rendered as a component so demos that use hooks keep their own hook order. */
+  render: ComponentType;
+  /** Workbench fixture id (`slug/name`) that lets the reader click into this component. */
+  workbench?: string;
 };
 
 function ButtonsDemo() {
@@ -142,9 +147,11 @@ function SelectDemo() {
 function ComboboxDemo() {
   return (
     <Combobox.Root items={meters} defaultValue={meters[0]}>
-      <Combobox.Label className="ui-label">Meter</Combobox.Label>
+      <label className="ui-label" htmlFor="meter-search">
+        Meter
+      </label>
       <Combobox.InputGroup className="ui-combobox">
-        <Combobox.Input className="ui-input" placeholder="Search meters" />
+        <Combobox.Input id="meter-search" className="ui-input" placeholder="Search meters" />
         <Combobox.Clear className="ui-icon-btn" aria-label="Clear">
           <XIcon />
         </Combobox.Clear>
@@ -235,7 +242,7 @@ function AccordionDemo() {
           <Accordion.Header>
             <Accordion.Trigger className="ui-accordion-trigger">
               {title}
-              <PlusIcon />
+              <PlusIcon className="ui-icon-plus" />
             </Accordion.Trigger>
           </Accordion.Header>
           <Accordion.Panel className="ui-accordion-panel">
@@ -416,7 +423,7 @@ function AvatarCollapsibleDemo() {
       <Collapsible.Root>
         <Collapsible.Trigger className="ui-accordion-trigger">
           Shift notes
-          <ChevronDownIcon />
+          <ChevronDownIcon className="ui-icon-chevron" />
         </Collapsible.Trigger>
         <Collapsible.Panel className="ui-accordion-panel">
           <div className="ui-accordion-body">Chiller-1 is in night setback until 06:00. Do not override unless occupancy exceeds 40%.</div>
@@ -456,25 +463,27 @@ function SeparatorDemo() {
 }
 
 export const demos: Demo[] = [
-  { id: 'buttons', title: 'Button', group: 'Actions', render: ButtonsDemo },
-  { id: 'menu', title: 'Menu', group: 'Actions', render: MenuDemo },
-  { id: 'tooltip', title: 'Tooltip', group: 'Actions', render: TooltipDemo },
-  { id: 'popover', title: 'Popover', group: 'Actions', render: PopoverDemo },
-  { id: 'dialog', title: 'Dialog', group: 'Actions', render: DialogDemo },
-  { id: 'alert-dialog', title: 'Alert Dialog', group: 'Actions', render: AlertDialogDemo },
-  { id: 'toast', title: 'Toast', group: 'Actions', render: ToastDemo },
-  { id: 'input', title: 'Field + Input', group: 'Forms', render: InputsDemo },
-  { id: 'select', title: 'Select', group: 'Forms', render: SelectDemo },
-  { id: 'combobox', title: 'Combobox', group: 'Forms', render: ComboboxDemo },
-  { id: 'number', title: 'Number Field', group: 'Forms', render: NumberFieldDemo },
-  { id: 'choice', title: 'Checkbox, Switch, Radio', group: 'Forms', render: CheckboxSwitchRadioDemo },
-  { id: 'slider', title: 'Slider', group: 'Forms', render: SliderDemo },
-  { id: 'toggle', title: 'Toggle Group', group: 'Forms', render: ToggleDemo },
-  { id: 'tabs', title: 'Tabs', group: 'Structure', render: TabsDemo },
-  { id: 'accordion', title: 'Accordion', group: 'Structure', render: AccordionDemo },
-  { id: 'progress', title: 'Progress + Meter', group: 'Structure', render: ProgressMeterDemo },
-  { id: 'avatar', title: 'Avatar + Collapsible', group: 'Structure', render: AvatarCollapsibleDemo },
-  { id: 'scroll', title: 'Scroll Area', group: 'Structure', render: ScrollTicketsDemo },
-  { id: 'separator', title: 'Separator', group: 'Structure', render: SeparatorDemo },
+  { id: 'buttons', title: 'Button', group: 'Actions', render: ButtonsDemo, workbench: 'button/playground' },
+  { id: 'menu', title: 'Menu', group: 'Actions', render: MenuDemo, workbench: 'overlays/menu' },
+  { id: 'tooltip', title: 'Tooltip', group: 'Actions', render: TooltipDemo, workbench: 'overlays/tooltip' },
+  { id: 'popover', title: 'Popover', group: 'Actions', render: PopoverDemo, workbench: 'overlays/popover' },
+  { id: 'dialog', title: 'Dialog', group: 'Actions', render: DialogDemo, workbench: 'overlays/dialog' },
+  { id: 'alert-dialog', title: 'Alert Dialog', group: 'Actions', render: AlertDialogDemo, workbench: 'overlays/alert-dialog' },
+  { id: 'toast', title: 'Toast', group: 'Actions', render: ToastDemo, workbench: 'overlays/toast' },
+  { id: 'input', title: 'Field + Input', group: 'Forms', render: InputsDemo, workbench: 'field/playground' },
+  { id: 'select', title: 'Select', group: 'Forms', render: SelectDemo, workbench: 'forms/select' },
+  { id: 'combobox', title: 'Combobox', group: 'Forms', render: ComboboxDemo, workbench: 'forms/combobox' },
+  { id: 'number', title: 'Number Field', group: 'Forms', render: NumberFieldDemo, workbench: 'forms/number-field' },
+  { id: 'choice', title: 'Checkbox, Switch, Radio', group: 'Forms', render: CheckboxSwitchRadioDemo, workbench: 'controls/switch' },
+  { id: 'slider', title: 'Slider', group: 'Forms', render: SliderDemo, workbench: 'forms/slider' },
+  { id: 'toggle', title: 'Toggle Group', group: 'Forms', render: ToggleDemo, workbench: 'forms/toggle-group' },
+  { id: 'tabs', title: 'Tabs', group: 'Structure', render: TabsDemo, workbench: 'controls/tabs' },
+  { id: 'accordion', title: 'Accordion', group: 'Structure', render: AccordionDemo, workbench: 'structure/accordion' },
+  { id: 'progress', title: 'Progress + Meter', group: 'Structure', render: ProgressMeterDemo, workbench: 'structure/progress-and-meter' },
+  { id: 'avatar', title: 'Avatar + Collapsible', group: 'Structure', render: AvatarCollapsibleDemo, workbench: 'structure/avatar' },
+  { id: 'scroll', title: 'Scroll Area', group: 'Structure', render: ScrollTicketsDemo, workbench: 'structure/scroll-area' },
+  { id: 'separator', title: 'Separator', group: 'Structure', render: SeparatorDemo, workbench: 'structure/separator' },
   ...stackDemos,
+  ...chartDemos,
+  ...tableDemos,
 ];

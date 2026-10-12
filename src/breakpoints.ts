@@ -174,7 +174,7 @@ export function breakpointQueryCss(): string {
   }
 
   .ui-input {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   .editor-panel-grid {

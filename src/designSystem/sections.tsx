@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { Toast } from '@base-ui/react/toast';
 import { useTranslation } from 'react-i18next';
 import { breakpointRoles, breakpoints, breakpointVarName, type BreakpointName } from '../breakpoints';
 import { iconCatalog } from '../icons';
@@ -8,13 +9,21 @@ import {
   contrastPairs,
   derivedTokens,
   derivedValue,
+  fluidCssVar,
+  fluidRangePx,
+  fluidValue,
   fontFamilyCssVar,
   fontLabels,
   fontRoles,
+  fontSizePx,
+  fontSizeSource,
+  fontSizeTokenById,
   layoutGrid,
   tokenById,
   tokens,
   typeRoles,
+  typeScale,
+  typeStepPx,
   type ThemeValues,
 } from '../tokens';
 import { measureContrast, type WcagLevel } from './contrast';
@@ -30,11 +39,6 @@ export const systemSections = [
 
 function colorOf(id: string, palette: Record<string, string>) {
   return palette[id] ?? tokenById[id]?.defaultValue ?? '';
-}
-
-function parsePx(value: string) {
-  const numeric = Number.parseFloat(value);
-  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 function ContrastBadge({
@@ -202,11 +206,55 @@ export function TypographySection({ values }: { values: ThemeValues }) {
 
       <div className="system-role">
         <div className="system-role-head">
+          <h3>{t('system.type.scale')}</h3>
+          <p className="ui-description">{t('system.type.scaleLead')}</p>
+        </div>
+        <div className="system-type-list">
+          {typeScale.map((step) => (
+            <article key={step.id} className="card system-type-card">
+              <p className="system-type-sample" style={{ fontSize: `var(${step.cssVar})`, lineHeight: 1.2 }}>
+                Ag
+              </p>
+              <p className="system-meta">
+                <code className="system-code">{step.cssVar}</code>
+                <span>{typeStepPx(step)}</span>
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div className="system-role">
+        <div className="system-role-head">
+          <h3>{t('system.type.fluid')}</h3>
+          <p className="ui-description">{t('system.type.fluidLead')}</p>
+        </div>
+        <div className="system-type-list">
+          {typeScale
+            .filter((step) => step.fluid)
+            .map((step) => (
+              <article key={step.id} className="card system-type-card">
+                <p className="system-type-sample" style={{ fontSize: `var(${fluidCssVar(step)})`, lineHeight: 1.2 }}>
+                  Ag
+                </p>
+                <p className="system-meta">
+                  <code className="system-code">{fluidCssVar(step)}</code>
+                  <span>{fluidRangePx(step)}</span>
+                </p>
+                <code className="system-code">{fluidValue(step)}</code>
+              </article>
+            ))}
+        </div>
+      </div>
+
+      <div className="system-role">
+        <div className="system-role-head">
           <h3>{t('system.type.roles')}</h3>
+          <p className="ui-description">{t('system.type.rolesLead')}</p>
         </div>
         <div className="system-type-list">
           {typeRoles.map((role) => {
-            const sizeToken = tokenById[role.sizeToken];
+            const sizeToken = fontSizeTokenById[role.sizeToken];
             const familyVar = fontFamilyCssVar[role.familyToken];
             const style: CSSProperties = {
               fontFamily: `var(${familyVar})`,
@@ -225,7 +273,7 @@ export function TypographySection({ values }: { values: ThemeValues }) {
                 <h3>{role.label}</h3>
                 <p className="ui-description">{role.usage}</p>
                 <p className="system-meta">
-                  <span>{values[role.sizeToken] ?? sizeToken.defaultValue}</span>
+                  <span>{fontSizePx(sizeToken)}</span>
                   <span>{role.weight}</span>
                   <span>{role.lineHeight}</span>
                   {role.tabularNums ? <span>tabular</span> : null}
@@ -233,6 +281,7 @@ export function TypographySection({ values }: { values: ThemeValues }) {
                 <p className="system-meta">
                   <code className="system-code">{familyVar}</code>
                   <code className="system-code">{sizeToken.cssVar}</code>
+                  <code className="system-code">{fontSizeSource(sizeToken)}</code>
                 </p>
               </article>
             );
@@ -247,7 +296,6 @@ export function SpaceSection({ values }: { values: ThemeValues }) {
   const { t } = useTranslation();
   const scale = derivedTokens.filter((token) => token.group === 'Space');
   const editable = tokens.filter((token) => token.group === 'Space');
-  const max = Math.max(...scale.map((token) => parsePx(derivedValue(token, values, 'light'))), 1);
 
   return (
     <section id="space" className="system-section">
@@ -256,7 +304,6 @@ export function SpaceSection({ values }: { values: ThemeValues }) {
       <div className="system-space-list">
         {scale.map((token) => {
           const value = derivedValue(token, values, 'light');
-          const width = `${(parsePx(value) / max) * 100}%`;
           return (
             <div key={token.cssVar} className="system-space-row">
               <div className="system-space-copy">
@@ -265,7 +312,7 @@ export function SpaceSection({ values }: { values: ThemeValues }) {
                 {token.note ? <span className="system-note">{token.note}</span> : null}
               </div>
               <div className="system-space-track">
-                <span className="system-space-fill" style={{ width }} />
+                <span className="system-space-fill" style={{ width: `var(${token.cssVar})` }} />
               </div>
               <span className="system-space-value">{value}</span>
             </div>
@@ -411,6 +458,16 @@ export function LayoutSection() {
 
 export function IconsSection() {
   const { t } = useTranslation();
+  const toastManager = Toast.useToastManager();
+
+  async function copy(name: string) {
+    try {
+      await navigator.clipboard.writeText(`<${name} />`);
+      toastManager.add({ title: t('system.icons.copied'), description: `<${name} />` });
+    } catch {
+      toastManager.add({ title: t('system.icons.copyFailed') });
+    }
+  }
 
   return (
     <section id="icons" className="system-section">
@@ -418,12 +475,12 @@ export function IconsSection() {
       <p className="ui-description">{t('system.icons.lead')}</p>
       <div className="system-icon-grid">
         {iconCatalog.map(({ name, Icon }) => (
-          <article key={name} className="card system-icon-card">
+          <button key={name} type="button" className="card system-icon-card" onClick={() => copy(name)}>
             <span className="system-icon-tile" aria-hidden="true">
               <Icon />
             </span>
             <code className="system-code">{name}</code>
-          </article>
+          </button>
         ))}
       </div>
     </section>

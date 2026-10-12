@@ -5,14 +5,22 @@ import {
   contrastPairs,
   derivedTokens,
   derivedValue,
+  fluidCssVar,
+  fluidRangePx,
+  fluidValue,
   fontFamilyCssVar,
   fontLabels,
   fontRoles,
+  fontSizePx,
+  fontSizeSource,
+  fontSizeTokenById,
   layoutGrid,
   resolveTheme,
   tokenById,
   tokens,
   typeRoles,
+  typeScale,
+  typeStepPx,
   type ThemeValues,
 } from '../tokens';
 import { measureContrast } from './contrast';
@@ -60,12 +68,23 @@ export function buildSystemSnapshot(values: ThemeValues, darkColors: Record<stri
         usage: role.usage,
       };
     }),
-    roles: typeRoles.map((role) => ({
-      ...role,
-      size: values[role.sizeToken] ?? tokenById[role.sizeToken]?.defaultValue,
-      sizeVar: tokenById[role.sizeToken]?.cssVar,
-      familyVar: fontFamilyCssVar[role.familyToken],
+    scale: typeScale.map((step) => ({
+      id: step.id,
+      cssVar: step.cssVar,
+      value: `${step.rem}rem`,
+      px: typeStepPx(step),
+      fluid: step.fluid ? { cssVar: fluidCssVar(step), value: fluidValue(step), px: fluidRangePx(step) } : null,
     })),
+    roles: typeRoles.map((role) => {
+      const sizeToken = fontSizeTokenById[role.sizeToken];
+      return {
+        ...role,
+        size: fontSizePx(sizeToken),
+        sizeVar: sizeToken.cssVar,
+        sizeSource: fontSizeSource(sizeToken),
+        familyVar: fontFamilyCssVar[role.familyToken],
+      };
+    }),
   };
 
   const space = [
@@ -191,11 +210,24 @@ export function systemToMarkdown(values: ThemeValues, darkColors: Record<string,
   );
   sections.push(
     mdTable(
+      ['Step', 'CSS variable', 'Fixed', 'Fluid variable', 'Fluid range'],
+      snapshot.typography.scale.map((step) => [
+        step.id,
+        `\`${step.cssVar}\``,
+        `${step.value} (${step.px})`,
+        step.fluid ? `\`${step.fluid.cssVar}\`` : '—',
+        step.fluid ? step.fluid.px : '—',
+      ]),
+    ),
+    '',
+  );
+  sections.push(
+    mdTable(
       ['Role', 'Font', 'Size', 'Weight', 'Line height', 'Usage'],
       snapshot.typography.roles.map((role) => [
         role.label,
         `\`${role.familyVar}\``,
-        `${role.size} (\`${role.sizeVar}\`)`,
+        `${role.size} (\`${role.sizeVar}\` → \`${role.sizeSource}\`)`,
         String(role.weight),
         String(role.lineHeight),
         role.usage,

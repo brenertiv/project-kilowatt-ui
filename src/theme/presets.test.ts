@@ -8,17 +8,17 @@ describe('theme state', () => {
     const state = parseStoredTheme(null);
 
     expect(state.colorScheme).toBe('light');
-    expect(state.values.bg).toBe('#F9FAFC');
-    expect(state.values.accent).toBe('#2EA6E1');
-    expect(state.values.onAccent).toBe('#0D212A');
-    expect(state.values.positive).toBe('#008459');
-    expect(state.values.negative).toBe('#D61A1A');
-    expect(state.values.warning).toBe('#E16A2E');
-    expect(state.darkColors.bg).toBe('#0D212A');
-    expect(state.darkColors.border).toBe('#1B3E4F');
-    expect(state.darkColors.accent).toBe('#51B5E6');
-    expect(state.darkColors.negative).toBe('#FF7A7A');
-    expect(state.darkColors.warning).toBe('#F48E36');
+    expect(state.values.bg).toBe('#F7F8F7');
+    expect(state.values.accent).toBe('#40B4E5');
+    expect(state.values.onAccent).toBe('#133240');
+    expect(state.values.positive).toBe('#008C01');
+    expect(state.values.negative).toBe('#E40235');
+    expect(state.values.warning).toBe('#F67C01');
+    expect(state.darkColors.bg).toBe('#133150');
+    expect(state.darkColors.border).toBe('#2F4A65');
+    expect(state.darkColors.accent).toBe('#40B4E5');
+    expect(state.darkColors.negative).toBe('#F7989E');
+    expect(state.darkColors.warning).toBe('#FFCC80');
     expect(measureContrast(state.values.warning, state.values.surface, 'normal')?.level).toBe('fail');
     expect(measureContrast(state.darkColors.warning, state.darkColors.surface, 'normal')?.level).not.toBe('fail');
     expect(measureContrast(state.values.negative, state.values.surface, 'normal')?.level).not.toBe('fail');
@@ -80,8 +80,8 @@ describe('theme state', () => {
 
     expect(reset.colorScheme).toBe('dark');
     expect(reset.values.radius).toBe(defaultTheme.radius);
-    expect(reset.values.accent).toBe('#2EA6E1');
-    expect(reset.darkColors.bg).toBe('#0D212A');
+    expect(reset.values.accent).toBe('#40B4E5');
+    expect(reset.darkColors.bg).toBe('#133150');
     expect(isThemeDirty(reset)).toBe(false);
   });
 

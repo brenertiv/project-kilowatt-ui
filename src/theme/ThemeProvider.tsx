@@ -1,8 +1,8 @@
 import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   colorTokens,
-  isPrimitiveTokenId,
   resolveTheme,
+  tokenById,
   themeToCssText,
   themeToCssVars,
   type ColorScheme,
@@ -98,7 +98,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }
 
   function setToken(id: string, value: string) {
-    if (!isPrimitiveTokenId(id)) return;
+    if (!tokenById[id]) return;
     setState((current) => {
       const isColor = colorTokens.some((token) => token.id === id);
       const next: ThemeState =

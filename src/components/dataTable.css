@@ -1,0 +1,378 @@
+/* DataTable additions. Base table rules live in styles.css (.ui-table, .ui-data-table, .table-wrap). */
+
+.ui-data-table {
+  position: relative;
+}
+
+.ui-data-table .table-wrap {
+  position: relative;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.ui-data-table .table-wrap.is-virtual {
+  overflow: auto;
+}
+
+.ui-data-table .ui-table.is-fixed {
+  table-layout: fixed;
+  min-width: 100%;
+}
+
+.ui-data-table .ui-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.ui-data-table .ui-table :is(th, td).is-pinned {
+  position: sticky;
+  z-index: 1;
+  background: var(--color-surface);
+}
+
+.ui-data-table .ui-table thead th.is-pinned {
+  z-index: 3;
+}
+
+.ui-data-table .ui-table tbody tr:hover :is(td).is-pinned {
+  background: var(--color-hover);
+}
+
+.ui-data-table .ui-table tbody tr[data-selected] td {
+  background: var(--color-accent-tint);
+}
+
+.ui-data-table .ui-table :is(th, td).is-pinned-edge-left {
+  box-shadow:
+    inset calc(-1 * var(--border-width)) 0 0 var(--color-border),
+    4px 0 6px -4px rgb(13 33 42 / 12%);
+}
+
+.ui-data-table .ui-table :is(th, td).is-pinned-edge-right {
+  box-shadow:
+    inset var(--border-width) 0 0 var(--color-border),
+    -4px 0 6px -4px rgb(13 33 42 / 12%);
+}
+
+/* Pinned cells need their own trailing padding; the base rule removes it from the last child only. */
+.ui-data-table .ui-table :is(th, td).is-pinned-edge-left {
+  padding-inline-end: var(--space-3);
+}
+
+.ui-data-table .ui-table :is(th, td).is-pinned-edge-right {
+  padding-inline-start: var(--space-3);
+}
+
+.ui-data-table .ui-table th .ui-table-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.ui-data-table .ui-table th .ui-table-head > :first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-data-table .ui-table .is-numeric .ui-table-head {
+  justify-content: flex-end;
+}
+
+.ui-data-table .ui-table.is-fixed td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Resize handle sits on the trailing edge of the header cell. */
+.ui-table-resizer {
+  position: absolute;
+  inset-block: calc(-1 * var(--space-2));
+  inset-inline-end: calc(-1 * var(--space-2));
+  width: 9px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.ui-table-resizer::after {
+  content: '';
+  position: absolute;
+  inset-block: var(--space-2);
+  inset-inline-start: 4px;
+  width: var(--border-width);
+  background: var(--color-border);
+  opacity: 0;
+}
+
+.ui-data-table .ui-table th:hover .ui-table-resizer::after,
+.ui-table-resizer:focus-visible::after,
+.ui-table-resizer[data-resizing]::after {
+  opacity: 1;
+}
+
+.ui-table-resizer[data-resizing]::after,
+.ui-table-resizer:focus-visible::after {
+  background: var(--color-accent);
+  width: 2px;
+}
+
+.ui-table-resizer:focus-visible {
+  outline: none;
+}
+
+.ui-data-table[data-resizing] {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* Density */
+.ui-data-table[data-density='compact'] .ui-table th,
+.ui-data-table[data-density='compact'] .ui-table td {
+  padding-block: var(--space-1);
+}
+
+.ui-data-table[data-density='compact'] .ui-table td .ui-icon-btn {
+  height: 24px;
+  width: 24px;
+}
+
+/* Toolbar */
+.ui-table-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.ui-table-toolbar .ui-toggle {
+  width: var(--control-height);
+  min-width: var(--control-height);
+  padding: 0;
+}
+
+.ui-table-menu-check {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ui-item.is-destructive {
+  color: var(--color-negative);
+}
+
+.ui-item.is-destructive[data-highlighted] {
+  background: color-mix(in oklab, var(--color-negative) 12%, var(--color-surface));
+  color: var(--color-negative);
+}
+
+/* Bulk actions bar */
+.ui-table-bulk {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-accent-tint);
+  font-size: var(--font-size-sm);
+}
+
+.ui-table-bulk-count {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  margin-inline-end: var(--space-2);
+}
+
+/* Selection and expansion columns */
+.ui-data-table .ui-table :is(th, td).is-control {
+  width: 36px;
+  padding-inline-end: var(--space-2);
+}
+
+.ui-data-table .ui-table td.is-control .ui-checkbox,
+.ui-data-table .ui-table th.is-control .ui-checkbox {
+  vertical-align: middle;
+}
+
+.ui-table-expander {
+  width: 24px;
+  height: 24px;
+}
+
+.ui-table-expander[aria-expanded='true'] .ui-icon {
+  rotate: 90deg;
+}
+
+.ui-data-table .ui-table tr.is-expanded-row > td {
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6);
+  white-space: normal;
+  background: color-mix(in oklab, var(--color-hover) 50%, var(--color-surface));
+}
+
+.ui-data-table .ui-table tbody tr.is-expanded-row:hover {
+  background: inherit;
+}
+
+.ui-table-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+
+.ui-table-details dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.ui-table-details dd {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Virtualization spacer rows carry no content, just height. */
+.ui-data-table .ui-table tr.ui-table-spacer > td {
+  padding: 0;
+  border: 0;
+}
+
+.ui-data-table .ui-table tbody tr.ui-table-spacer:hover {
+  background: transparent;
+}
+
+/* Server fetching: keep rows, dim them. */
+.ui-data-table .table-wrap.is-fetching .ui-table tbody {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ui-data-table .ui-table tbody {
+    transition: opacity 150ms var(--ease-out);
+  }
+}
+
+/* Loading and error states */
+.ui-skeleton {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-inner);
+  background: var(--color-hover);
+}
+
+.ui-table-skeleton {
+  display: flex;
+  flex-direction: column;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.ui-table-skeleton-row {
+  display: grid;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.ui-table-skeleton-row.is-header .ui-skeleton {
+  height: 10px;
+}
+
+.ui-table-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 200px;
+  padding: var(--space-5);
+  border: var(--border-width) dashed var(--color-border);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.ui-table-state p {
+  margin: 0;
+  max-width: 48ch;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.ui-table-state-icon {
+  color: var(--color-negative);
+  font-size: 24px;
+}
+
+/* Cell renderers */
+.ui-table-number {
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-table-delta[data-tone='positive'] {
+  color: var(--color-positive);
+}
+
+.ui-table-delta[data-tone='negative'] {
+  color: var(--color-negative);
+}
+
+.ui-table-delta[data-tone='neutral'] {
+  color: var(--color-text-muted);
+}
+
+.ui-table-link {
+  color: var(--color-accent);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+.ui-table-link:hover {
+  text-decoration: underline;
+}
+
+.ui-table-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+.ui-sparkline {
+  display: block;
+  color: var(--color-text-secondary);
+}
+
+.ui-data-table .ui-table td:has(> .ui-sparkline) {
+  line-height: 0;
+}
+
+.ui-status[data-tone='negative']::before {
+  background: var(--color-negative);
+}

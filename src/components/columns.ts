@@ -1,0 +1,109 @@
+import { createElement } from 'react';
+import type { RowData } from '@tanstack/react-table';
+import { ChipCell, DateCell, DeltaCell, NumericCell, StatusCell } from './cells';
+import type { DataTableColumn } from './DataTable';
+import { formatCalendarDate } from '../lib/dates';
+import { formatCurrency, formatDelta, formatPercent, formatUnit, type Unit } from '../lib/format';
+
+export type ColumnType = 'text' | 'numeric' | 'percent' | 'currency' | 'date' | 'status' | 'chip' | 'delta';
+
+export type ColumnSpec<TData extends RowData> = {
+  /** Row field to read. Doubles as the column id. */
+  id: Extract<keyof TData, string>;
+  header: string;
+  type: ColumnType;
+  /** Unit for `numeric` and `delta` columns. Defaults to `count` / `percent`. */
+  unit?: Unit;
+  /** For `delta` columns: whether an increase is the good direction. Defaults to true. */
+  upIsGood?: boolean;
+  /** For `status` columns: maps a cell value to a `.ui-status` tone. */
+  tone?: (value: unknown) => string;
+  /** Pin the column to an edge of the table. */
+  pin?: 'left' | 'right';
+  /** Initial width in pixels. */
+  size?: number;
+  enableSorting?: boolean;
+  enableHiding?: boolean;
+};
+
+const numericTypes = new Set<ColumnType>(['numeric', 'percent', 'currency', 'delta']);
+
+function isMissing(value: unknown) {
+  return value === undefined || value === null || value === '';
+}
+
+function toNumber(value: unknown) {
+  return typeof value === 'number' ? value : Number(value);
+}
+
+function exportValueFor<TData extends RowData>(spec: ColumnSpec<TData>) {
+  return (row: TData): string => {
+    const value = (row as Record<string, unknown>)[spec.id];
+    if (isMissing(value)) return '';
+    switch (spec.type) {
+      case 'numeric':
+        return formatUnit(toNumber(value), spec.unit ?? 'count');
+      case 'percent':
+        return formatPercent(toNumber(value));
+      case 'currency':
+        return formatCurrency(toNumber(value));
+      case 'delta':
+        return formatDelta(toNumber(value), spec.unit ?? 'percent');
+      case 'date':
+        return formatCalendarDate(String(value));
+      default:
+        return String(value);
+    }
+  };
+}
+
+function cellFor<TData extends RowData>(spec: ColumnSpec<TData>): DataTableColumn<TData>['cell'] {
+  switch (spec.type) {
+    case 'numeric':
+      return (info) => createElement(NumericCell, { value: toNumber(info.getValue()), unit: spec.unit ?? 'count' });
+    case 'percent':
+      return (info) => createElement(NumericCell, { value: toNumber(info.getValue()), unit: 'percent' });
+    case 'currency':
+      return (info) => createElement(NumericCell, { value: toNumber(info.getValue()), unit: 'USD' });
+    case 'delta':
+      return (info) =>
+        createElement(DeltaCell, { value: toNumber(info.getValue()), unit: spec.unit ?? 'percent', upIsGood: spec.upIsGood ?? true });
+    case 'date':
+      return (info) => createElement(DateCell, { iso: String(info.getValue()) });
+    case 'status':
+      return (info) => {
+        const value: unknown = info.getValue();
+        return createElement(StatusCell, { tone: spec.tone?.(value) ?? 'neutral', children: String(value) });
+      };
+    case 'chip':
+      return (info) => createElement(ChipCell, { children: String(info.getValue()) });
+    default:
+      return (info) => String(info.getValue());
+  }
+}
+
+/**
+ * Builds typed `DataTable` columns from a compact spec: the right renderer, end alignment for
+ * numbers, a matching sort function, and a CSV export value that mirrors what the cell shows.
+ */
+export function defineColumns<TData extends RowData>(specs: ColumnSpec<TData>[]): DataTableColumn<TData>[] {
+  return specs.map((spec) => {
+    const numeric = numericTypes.has(spec.type);
+    const column: DataTableColumn<TData> = {
+      id: spec.id,
+      accessorFn: (row) => (row as Record<string, unknown>)[spec.id],
+      header: spec.header,
+      cell: cellFor(spec),
+      sortFn: numeric || spec.type === 'date' ? 'basic' : 'text',
+      enableSorting: spec.enableSorting,
+      enableHiding: spec.enableHiding,
+      size: spec.size,
+      meta: {
+        align: numeric ? 'end' : 'start',
+        pin: spec.pin,
+        exportValue: exportValueFor(spec),
+      },
+    };
+    return column;
+  });
+}

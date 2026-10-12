@@ -1,7 +1,11 @@
-import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Component, useEffect, useState, type ReactNode } from 'react';
 import { Button } from '@base-ui/react/button';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table';
+import { CategoryBarChart } from '../charts/CategoryBarChart';
+import { ChartFrame } from '../charts/ChartFrame';
+import type { ChartData } from '../charts/types';
+import { useChartRoot } from '../charts/useChartRoot';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5percent from '@amcharts/amcharts5/percent';
 import * as am5xy from '@amcharts/amcharts5/xy';
@@ -12,12 +16,10 @@ import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import { GridLayout, useContainerWidth, type Layout } from 'react-grid-layout';
 import { useTranslation } from 'react-i18next';
 import { fetchTickets } from '../api/operations';
-import BuildingIcon from '../assets/icons/building.svg?react';
 import { buildings, demandSeries, tickets as catalogTickets, type Ticket } from '../data';
 import { formatOperationsTime } from '../lib/dates';
 import { formatCount, formatKilowatts, formatPercent } from '../lib/format';
-import { ArrowOutwardIcon, TrendUpIcon, WarningIcon } from '../icons';
-import { useTheme } from '../theme/ThemeProvider';
+import { ArrowOutwardIcon, BuildingIcon, TrendUpIcon, WarningIcon } from '../icons';
 import type { Demo } from './demos';
 
 import 'leaflet/dist/leaflet.css';
@@ -56,7 +58,7 @@ export class DemoErrorBoundary extends Component<{ children: ReactNode }, { fail
   }
 }
 
-function TableDemo() {
+export function TableDemo() {
   const {
     data = [],
     isPending,
@@ -102,111 +104,43 @@ function TableDemo() {
   );
 }
 
-function ChartDemo() {
-  const hostRef = useRef<HTMLDivElement>(null);
-  const { values } = useTheme();
+const demandByPeriod: ChartData = {
+  xLabel: 'Period',
+  series: [
+    {
+      id: 'demand',
+      label: 'Demand',
+      unit: 'kW',
+      points: demandSeries.map((value, index) => ({ x: String(index + 1), y: value })),
+    },
+  ],
+};
+const peakPeriod = String(demandSeries.indexOf(Math.max(...demandSeries)) + 1);
 
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-
-    const root = am5.Root.new(host);
-    root.setThemes([]);
-
-    const chart = root.container.children.push(
-      am5xy.XYChart.new(root, {
-        panX: false,
-        panY: false,
-        paddingLeft: 0,
-        paddingRight: 8,
-        paddingTop: 8,
-        paddingBottom: 0,
-      }),
-    );
-
-    const xAxis = chart.xAxes.push(
-      am5xy.CategoryAxis.new(root, {
-        categoryField: 'period',
-        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30 }),
-      }),
-    );
-    xAxis.get('renderer').labels.template.setAll({
-      fill: am5.color(values.textSecondary),
-      fontSize: 11,
-      fontFamily: values.fontSans,
-    });
-    xAxis.get('renderer').grid.template.setAll({ strokeOpacity: 0 });
-
-    const yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {}),
-      }),
-    );
-    yAxis.get('renderer').labels.template.setAll({
-      fill: am5.color(values.textMuted),
-      fontSize: 11,
-      fontFamily: values.fontSans,
-    });
-    yAxis.get('renderer').grid.template.setAll({
-      stroke: am5.color(values.border),
-      strokeOpacity: 1,
-    });
-
-    const series = chart.series.push(
-      am5xy.ColumnSeries.new(root, {
-        name: 'Demand',
-        xAxis,
-        yAxis,
-        valueYField: 'value',
-        categoryXField: 'period',
-      }),
-    );
-
-    series.columns.template.setAll({
-      width: am5.percent(55),
-      fill: am5.color(values.track),
-      strokeOpacity: 0,
-    });
-    series.columns.template.adapters.add('fill', (fill, target) => {
-      const dataItem = target.dataItem;
-      const context = dataItem?.dataContext as { focus?: boolean } | undefined;
-      return context?.focus ? am5.color(values.accent) : fill;
-    });
-
-    const chartData = demandSeries.map((value, index) => ({
-      period: String(index + 1),
-      value,
-      focus: index === 4,
-    }));
-    xAxis.data.setAll(chartData);
-    series.data.setAll(chartData);
-
-    const observer = new ResizeObserver(() => {
-      root.resize();
-    });
-    observer.observe(host);
-
-    return () => {
-      observer.disconnect();
-      root.dispose();
-    };
-  }, [values.accent, values.border, values.fontSans, values.textMuted, values.textSecondary, values.track]);
-
-  return <div ref={hostRef} className="chart-host" role="img" aria-label="Demand by period, period 5 highlighted" />;
+export function ChartDemo() {
+  return (
+    <ChartFrame title="Demand by period" subtitle="Peak period highlighted" data={demandByPeriod}>
+      <CategoryBarChart
+        data={demandByPeriod}
+        unit="kW"
+        highlight={peakPeriod}
+        ariaLabel={`Demand by period, period ${peakPeriod} highlighted`}
+      />
+    </ChartFrame>
+  );
 }
 
-function MetricCardDemo() {
-  const hostRef = useRef<HTMLDivElement>(null);
-  const { values } = useTheme();
+export type MetricCardDemoProps = {
+  label?: string;
+  value?: number;
+  /** Fractional change, e.g. 0.056 for +5.6%. */
+  delta?: number;
+  /** Index of the bar drawn in the accent. */
+  focusIndex?: number;
+};
 
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-
-    const root = am5.Root.new(host);
-    root.setThemes([]);
-    root._logo?.dispose();
-
+export function MetricCardDemo({ label = 'Total tickets', value = 12853, delta = 0.056, focusIndex = 4 }: MetricCardDemoProps = {}) {
+  const hostRef = useChartRoot(({ root, values }) => {
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: false,
@@ -224,27 +158,12 @@ function MetricCardDemo() {
     const xRenderer = am5xy.AxisRendererX.new(root, { minGridDistance: 1, visible: false });
     xRenderer.labels.template.set('forceHidden', true);
     xRenderer.grid.template.set('forceHidden', true);
-    xRenderer.ticks.template.set('forceHidden', true);
-
-    const xAxis = chart.xAxes.push(
-      am5xy.CategoryAxis.new(root, {
-        categoryField: 'period',
-        renderer: xRenderer,
-      }),
-    );
+    const xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: 'period', renderer: xRenderer }));
 
     const yRenderer = am5xy.AxisRendererY.new(root, { visible: false, inside: true });
     yRenderer.labels.template.set('forceHidden', true);
     yRenderer.grid.template.set('forceHidden', true);
-    yRenderer.ticks.template.set('forceHidden', true);
-
-    const yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        min: 0,
-        extraMax: 0.02,
-        renderer: yRenderer,
-      }),
-    );
+    const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, extraMax: 0.02, renderer: yRenderer }));
 
     const series = chart.series.push(
       am5xy.ColumnSeries.new(root, {
@@ -253,51 +172,31 @@ function MetricCardDemo() {
         yAxis,
         valueYField: 'value',
         categoryXField: 'period',
+        fill: am5.color(values.track),
+        stroke: am5.color(values.track),
       }),
     );
-
-    series.columns.template.setAll({
-      width: am5.percent(55),
-      fill: am5.color(values.track),
-      strokeOpacity: 0,
-      cornerRadiusTL: 1,
-      cornerRadiusTR: 1,
-      interactive: false,
-    });
+    series.columns.template.setAll({ width: am5.percent(55), cornerRadiusTL: 1, cornerRadiusTR: 1, interactive: false });
     series.columns.template.adapters.add('fill', (fill, target) => {
       const context = target.dataItem?.dataContext as { focus?: boolean } | undefined;
       return context?.focus ? am5.color(values.accent) : fill;
     });
 
-    const chartData = demandSeries.map((value, index) => ({
-      period: String(index + 1),
-      value,
-      focus: index === 4,
-    }));
+    const chartData = demandSeries.map((sample, index) => ({ period: String(index + 1), value: sample, focus: index === focusIndex }));
     xAxis.data.setAll(chartData);
     series.data.setAll(chartData);
-
-    const observer = new ResizeObserver(() => {
-      root.resize();
-    });
-    observer.observe(host);
-
-    return () => {
-      observer.disconnect();
-      root.dispose();
-    };
-  }, [values.accent, values.track]);
+  }, [focusIndex]);
 
   return (
     <div className="metric">
       <header className="panel-head">
-        <span className="ui-label">Total tickets</span>
+        <span className="ui-label">{label}</span>
         <span className="ui-description">Last 12 periods</span>
       </header>
-      <div className="panel-value">{formatCount(12853)}</div>
-      <div className="panel-meta">
+      <div className="panel-value">{formatCount(value)}</div>
+      <div className={`panel-meta${delta < 0 ? ' is-negative' : ''}`}>
         <TrendUpIcon />
-        {formatPercent(0.056)}
+        {formatPercent(delta)}
       </div>
       <div
         ref={hostRef}
@@ -319,21 +218,8 @@ const overviewTickets = {
 
 const overviewClosed = overviewTickets.easy + overviewTickets.medium + overviewTickets.difficult;
 
-function OverviewPanelDemo() {
-  const hostRef = useRef<HTMLDivElement>(null);
-  const { values } = useTheme();
-  const closedShare = overviewTickets.closedShare;
-
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-
-    const root = am5.Root.new(host);
-    root.setThemes([]);
-    root._logo?.dispose();
-
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+export function OverviewPanelDemo({ closedShare = overviewTickets.closedShare }: { closedShare?: number } = {}) {
+  const hostRef = useChartRoot(({ root, values, reduceMotion }) => {
     const chart = root.container.children.push(
       am5percent.PieChart.new(root, {
         startAngle: 180,
@@ -346,7 +232,6 @@ function OverviewPanelDemo() {
         paddingRight: 0,
       }),
     );
-
     const series = chart.series.push(
       am5percent.PieSeries.new(root, {
         startAngle: 180,
@@ -356,7 +241,6 @@ function OverviewPanelDemo() {
         alignLabels: false,
       }),
     );
-
     series.slices.template.setAll({
       strokeOpacity: 0,
       cornerRadius: Number.parseInt(values.radius, 10) * 2 || 20,
@@ -371,26 +255,12 @@ function OverviewPanelDemo() {
       const context = target.dataItem?.dataContext as { remaining?: boolean } | undefined;
       return context?.remaining ? 0.28 : 1;
     });
-
-    if (reduceMotion) {
-      series.set('interpolationDuration', 0);
-    }
-
+    if (reduceMotion) series.set('interpolationDuration', 0);
     series.data.setAll([
-      { category: 'Closed tickets', value: overviewTickets.closedShare },
-      { category: 'Remaining capacity', value: 1 - overviewTickets.closedShare, remaining: true },
+      { category: 'Closed tickets', value: closedShare },
+      { category: 'Remaining capacity', value: 1 - closedShare, remaining: true },
     ]);
-
-    const observer = new ResizeObserver(() => {
-      root.resize();
-    });
-    observer.observe(host);
-
-    return () => {
-      observer.disconnect();
-      root.dispose();
-    };
-  }, [values.onAccent, values.radius]);
+  }, [closedShare]);
 
   return (
     <div className="overview-panel">
@@ -448,7 +318,7 @@ function OverviewPanelDemo() {
   );
 }
 
-function MapDemo() {
+export function MapDemo() {
   return (
     <MapContainer className="map-host" center={[40.73, -74.0]} zoom={12} scrollWheelZoom={false} attributionControl>
       <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -456,7 +326,7 @@ function MapDemo() {
         <Marker key={building.value} position={[building.lat, building.lng]} icon={mapIcon}>
           <Popup>
             <span className="map-popup">
-              <BuildingIcon className="ui-icon" />
+              <BuildingIcon />
               {building.label}
             </span>
           </Popup>
@@ -466,7 +336,7 @@ function MapDemo() {
   );
 }
 
-function GridDemo() {
+export function GridDemo() {
   const { width, containerRef, mounted } = useContainerWidth();
   const [hostHeight, setHostHeight] = useState(0);
   const [layout, setLayout] = useState<Layout>([
@@ -531,7 +401,7 @@ function GridDemo() {
   );
 }
 
-function DndDemo() {
+export function DndDemo() {
   const [items, setItems] = useState(catalogTickets);
 
   function onDragEnd(result: DropResult) {
@@ -570,7 +440,7 @@ function DndDemo() {
   );
 }
 
-function TourDemo() {
+export function TourDemo() {
   const { t } = useTranslation();
 
   function startTour() {
@@ -602,28 +472,13 @@ function TourDemo() {
   );
 }
 
-function DomainIconDemo() {
-  return (
-    <div className="demo-row">
-      <span className="domain-icon" aria-hidden="true">
-        <BuildingIcon className="ui-icon" />
-      </span>
-      <div>
-        <div className="ui-popup-title">120 Broadway</div>
-        <div className="ui-description">Domain SVG via SVGR</div>
-      </div>
-    </div>
-  );
-}
-
 export const stackDemos: Demo[] = [
-  { id: 'metric', title: 'Metric card', group: 'Data', render: MetricCardDemo },
-  { id: 'table', title: 'Tickets table', group: 'Data', render: TableDemo },
-  { id: 'chart', title: 'Demand chart', group: 'Data', render: ChartDemo },
-  { id: 'overview-panel', title: 'AgentOps overview', group: 'Data', render: OverviewPanelDemo },
-  { id: 'map', title: 'Portfolio map', group: 'Data', render: MapDemo },
-  { id: 'grid', title: 'Dashboard grid', group: 'Data', render: GridDemo },
-  { id: 'dnd', title: 'Queue reorder', group: 'Data', render: DndDemo },
-  { id: 'tour', title: 'Product tour', group: 'Data', render: TourDemo },
-  { id: 'domain-icon', title: 'Domain icon', group: 'Data', render: DomainIconDemo },
+  { id: 'metric', title: 'Metric card', group: 'Data', render: MetricCardDemo, workbench: 'widgets/metric-card' },
+  { id: 'table', title: 'Tickets table', group: 'Data', render: TableDemo, workbench: 'widgets/tickets-table' },
+  { id: 'chart', title: 'Demand chart', group: 'Data', render: ChartDemo, workbench: 'widgets/demand-chart' },
+  { id: 'overview-panel', title: 'AgentOps overview', group: 'Data', render: OverviewPanelDemo, workbench: 'widgets/overview-panel' },
+  { id: 'map', title: 'Portfolio map', group: 'Data', render: MapDemo, workbench: 'widgets/portfolio-map' },
+  { id: 'grid', title: 'Dashboard grid', group: 'Data', render: GridDemo, workbench: 'widgets/dashboard-grid' },
+  { id: 'dnd', title: 'Queue reorder', group: 'Data', render: DndDemo, workbench: 'widgets/queue-reorder' },
+  { id: 'tour', title: 'Product tour', group: 'Data', render: TourDemo, workbench: 'widgets/product-tour' },
 ];

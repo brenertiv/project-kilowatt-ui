@@ -1,9 +1,65 @@
 import { useState } from 'react';
 import { Input } from '@base-ui/react/input';
+import { Toast } from '@base-ui/react/toast';
+import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { demos } from './demos';
+import { demos, type Demo } from './demos';
 import { SearchIcon } from '../icons';
+import { CardMenu } from '../components/CardMenu';
 import { DemoErrorBoundary } from './stackDemos';
+
+function DemoCard({ demo }: { demo: Demo }) {
+  const toastManager = Toast.useToastManager();
+  const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
+  const [generation, setGeneration] = useState(0);
+  const View = demo.render;
+
+  async function copyName() {
+    try {
+      await navigator.clipboard.writeText(demo.title);
+      toastManager.add({ title: 'Copied', description: `“${demo.title}” is on the clipboard.` });
+    } catch {
+      toastManager.add({ title: 'Copy failed', description: 'Clipboard access was blocked.' });
+    }
+  }
+
+  return (
+    <article className="card" data-collapsed={collapsed || undefined}>
+      <header className="card-head">
+        <h3>
+          {demo.workbench ? (
+            <Link to={`/workbench/${demo.workbench}`} className="card-title-link">
+              {demo.title}
+            </Link>
+          ) : (
+            demo.title
+          )}
+        </h3>
+        <div className="card-actions">
+          <CardMenu
+            label={`${demo.title} actions`}
+            items={[
+              ...(demo.workbench
+                ? [{ id: 'workbench', label: 'Open in workbench', onSelect: () => navigate(`/workbench/${demo.workbench}`) }]
+                : []),
+              { id: 'copy', label: 'Copy name', onSelect: copyName },
+              { id: 'remount', label: 'Remount demo', onSelect: () => setGeneration((n) => n + 1) },
+              { id: 'collapse', label: collapsed ? 'Expand' : 'Collapse', onSelect: () => setCollapsed((c) => !c) },
+            ]}
+          />
+        </div>
+      </header>
+      {collapsed ? null : (
+        <div className="card-body">
+          <DemoErrorBoundary key={generation}>
+            <View />
+          </DemoErrorBoundary>
+        </div>
+      )}
+    </article>
+  );
+}
 
 export function Gallery() {
   const { t } = useTranslation();
@@ -22,10 +78,15 @@ export function Gallery() {
           <h1>{t('gallery.title')}</h1>
           <p>{t('gallery.subtitle')}</p>
         </div>
-        <label className="search">
-          <SearchIcon />
-          <Input className="ui-input" placeholder={t('gallery.search')} value={query} onValueChange={setQuery} />
-        </label>
+        <div className="gallery-tools">
+          <Link to="/workbench" className="ui-btn gallery-workbench-link">
+            {t('gallery.workbench')}
+          </Link>
+          <label className="search">
+            <SearchIcon />
+            <Input className="ui-input" placeholder={t('gallery.search')} value={query} onValueChange={setQuery} />
+          </label>
+        </div>
       </header>
 
       {groups.map((group) => (
@@ -35,15 +96,7 @@ export function Gallery() {
             {filtered
               .filter((demo) => demo.group === group)
               .map((demo) => (
-                <article key={demo.id} className="card">
-                  <header className="card-head">
-                    <h3>{demo.title}</h3>
-                    <span className="card-tag">{demo.group}</span>
-                  </header>
-                  <div className="card-body">
-                    <DemoErrorBoundary>{demo.render()}</DemoErrorBoundary>
-                  </div>
-                </article>
+                <DemoCard key={demo.id} demo={demo} />
               ))}
           </div>
         </section>

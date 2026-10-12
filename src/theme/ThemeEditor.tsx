@@ -3,19 +3,49 @@ import { Button } from '@base-ui/react/button';
 import { Dialog } from '@base-ui/react/dialog';
 import { Input } from '@base-ui/react/input';
 import { Select } from '@base-ui/react/select';
-import { fontLabels, primitiveTokens, type Token } from '../tokens';
+import { Toggle } from '@base-ui/react/toggle';
+import { ToggleGroup } from '@base-ui/react/toggle-group';
+import {
+  derivedTokens,
+  derivedValue,
+  fontLabels,
+  tokenLayer,
+  tokens,
+  type DerivedToken,
+  type SystemGroup,
+  type ThemeValues,
+  type Token,
+  type TokenLayer,
+} from '../tokens';
 import { useTheme } from './ThemeProvider';
 import { CheckIcon, ChevronUpDownIcon, CopyIcon, ResetIcon, TuneIcon, XIcon } from '../icons';
 
-const panelGroups: { id: string; label: string; tokens: Token[] }[] = [
-  { id: 'Color', label: 'Color', tokens: primitiveTokens.filter((token) => token.group === 'Color') },
-  { id: 'Typography', label: 'Typography', tokens: primitiveTokens.filter((token) => token.group === 'Typography') },
-  {
-    id: 'Shape',
-    label: 'Shape & space',
-    tokens: primitiveTokens.filter((token) => token.group === 'Shape' || token.group === 'Space'),
-  },
+type LayerFilter = TokenLayer | 'derived' | 'all';
+
+type PanelGroup = {
+  id: string;
+  label: string;
+  groups: SystemGroup[];
+};
+
+const panelGroups: PanelGroup[] = [
+  { id: 'Color', label: 'Color', groups: ['Color'] },
+  { id: 'Typography', label: 'Typography', groups: ['Typography'] },
+  { id: 'Shape', label: 'Shape & space', groups: ['Shape', 'Space'] },
+  { id: 'Layout', label: 'Layout', groups: ['Layout'] },
 ];
+
+const layerFilters: { value: LayerFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'primitive', label: 'Primitive' },
+  { value: 'semantic', label: 'Semantic' },
+  { value: 'derived', label: 'Derived' },
+];
+
+const layerCopy: Record<TokenLayer, string> = {
+  primitive: 'Identity knobs. Everything else builds on these.',
+  semantic: 'Role tokens with their own stored value. Edit to override the role without touching the primitive.',
+};
 
 function toPxValue(raw: string, fallback: string) {
   const numeric = Number.parseFloat(raw);
@@ -23,10 +53,24 @@ function toPxValue(raw: string, fallback: string) {
   return `${numeric}px`;
 }
 
+function matches(needle: string, ...haystack: string[]) {
+  if (!needle) return true;
+  return haystack.some((text) => text.toLowerCase().includes(needle));
+}
+
+function TokenLabel({ label, cssVar }: { label: string; cssVar: string }) {
+  return (
+    <span className="token-label">
+      <span className="token-name">{label}</span>
+      <code className="token-var">{cssVar}</code>
+    </span>
+  );
+}
+
 function ColorControl({ token, value, onChange }: { token: Token; value: string; onChange: (next: string) => void }) {
   return (
     <label className="token-row">
-      <span className="token-label">{token.label}</span>
+      <TokenLabel label={token.label} cssVar={token.cssVar} />
       <span className="color-control">
         <input
           className="color-swatch"
@@ -53,7 +97,7 @@ function LengthControl({ token, value, onChange }: { token: Token; value: string
 
   return (
     <label className="token-row">
-      <span className="token-label">{token.label}</span>
+      <TokenLabel label={token.label} cssVar={token.cssVar} />
       <Input
         className="ui-input ui-input-compact"
         value={focused ? draft : value}
@@ -81,13 +125,13 @@ function FontControl({ token, value, onChange }: { token: Token; value: string; 
   const options = token.options ?? [];
   return (
     <div className="token-row">
-      <span className="token-label">{token.label}</span>
+      <TokenLabel label={token.label} cssVar={token.cssVar} />
       <Select.Root
         items={options.map((option) => ({ label: fontLabels[option] ?? option, value: option }))}
         value={value}
         onValueChange={(next) => next && onChange(next)}
       >
-        <Select.Trigger className="ui-select">
+        <Select.Trigger className="ui-select" aria-label={token.label}>
           <Select.Value />
           <Select.Icon className="ui-select-icon">
             <ChevronUpDownIcon />
@@ -114,16 +158,95 @@ function FontControl({ token, value, onChange }: { token: Token; value: string; 
   );
 }
 
+function TokenControl({
+  token,
+  value,
+  onChange,
+}: {
+  token: Token;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  if (token.type === 'color') return <ColorControl token={token} value={value} onChange={onChange} />;
+  if (token.type === 'font') return <FontControl token={token} value={value} onChange={onChange} />;
+  return <LengthControl token={token} value={value} onChange={onChange} />;
+}
+
+function DerivedRow({ token, value }: { token: DerivedToken; value: string }) {
+  return (
+    <div className="token-row derived-row">
+      <TokenLabel label={token.label} cssVar={token.cssVar} />
+      <span className="derived-value">
+        <code className="system-code">{value}</code>
+        {token.note ? <span className="derived-note">{token.note}</span> : null}
+      </span>
+    </div>
+  );
+}
+
+function LayerBlock({
+  layer,
+  items,
+  values,
+  onChange,
+}: {
+  layer: TokenLayer;
+  items: Token[];
+  values: ThemeValues;
+  onChange: (id: string, next: string) => void;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="editor-subgroup">
+      <div className="editor-subgroup-head">
+        <h4>{layer === 'primitive' ? 'Primitive' : 'Semantic'}</h4>
+        <p className="ui-description">{layerCopy[layer]}</p>
+      </div>
+      <div className="editor-panel-grid">
+        {items.map((token) => (
+          <TokenControl
+            key={token.id}
+            token={token}
+            value={values[token.id] ?? token.defaultValue}
+            onChange={(next) => onChange(token.id, next)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ThemeEditor() {
   const { values, setToken, reset, exportCss, colorScheme, dirty } = useTheme();
   const [copied, setCopied] = useState(false);
+  const [layer, setLayer] = useState<LayerFilter>('all');
+  const [query, setQuery] = useState('');
   const editingDark = colorScheme === 'dark';
+  const needle = query.trim().toLowerCase();
 
   async function copyCss() {
     await navigator.clipboard.writeText(exportCss());
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
   }
+
+  const sections = panelGroups
+    .map((panel) => {
+      const inGroup = tokens.filter(
+        (token) => panel.groups.includes(token.group) && matches(needle, token.label, token.cssVar, token.id),
+      );
+      const showLayer = (candidate: TokenLayer) => layer === 'all' || layer === candidate;
+      const primitive = showLayer('primitive') ? inGroup.filter((token) => tokenLayer(token) === 'primitive') : [];
+      const semantic = showLayer('semantic') ? inGroup.filter((token) => tokenLayer(token) === 'semantic') : [];
+      const derived =
+        layer === 'all' || layer === 'derived'
+          ? derivedTokens.filter(
+              (token) => panel.groups.includes(token.group) && matches(needle, token.label, token.cssVar),
+            )
+          : [];
+      return { panel, primitive, semantic, derived };
+    })
+    .filter((section) => section.primitive.length + section.semantic.length + section.derived.length > 0);
 
   return (
     <Dialog.Root>
@@ -145,8 +268,8 @@ export function ThemeEditor() {
                 <Dialog.Title className="ui-dialog-title">Theme</Dialog.Title>
                 <Dialog.Description className="ui-description">
                   {editingDark
-                    ? 'Primary colors edit the dark palette. Type, shape, and space stay shared.'
-                    : 'Edit primary variables. Semantic tokens stay on the Design System page.'}
+                    ? 'Color edits apply to the dark palette. Type, shape, and space are shared across both schemes.'
+                    : 'Every primitive and semantic token, grouped by role. Derived variables show their resolved value.'}
                 </Dialog.Description>
               </div>
               <Dialog.Close className="ui-icon-btn" aria-label="Close theme">
@@ -155,6 +278,31 @@ export function ThemeEditor() {
             </div>
 
             <div className="editor-panel-toolbar">
+              <div className="editor-filters">
+                <ToggleGroup
+                  value={[layer]}
+                  onValueChange={(next) => {
+                    const chosen = next[0] as LayerFilter | undefined;
+                    if (chosen) setLayer(chosen);
+                  }}
+                  className="ui-toggle-group"
+                  aria-label="Token layer"
+                >
+                  {layerFilters.map((option) => (
+                    <Toggle key={option.value} value={option.value} className="ui-toggle">
+                      {option.label}
+                    </Toggle>
+                  ))}
+                </ToggleGroup>
+                <Input
+                  className="ui-input editor-search"
+                  type="search"
+                  placeholder="Filter tokens"
+                  aria-label="Filter tokens"
+                  value={query}
+                  onValueChange={setQuery}
+                />
+              </div>
               <div className="editor-actions">
                 <Button className="ui-btn ui-btn-ghost" onClick={copyCss}>
                   <CopyIcon />
@@ -168,42 +316,31 @@ export function ThemeEditor() {
             </div>
 
             <div className="editor-panel-body">
-              {panelGroups.map((group) => (
-                <section key={group.id} className="editor-group">
-                  <h3>{group.id === 'Color' && editingDark ? 'Color · Dark' : group.label}</h3>
-                  <div className="editor-panel-grid">
-                    {group.tokens.map((token) => {
-                      const value = values[token.id] ?? token.defaultValue;
-                      if (token.type === 'color') {
-                        return (
-                          <ColorControl
-                            key={token.id}
+              {sections.length === 0 ? <p className="ui-description">No tokens match this filter.</p> : null}
+              {sections.map(({ panel, primitive, semantic, derived }) => (
+                <section key={panel.id} className="editor-group">
+                  <h3>{panel.id === 'Color' && editingDark ? 'Color · Dark' : panel.label}</h3>
+                  <LayerBlock layer="primitive" items={primitive} values={values} onChange={setToken} />
+                  <LayerBlock layer="semantic" items={semantic} values={values} onChange={setToken} />
+                  {derived.length > 0 ? (
+                    <div className="editor-subgroup">
+                      <div className="editor-subgroup-head">
+                        <h4>Derived</h4>
+                        <p className="ui-description">
+                          Computed from the tokens above. Change the source token to move these.
+                        </p>
+                      </div>
+                      <div className="editor-panel-grid">
+                        {derived.map((token) => (
+                          <DerivedRow
+                            key={token.cssVar}
                             token={token}
-                            value={value}
-                            onChange={(next) => setToken(token.id, next)}
+                            value={derivedValue(token, values, colorScheme)}
                           />
-                        );
-                      }
-                      if (token.type === 'font') {
-                        return (
-                          <FontControl
-                            key={token.id}
-                            token={token}
-                            value={value}
-                            onChange={(next) => setToken(token.id, next)}
-                          />
-                        );
-                      }
-                      return (
-                        <LengthControl
-                          key={token.id}
-                          token={token}
-                          value={value}
-                          onChange={(next) => setToken(token.id, next)}
-                        />
-                      );
-                    })}
-                  </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </section>
               ))}
             </div>
