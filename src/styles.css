@@ -51,13 +51,13 @@
   --font-size-metric-sm: var(--text-xl);
   --font-size-metric: var(--text-3xl-fluid);
   --radius: 8px;
-  --radius-control: 4px;
+  --radius-control: 8px;
   --radius-inner: 4px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-2xl: 20px;
   --radius-full: 9999px;
-  --control-height: 32px;
+  --control-height: 36px;
   --border-width: 1px;
   --shadow: 0px;
   /* Figma Shadow/Primitive: card = sm, popover = md, modal = lg. Overlays add a 1px ring for definition. */

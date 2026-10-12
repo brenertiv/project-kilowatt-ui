@@ -33,7 +33,7 @@
   "system.type.roles": "Roles",
   "system.type.rolesLead": "Roles point at a step on the scale. Page-level hierarchy uses fluid steps; dense UI stays fixed.",
   "system.space.lead": "Eight-step scale, drawn at actual size. Space 2 aliases the primary base space. Card padding and gap stay semantic.",
-  "system.shape.lead": "Cards 8px, controls and inputs 4px, chips and nested tiles 4px, avatars full. Cards are flat; popovers carry the md shadow, modals lg.",
+  "system.shape.lead": "Cards 8px, controls 8px and 36px tall, chips and nested tiles 4px, avatars full. Cards are flat; popovers carry the md shadow, modals lg.",
   "system.shape.radiusRule": "The card is the only outer frame. Inner radius is for nested tiles and clipped map or chart hosts.",
   "system.layout.lead": "Primary content sits on a 12-column grid, capped at the content max. Breakpoints live in code, not in CSS variables inside queries.",
   "system.layout.gridTitle": "Content grid",

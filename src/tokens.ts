@@ -406,7 +406,7 @@ export const tokens: Token[] = [
     label: 'Control radius',
     group: 'Shape',
     type: 'length',
-    defaultValue: '4px',
+    defaultValue: '8px',
   },
   {
     id: 'controlHeight',
@@ -414,7 +414,7 @@ export const tokens: Token[] = [
     label: 'Control height',
     group: 'Shape',
     type: 'length',
-    defaultValue: '32px',
+    defaultValue: '36px',
   },
   {
     id: 'borderWidth',

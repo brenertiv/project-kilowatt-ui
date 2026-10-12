@@ -45,7 +45,7 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 ## Space and shape
 
 - Spacing uses the eight-step scale. The Figma component and layout aliases map onto it; use the alias that names the intent.
-- Cards are 8px radius, controls and inputs 4px, chips and nested tiles 4px, avatars full.
+- Cards are 8px radius, controls 8px and 36px tall (Figma `button/radius` and `button/height/md`), chips and nested tiles 4px, avatars full.
 - Nested radii are concentric: outer radius equals inner radius plus padding. Menu items derive their radius from the popup radius for this reason.
 - Shadows are for elevation, borders are for structure. Cards are flat and rely on their border; popovers carry the md shadow, modals lg. Dividers, table cell lines and input outlines stay borders.
 - Images get a 1px outline at 10% black in light and 10% white in dark. Never a tinted outline.
