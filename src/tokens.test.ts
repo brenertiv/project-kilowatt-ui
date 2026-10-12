@@ -31,8 +31,8 @@ describe('theme tokens', () => {
 
     expect(css).toContain(':root {');
     expect(css).toContain('html.dark {');
-    expect(css).toContain('--color-bg: #F7F8F7;');
-    expect(css).toContain('--color-bg: #133150;');
+    expect(css).toContain('--color-bg: #F3F6F9;');
+    expect(css).toContain('--color-bg: #0D212A;');
   });
 
   it('documents every CSS variable themeToCssVars emits', () => {
@@ -71,7 +71,7 @@ describe('theme tokens', () => {
     const vars = themeToCssVars(defaultTheme, 'light');
     const fixed = typeScale.map((step) => vars[step.cssVar]);
 
-    expect(fixed).toEqual(['0.75rem', '0.875rem', '1rem', '1.125rem', '1.375rem', '1.75rem', '2.125rem', '2.75rem']);
+    expect(fixed).toEqual(['0.625rem', '0.75rem', '0.875rem', '1rem', '1.125rem', '1.375rem', '1.75rem', '2.125rem', '2.75rem']);
     expect(new Set(fixed).size).toBe(fixed.length);
     expect(vars['--text-xl-fluid']).toBe('clamp(1.25rem, 1.1rem + 0.5vw, var(--text-xl))');
     expect(vars['--text-4xl-fluid']).toBe('clamp(2.25rem, 1.7rem + 1.8vw, var(--text-4xl))');

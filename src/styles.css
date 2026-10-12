@@ -1,28 +1,29 @@
 :root {
   color-scheme: light;
-  --color-bg: #f7f8f7;
+  --color-bg: #f3f6f9;
+  --color-surface-sunken: #f9fafc;
   --color-surface: #ffffff;
-  --color-border: #e0e1e1;
-  --color-border-subtle: #eaeaea;
-  --color-border-strong: #c1c3c2;
-  --color-text: #3e4543;
-  --color-text-secondary: #656a69;
-  --color-text-muted: #848887;
-  --color-text-disabled: #b2b5b4;
-  --color-link: #2ea6e1;
-  --color-accent: #40b4e5;
-  --color-accent-tint: #e1f5fb;
-  --color-on-accent: #133240;
-  --color-positive: #008c01;
-  --color-positive-tint: #e5f6e5;
-  --color-negative: #e40235;
-  --color-negative-tint: #ffeaf0;
-  --color-warning: #f67c01;
-  --color-warning-tint: #fff4e0;
-  --color-solid: #37464c;
-  --color-on-solid: #f5f7f8;
-  --color-hover: #f2f2f2;
-  --color-track: #d1d3d2;
+  --color-border: #e2e8ef;
+  --color-border-subtle: #edf1f5;
+  --color-border-strong: #d0dae5;
+  --color-text: #0d212a;
+  --color-text-secondary: #56646a;
+  --color-text-muted: #626f75;
+  --color-text-disabled: #9ea6aa;
+  --color-link: #1c6487;
+  --color-accent: #2ea6e1;
+  --color-accent-tint: #dcf0fa;
+  --color-on-accent: #0d212a;
+  --color-positive: #086d51;
+  --color-positive-tint: #e1ffef;
+  --color-negative: #d61a1a;
+  --color-negative-tint: #fff1f1;
+  --color-warning: #e16a2e;
+  --color-warning-tint: #fff5e4;
+  --color-solid: #112a36;
+  --color-on-solid: #ffffff;
+  --color-hover: #e7ecf2;
+  --color-track: #d6dee8;
   --color-utility-electricity: #ff6bd6;
   --color-utility-water: #3fb4e5;
   --color-utility-gas: #00c371;
@@ -31,6 +32,7 @@
   --font-sans: Roboto, system-ui, sans-serif;
   --font-serif: 'Roboto Serif', Georgia, serif;
   --font-mono: 'Roboto Mono', ui-monospace, monospace;
+  --text-xxs: 0.625rem;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
@@ -51,6 +53,9 @@
   --radius: 8px;
   --radius-control: 4px;
   --radius-inner: 4px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
   --control-height: 32px;
   --border-width: 1px;
@@ -132,13 +137,13 @@ body {
    provider writes as concrete values per scheme; these are the stylesheet defaults. */
 :root {
   --scrollbar-size: 12px;
-  --scrollbar-thumb: #d1d3d2;
-  --scrollbar-thumb-hover: color-mix(in oklab, #d1d3d2 55%, #848887);
+  --scrollbar-thumb: #d6dee8;
+  --scrollbar-thumb-hover: color-mix(in oklab, #d6dee8 55%, #626f75);
 }
 
 html.dark {
-  --scrollbar-thumb: #425b73;
-  --scrollbar-thumb-hover: color-mix(in oklab, #425b73 55%, #7b8c9d);
+  --scrollbar-thumb: #365670;
+  --scrollbar-thumb-hover: color-mix(in oklab, #365670 55%, #a0afb7);
 }
 
 /* Re-matching this rule while the scheme flips forces WebKit to restyle scrollbar parts. */
@@ -297,13 +302,21 @@ strong {
   background: var(--color-hover);
 }
 
+.topbar-nav-link {
+  color: var(--color-text-secondary);
+}
+
+.topbar-nav-link:hover {
+  color: var(--color-text);
+}
+
 .topbar-nav-link[aria-current='page'] {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--color-accent-tint);
+  color: var(--color-link);
 }
 
 .topbar-nav-link[aria-current='page']:hover {
-  background: var(--color-accent);
+  background: color-mix(in oklab, var(--color-accent-tint) 70%, var(--color-accent));
 }
 
 .topbar-nav-link:focus-visible {
@@ -351,7 +364,7 @@ strong {
   flex-shrink: 0;
   padding: var(--space-3) var(--space-4);
   border-bottom: var(--border-width) solid var(--color-border);
-  background: var(--color-hover);
+  background: var(--color-surface-sunken);
 }
 
 .editor-panel-body {
@@ -832,7 +845,8 @@ strong {
 
 .ui-btn[data-disabled],
 .ui-select[data-disabled] {
-  color: var(--color-text-muted);
+  color: var(--color-text-disabled);
+  background: var(--color-bg);
   cursor: not-allowed;
 }
 
@@ -848,6 +862,26 @@ strong {
 
 .ui-btn-ghost {
   background: transparent;
+}
+
+/* Figma button/*: rest on the sunken surface, lift to the raised surface on hover,
+   drop to the page surface on press. Borders step through the text opacity scale. */
+.ui-btn:not(.ui-btn-solid):not(.ui-btn-ghost) {
+  background: var(--color-surface-sunken);
+}
+
+.ui-btn:not(.ui-btn-solid):hover:not([data-disabled]) {
+  background: var(--color-surface);
+  border-color: var(--color-text-disabled);
+}
+
+.ui-btn:not(.ui-btn-solid):active:not([data-disabled]) {
+  background: var(--color-bg);
+  border-color: var(--color-text-muted);
+}
+
+.ui-btn-ghost:hover:not([data-disabled]) {
+  border-color: var(--color-border);
 }
 
 @media (prefers-reduced-motion: no-preference) {

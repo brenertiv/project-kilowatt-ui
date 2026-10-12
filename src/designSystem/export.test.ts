@@ -13,8 +13,8 @@ describe('design system export', () => {
     }
 
     const json = systemToJson(defaultTheme, defaultDarkColors);
-    expect(json).toContain('"light": "#F7F8F7"');
-    expect(json).toContain('"dark": "#133150"');
+    expect(json).toContain('"light": "#F3F6F9"');
+    expect(json).toContain('"dark": "#0D212A"');
   });
 
   it('writes a markdown heading per section', () => {

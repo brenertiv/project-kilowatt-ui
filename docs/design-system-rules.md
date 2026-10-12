@@ -14,8 +14,9 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 
 ## Color
 
-- Light values come from the Figma semantic set. Dark values come from the UI_DARK ramp, the brand ramp and the lighter feedback tints, since Figma defines no dark semantics.
-- Text roles: primary text is Figma `text/primary`, secondary text is Figma `icon/default`, muted text is Figma `text/secondary`. This mapping keeps body copy above 4.5:1 on the raised surface. Figma's own secondary text is 3.5:1 and is used only for de-emphasized labels.
+- Colors come from the Figma semantic collection, which has Light and Dark modes: three surfaces (page, sunken, raised), one border, one text color and the brand ramp, all built on the slate and navy primitives.
+- Text emphasis: Figma defines secondary, muted and disabled as 70, 60 and 40 percent opacity of the text color. Our tokens are those steps flattened onto the raised surface and snapped so secondary and muted clear 4.5:1. Never use raw alpha text over a colored surface.
+- Buttons rest on the sunken surface, lift to the raised surface on hover and drop to the page surface on press, with borders stepping through the text opacity scale, after Figma `button/*`. Navigation marks the selected item with the brand tint and brand text, after Figma `nav color/*`.
 - Status colors are reserved. Positive, warning and negative mean good, caution and bad. They never color a series or a decoration, and they always ship with an icon or a label, never color alone.
 - Warning text on white is below 4.5:1 by design. Pair it with an icon or use it on its tint.
 - Utility colors (electricity, water, gas, steam, sanitation) are entity colors. A commodity keeps its hue everywhere it appears. They are not a categorical palette and fail the adjacent-pair checks together, so never rely on them alone to separate series.
