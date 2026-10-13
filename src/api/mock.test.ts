@@ -73,6 +73,10 @@ describe('filters, search and ordering', () => {
     expect(page.results.every((row) => String(row.name).toLowerCase().includes('broadway'))).toBe(true);
     const sorted = applyOrdering(portfolio.actions, '-work_order_number') as Action[];
     expect(sorted[0]!.work_order_number).toBeGreaterThan(sorted[sorted.length - 1]!.work_order_number);
+    const byDue = applyOrdering(portfolio.actions, '-due_date') as Action[];
+    expect(byDue[0]!.due_date).not.toBeNull();
+    const firstNull = byDue.findIndex((action) => action.due_date === null);
+    expect(byDue.slice(firstNull).every((action) => action.due_date === null)).toBe(true);
   });
 });
 

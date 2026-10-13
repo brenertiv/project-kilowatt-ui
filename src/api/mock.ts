@@ -146,7 +146,13 @@ export function applyOrdering<T extends Record<string, unknown>>(rows: T[], orde
     for (const key of keys) {
       const descending = key.startsWith('-');
       const field = descending ? key.slice(1) : key;
-      const result = compare(readField(a, field), readField(b, field)) * (descending ? -1 : 1);
+      const left = readField(a, field);
+      const right = readField(b, field);
+      // Nulls sort last in both directions, as the API does.
+      const leftNull = left === null || left === undefined;
+      const rightNull = right === null || right === undefined;
+      if (leftNull !== rightNull) return leftNull ? 1 : -1;
+      const result = compare(left, right) * (descending ? -1 : 1);
       if (result !== 0) return result;
     }
     return 0;
