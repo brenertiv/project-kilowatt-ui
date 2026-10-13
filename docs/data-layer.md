@@ -45,3 +45,21 @@ Components are prop-driven: they take an `AsyncState` plus the rows, never a que
 ## Query hooks
 
 `src/api/queries.ts` wraps TanStack Query: `useEntityList(entity, params)`, `useEntity(entity, id)`, `useLookup(name)` and `useEnergyData(entity, id, params)`. Keys are `[entity, kind, args]`, so invalidating `['action']` refreshes every work-order view. Lists keep the previous page on screen while the next one loads, which is what the `fetching` state renders.
+
+## Components
+
+`src/components/data` holds the boilerplate built on this layer, each with a Cosmos fixture:
+
+| Component                                   | What it is for                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| `DataState`                                 | Renders loading, fetching, empty, error, idle or ready around any content |
+| `EmptyState`, `ErrorState`, skeletons       | The states themselves, used by `DataState` and directly in cards          |
+| `PageHeader`                                | Breadcrumbs, eyebrow, title, description, meta chips and actions          |
+| `StatCard`                                  | One number with its unit, change and comparison period                    |
+| `EntityCard`, `EntityList`, `EntityName`    | Records as a card, as rows, or as a name with placeholder handling        |
+| `StatusChip` and wrappers                   | Work-order status and priority, alert flags, any lookup-backed field      |
+| `RelationLink`                              | A relation whether the API expanded it or not                             |
+| `DateText`, `RelativeTime`, `DateRangeText` | The API's dates, timestamps and ranges                                    |
+| `FilterBar`, `CursorPagination`             | Search, ordering, page size and cursor paging over `ListParams`           |
+
+`src/pages` composes them into views (`PortfolioOverview`, `BuildingDetail`, `WorkOrders`) that run real queries through the hooks above.

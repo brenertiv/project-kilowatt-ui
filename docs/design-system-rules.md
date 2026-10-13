@@ -32,6 +32,17 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 - `sx` is for layout only: spacing, flex, grid, width. Its spacing unit is 4px, so `spacing={4}` is 16px.
 - Icons stay Material Symbols through `src/icons.tsx`. The `@mui/icons-material` package is not installed on purpose.
 
+## Data components
+
+- Components that show API data live in `src/components/data` and are built on Material UI. They are prop-driven: a component takes rows plus an `AsyncState`, never a query result. Pages derive the state with `fromQuery`. A fixture must reach loading, fetching, empty, error and, where names appear, placeholder.
+- `DataState` is the one way to render the async states. No component hand-rolls a spinner, an empty message or an error block.
+- Relations render through `RelationLink`, which accepts the bare id or the expanded record. Never assume the request expanded a relation.
+- Names go through `EntityName` or `EntityCard`, which replace placeholder values such as `???` and `0` with "Unnamed {noun}" and explain why. The raw placeholder is never printed as a name.
+- Status vocabularies render through `StatusChip` and its wrappers (`ActionStatusChip`, `ActionPriorityChip`, `AlertStateChip`). Tones follow meaning: success for done, warning for waiting, error for blocked or overdue, info for in progress, neutral otherwise. A chip always carries its label.
+- Dates render through `DateText`, `RelativeTime` and `DateRangeText`. Calendar dates never shift time zone; timestamps render in the operations zone.
+- The API gives no totals. A count says what is on the page and whether there is more; it never invents a total.
+- Page views live in `src/pages`, compose these components, and run real queries. Their fixtures expose fail and latency switches.
+
 ## Charts
 
 - Charts are built in `src/charts`. Every chart renders inside `ChartFrame`, uses `useChartRoot` for its root, and reads colors from the frame. No chart calls the chart library's color APIs with literals.

@@ -1,4 +1,5 @@
 import type { FixtureRef } from './cosmos';
+import { dataDemos } from './dataDemos';
 import { useState, type ComponentType } from 'react';
 import { Accordion } from '@base-ui/react/accordion';
 import { AlertDialog } from '@base-ui/react/alert-dialog';
@@ -487,4 +488,5 @@ export const demos: Demo[] = [
   ...stackDemos,
   ...chartDemos,
   ...tableDemos,
+  ...dataDemos,
 ];

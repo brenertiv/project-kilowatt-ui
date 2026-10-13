@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -13,7 +14,7 @@ export type EntityListItem = {
   id: string | number;
   primary: ReactNode;
   secondary?: ReactNode;
-  /** Right-aligned content: a chip, a value, a menu. */
+  /** Right-aligned content: a chip, a value, a menu. Wraps under the text on narrow screens. */
   trailing?: ReactNode;
   to?: string;
   onClick?: () => void;
@@ -29,47 +30,54 @@ export type EntityListProps = {
   'aria-label'?: string;
 };
 
+const rowSx = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 3, rowGap: 1 } as const;
+
+function Row({ item, dense }: { item: EntityListItem; dense?: boolean }) {
+  const text = (
+    <ListItemText
+      primary={item.primary}
+      secondary={item.secondary}
+      sx={{ flex: '1 1 240px', minWidth: 0, my: dense ? 0 : undefined }}
+      slotProps={{ primary: { sx: { overflowWrap: 'anywhere' } }, secondary: { sx: { overflowWrap: 'anywhere' } } }}
+    />
+  );
+  const trailing = item.trailing ? (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexShrink: 0, ml: 'auto' }}>{item.trailing}</Box>
+  ) : null;
+  if (item.to) {
+    return (
+      <ListItemButton component={RouterLink} to={item.to} selected={item.selected} sx={rowSx}>
+        {text}
+        {trailing}
+      </ListItemButton>
+    );
+  }
+  if (item.onClick) {
+    return (
+      <ListItemButton onClick={item.onClick} selected={item.selected} sx={rowSx}>
+        {text}
+        {trailing}
+      </ListItemButton>
+    );
+  }
+  return (
+    <>
+      {text}
+      {trailing}
+    </>
+  );
+}
+
 /** Rows of records with a primary line, a secondary line and something on the right. Rows link or click when asked to. */
 export function EntityList({ items, state, empty, dense, skeletonRows = 5, 'aria-label': label }: EntityListProps) {
   return (
     <DataState state={state ?? { status: 'ready' }} skeleton={<ListSkeleton rows={skeletonRows} />} empty={empty}>
       <List dense={dense} disablePadding aria-label={label}>
         {items.map((item) => {
-          const text = (
-            <ListItemText
-              primary={item.primary}
-              secondary={item.secondary}
-              slotProps={{
-                primary: { sx: { overflowWrap: 'anywhere' } },
-                secondary: { sx: { overflowWrap: 'anywhere' } },
-              }}
-            />
-          );
-          const interactive = item.to || item.onClick;
+          const interactive = Boolean(item.to || item.onClick);
           return (
-            <ListItem key={item.id} divider disablePadding={Boolean(interactive)} secondaryAction={item.trailing}>
-              {interactive ? (
-                item.to ? (
-                  <ListItemButton
-                    component={RouterLink}
-                    to={item.to}
-                    selected={item.selected}
-                    sx={{ pr: item.trailing ? 14 : undefined }}
-                  >
-                    {text}
-                  </ListItemButton>
-                ) : (
-                  <ListItemButton
-                    onClick={item.onClick}
-                    selected={item.selected}
-                    sx={{ pr: item.trailing ? 14 : undefined }}
-                  >
-                    {text}
-                  </ListItemButton>
-                )
-              ) : (
-                text
-              )}
+            <ListItem key={item.id} divider disablePadding={interactive} sx={interactive ? undefined : rowSx}>
+              <Row item={item} dense={dense} />
             </ListItem>
           );
         })}

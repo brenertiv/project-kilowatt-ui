@@ -19,6 +19,10 @@ Markdown in `docs/` is rendered in the app under **Docs** (`/docs/<file-name>`),
 
 `npm run cosmos` opens React Cosmos at `http://localhost:5100`, rendering every `Name.fixture.tsx` in isolation with a control panel, a fixture tree and device viewports. The root decorator in `src/cosmos.decorator.tsx` supplies the app's provider stack and a light/dark select. The Components page links every card to its fixture. See `docs/cosmos.md`.
 
+## Data layer and pages
+
+`src/api` mirrors the Enertiv API: entity types copied from live responses, a cursor-paged mock adapter with a failure switch, the `AsyncState` contract and TanStack Query hooks. `src/components/data` holds the Material UI components built on it, and `src/pages` composes them into page views that run in Cosmos against the mock. See `docs/data-layer.md`.
+
 ## Charts
 
 Charts live in `src/charts` and are built on amCharts 5 with one rule: tokens are the only color source.

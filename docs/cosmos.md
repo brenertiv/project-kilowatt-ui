@@ -56,3 +56,7 @@ Wrap a fixture in `<Viewport width={375} height={667}>` to open it at that size.
 ## Export
 
 `npm run cosmos:export` writes a static Cosmos site to `dist/cosmos`. The app links to it when `VITE_COSMOS_URL` is set at build time; without it the links are hidden in production builds. The link back runs the other way: every fixture shows a **Back to library** control that opens the dev server in development, or `VITE_LIBRARY_URL` when set for an exported site.
+
+## Pages
+
+Page views under `src/pages` are fixtures too. They run real queries against the mock adapter, so their loading, fetching, empty and error states are the genuine article. The decorator in `src/pages/cosmos.decorator.tsx` adds two controls to every page fixture: **fail requests**, which makes every request reject, and **latency ms**, which sets the simulated round trip. Use them to watch a page degrade and recover.
