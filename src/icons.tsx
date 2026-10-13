@@ -76,6 +76,14 @@ export const DensityComfortableIcon = define('density_medium');
 export const DensityCompactIcon = define('density_small');
 export const ErrorIcon = define('error');
 export const BuildingIcon = define('apartment');
+export const InboxIcon = define('inbox');
+export const RefreshIcon = define('refresh');
+export const ScheduleIcon = define('schedule');
+export const CheckCircleIcon = define('check_circle');
+export const InfoIcon = define('info');
+export const TrendDownIcon = define('trending_down');
+export const LinkIcon = define('link');
+export const FilterOffIcon = define('filter_alt_off');
 
 export const iconCatalog: { name: string; Icon: ComponentType<IconProps> }[] = [
   { name: 'CheckIcon', Icon: CheckIcon },
@@ -104,4 +112,12 @@ export const iconCatalog: { name: string; Icon: ComponentType<IconProps> }[] = [
   { name: 'WarningIcon', Icon: WarningIcon },
   { name: 'ErrorIcon', Icon: ErrorIcon },
   { name: 'BuildingIcon', Icon: BuildingIcon },
+  { name: 'InboxIcon', Icon: InboxIcon },
+  { name: 'RefreshIcon', Icon: RefreshIcon },
+  { name: 'ScheduleIcon', Icon: ScheduleIcon },
+  { name: 'CheckCircleIcon', Icon: CheckCircleIcon },
+  { name: 'InfoIcon', Icon: InfoIcon },
+  { name: 'TrendDownIcon', Icon: TrendDownIcon },
+  { name: 'LinkIcon', Icon: LinkIcon },
+  { name: 'FilterOffIcon', Icon: FilterOffIcon },
 ];

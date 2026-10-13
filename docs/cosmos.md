@@ -34,7 +34,7 @@ Inputs are hooks a fixture calls to expose state. The control panel renders a co
 
 ## Decorators
 
-`src/cosmos.decorator.tsx` wraps every fixture in the same provider stack the app shell uses, from `src/AppProviders.tsx`: query client, theme, the Material bridge, toasts and tooltips, plus a memory router. It also declares one `scheme` select, so **light** and **dark** are a control in every fixture. Add a `cosmos.decorator.tsx` beside a component family when its fixtures need another provider.
+`src/cosmos.decorator.tsx` wraps every fixture in the same provider stack the app shell uses, from `src/AppProviders.tsx`: query client, theme, the Material bridge, toasts and tooltips, plus a memory router. It also declares one `scheme` select, so **light** and **dark** are a control in every fixture, and places the **Back to library** link in the top-left corner of the renderer. Add a `cosmos.decorator.tsx` beside a component family when its fixtures need another provider.
 
 ## Data
 
@@ -55,4 +55,4 @@ Wrap a fixture in `<Viewport width={375} height={667}>` to open it at that size.
 
 ## Export
 
-`npm run cosmos:export` writes a static Cosmos site to `dist/cosmos`. The app links to it when `VITE_COSMOS_URL` is set at build time; without it the links are hidden in production builds.
+`npm run cosmos:export` writes a static Cosmos site to `dist/cosmos`. The app links to it when `VITE_COSMOS_URL` is set at build time; without it the links are hidden in production builds. The link back runs the other way: every fixture shows a **Back to library** control that opens the dev server in development, or `VITE_LIBRARY_URL` when set for an exported site.

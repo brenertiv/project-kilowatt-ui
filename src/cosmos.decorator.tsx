@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { useFixtureSelect } from 'react-cosmos/client';
 import { AppProviders, ToastOutlet } from './AppProviders';
+import { ChevronLeftIcon } from './icons';
 import { useTheme } from './theme/ThemeProvider';
 import type { ColorScheme } from './tokens';
 
@@ -12,6 +13,24 @@ import type { ColorScheme } from './tokens';
  */
 
 const schemes: ColorScheme[] = ['light', 'dark'];
+
+/**
+ * Where the component library runs. Cosmos renders fixtures in an iframe on its
+ * own origin, so the way back is a top-level link: the dev server in development,
+ * or `VITE_LIBRARY_URL` for an exported Cosmos site.
+ */
+const libraryUrl: string | null =
+  (import.meta.env.VITE_LIBRARY_URL as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:5173/components' : null);
+
+function BackToLibrary() {
+  if (!libraryUrl) return null;
+  return (
+    <a className="ui-btn ui-btn-ghost cosmos-back" href={libraryUrl} target="_top" rel="noreferrer">
+      <ChevronLeftIcon />
+      Back to library
+    </a>
+  );
+}
 
 function SchemeControl({ children }: { children: ReactNode }) {
   const { colorScheme, setColorScheme } = useTheme();
@@ -27,6 +46,7 @@ export default function RootDecorator({ children }: { children: ReactNode }) {
     <AppProviders>
       <MemoryRouter>
         <SchemeControl>
+          <BackToLibrary />
           <div className="cosmos-stage">{children}</div>
           <ToastOutlet />
         </SchemeControl>

@@ -3017,6 +3017,18 @@ button.chart-legend-item:focus-visible {
 .cosmos-stage {
   min-height: 100vh;
   padding: var(--space-5);
+  padding-top: calc(var(--control-height) + var(--space-5) + var(--space-3));
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+/* The way back from a fixture. Fixed in the renderer so fixtures never have to leave room for it. */
+.cosmos-back {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 40;
+  text-decoration: none;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
 }
