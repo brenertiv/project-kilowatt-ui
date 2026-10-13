@@ -1,14 +1,14 @@
-import { sparklines } from '../workbench/sampleData';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { sparklines } from '../fixtures/sampleData';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 import { ChipCell, DateCell, DeltaCell, NumericCell, SparklineCell, StatusCell } from './cells';
 
 function Playground() {
-  const [tone] = useFixtureSelect('status tone', { options: ['positive', 'warning', 'negative', 'neutral'] as const });
+  const [tone] = useFixtureSelect('status tone', { options: [...(['positive', 'warning', 'negative', 'neutral'] as const)] });
   const [delta] = useFixtureInput('delta', 0.056);
   const [upIsGood] = useFixtureInput('up is good', true);
   const [value] = useFixtureInput('numeric value', 12853);
-  const [unit] = useFixtureSelect('unit', { options: ['count', 'kW', 'kWh', 'USD', 'percent'] as const });
-  const [trend] = useFixtureSelect('sparkline', { options: ['rising', 'falling', 'flat', 'noisy', 'short'] as const });
+  const [unit] = useFixtureSelect('unit', { options: [...(['count', 'kW', 'kWh', 'USD', 'percent'] as const)] });
+  const [trend] = useFixtureSelect('sparkline', { options: [...(['rising', 'falling', 'flat', 'noisy', 'short'] as const)] });
 
   return (
     <div className="table-wrap">

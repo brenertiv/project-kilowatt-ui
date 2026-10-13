@@ -1,9 +1,8 @@
+import { Viewport, useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 import { Checkbox } from '@base-ui/react/checkbox';
 import { Switch } from '@base-ui/react/switch';
 import { Tabs } from '@base-ui/react/tabs';
 import { CheckIcon } from '../icons';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
-import { Viewport } from '../workbench/Viewport';
 
 function SwitchFixture() {
   const [checked, setChecked] = useFixtureInput('checked', true);
@@ -20,7 +19,7 @@ function SwitchFixture() {
 }
 
 function CheckboxFixture() {
-  const [state, setState] = useFixtureSelect('state', { options: ['unchecked', 'checked', 'indeterminate'] as const, defaultValue: 'checked' });
+  const [state, setState] = useFixtureSelect('state', { options: [...(['unchecked', 'checked', 'indeterminate'] as const)], defaultValue: 'checked' });
   const [disabled] = useFixtureInput('disabled', false);
   return (
     <label className="ui-inline-label">

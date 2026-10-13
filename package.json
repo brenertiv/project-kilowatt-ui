@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "cosmos": "cosmos",
+    "cosmos:export": "cosmos-export"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.20.5",
@@ -52,6 +54,8 @@
     "eslint-plugin-react-refresh": "^0.5.7",
     "jsdom": "^30.0.1",
     "prettier": "^3.9.6",
+    "react-cosmos": "^7.4.1",
+    "react-cosmos-plugin-vite": "^7.4.0",
     "rollup-plugin-visualizer": "^7.1.1",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.70.0",

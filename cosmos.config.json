@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json.schemastore.org/cosmos-config",
+  "plugins": ["react-cosmos-plugin-vite"],
+  "port": 5100,
+  "vite": { "port": 5150 },
+  "globalImports": ["./src/cosmos.globals.ts"],
+  "exportPath": "dist/cosmos",
+  "ignore": ["**/node_modules/**", "**/dist/**"]
+}

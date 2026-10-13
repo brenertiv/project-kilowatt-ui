@@ -8,7 +8,7 @@ import { Toggle } from '@base-ui/react/toggle';
 import { ToggleGroup } from '@base-ui/react/toggle-group';
 import { buildings, meters } from '../data';
 import { CheckIcon, ChevronDownIcon, ChevronUpDownIcon, MinusIcon, PlusIcon, XIcon } from '../icons';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 
 function SelectFixture() {
   const [count] = useFixtureInput('option count', buildings.length);
@@ -155,7 +155,7 @@ function ToggleGroupFixture() {
 }
 
 function RadioGroupFixture() {
-  const [value, setValue] = useFixtureSelect('value', { options: ['electric', 'steam', 'gas'] as const });
+  const [value, setValue] = useFixtureSelect('value', { options: [...(['electric', 'steam', 'gas'] as const)] });
   const [disabled] = useFixtureInput('disabled', false);
   return (
     <RadioGroup value={value} onValueChange={(next) => setValue(next as typeof value)} className="demo-stack" aria-label="Meter type" disabled={disabled}>

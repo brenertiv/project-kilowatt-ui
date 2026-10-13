@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useFixtureInput } from '../workbench/inputs';
+import { useFixtureInput } from 'react-cosmos/client';
 import { CardMenu } from './CardMenu';
 
 function Playground() {

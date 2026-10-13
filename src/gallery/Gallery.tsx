@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Input } from '@base-ui/react/input';
 import { Toast } from '@base-ui/react/toast';
-import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { demos, type Demo } from './demos';
+import { cosmosBaseUrl, cosmosFixtureUrl } from './cosmos';
 import { SearchIcon } from '../icons';
 import { CardMenu } from '../components/CardMenu';
 import { DemoErrorBoundary } from './stackDemos';
 
 function DemoCard({ demo }: { demo: Demo }) {
   const toastManager = Toast.useToastManager();
-  const navigate = useNavigate();
+  const fixtureUrl = demo.fixture ? cosmosFixtureUrl(demo.fixture) : null;
   const [collapsed, setCollapsed] = useState(false);
   const [generation, setGeneration] = useState(0);
   const View = demo.render;
@@ -28,10 +28,10 @@ function DemoCard({ demo }: { demo: Demo }) {
     <article className="card" data-collapsed={collapsed || undefined}>
       <header className="card-head">
         <h3>
-          {demo.workbench ? (
-            <Link to={`/workbench/${demo.workbench}`} className="card-title-link">
+          {fixtureUrl ? (
+            <a href={fixtureUrl} className="card-title-link" target="_blank" rel="noreferrer">
               {demo.title}
-            </Link>
+            </a>
           ) : (
             demo.title
           )}
@@ -40,8 +40,8 @@ function DemoCard({ demo }: { demo: Demo }) {
           <CardMenu
             label={`${demo.title} actions`}
             items={[
-              ...(demo.workbench
-                ? [{ id: 'workbench', label: 'Open in workbench', onSelect: () => navigate(`/workbench/${demo.workbench}`) }]
+              ...(fixtureUrl
+                ? [{ id: 'cosmos', label: 'Open in Cosmos', onSelect: () => window.open(fixtureUrl, '_blank', 'noreferrer') }]
                 : []),
               { id: 'copy', label: 'Copy name', onSelect: copyName },
               { id: 'remount', label: 'Remount demo', onSelect: () => setGeneration((n) => n + 1) },
@@ -79,9 +79,11 @@ export function Gallery() {
           <p>{t('gallery.subtitle')}</p>
         </div>
         <div className="gallery-tools">
-          <Link to="/workbench" className="ui-btn gallery-workbench-link">
-            {t('gallery.workbench')}
-          </Link>
+          {cosmosBaseUrl ? (
+            <a href={cosmosBaseUrl} className="ui-btn gallery-cosmos-link" target="_blank" rel="noreferrer">
+              {t('gallery.cosmos')}
+            </a>
+          ) : null}
           <label className="search">
             <SearchIcon />
             <Input className="ui-input" placeholder={t('gallery.search')} value={query} onValueChange={setQuery} />

@@ -7,7 +7,7 @@ import { ScrollArea } from '@base-ui/react/scroll-area';
 import { Separator } from '@base-ui/react/separator';
 import { tickets } from '../data';
 import { ChevronDownIcon, PlusIcon } from '../icons';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 
 const alerts = [
   ['AHU-3', 'Vibration exceeded 4.2 mm/s for 12 minutes.'],
@@ -66,7 +66,7 @@ function ProgressMeterFixture() {
 }
 
 function AvatarFixture() {
-  const [source] = useFixtureSelect('image', { options: ['photo', 'broken url', 'none'] as const });
+  const [source] = useFixtureSelect('image', { options: [...(['photo', 'broken url', 'none'] as const)] });
   const [initials] = useFixtureInput('initials', 'AR');
   const [name] = useFixtureInput('name', 'Alex Rivera');
   const [role] = useFixtureInput('role', 'On-call operator');

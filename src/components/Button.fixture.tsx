@@ -1,11 +1,11 @@
 import { Button } from '@base-ui/react/button';
 import { PlusIcon } from '../icons';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 
 const variantClass = { solid: 'ui-btn ui-btn-solid', outline: 'ui-btn', ghost: 'ui-btn ui-btn-ghost' } as const;
 
 function Playground() {
-  const [variant] = useFixtureSelect('variant', { options: ['solid', 'outline', 'ghost'] as const });
+  const [variant] = useFixtureSelect('variant', { options: [...(['solid', 'outline', 'ghost'] as const)] });
   const [label] = useFixtureInput('label', 'Dispatch ticket');
   const [disabled] = useFixtureInput('disabled', false);
   const [icon] = useFixtureInput('leading icon', false);

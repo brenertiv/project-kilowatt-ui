@@ -473,12 +473,12 @@ export function TourDemo() {
 }
 
 export const stackDemos: Demo[] = [
-  { id: 'metric', title: 'Metric card', group: 'Data', render: MetricCardDemo, workbench: 'widgets/metric-card' },
-  { id: 'table', title: 'Tickets table', group: 'Data', render: TableDemo, workbench: 'widgets/tickets-table' },
-  { id: 'chart', title: 'Demand chart', group: 'Data', render: ChartDemo, workbench: 'widgets/demand-chart' },
-  { id: 'overview-panel', title: 'AgentOps overview', group: 'Data', render: OverviewPanelDemo, workbench: 'widgets/overview-panel' },
-  { id: 'map', title: 'Portfolio map', group: 'Data', render: MapDemo, workbench: 'widgets/portfolio-map' },
-  { id: 'grid', title: 'Dashboard grid', group: 'Data', render: GridDemo, workbench: 'widgets/dashboard-grid' },
-  { id: 'dnd', title: 'Queue reorder', group: 'Data', render: DndDemo, workbench: 'widgets/queue-reorder' },
-  { id: 'tour', title: 'Product tour', group: 'Data', render: TourDemo, workbench: 'widgets/product-tour' },
+  { id: 'metric', title: 'Metric card', group: 'Data', render: MetricCardDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Metric card' } },
+  { id: 'table', title: 'Tickets table', group: 'Data', render: TableDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Tickets table' } },
+  { id: 'chart', title: 'Demand chart', group: 'Data', render: ChartDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Demand chart' } },
+  { id: 'overview-panel', title: 'AgentOps overview', group: 'Data', render: OverviewPanelDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Overview panel' } },
+  { id: 'map', title: 'Portfolio map', group: 'Data', render: MapDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Portfolio map' } },
+  { id: 'grid', title: 'Dashboard grid', group: 'Data', render: GridDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Dashboard grid' } },
+  { id: 'dnd', title: 'Queue reorder', group: 'Data', render: DndDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Queue reorder' } },
+  { id: 'tour', title: 'Product tour', group: 'Data', render: TourDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Product tour' } },
 ];

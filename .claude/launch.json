@@ -7,6 +7,12 @@
       "runtimeArgs": ["-c", "exec npx vite --port \"${PORT:-5173}\" --strictPort"],
       "port": 5173,
       "autoPort": true
+    },
+    {
+      "name": "cosmos",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["cosmos"],
+      "port": 5100
     }
   ]
 }

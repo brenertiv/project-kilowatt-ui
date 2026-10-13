@@ -1,6 +1,6 @@
 # Stack Overview
 
-Kilowatt UI is Enertiv's design system and component library: a React single-page app that documents the tokens, hosts a gallery of every component, and provides a workbench for exercising components in isolation. It deploys as a static site.
+Kilowatt UI is Enertiv's design system and component library: a React single-page app that documents the tokens, hosts a gallery of every component, and runs React Cosmos for exercising components and pages in isolation. It deploys as a static site.
 
 ## Runtime
 
@@ -30,19 +30,19 @@ Kilowatt UI is Enertiv's design system and component library: a React single-pag
 - **Chart colors** are an eight-slot categorical palette validated for colorblind-safe separation on both surfaces, with sequential and diverging ramps derived in OKLCH.
 - **Motion** is CSS transitions at 150ms on one curve, with reduced-motion guards.
 
-## Developer workbench
+## React Cosmos
 
-`/workbench` renders one component at a time with a control panel, following React Cosmos conventions: `Name.fixture.tsx` files beside components, `useFixtureInput` and `useFixtureSelect` hooks for state, directory-scoped decorators, a viewport wrapper, and URLs that capture the fixture and its inputs. Sample data in `src/workbench/sampleData.ts` reaches every component state.
+`npm run cosmos` runs React Cosmos 7 with its Vite plugin on port 5100. `Name.fixture.tsx` files sit beside components, `useFixtureInput` and `useFixtureSelect` expose state in the control panel, and `src/cosmos.decorator.tsx` wraps every fixture in the app's provider stack with a light/dark select. The in-app workbench it replaced is gone. See `docs/cosmos.md`.
 
 ## Tooling
 
-| Concern              | Tool                                                                                                                                                                               |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build and dev server | Vite 7 with `@vitejs/plugin-react`, `vite-plugin-checker` for in-editor type errors, `vite-plugin-svgr` for the brand mark                                                         |
-| Tests                | Vitest 5 with jsdom and Testing Library. Unit tests cover tokens, theme persistence, color math, chart data adapters, CSV export, table URL state, docs registry and the workbench |
-| Lint and format      | ESLint 10 with typescript-eslint and the React Hooks plugin, Prettier 3                                                                                                            |
-| Bundle analysis      | rollup-plugin-visualizer                                                                                                                                                           |
-| Node                 | 24 or newer                                                                                                                                                                        |
+| Concern              | Tool                                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Build and dev server | Vite 7 with `@vitejs/plugin-react`, `vite-plugin-checker` for in-editor type errors, `vite-plugin-svgr` for the brand mark                                                                             |
+| Tests                | Vitest 5 with jsdom and Testing Library. Unit tests cover tokens, theme persistence, color math, chart data adapters, CSV export, table URL state, the docs registry, the mock API and the sample data |
+| Lint and format      | ESLint 10 with typescript-eslint and the React Hooks plugin, Prettier 3                                                                                                                                |
+| Bundle analysis      | rollup-plugin-visualizer                                                                                                                                                                               |
+| Node                 | 24 or newer                                                                                                                                                                                            |
 
 Scripts: `npm run dev`, `npm run build`, `npm test`, `npm run lint`, `npm run format`.
 
@@ -54,5 +54,6 @@ A GitHub Actions workflow builds on every push to `main` and publishes `dist/` t
 
 - `README.md` for setup and the layer map.
 - `docs/design-system-rules.md` for the rules of using the system.
-- `docs/workbench.md` for fixture conventions.
+- `docs/cosmos.md` for fixture conventions.
+- `docs/data-layer.md` for the API shapes, mock adapter and async state.
 - The **System** page in the app renders the live token values, contrast measurements, type roles, spacing, shape and the icon catalog, and the **Docs** page renders everything in `docs/`.

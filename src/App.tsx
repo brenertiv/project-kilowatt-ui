@@ -1,37 +1,14 @@
 import { Field } from '@base-ui/react/field';
 import { Switch } from '@base-ui/react/switch';
-import { Toast } from '@base-ui/react/toast';
-import { Tooltip } from '@base-ui/react/tooltip';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { queryClient } from './api/queryClient';
-import { ThemeProvider, useTheme } from './theme/ThemeProvider';
-import { MuiProvider } from './mui/MuiProvider';
+import { AppProviders, ToastOutlet } from './AppProviders';
+import { useTheme } from './theme/ThemeProvider';
 import { ThemeEditor } from './theme/ThemeEditor';
 import { Gallery } from './gallery/Gallery';
 import { DesignSystem } from './designSystem/DesignSystem';
 import { DocsPage } from './docs/DocsPage';
-import { Workbench } from './workbench/Workbench';
-import { XIcon } from './icons';
 import EnertivAvatar from './assets/enertiv-avatar.svg?react';
-
-function ToastList() {
-  const { toasts } = Toast.useToastManager();
-  return toasts.map((toast) => (
-    <Toast.Root key={toast.id} toast={toast} className="ui-toast">
-      <Toast.Content className="ui-toast-content">
-        <div>
-          <Toast.Title className="ui-popup-title" />
-          <Toast.Description className="ui-description" />
-        </div>
-        <Toast.Close className="ui-icon-btn" aria-label="Dismiss">
-          <XIcon />
-        </Toast.Close>
-      </Toast.Content>
-    </Toast.Root>
-  ));
-}
 
 function DarkModeToggle() {
   const { colorScheme, setColorScheme } = useTheme();
@@ -90,35 +67,20 @@ function Shell() {
           <Route path="/design-system" element={<DesignSystem />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/docs/:slug" element={<DocsPage />} />
-          <Route path="/workbench" element={<Workbench />} />
-          <Route path="/workbench/:slug" element={<Workbench />} />
-          <Route path="/workbench/:slug/:name" element={<Workbench />} />
           <Route path="*" element={<Navigate to="/components" replace />} />
         </Routes>
       </div>
-      <Toast.Portal>
-        <Toast.Viewport className="ui-toast-viewport">
-          <ToastList />
-        </Toast.Viewport>
-      </Toast.Portal>
+      <ToastOutlet />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <MuiProvider>
-          <Toast.Provider>
-            <Tooltip.Provider>
-              <BrowserRouter basename={import.meta.env.BASE_URL}>
-                <Shell />
-              </BrowserRouter>
-            </Tooltip.Provider>
-          </Toast.Provider>
-        </MuiProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <AppProviders>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <Shell />
+      </BrowserRouter>
+    </AppProviders>
   );
 }

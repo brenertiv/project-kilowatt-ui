@@ -15,9 +15,9 @@ npm run dev
 
 Markdown in `docs/` is rendered in the app under **Docs** (`/docs/<file-name>`), with a section index built from the level-two headings. `docs/design-system-rules.md` holds the rules for using the system and lives apart from component code on purpose. Drop another `.md` file in the folder and it appears in the Docs list automatically.
 
-## Workbench
+## Cosmos
 
-`/workbench` renders one component at a time in isolation, after React Cosmos: `Name.fixture.tsx` files beside components are discovered automatically, `useFixtureInput` and `useFixtureSelect` expose state in a control panel, `cosmos.decorator.tsx` files wrap fixtures by directory, and `<Viewport>` opens a fixture at a device size. The URL carries the fixture and any input values, so a specific state can be linked. Sample data that reaches every state lives in `src/workbench/sampleData.ts`. See `docs/workbench.md`.
+`npm run cosmos` opens React Cosmos at `http://localhost:5100`, rendering every `Name.fixture.tsx` in isolation with a control panel, a fixture tree and device viewports. The root decorator in `src/cosmos.decorator.tsx` supplies the app's provider stack and a light/dark select. The Components page links every card to its fixture. See `docs/cosmos.md`.
 
 ## Charts
 

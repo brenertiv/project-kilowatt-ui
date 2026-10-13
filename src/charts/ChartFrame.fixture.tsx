@@ -6,14 +6,14 @@ import { DonutChart } from './DonutChart';
 import { HeatScale, HeatmapChart } from './HeatmapChart';
 import { TimeSeriesChart } from './TimeSeriesChart';
 import type { ChartData } from './types';
-import { categories, demand } from '../workbench/sampleData';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { categories, demand } from '../fixtures/sampleData';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 
 const frameStates = ['ready', 'loading', 'fetching', 'error'] as const;
 
 function TimeSeries() {
-  const [dataSet] = useFixtureSelect('data', { options: ['single', 'pair', 'four', 'gaps', 'empty'] as const, defaultValue: 'pair' });
-  const [state] = useFixtureSelect('state', { options: frameStates });
+  const [dataSet] = useFixtureSelect('data', { options: [...(['single', 'pair', 'four', 'gaps', 'empty'] as const)], defaultValue: 'pair' });
+  const [state] = useFixtureSelect('state', { options: [...frameStates] });
   const [area] = useFixtureInput('area', true);
   const [zeroBased] = useFixtureInput('zero based', true);
   const [height] = useFixtureInput('height', 260);
@@ -39,7 +39,7 @@ function TimeSeries() {
 function Bars() {
   const [stacked] = useFixtureInput('stacked', true);
   const [horizontal] = useFixtureInput('horizontal', false);
-  const [state] = useFixtureSelect('state', { options: frameStates });
+  const [state] = useFixtureSelect('state', { options: [...frameStates] });
   return (
     <ChartFrame
       title="Energy by system"

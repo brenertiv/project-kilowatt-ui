@@ -3,8 +3,8 @@ import { Button } from '@base-ui/react/button';
 import { createColumnHelper } from '@tanstack/react-table';
 import { formatCalendarDate } from '../lib/dates';
 import { meterSources, type Meter } from '../meters';
-import { meters } from '../workbench/sampleData';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { meters } from '../fixtures/sampleData';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 import { ServerTableDemo, VirtualizedTableDemo } from '../gallery/tableDemos';
 import { ChipCell, StatusCell } from './cells';
 import { DataTable, type DataTableFeatures } from './DataTable';
@@ -30,11 +30,11 @@ const columns = helper.columns([
 const dataSets = ['none', 'one', 'few', 'page', 'all', 'sparse', 'long'] as const;
 
 function Playground() {
-  const [dataSet] = useFixtureSelect('data', { options: dataSets, defaultValue: 'few' });
-  const [status] = useFixtureSelect('status', { options: ['ready', 'loading', 'error'] as const });
+  const [dataSet] = useFixtureSelect('data', { options: [...dataSets], defaultValue: 'few' });
+  const [status] = useFixtureSelect('status', { options: [...(['ready', 'loading', 'error'] as const)] });
   const [selectable] = useFixtureInput('selectable', false);
   const [expandable] = useFixtureInput('expandable', false);
-  const [density] = useFixtureSelect('density', { options: ['comfortable', 'compact'] as const });
+  const [density] = useFixtureSelect('density', { options: [...(['comfortable', 'compact'] as const)] });
   const [search] = useFixtureInput('search', true);
   const [pageSize] = useFixtureInput('page size', 10);
   const data = useMemo(() => meters[dataSet], [dataSet]);

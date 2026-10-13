@@ -1,3 +1,4 @@
+import type { FixtureRef } from './cosmos';
 import { useState, type ComponentType } from 'react';
 import { Accordion } from '@base-ui/react/accordion';
 import { AlertDialog } from '@base-ui/react/alert-dialog';
@@ -38,8 +39,8 @@ export type Demo = {
   group: string;
   /** Rendered as a component so demos that use hooks keep their own hook order. */
   render: ComponentType;
-  /** Workbench fixture id (`slug/name`) that lets the reader click into this component. */
-  workbench?: string;
+  /** The Cosmos fixture that lets the reader click into this component. */
+  fixture?: FixtureRef;
 };
 
 function ButtonsDemo() {
@@ -463,26 +464,26 @@ function SeparatorDemo() {
 }
 
 export const demos: Demo[] = [
-  { id: 'buttons', title: 'Button', group: 'Actions', render: ButtonsDemo, workbench: 'button/playground' },
-  { id: 'menu', title: 'Menu', group: 'Actions', render: MenuDemo, workbench: 'overlays/menu' },
-  { id: 'tooltip', title: 'Tooltip', group: 'Actions', render: TooltipDemo, workbench: 'overlays/tooltip' },
-  { id: 'popover', title: 'Popover', group: 'Actions', render: PopoverDemo, workbench: 'overlays/popover' },
-  { id: 'dialog', title: 'Dialog', group: 'Actions', render: DialogDemo, workbench: 'overlays/dialog' },
-  { id: 'alert-dialog', title: 'Alert Dialog', group: 'Actions', render: AlertDialogDemo, workbench: 'overlays/alert-dialog' },
-  { id: 'toast', title: 'Toast', group: 'Actions', render: ToastDemo, workbench: 'overlays/toast' },
-  { id: 'input', title: 'Field + Input', group: 'Forms', render: InputsDemo, workbench: 'field/playground' },
-  { id: 'select', title: 'Select', group: 'Forms', render: SelectDemo, workbench: 'forms/select' },
-  { id: 'combobox', title: 'Combobox', group: 'Forms', render: ComboboxDemo, workbench: 'forms/combobox' },
-  { id: 'number', title: 'Number Field', group: 'Forms', render: NumberFieldDemo, workbench: 'forms/number-field' },
-  { id: 'choice', title: 'Checkbox, Switch, Radio', group: 'Forms', render: CheckboxSwitchRadioDemo, workbench: 'controls/switch' },
-  { id: 'slider', title: 'Slider', group: 'Forms', render: SliderDemo, workbench: 'forms/slider' },
-  { id: 'toggle', title: 'Toggle Group', group: 'Forms', render: ToggleDemo, workbench: 'forms/toggle-group' },
-  { id: 'tabs', title: 'Tabs', group: 'Structure', render: TabsDemo, workbench: 'controls/tabs' },
-  { id: 'accordion', title: 'Accordion', group: 'Structure', render: AccordionDemo, workbench: 'structure/accordion' },
-  { id: 'progress', title: 'Progress + Meter', group: 'Structure', render: ProgressMeterDemo, workbench: 'structure/progress-and-meter' },
-  { id: 'avatar', title: 'Avatar + Collapsible', group: 'Structure', render: AvatarCollapsibleDemo, workbench: 'structure/avatar' },
-  { id: 'scroll', title: 'Scroll Area', group: 'Structure', render: ScrollTicketsDemo, workbench: 'structure/scroll-area' },
-  { id: 'separator', title: 'Separator', group: 'Structure', render: SeparatorDemo, workbench: 'structure/separator' },
+  { id: 'buttons', title: 'Button', group: 'Actions', render: ButtonsDemo, fixture: { path: 'src/components/Button.fixture.tsx', name: 'Playground' } },
+  { id: 'menu', title: 'Menu', group: 'Actions', render: MenuDemo, fixture: { path: 'src/gallery/Overlays.fixture.tsx', name: 'Menu' } },
+  { id: 'tooltip', title: 'Tooltip', group: 'Actions', render: TooltipDemo, fixture: { path: 'src/gallery/Overlays.fixture.tsx', name: 'Tooltip' } },
+  { id: 'popover', title: 'Popover', group: 'Actions', render: PopoverDemo, fixture: { path: 'src/gallery/Overlays.fixture.tsx', name: 'Popover' } },
+  { id: 'dialog', title: 'Dialog', group: 'Actions', render: DialogDemo, fixture: { path: 'src/gallery/Overlays.fixture.tsx', name: 'Dialog' } },
+  { id: 'alert-dialog', title: 'Alert Dialog', group: 'Actions', render: AlertDialogDemo, fixture: { path: 'src/gallery/Overlays.fixture.tsx', name: 'Alert dialog' } },
+  { id: 'toast', title: 'Toast', group: 'Actions', render: ToastDemo, fixture: { path: 'src/gallery/Overlays.fixture.tsx', name: 'Toast' } },
+  { id: 'input', title: 'Field + Input', group: 'Forms', render: InputsDemo, fixture: { path: 'src/components/Field.fixture.tsx', name: 'Playground' } },
+  { id: 'select', title: 'Select', group: 'Forms', render: SelectDemo, fixture: { path: 'src/gallery/Forms.fixture.tsx', name: 'Select' } },
+  { id: 'combobox', title: 'Combobox', group: 'Forms', render: ComboboxDemo, fixture: { path: 'src/gallery/Forms.fixture.tsx', name: 'Combobox' } },
+  { id: 'number', title: 'Number Field', group: 'Forms', render: NumberFieldDemo, fixture: { path: 'src/gallery/Forms.fixture.tsx', name: 'Number field' } },
+  { id: 'choice', title: 'Checkbox, Switch, Radio', group: 'Forms', render: CheckboxSwitchRadioDemo, fixture: { path: 'src/gallery/Controls.fixture.tsx', name: 'Switch' } },
+  { id: 'slider', title: 'Slider', group: 'Forms', render: SliderDemo, fixture: { path: 'src/gallery/Forms.fixture.tsx', name: 'Slider' } },
+  { id: 'toggle', title: 'Toggle Group', group: 'Forms', render: ToggleDemo, fixture: { path: 'src/gallery/Forms.fixture.tsx', name: 'Toggle group' } },
+  { id: 'tabs', title: 'Tabs', group: 'Structure', render: TabsDemo, fixture: { path: 'src/gallery/Controls.fixture.tsx', name: 'Tabs' } },
+  { id: 'accordion', title: 'Accordion', group: 'Structure', render: AccordionDemo, fixture: { path: 'src/gallery/Structure.fixture.tsx', name: 'Accordion' } },
+  { id: 'progress', title: 'Progress + Meter', group: 'Structure', render: ProgressMeterDemo, fixture: { path: 'src/gallery/Structure.fixture.tsx', name: 'Progress and meter' } },
+  { id: 'avatar', title: 'Avatar + Collapsible', group: 'Structure', render: AvatarCollapsibleDemo, fixture: { path: 'src/gallery/Structure.fixture.tsx', name: 'Avatar' } },
+  { id: 'scroll', title: 'Scroll Area', group: 'Structure', render: ScrollTicketsDemo, fixture: { path: 'src/gallery/Structure.fixture.tsx', name: 'Scroll area' } },
+  { id: 'separator', title: 'Separator', group: 'Structure', render: SeparatorDemo, fixture: { path: 'src/gallery/Structure.fixture.tsx', name: 'Separator' } },
   ...stackDemos,
   ...chartDemos,
   ...tableDemos,

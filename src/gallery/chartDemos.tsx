@@ -342,11 +342,11 @@ function ChartStatesDemo() {
 }
 
 export const chartDemos: Demo[] = [
-  { id: 'line-chart', title: 'Time series', group: 'Data', render: DemandTrendDemo, workbench: 'chart-frame/time-series' },
-  { id: 'stacked-bars', title: 'Stacked bars', group: 'Data', render: EnergyBySystemDemo, workbench: 'chart-frame/bars' },
-  { id: 'donut', title: 'Donut', group: 'Data', render: EnergyMixDemo, workbench: 'chart-frame/donut' },
-  { id: 'heatmap', title: 'Heatmap', group: 'Data', render: LoadProfileDemo, workbench: 'chart-frame/heatmap' },
-  { id: 'radar-chart', title: 'Radar', group: 'Data', render: RadarChartDemo, workbench: 'chart-frame/radar' },
-  { id: 'treemap', title: 'Energy drill-down treemap', group: 'Data', render: TreemapDemo, workbench: 'treemap/default' },
-  { id: 'chart-states', title: 'Chart states', group: 'Data', render: ChartStatesDemo, workbench: 'chart-frame/time-series' },
+  { id: 'line-chart', title: 'Time series', group: 'Data', render: DemandTrendDemo, fixture: { path: 'src/charts/ChartFrame.fixture.tsx', name: 'Time series' } },
+  { id: 'stacked-bars', title: 'Stacked bars', group: 'Data', render: EnergyBySystemDemo, fixture: { path: 'src/charts/ChartFrame.fixture.tsx', name: 'Bars' } },
+  { id: 'donut', title: 'Donut', group: 'Data', render: EnergyMixDemo, fixture: { path: 'src/charts/ChartFrame.fixture.tsx', name: 'Donut' } },
+  { id: 'heatmap', title: 'Heatmap', group: 'Data', render: LoadProfileDemo, fixture: { path: 'src/charts/ChartFrame.fixture.tsx', name: 'Heatmap' } },
+  { id: 'radar-chart', title: 'Radar', group: 'Data', render: RadarChartDemo, fixture: { path: 'src/charts/ChartFrame.fixture.tsx', name: 'Radar' } },
+  { id: 'treemap', title: 'Energy drill-down treemap', group: 'Data', render: TreemapDemo, fixture: { path: 'src/gallery/Treemap.fixture.tsx', name: null } },
+  { id: 'chart-states', title: 'Chart states', group: 'Data', render: ChartStatesDemo, fixture: { path: 'src/charts/ChartFrame.fixture.tsx', name: 'Time series' } },
 ];

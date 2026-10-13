@@ -13,14 +13,14 @@ import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Button as BaseButton } from '@base-ui/react/button';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 
 /** Proves the Material UI theme bridge: tokens drive every Material part, beside the Base UI button for comparison. */
 
 function Playground() {
-  const [variant] = useFixtureSelect('variant', { options: ['contained', 'outlined', 'text'] as const });
+  const [variant] = useFixtureSelect('variant', { options: [...(['contained', 'outlined', 'text'] as const)] });
   const [color] = useFixtureSelect('color', {
-    options: ['primary', 'secondary', 'success', 'error', 'warning', 'info'] as const,
+    options: [...(['primary', 'secondary', 'success', 'error', 'warning', 'info'] as const)],
   });
   const [label] = useFixtureInput('label', 'Dispatch ticket');
   const [disabled] = useFixtureInput('disabled', false);

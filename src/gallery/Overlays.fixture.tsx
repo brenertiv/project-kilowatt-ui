@@ -5,7 +5,7 @@ import { Menu } from '@base-ui/react/menu';
 import { Popover } from '@base-ui/react/popover';
 import { Toast } from '@base-ui/react/toast';
 import { Tooltip } from '@base-ui/react/tooltip';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 
 function MenuFixture() {
   const [count] = useFixtureInput('item count', 3);
@@ -35,7 +35,7 @@ function MenuFixture() {
 
 function TooltipFixture() {
   const [text] = useFixtureInput('text', 'Last 15-minute interval: 412 kW');
-  const [side] = useFixtureSelect('side', { options: ['top', 'bottom', 'left', 'right'] as const });
+  const [side] = useFixtureSelect('side', { options: [...(['top', 'bottom', 'left', 'right'] as const)] });
   const [open, setOpen] = useFixtureInput('open', false);
   return (
     <Tooltip.Root open={open} onOpenChange={setOpen}>

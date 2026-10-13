@@ -1,13 +1,13 @@
 import { Field } from '@base-ui/react/field';
 import { Input } from '@base-ui/react/input';
-import { useFixtureInput, useFixtureSelect } from '../workbench/inputs';
+import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
 
 function Playground() {
   const [label] = useFixtureInput('label', 'Site name');
   const [value, setValue] = useFixtureInput('value', '120 Broadway');
   const [placeholder] = useFixtureInput('placeholder', 'Enter a site');
   const [description] = useFixtureInput('description', 'Used on tickets and meter rollups.');
-  const [state] = useFixtureSelect('state', { options: ['default', 'invalid', 'disabled'] as const });
+  const [state] = useFixtureSelect('state', { options: [...(['default', 'invalid', 'disabled'] as const)] });
   const [error] = useFixtureInput('error message', 'Site name is required.');
 
   return (

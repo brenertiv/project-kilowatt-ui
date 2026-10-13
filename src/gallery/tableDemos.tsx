@@ -383,10 +383,10 @@ export function CellRenderersDemo() {
 
 // Rendered as elements (not called) so demos that use hooks keep their own hook order when the gallery filters.
 export const tableDemos: Demo[] = [
-  { id: 'data-table', title: 'Data table', group: 'Tables', render: () => <MetersTableDemo />, workbench: 'data-table/playground' },
-  { id: 'server-table', title: 'Server-side table', group: 'Tables', render: () => <ServerTableDemo />, workbench: 'data-table/server-side' },
-  { id: 'selection-table', title: 'Selection + bulk actions', group: 'Tables', render: () => <SelectionTableDemo />, workbench: 'data-table/playground' },
-  { id: 'expandable-table', title: 'Expandable rows', group: 'Tables', render: () => <ExpandableTableDemo />, workbench: 'data-table/playground' },
-  { id: 'virtualized-table', title: 'Virtualized table', group: 'Tables', render: () => <VirtualizedTableDemo />, workbench: 'data-table/virtualized' },
-  { id: 'cell-renderers', title: 'Cell renderers', group: 'Tables', render: () => <CellRenderersDemo />, workbench: 'cells/playground' },
+  { id: 'data-table', title: 'Data table', group: 'Tables', render: () => <MetersTableDemo />, fixture: { path: 'src/components/DataTable.fixture.tsx', name: 'Playground' } },
+  { id: 'server-table', title: 'Server-side table', group: 'Tables', render: () => <ServerTableDemo />, fixture: { path: 'src/components/DataTable.fixture.tsx', name: 'Server-side' } },
+  { id: 'selection-table', title: 'Selection + bulk actions', group: 'Tables', render: () => <SelectionTableDemo />, fixture: { path: 'src/components/DataTable.fixture.tsx', name: 'Playground' } },
+  { id: 'expandable-table', title: 'Expandable rows', group: 'Tables', render: () => <ExpandableTableDemo />, fixture: { path: 'src/components/DataTable.fixture.tsx', name: 'Playground' } },
+  { id: 'virtualized-table', title: 'Virtualized table', group: 'Tables', render: () => <VirtualizedTableDemo />, fixture: { path: 'src/components/DataTable.fixture.tsx', name: 'Virtualized' } },
+  { id: 'cell-renderers', title: 'Cell renderers', group: 'Tables', render: () => <CellRenderersDemo />, fixture: { path: 'src/components/cells.fixture.tsx', name: 'Playground' } },
 ];

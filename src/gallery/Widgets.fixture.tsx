@@ -1,4 +1,4 @@
-import { useFixtureInput } from '../workbench/inputs';
+import { useFixtureInput } from 'react-cosmos/client';
 import {
   ChartDemo,
   DndDemo,
