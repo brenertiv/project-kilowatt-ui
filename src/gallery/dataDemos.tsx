@@ -115,8 +115,7 @@ function DataStateDemo() {
 function PageNote({ children }: { children: string }) {
   return (
     <Typography variant="body2" color="text.secondary">
-      {children} Open it in Cosmos to run the page against the mock API, with fail and latency switches in the control
-      panel.
+      {children} Open it in Cosmos to drive every state from the control panel.
     </Typography>
   );
 }
