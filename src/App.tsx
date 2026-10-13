@@ -7,6 +7,7 @@ import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { queryClient } from './api/queryClient';
 import { ThemeProvider, useTheme } from './theme/ThemeProvider';
+import { MuiProvider } from './mui/MuiProvider';
 import { ThemeEditor } from './theme/ThemeEditor';
 import { Gallery } from './gallery/Gallery';
 import { DesignSystem } from './designSystem/DesignSystem';
@@ -108,13 +109,15 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <Toast.Provider>
-          <Tooltip.Provider>
-            <BrowserRouter basename={import.meta.env.BASE_URL}>
-              <Shell />
-            </BrowserRouter>
-          </Tooltip.Provider>
-        </Toast.Provider>
+        <MuiProvider>
+          <Toast.Provider>
+            <Tooltip.Provider>
+              <BrowserRouter basename={import.meta.env.BASE_URL}>
+                <Shell />
+              </BrowserRouter>
+            </Tooltip.Provider>
+          </Toast.Provider>
+        </MuiProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

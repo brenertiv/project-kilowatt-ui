@@ -7,6 +7,7 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 ## Tokens
 
 - Tokens are the only source of color, type, space, radius and shadow. No component declares a hex value, a pixel radius or a font family of its own.
+- Styling is plain CSS with custom properties. The one exception is Material UI, which is styled through the theme bridge in `src/mui/theme.ts` and nowhere else: no `sx` colors, no `styled()` literals, no inline Emotion in components.
 - Three layers. **Primitives** are the Figma ramps and scales, mirrored in `src/primitives.ts` with every color ramp normalised to eleven steps named 50 to 950 (the ten-step Figma ramps have their 1000 named 950 and a synthesized 50 tint, flagged as derived until added in Figma) and emitted as `--color-slate-300`, `--spacing-4`, `--radius-md` and so on; they change only when Figma changes. **Core** tokens are the identity knobs (background, text, accent, state colors, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles with their own stored value (surfaces, borders, secondary text, tints, utilities, chart slots). Core and semantic are editable in the Theme editor and take their defaults from primitive steps.
 - **Derived** variables (type scale steps, space scale, inner radius, shadow steps, scrollbar colors) are computed from the layers above and are never stored. Change the source token to move them.
 - Every color token has a light and a dark value. A new color token is not done until both exist and the Design System contrast list has been checked.
@@ -21,6 +22,15 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 - Warning text on white is below 4.5:1 by design. Pair it with an icon or use it on its tint.
 - Utility colors (electricity, water, gas, steam, sanitation) are entity colors. A commodity keeps its hue everywhere it appears. They are not a categorical palette and fail the adjacent-pair checks together, so never rely on them alone to separate series.
 - Links use the link token. Focus rings use the accent.
+
+## Material UI
+
+- Material UI is the component library for data display and page composition: cards, lists, chips, badges, skeletons, alerts, pagination, app bars and drawers. Base UI remains in place for the primitives already built on it. New work reaches for Material first; existing Base UI components migrate when they are next touched, not before.
+- The bridge in `src/mui/theme.ts` is the only place Material learns a value. It reads the same resolved tokens the stylesheet receives, so the Theme editor and the scheme switch reach every Material component with no second source of truth. Add a token mapping there; never pass a color to a component.
+- Material's palette roles map onto ours: `primary` is the accent, contained primary buttons wear the solid token, `secondary` is solid, `success`, `error` and `warning` are the state colors, `info` is the link color, `divider` is the border, `background.paper` is the raised surface.
+- Material defaults that contradict the system are switched off in the bridge: ripples, button elevation, uppercase button text, the dark-mode elevation overlay. Cards are outlined. Motion uses the system curve and durations.
+- `sx` is for layout only: spacing, flex, grid, width. Its spacing unit is 4px, so `spacing={4}` is 16px.
+- Icons stay Material Symbols through `src/icons.tsx`. The `@mui/icons-material` package is not installed on purpose.
 
 ## Charts
 
