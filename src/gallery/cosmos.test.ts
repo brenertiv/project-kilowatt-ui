@@ -8,7 +8,7 @@ describe('cosmosFixtureUrl', () => {
       'http://localhost:5100/',
     );
     expect(url).toBe(
-      `http://localhost:5100/?fixtureId=${encodeURIComponent('{"path":"src/components/Button.fixture.tsx","name":"All states"}')}`,
+      `http://localhost:5100/?fixture=${encodeURIComponent('{"path":"src/components/Button.fixture.tsx","name":"All states"}')}`,
     );
   });
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   colorTokens,
   resolveTheme,
@@ -89,13 +89,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setState(next);
   }
 
-  function setColorScheme(colorScheme: ColorScheme) {
+  const setColorScheme = useCallback((colorScheme: ColorScheme) => {
     setState((current) => {
+      if (current.colorScheme === colorScheme) return current;
       const next = { ...current, colorScheme };
       persist(next);
       return next;
     });
-  }
+  }, []);
 
   function setToken(id: string, value: string) {
     if (!tokenById[id]) return;

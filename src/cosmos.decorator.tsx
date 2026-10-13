@@ -15,10 +15,10 @@ const schemes: ColorScheme[] = ['light', 'dark'];
 
 function SchemeControl({ children }: { children: ReactNode }) {
   const { colorScheme, setColorScheme } = useTheme();
-  const [scheme] = useFixtureSelect('scheme', { options: schemes, defaultValue: colorScheme });
+  const [scheme] = useFixtureSelect('scheme', { options: schemes, defaultValue: 'light' });
   useEffect(() => {
-    setColorScheme(scheme);
-  }, [scheme, setColorScheme]);
+    if (scheme !== colorScheme) setColorScheme(scheme);
+  }, [scheme, colorScheme, setColorScheme]);
   return children;
 }
 

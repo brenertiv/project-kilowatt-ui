@@ -12,5 +12,5 @@ export const cosmosBaseUrl: string | null =
 export function cosmosFixtureUrl(fixture: FixtureRef, base: string | null = cosmosBaseUrl): string | null {
   if (!base) return null;
   const id = JSON.stringify(fixture.name ? { path: fixture.path, name: fixture.name } : { path: fixture.path });
-  return `${base.replace(/\/$/, '')}/?fixtureId=${encodeURIComponent(id)}`;
+  return `${base.replace(/\/$/, '')}/?fixture=${encodeURIComponent(id)}`;
 }
