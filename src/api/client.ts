@@ -1,6 +1,7 @@
 import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { tickets } from '../data';
 import { meterInventory, type Meter } from '../meters';
+import { mockRoute } from './mock';
 
 const catalog: Record<string, unknown> = {
   '/tickets': tickets,
@@ -90,7 +91,8 @@ export const http = axios.create({
   adapter: async (config: InternalAxiosRequestConfig): Promise<AxiosResponse> => {
     const path = config.url ?? '';
     const route = routes[path];
-    const data = route ? await route(config) : catalog[path];
+    const mocked = route ? route(config) : mockRoute(config);
+    const data = mocked ? await mocked : catalog[path];
     if (data === undefined) {
       return Promise.reject(new Error(`No lab mock for ${path}`));
     }

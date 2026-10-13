@@ -25,7 +25,9 @@ describe('selectMetersPage', () => {
   it('matches the search term across name, description, and sublocation', () => {
     const page = selectMetersPage({ q: 'penthouse', size: 0 });
     expect(page.rows.length).toBe(page.total);
-    expect(page.rows.every((meter) => meter.sublocation === 'Penthouse' || meter.description?.includes('Penthouse'))).toBe(true);
+    expect(
+      page.rows.every((meter) => meter.sublocation === 'Penthouse' || meter.description?.includes('Penthouse')),
+    ).toBe(true);
   });
 });
 
