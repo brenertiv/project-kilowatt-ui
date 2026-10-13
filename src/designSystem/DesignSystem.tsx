@@ -8,6 +8,7 @@ import {
   ColorSection,
   IconsSection,
   LayoutSection,
+  PrimitivesSection,
   ShapeSection,
   SpaceSection,
   systemSections,
@@ -58,6 +59,7 @@ export function DesignSystem() {
         ))}
       </nav>
 
+      <PrimitivesSection />
       <ColorSection lightValues={lightValues} darkColors={darkColors} />
       <TypographySection values={values} />
       <SpaceSection values={values} />

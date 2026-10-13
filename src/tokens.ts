@@ -1,4 +1,5 @@
 import { breakpointCssVars } from './breakpoints';
+import { primitiveCssVars } from './primitives';
 
 export type TokenGroup = 'Color' | 'Typography' | 'Shape' | 'Space';
 export type TokenType = 'color' | 'length' | 'font';
@@ -242,8 +243,8 @@ export const tokens: Token[] = [
     label: 'Electricity',
     group: 'Color',
     type: 'color',
-    defaultValue: '#FF6BD6',
-    darkValue: '#D15CC5',
+    defaultValue: '#8351E7',
+    darkValue: '#B99CF1',
   },
   {
     id: 'utilityWater',
@@ -251,8 +252,8 @@ export const tokens: Token[] = [
     label: 'Water',
     group: 'Color',
     type: 'color',
-    defaultValue: '#3FB4E5',
-    darkValue: '#5CABD2',
+    defaultValue: '#2EA6E1',
+    darkValue: '#51B5E6',
   },
   {
     id: 'utilityGas',
@@ -260,8 +261,8 @@ export const tokens: Token[] = [
     label: 'Gas',
     group: 'Color',
     type: 'color',
-    defaultValue: '#00C371',
-    darkValue: '#5CBE7C',
+    defaultValue: '#00804C',
+    darkValue: '#74C365',
   },
   {
     id: 'utilitySteam',
@@ -269,8 +270,8 @@ export const tokens: Token[] = [
     label: 'Steam',
     group: 'Color',
     type: 'color',
-    defaultValue: '#FF9900',
-    darkValue: '#FF993A',
+    defaultValue: '#E34712',
+    darkValue: '#FE9E7F',
   },
   {
     id: 'utilitySanitation',
@@ -278,17 +279,17 @@ export const tokens: Token[] = [
     label: 'Sanitation',
     group: 'Color',
     type: 'color',
-    defaultValue: '#B8B105',
-    darkValue: '#E8C71F',
+    defaultValue: '#8E960A',
+    darkValue: '#C4CF3A',
   },
   {
     id: 'chart1',
     cssVar: '--chart-1',
-    label: 'Series 1 (blue)',
+    label: 'Series 1 (brand)',
     group: 'Color',
     type: 'color',
-    defaultValue: '#2A78D6',
-    darkValue: '#3987E5',
+    defaultValue: '#51B5E6',
+    darkValue: '#2585B4',
   },
   {
     id: 'chart2',
@@ -296,62 +297,53 @@ export const tokens: Token[] = [
     label: 'Series 2 (orange)',
     group: 'Color',
     type: 'color',
-    defaultValue: '#EB6834',
-    darkValue: '#D95926',
+    defaultValue: '#952F0C',
+    darkValue: '#BB3B0F',
   },
   {
     id: 'chart3',
     cssVar: '--chart-3',
-    label: 'Series 3 (aqua)',
+    label: 'Series 3 (green)',
     group: 'Color',
     type: 'color',
-    defaultValue: '#1BAF7A',
-    darkValue: '#199E70',
+    defaultValue: '#1BC28C',
+    darkValue: '#0FA477',
   },
   {
     id: 'chart4',
     cssVar: '--chart-4',
-    label: 'Series 4 (yellow)',
+    label: 'Series 4 (violet)',
     group: 'Color',
     type: 'color',
-    defaultValue: '#EDA100',
-    darkValue: '#C98500',
+    defaultValue: '#6A2EE1',
+    darkValue: '#9B72EB',
   },
   {
     id: 'chart5',
     cssVar: '--chart-5',
-    label: 'Series 5 (magenta)',
+    label: 'Series 5 (spring)',
     group: 'Color',
     type: 'color',
-    defaultValue: '#E87BA4',
-    darkValue: '#D55181',
+    defaultValue: '#A8B11B',
+    darkValue: '#8E960A',
   },
   {
     id: 'chart6',
     cssVar: '--chart-6',
-    label: 'Series 6 (green)',
+    label: 'Series 6 (midnight)',
     group: 'Color',
     type: 'color',
-    defaultValue: '#008300',
-    darkValue: '#008300',
+    defaultValue: '#3A60A1',
+    darkValue: '#3A60A1',
   },
   {
     id: 'chart7',
     cssVar: '--chart-7',
-    label: 'Series 7 (violet)',
+    label: 'Series 7 (meadow)',
     group: 'Color',
     type: 'color',
-    defaultValue: '#4A3AA7',
-    darkValue: '#9085E9',
-  },
-  {
-    id: 'chart8',
-    cssVar: '--chart-8',
-    label: 'Series 8 (red)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#E34948',
-    darkValue: '#E66767',
+    defaultValue: '#74C365',
+    darkValue: '#43A159',
   },
   {
     id: 'fontSans',
@@ -430,10 +422,15 @@ export const tokens: Token[] = [
   { id: 'gap', cssVar: '--gap', label: 'Card gap', group: 'Space', type: 'length', defaultValue: '12px' },
 ];
 
-export type TokenLayer = 'primitive' | 'semantic';
+/**
+ * Editable token layers. `core` tokens are the identity knobs the rest of the
+ * theme derives from; `semantic` tokens are roles with their own stored value.
+ * Both sit above the primitives in `primitives.ts`, which mirror Figma's ramps.
+ */
+export type TokenLayer = 'core' | 'semantic';
 
 /** Identity knobs. Semantic tokens build on these; both layers are editable in the Theme editor. */
-export const primitiveTokenIds = [
+export const coreTokenIds = [
   'bg',
   'text',
   'accent',
@@ -449,18 +446,18 @@ export const primitiveTokenIds = [
   'space',
 ] as const;
 
-export type PrimitiveTokenId = (typeof primitiveTokenIds)[number];
+export type CoreTokenId = (typeof coreTokenIds)[number];
 
-export function isPrimitiveTokenId(id: string): id is PrimitiveTokenId {
-  return (primitiveTokenIds as readonly string[]).includes(id);
+export function isCoreTokenId(id: string): id is CoreTokenId {
+  return (coreTokenIds as readonly string[]).includes(id);
 }
 
 export function tokenLayer(token: Token): TokenLayer {
-  return isPrimitiveTokenId(token.id) ? 'primitive' : 'semantic';
+  return isCoreTokenId(token.id) ? 'core' : 'semantic';
 }
 
-export const primitiveTokens = tokens.filter((token) => isPrimitiveTokenId(token.id));
-export const semanticTokens = tokens.filter((token) => !isPrimitiveTokenId(token.id));
+export const coreTokens = tokens.filter((token) => isCoreTokenId(token.id));
+export const semanticTokens = tokens.filter((token) => !isCoreTokenId(token.id));
 
 export const defaultTheme = Object.fromEntries(tokens.map((token) => [token.id, token.defaultValue])) as Record<
   string,
@@ -646,9 +643,6 @@ export const derivedTokens: DerivedToken[] = [
   { cssVar: '--space-6', label: 'Space 6', group: 'Space', value: '32px' },
   { cssVar: '--space-7', label: 'Space 7', group: 'Space', value: '48px' },
   { cssVar: '--space-8', label: 'Space 8', group: 'Space', value: '64px' },
-  { cssVar: '--spacing-0', label: 'Spacing 0', group: 'Space', value: '0px', note: 'Figma spacing/0' },
-  { cssVar: '--spacing-5', label: 'Spacing 5', group: 'Space', value: '20px', note: 'Figma spacing/5, between space 4 and 5' },
-  { cssVar: '--spacing-10', label: 'Spacing 10', group: 'Space', value: '40px', note: 'Figma spacing/10, between space 6 and 7' },
   { cssVar: '--spacing-component-xs', label: 'Component XS', group: 'Space', value: '4px', note: 'Figma spacing/component-xs' },
   { cssVar: '--spacing-component-sm', label: 'Component SM', group: 'Space', aliasOf: 'space', note: 'Figma spacing/component-sm' },
   { cssVar: '--spacing-component-md', label: 'Component MD', group: 'Space', aliasOf: 'gap', note: 'Figma spacing/component-md' },
@@ -664,10 +658,6 @@ export const derivedTokens: DerivedToken[] = [
     value: '4px',
     note: 'Chips, badges, nested tiles and clipped viewports (Figma radius/sm)',
   },
-  { cssVar: '--radius-lg', label: 'Radius LG', group: 'Shape', value: '12px', note: 'Figma radius/lg' },
-  { cssVar: '--radius-xl', label: 'Radius XL', group: 'Shape', value: '16px', note: 'Figma radius/xl' },
-  { cssVar: '--radius-2xl', label: 'Radius 2XL', group: 'Shape', value: '20px', note: 'Figma radius/2xl' },
-  { cssVar: '--radius-full', label: 'Full radius', group: 'Shape', value: '9999px', note: 'Avatars and pills (Figma radius/full)' },
   { cssVar: '--shadow-sm', label: 'Shadow SM', group: 'Shape', value: shadowScale.sm, note: 'Figma Shadow/card, Shadow/tooltip' },
   { cssVar: '--shadow-md', label: 'Shadow MD', group: 'Shape', value: shadowScale.md, note: 'Figma Shadow/panel, Shadow/popover' },
   { cssVar: '--shadow-lg', label: 'Shadow LG', group: 'Shape', value: shadowScale.lg, note: 'Figma Shadow/modal' },
@@ -707,7 +697,7 @@ export function derivedValue(
 }
 
 export function themeToCssVars(values: Record<string, string>, scheme: ColorScheme = 'light'): Record<string, string> {
-  const vars: Record<string, string> = {};
+  const vars: Record<string, string> = { ...primitiveCssVars };
   for (const token of tokens) {
     vars[token.cssVar] = values[token.id] ?? token.defaultValue;
   }
@@ -737,7 +727,7 @@ export function themeToCssText(values: ThemeValues, darkColors: Record<string, s
 }
 
 /** Categorical chart slots in assignment order. Validated with the dataviz palette checks on both surfaces. */
-export const chartSeriesIds = ['chart1', 'chart2', 'chart3', 'chart4', 'chart5', 'chart6', 'chart7', 'chart8'] as const;
+export const chartSeriesIds = ['chart1', 'chart2', 'chart3', 'chart4', 'chart5', 'chart6', 'chart7'] as const;
 
 /** Semantic grouping for the color palette, so roles read in intent order. */
 export type ColorRoleGroup = {
@@ -779,7 +769,7 @@ export const colorRoles: ColorRoleGroup[] = [
     id: 'utility',
     label: 'Utilities',
     description:
-      'Entity colors for commodity data. A utility keeps its hue everywhere it appears, so a water series in a chart matches the water chip in a table. Not a categorical palette: they fail the adjacent-pair checks together, so never rely on them alone to separate series.',
+      'Entity colors for commodity data from the Figma ramps: electricity on violet, water on brand, gas on meadow, steam on orange, sanitation on spring, each stepped lighter in dark mode. A utility keeps its hue everywhere it appears. Not a categorical palette; never rely on them alone to separate series.',
     tokenIds: ['utilityElectricity', 'utilityWater', 'utilityGas', 'utilitySteam', 'utilitySanitation'],
   },
   {
@@ -792,7 +782,7 @@ export const colorRoles: ColorRoleGroup[] = [
     id: 'chart',
     label: 'Chart series',
     description:
-      'Eight categorical hues in a fixed order, assigned to series in sequence and never cycled. The order is the colorblind-safety mechanism; both schemes pass the adjacent-pair checks on their surfaces.',
+      'Seven categorical slots, one per chromatic Figma ramp not reserved for status, in the order brand, orange, green, violet, spring, midnight, meadow, chosen by search to maximise colorblind separation. Validated with the dataviz checks: worst adjacent CVD ΔE 26.3 light and 12.4 dark against a target of 8. Assigned to series in sequence, never cycled; an eighth series folds into Other.',
     tokenIds: [...chartSeriesIds],
   },
 ];

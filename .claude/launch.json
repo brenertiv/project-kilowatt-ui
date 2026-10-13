@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kilowatt-ui",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "exec npx vite --port \"${PORT:-5173}\" --strictPort"],
+      "port": 5173,
+      "autoPort": true
+    }
+  ]
+}

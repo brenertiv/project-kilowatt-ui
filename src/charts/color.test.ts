@@ -23,10 +23,10 @@ describe('chart color', () => {
     }
   });
 
-  it('exposes eight categorical slots in token order for both schemes', () => {
+  it('exposes seven categorical slots in token order for both schemes', () => {
     expect(categoricalPalette(defaultTheme)).toEqual(chartSeriesIds.map((id) => defaultTheme[id]));
     expect(categoricalPalette(dark)).toEqual(chartSeriesIds.map((id) => defaultDarkColors[id]));
-    expect(new Set(categoricalPalette(defaultTheme)).size).toBe(8);
+    expect(new Set(categoricalPalette(defaultTheme)).size).toBe(7);
   });
 
   it('keeps a color with its series id when the series list is filtered', () => {
@@ -36,8 +36,8 @@ describe('chart color', () => {
     expect(filtered.plug).toBe(defaultTheme.chart2);
   });
 
-  it('refuses a ninth series instead of cycling hues', () => {
-    const ids = Array.from({ length: 9 }, (_, index) => `s${index}`);
+  it('refuses an eighth series instead of cycling hues', () => {
+    const ids = Array.from({ length: 8 }, (_, index) => `s${index}`);
     expect(() => assignSeriesColors(ids, defaultTheme)).toThrow(/Fold the tail/);
   });
 

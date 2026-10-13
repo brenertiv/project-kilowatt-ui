@@ -3,6 +3,7 @@ import { Toast } from '@base-ui/react/toast';
 import { useTranslation } from 'react-i18next';
 import { breakpointRoles, breakpoints, breakpointVarName, type BreakpointName } from '../breakpoints';
 import { iconCatalog } from '../icons';
+import { colorRamps, isDerivedStep, radiusScale, rampLabel, sizeScale, spacingScale, typographyPrimitives, type RampName } from '../primitives';
 import { useTheme } from '../theme/ThemeProvider';
 import {
   colorRoles,
@@ -29,6 +30,7 @@ import {
 import { measureContrast, type WcagLevel } from './contrast';
 
 export const systemSections = [
+  { id: 'primitives', labelKey: 'system.sections.primitives' },
   { id: 'color', labelKey: 'system.sections.color' },
   { id: 'typography', labelKey: 'system.sections.typography' },
   { id: 'space', labelKey: 'system.sections.space' },
@@ -102,6 +104,10 @@ export function ColorSection({
                   <p className="system-meta">
                     <span>{light}</span>
                     <span>{dark}</span>
+                  </p>
+                  <p className="system-meta system-ramp-ref">
+                    <span>{rampLabel(light) ?? '—'}</span>
+                    <span>{rampLabel(dark) ?? '—'}</span>
                   </p>
                   {pair ? (
                     <div className="system-swatch-contrast">
@@ -451,6 +457,121 @@ export function LayoutSection() {
             <p className="ui-description">{breakpointRoles[name]}</p>
           </article>
         ))}
+      </div>
+    </section>
+  );
+}
+
+const rampOrder: RampName[] = ['slate', 'navy', 'brand', 'green', 'meadow', 'spring', 'yellow', 'orange', 'red', 'violet', 'midnight', 'aquaverde', 'parchment'];
+
+export function PrimitivesSection() {
+  const { t } = useTranslation();
+  return (
+    <section id="primitives" className="system-section">
+      <h2>{t('system.sections.primitives')}</h2>
+      <p className="ui-description">{t('system.primitives.lead')}</p>
+
+      <div className="system-role">
+        <div className="system-role-head">
+          <h3>{t('system.primitives.ramps')}</h3>
+          <p className="ui-description">{t('system.primitives.rampsLead')}</p>
+        </div>
+        <div className="system-ramps">
+          {rampOrder.map((ramp) => (
+            <div key={ramp} className="system-ramp">
+              <div className="system-ramp-name">
+                <span>{ramp}</span>
+                <code className="system-code">--color-{ramp}-*</code>
+              </div>
+              <div className="system-ramp-steps">
+                {colorRamps[ramp].map(([step, hex]) => (
+                  <div
+                    key={step}
+                    className="system-ramp-step"
+                    data-derived={isDerivedStep(ramp, step) || undefined}
+                    title={`color/${ramp}/${step} ${hex}${isDerivedStep(ramp, step) ? ' (derived, not yet in Figma)' : ''}`}
+                  >
+                    <span className="system-ramp-swatch" style={{ background: hex }} aria-hidden="true" />
+                    <span className="system-ramp-label">{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="system-role">
+        <div className="system-role-head">
+          <h3>{t('system.primitives.scales')}</h3>
+          <p className="ui-description">{t('system.primitives.scalesLead')}</p>
+        </div>
+        <div className="system-swatches">
+          <article className="card system-type-card">
+            <h3>Spacing</h3>
+            <p className="system-meta">
+              {spacingScale.map(([name, px]) => (
+                <span key={name}>
+                  <code className="system-code">{name}</code> {px}
+                </span>
+              ))}
+            </p>
+          </article>
+          <article className="card system-type-card">
+            <h3>Radius</h3>
+            <p className="system-meta">
+              {radiusScale.map(([name, px]) => (
+                <span key={name}>
+                  <code className="system-code">{name}</code> {px}
+                </span>
+              ))}
+            </p>
+          </article>
+          <article className="card system-type-card">
+            <h3>Font size</h3>
+            <p className="system-meta">
+              {Object.entries(typographyPrimitives.fontSize).map(([name, px]) => (
+                <span key={name}>
+                  <code className="system-code">{name}</code> {px}
+                </span>
+              ))}
+            </p>
+          </article>
+          <article className="card system-type-card">
+            <h3>Weight, leading, tracking</h3>
+            <p className="system-meta">
+              {Object.entries(typographyPrimitives.fontWeight).map(([name, value]) => (
+                <span key={name}>
+                  <code className="system-code">{name}</code> {value}
+                </span>
+              ))}
+            </p>
+            <p className="system-meta">
+              {Object.entries(typographyPrimitives.lineHeight).map(([name, value]) => (
+                <span key={name}>
+                  <code className="system-code">{name}</code> {value}
+                </span>
+              ))}
+            </p>
+            <p className="system-meta">
+              {Object.entries(typographyPrimitives.letterSpacing).map(([name, value]) => (
+                <span key={name}>
+                  <code className="system-code">{name}</code> {value}em
+                </span>
+              ))}
+            </p>
+          </article>
+          <article className="card system-type-card">
+            <h3>Size</h3>
+            <p className="system-meta">
+              {sizeScale.map((px) => (
+                <span key={px}>
+                  <code className="system-code">size/{px}</code> {px}
+                </span>
+              ))}
+            </p>
+          </article>
+        </div>
       </div>
     </section>
   );

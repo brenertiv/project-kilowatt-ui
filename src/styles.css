@@ -24,11 +24,11 @@
   --color-on-solid: #ffffff;
   --color-hover: #e7ecf2;
   --color-track: #d6dee8;
-  --color-utility-electricity: #ff6bd6;
-  --color-utility-water: #3fb4e5;
-  --color-utility-gas: #00c371;
-  --color-utility-steam: #ff9900;
-  --color-utility-sanitation: #b8b105;
+  --color-utility-electricity: #8351e7;
+  --color-utility-water: #2ea6e1;
+  --color-utility-gas: #00804c;
+  --color-utility-steam: #e34712;
+  --color-utility-sanitation: #8e960a;
   --font-sans: Roboto, system-ui, sans-serif;
   --font-serif: 'Roboto Serif', Georgia, serif;
   --font-mono: 'Roboto Mono', ui-monospace, monospace;
@@ -3205,5 +3205,78 @@ button.chart-legend-item:focus-visible {
   .workbench-drawer {
     border: 0;
     border-top: var(--border-width) solid var(--color-border);
+  }
+}
+
+/* System page: primitive ramps */
+
+.system-ramps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.system-ramp {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.system-ramp-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-size-sm);
+  text-transform: capitalize;
+}
+
+.system-ramp-name .system-code {
+  text-transform: none;
+}
+
+.system-ramp-steps {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.system-ramp-step {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.system-ramp-swatch {
+  display: block;
+  height: 28px;
+  border-radius: var(--radius-inner);
+  outline: 1px solid var(--image-outline);
+  outline-offset: -1px;
+}
+
+.system-ramp-step[data-derived] .system-ramp-swatch {
+  outline: 1px dashed var(--color-text-muted);
+}
+
+.system-ramp-step[data-derived] .system-ramp-label {
+  font-style: italic;
+}
+
+.system-ramp-label {
+  font-size: var(--text-xxs);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.system-ramp-ref {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 720px) {
+  .system-ramp {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

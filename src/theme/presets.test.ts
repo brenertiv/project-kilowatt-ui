@@ -86,7 +86,8 @@ describe('theme state', () => {
   });
 
   it('migrates a stored fontFamily onto Font Sans', () => {
-    const { fontSans: _sans, fontSerif: _serif, fontMono: _mono, ...legacyTokens } = defaultTheme;
+    const fontKeys = ['fontSans', 'fontSerif', 'fontMono'];
+    const legacyTokens = Object.fromEntries(Object.entries(defaultTheme).filter(([key]) => !fontKeys.includes(key)));
     const stored = JSON.stringify({
       version: 2,
       values: { ...legacyTokens, fontFamily: '"IBM Plex Sans", system-ui, sans-serif' },

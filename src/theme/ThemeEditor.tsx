@@ -37,14 +37,14 @@ const panelGroups: PanelGroup[] = [
 
 const layerFilters: { value: LayerFilter; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'primitive', label: 'Primitive' },
+  { value: 'core', label: 'Core' },
   { value: 'semantic', label: 'Semantic' },
   { value: 'derived', label: 'Derived' },
 ];
 
 const layerCopy: Record<TokenLayer, string> = {
-  primitive: 'Identity knobs. Everything else builds on these.',
-  semantic: 'Role tokens with their own stored value. Edit to override the role without touching the primitive.',
+  core: 'Identity knobs. Everything else builds on these.',
+  semantic: 'Role tokens with their own stored value, taken from the Figma ramps. Edit to override the role without touching the core token.',
 };
 
 function toPxValue(raw: string, fallback: string) {
@@ -199,7 +199,7 @@ function LayerBlock({
   return (
     <div className="editor-subgroup">
       <div className="editor-subgroup-head">
-        <h4>{layer === 'primitive' ? 'Primitive' : 'Semantic'}</h4>
+        <h4>{layer === 'core' ? 'Core' : 'Semantic'}</h4>
         <p className="ui-description">{layerCopy[layer]}</p>
       </div>
       <div className="editor-panel-grid">
@@ -236,7 +236,7 @@ export function ThemeEditor() {
         (token) => panel.groups.includes(token.group) && matches(needle, token.label, token.cssVar, token.id),
       );
       const showLayer = (candidate: TokenLayer) => layer === 'all' || layer === candidate;
-      const primitive = showLayer('primitive') ? inGroup.filter((token) => tokenLayer(token) === 'primitive') : [];
+      const core = showLayer('core') ? inGroup.filter((token) => tokenLayer(token) === 'core') : [];
       const semantic = showLayer('semantic') ? inGroup.filter((token) => tokenLayer(token) === 'semantic') : [];
       const derived =
         layer === 'all' || layer === 'derived'
@@ -244,9 +244,9 @@ export function ThemeEditor() {
               (token) => panel.groups.includes(token.group) && matches(needle, token.label, token.cssVar),
             )
           : [];
-      return { panel, primitive, semantic, derived };
+      return { panel, core, semantic, derived };
     })
-    .filter((section) => section.primitive.length + section.semantic.length + section.derived.length > 0);
+    .filter((section) => section.core.length + section.semantic.length + section.derived.length > 0);
 
   return (
     <Dialog.Root>
@@ -269,7 +269,7 @@ export function ThemeEditor() {
                 <Dialog.Description className="ui-description">
                   {editingDark
                     ? 'Color edits apply to the dark palette. Type, shape, and space are shared across both schemes.'
-                    : 'Every primitive and semantic token, grouped by role. Derived variables show their resolved value.'}
+                    : 'Every core and semantic token, grouped by role. Derived variables show their resolved value. Primitives (the Figma ramps) live on the System page.'}
                 </Dialog.Description>
               </div>
               <Dialog.Close className="ui-icon-btn" aria-label="Close theme">
@@ -317,10 +317,10 @@ export function ThemeEditor() {
 
             <div className="editor-panel-body">
               {sections.length === 0 ? <p className="ui-description">No tokens match this filter.</p> : null}
-              {sections.map(({ panel, primitive, semantic, derived }) => (
+              {sections.map(({ panel, core, semantic, derived }) => (
                 <section key={panel.id} className="editor-group">
                   <h3>{panel.id === 'Color' && editingDark ? 'Color · Dark' : panel.label}</h3>
-                  <LayerBlock layer="primitive" items={primitive} values={values} onChange={setToken} />
+                  <LayerBlock layer="core" items={core} values={values} onChange={setToken} />
                   <LayerBlock layer="semantic" items={semantic} values={values} onChange={setToken} />
                   {derived.length > 0 ? (
                     <div className="editor-subgroup">

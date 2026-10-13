@@ -7,7 +7,7 @@
   "nav.components": "Components",
   "nav.designSystem": "System",
   "system.title": "Design system",
-  "system.subtitle": "Every token, type role, and layout rule in one place. Open Theme to edit any primitive or semantic token.",
+  "system.subtitle": "Primitives from Figma, the core and semantic tokens built on them, and every type role and layout rule in one place. Open Theme to edit any core or semantic token.",
   "system.toc": "On this page",
   "system.copied": "Copied",
   "system.exportCss": "CSS",
@@ -51,5 +51,11 @@
   "docs.sections": "Sections",
   "gallery.workbench": "Workbench",
   "system.icons.copied": "Copied",
-  "system.icons.copyFailed": "Clipboard access was blocked."
+  "system.icons.copyFailed": "Clipboard access was blocked.",
+  "system.sections.primitives": "Primitives",
+  "system.primitives.lead": "The raw ramps and scales, mirrored from the Figma primitives collection. Semantic tokens take their values from these steps; edit them in Figma, not here.",
+  "system.primitives.ramps": "Color ramps",
+  "system.primitives.rampsLead": "Every ramp has eleven steps named 50 to 950, emitted as --color-<ramp>-<step>. Dashed, italic steps are synthesized tints not yet in Figma. Swatches below name the step a semantic color comes from.",
+  "system.primitives.scales": "Scales",
+  "system.primitives.scalesLead": "Spacing, radius, type and size primitives, emitted under their Figma names (--spacing-4, --radius-md, --typography-font-size-sm, --size-36)."
 }

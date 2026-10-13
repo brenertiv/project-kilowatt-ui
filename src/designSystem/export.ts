@@ -23,6 +23,7 @@ import {
   typeStepPx,
   type ThemeValues,
 } from '../tokens';
+import { primitiveForColor, primitives } from '../primitives';
 import { measureContrast } from './contrast';
 
 function colorOf(id: string, palette: Record<string, string>) {
@@ -40,6 +41,8 @@ export function buildSystemSnapshot(values: ThemeValues, darkColors: Record<stri
         cssVar: token.cssVar,
         light: colorOf(token.id, values),
         dark: colorOf(token.id, darkColors),
+        lightPrimitive: primitiveForColor(colorOf(token.id, values)) ?? null,
+        darkPrimitive: primitiveForColor(colorOf(token.id, darkColors)) ?? null,
         role: colorRoles.find((role) => role.tokenIds.includes(token.id))?.id ?? null,
       },
     ]),
@@ -142,6 +145,7 @@ export function buildSystemSnapshot(values: ThemeValues, darkColors: Record<stri
 
   return {
     name: 'Kilowatt',
+    primitives: primitives.map(({ path, cssVar, value, group }) => ({ path, cssVar, value, group })),
     colors,
     colorRoles: colorRoles.map(({ id, label, description, tokenIds }) => ({ id, label, description, tokenIds })),
     contrast,
@@ -172,12 +176,28 @@ export function systemToMarkdown(values: ThemeValues, darkColors: Record<string,
     '',
   ];
 
+  sections.push('## Primitives', '', 'Mirrored from the Figma primitives collection. Semantic tokens below reference these steps.', '');
+  for (const group of ['color', 'spacing', 'radius', 'typography', 'size'] as const) {
+    sections.push(
+      mdTable(
+        ['Path', 'CSS variable', 'Value'],
+        snapshot.primitives.filter((p) => p.group === group).map((p) => [p.path, `\`${p.cssVar}\``, p.value]),
+      ),
+      '',
+    );
+  }
+
   sections.push('## Color', '');
   for (const role of snapshot.colorRoles) {
     sections.push(`### ${role.label}`, '', role.description, '');
     const rows = role.tokenIds.map((id) => {
       const color = snapshot.colors[id];
-      return [`${color.label} (\`${id}\`)`, `\`${color.cssVar}\``, color.light, color.dark];
+      return [
+        `${color.label} (\`${id}\`)`,
+        `\`${color.cssVar}\``,
+        color.lightPrimitive ? `${color.light} (${color.lightPrimitive})` : color.light,
+        color.darkPrimitive ? `${color.dark} (${color.darkPrimitive})` : color.dark,
+      ];
     });
     sections.push(mdTable(['Token', 'CSS variable', 'Light', 'Dark'], rows), '');
   }

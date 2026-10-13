@@ -7,7 +7,7 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 ## Tokens
 
 - Tokens are the only source of color, type, space, radius and shadow. No component declares a hex value, a pixel radius or a font family of its own.
-- Two editable layers. **Primitives** are the identity knobs (background, text, accent, state colors, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles with their own stored value (surface, borders, secondary text, tints, utilities, chart slots). Both are editable in the Theme editor.
+- Three layers. **Primitives** are the Figma ramps and scales, mirrored in `src/primitives.ts` with every color ramp normalised to eleven steps named 50 to 950 (the ten-step Figma ramps have their 1000 named 950 and a synthesized 50 tint, flagged as derived until added in Figma) and emitted as `--color-slate-300`, `--spacing-4`, `--radius-md` and so on; they change only when Figma changes. **Core** tokens are the identity knobs (background, text, accent, state colors, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles with their own stored value (surfaces, borders, secondary text, tints, utilities, chart slots). Core and semantic are editable in the Theme editor and take their defaults from primitive steps.
 - **Derived** variables (type scale steps, space scale, inner radius, shadow steps, scrollbar colors) are computed from the layers above and are never stored. Change the source token to move them.
 - Every color token has a light and a dark value. A new color token is not done until both exist and the Design System contrast list has been checked.
 - Adding a token means: add it to `src/tokens.ts`, give it a role group so the Design System page and the CSS export pick it up, and update the stylesheet `:root` fallback.
@@ -25,8 +25,8 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 ## Charts
 
 - Charts are built in `src/charts`. Every chart renders inside `ChartFrame`, uses `useChartRoot` for its root, and reads colors from the frame. No chart calls the chart library's color APIs with literals.
-- The eight chart slots are a fixed order and are assigned to series in sequence by series id. Color follows the entity: filtering a chart never repaints the survivors. A ninth series is never a generated hue; fold it into Other or facet.
-- The slot palette was validated with the dataviz checks on both surfaces. Run the validator again before changing any slot or surface color.
+- The seven chart slots are a fixed order and are assigned to series in sequence by series id. Color follows the entity: filtering a chart never repaints the survivors. An eighth series is never a generated hue; fold it into Other or facet.
+- The slots are steps from the Figma ramps (brand, orange, green, violet, spring, midnight, meadow), one per chromatic ramp, ordered by a search that maximises colorblind separation and validated with the dataviz checks on both surfaces. Red and yellow are reserved for status and never appear as series. Run the validator again before changing any slot or surface color.
 - One axis per chart. Two measures of different scale get two charts, small multiples, or an index to a common base.
 - Marks: 2px lines, columns capped at 24px with a 4px rounded data end, a 2px surface gap between touching fills, area washes at 10%.
 - Text in charts wears text tokens, never the series color. Identity comes from a colored key beside the text.

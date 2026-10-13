@@ -42,16 +42,40 @@ export function hexToOklch(hex: string): Oklch {
   return { l: L, c, h };
 }
 
-export function oklchToHex({ l, c, h }: Oklch): string {
+function oklchToLinear({ l, c, h }: Oklch): [number, number, number] {
   const a = c * Math.cos((h * Math.PI) / 180);
   const bb = c * Math.sin((h * Math.PI) / 180);
   const l_ = (l + 0.3963377774 * a + 0.2158037573 * bb) ** 3;
   const m_ = (l - 0.1055613458 * a - 0.0638541728 * bb) ** 3;
   const s_ = (l - 0.0894841775 * a - 1.291485548 * bb) ** 3;
-  const r = 4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_;
-  const g = -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_;
-  const b = -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_;
-  return toHex([linearToSrgb(r), linearToSrgb(g), linearToSrgb(b)]);
+  return [
+    4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_,
+    -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_,
+    -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_,
+  ];
+}
+
+const inGamut = (rgb: number[]) => rgb.every((channel) => channel >= -0.0005 && channel <= 1.0005);
+
+/**
+ * OKLCH to hex. When the requested chroma falls outside sRGB, chroma is reduced
+ * until the color fits, so lightness and hue hold and ramps stay one hue.
+ */
+export function oklchToHex(color: Oklch): string {
+  let { c } = color;
+  let rgb = oklchToLinear({ ...color, c });
+  if (!inGamut(rgb)) {
+    let low = 0;
+    let high = c;
+    for (let step = 0; step < 16; step += 1) {
+      const mid = (low + high) / 2;
+      if (inGamut(oklchToLinear({ ...color, c: mid }))) low = mid;
+      else high = mid;
+    }
+    c = low;
+    rgb = oklchToLinear({ ...color, c });
+  }
+  return toHex([linearToSrgb(rgb[0]), linearToSrgb(rgb[1]), linearToSrgb(rgb[2])]);
 }
 
 /** Relative luminance per WCAG. */

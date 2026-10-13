@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultDarkColors,
   defaultTheme,
-  primitiveTokens,
+  coreTokens,
   resolveTheme,
   semanticTokens,
-  isPrimitiveTokenId,
+  isCoreTokenId,
   themeToCssText,
   themeToCssVars,
   derivedTokens,
@@ -15,6 +15,7 @@ import {
   type ThemeValues,
 } from './tokens';
 import { breakpointCssVars } from './breakpoints';
+import { primitiveCssVars } from './primitives';
 
 describe('theme tokens', () => {
   it('resolves dark colors independently of the light palette', () => {
@@ -41,6 +42,7 @@ describe('theme tokens', () => {
       ...tokens.map((token) => token.cssVar),
       ...derivedTokens.map((token) => token.cssVar),
       ...Object.keys(breakpointCssVars),
+      ...Object.keys(primitiveCssVars),
     ]);
 
     expect(Object.keys(vars).sort()).toEqual([...documented].sort());
@@ -85,8 +87,8 @@ describe('theme tokens', () => {
     expect(vars['--font-size-title']).toBe('var(--text-xl-fluid)');
   });
 
-  it('separates primary variables from semantic tokens', () => {
-    expect(primitiveTokens.map((token) => token.id)).toEqual([
+  it('separates core tokens from semantic tokens', () => {
+    expect(coreTokens.map((token) => token.id)).toEqual([
       'bg',
       'text',
       'accent',
@@ -104,7 +106,7 @@ describe('theme tokens', () => {
     expect(semanticTokens.map((token) => token.id)).toContain('surface');
     expect(semanticTokens.map((token) => token.id)).toContain('onAccent');
     expect(semanticTokens.map((token) => token.id)).toContain('cardPad');
-    expect(isPrimitiveTokenId('hover')).toBe(false);
-    expect(isPrimitiveTokenId('accent')).toBe(true);
+    expect(isCoreTokenId('hover')).toBe(false);
+    expect(isCoreTokenId('accent')).toBe(true);
   });
 });
