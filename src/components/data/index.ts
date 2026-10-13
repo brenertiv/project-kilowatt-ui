@@ -14,3 +14,4 @@ export * from './StatusChip';
 export * from './cursor';
 export * from './dateFormat';
 export * from './placeholder';
+export * from './EntityName';
