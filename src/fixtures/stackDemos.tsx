@@ -1,4 +1,4 @@
-import { Component, useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@base-ui/react/button';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table';
@@ -20,7 +20,6 @@ import { buildings, demandSeries, tickets as catalogTickets, type Ticket } from 
 import { formatOperationsTime } from '../lib/dates';
 import { formatCount, formatKilowatts, formatPercent } from '../lib/format';
 import { ArrowOutwardIcon, BuildingIcon, TrendUpIcon, WarningIcon } from '../icons';
-import type { Demo } from './demos';
 
 import 'leaflet/dist/leaflet.css';
 import 'react-grid-layout/css/styles.css';
@@ -44,19 +43,6 @@ const mapIcon = L.divIcon({
   iconSize: [12, 12],
   iconAnchor: [6, 6],
 });
-
-export class DemoErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  render() {
-    if (this.state.failed) return <p className="ui-description">This demo could not render.</p>;
-    return this.props.children;
-  }
-}
 
 export function TableDemo() {
   const {
@@ -450,8 +436,8 @@ export function TourDemo() {
         popover: { title: t('tour.theme.title'), description: t('tour.theme.body') },
       },
       {
-        element: '[data-tour="gallery"]',
-        popover: { title: t('tour.gallery.title'), description: t('tour.gallery.body') },
+        element: '[data-tour="controls"]',
+        popover: { title: t('tour.controls.title'), description: t('tour.controls.body') },
       },
     ].filter((step) => document.querySelector(step.element));
     if (steps.length === 0) return;
@@ -471,14 +457,3 @@ export function TourDemo() {
     </Button>
   );
 }
-
-export const stackDemos: Demo[] = [
-  { id: 'metric', title: 'Metric card', group: 'Data', render: MetricCardDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Metric card' } },
-  { id: 'table', title: 'Tickets table', group: 'Data', render: TableDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Tickets table' } },
-  { id: 'chart', title: 'Demand chart', group: 'Data', render: ChartDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Demand chart' } },
-  { id: 'overview-panel', title: 'AgentOps overview', group: 'Data', render: OverviewPanelDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Overview panel' } },
-  { id: 'map', title: 'Portfolio map', group: 'Data', render: MapDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Portfolio map' } },
-  { id: 'grid', title: 'Dashboard grid', group: 'Data', render: GridDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Dashboard grid' } },
-  { id: 'dnd', title: 'Queue reorder', group: 'Data', render: DndDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Queue reorder' } },
-  { id: 'tour', title: 'Product tour', group: 'Data', render: TourDemo, fixture: { path: 'src/gallery/Widgets.fixture.tsx', name: 'Product tour' } },
-];

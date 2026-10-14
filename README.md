@@ -15,13 +15,17 @@ npm run dev
 
 Markdown in `docs/` is rendered in the app under **Docs** (`/docs/<file-name>`), with a section index built from the level-two headings. `docs/design-system-rules.md` holds the rules for using the system and lives apart from component code on purpose. Drop another `.md` file in the folder and it appears in the Docs list automatically.
 
-## Cosmos
+## Workbench
 
-`npm run cosmos` opens React Cosmos at `http://localhost:5100`, rendering every `Name.fixture.tsx` in isolation with a control panel, a fixture tree and device viewports. The root decorator in `src/cosmos.decorator.tsx` supplies the app's provider stack and a light/dark select. The Components page links every card to its fixture. See `docs/cosmos.md`.
+The **Components** tab is the workbench: it renders every `Name.fixture.tsx` in isolation inside the app, with a right-hand drawer for the component switcher, its states and its inputs, viewport presets, and a URL under `/components` that records the fixture and any changed input. Fixtures import `react-cosmos/client`, which the app aliases to the workbench's implementation, so `npm run cosmos` can also open the same fixtures in React Cosmos at `http://localhost:5100`. See `docs/workbench.md` and `docs/cosmos.md`.
+
+## Figma links
+
+`src/figma/links.json` maps the repository onto the Figma file: a whole-file link, shown on the **System** tab, and one link per component, shown in the workbench drawer. Paste a link from Figma in either place and the dev server writes it to the file for you to commit; a test keeps every key matched to a fixture. See `docs/figma.md`.
 
 ## Data layer and pages
 
-`src/api` mirrors the Enertiv API: entity types copied from live responses, a cursor-paged mock adapter with a failure switch, the `AsyncState` contract and TanStack Query hooks. `src/components/data` holds the Material UI components built on it, and `src/pages` composes them into page views that run in Cosmos against the mock. See `docs/data-layer.md`.
+`src/api` mirrors the Enertiv API: entity types copied from live responses, a cursor-paged mock adapter with a failure switch, the `AsyncState` contract and TanStack Query hooks. `src/components/data` holds the Material UI components built on it, and `src/pages` composes them into page views that run in the workbench against the mock. See `docs/data-layer.md`.
 
 ## Charts
 

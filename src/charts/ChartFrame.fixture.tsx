@@ -1,5 +1,5 @@
 import { energyMix, loadProfile } from '../data';
-import { radarData, RadarPlot } from '../gallery/chartDemos';
+import { radarData, RadarPlot } from '../fixtures/chartDemos';
 import { CategoryBarChart } from './CategoryBarChart';
 import { ChartFrame } from './ChartFrame';
 import { DonutChart } from './DonutChart';

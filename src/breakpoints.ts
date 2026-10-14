@@ -1,7 +1,7 @@
 /** Max-width thresholds in px. Change these to retune layout. */
 export const breakpoints = {
-  galleryMd: 900,
-  gallerySm: 560,
+  systemMd: 900,
+  systemSm: 560,
   workspace: 640,
   table: 480,
   ticket: 320,
@@ -11,8 +11,8 @@ export const breakpoints = {
 export type BreakpointName = keyof typeof breakpoints;
 
 export const breakpointRoles: Record<BreakpointName, string> = {
-  galleryMd: 'Gallery grid collapses from 12 to 6 columns',
-  gallerySm: 'Gallery grid collapses from 6 to 2 columns',
+  systemMd: 'System page grids collapse to two columns',
+  systemSm: 'System page grids stack to one column',
   workspace: 'Top bar stacks brand, utilities, and navigation',
   table: 'Hide a secondary table column; wrap cells',
   ticket: 'Stack ticket rows',
@@ -24,8 +24,8 @@ export function breakpointVarName(name: BreakpointName) {
 }
 
 export const breakpointCssVars = {
-  '--bp-gallery-md': `${breakpoints.galleryMd}px`,
-  '--bp-gallery-sm': `${breakpoints.gallerySm}px`,
+  '--bp-system-md': `${breakpoints.systemMd}px`,
+  '--bp-system-sm': `${breakpoints.systemSm}px`,
   '--bp-workspace': `${breakpoints.workspace}px`,
   '--bp-table': `${breakpoints.table}px`,
   '--bp-ticket': `${breakpoints.ticket}px`,
@@ -39,7 +39,7 @@ const STYLE_ID = 'kilowatt-breakpoints';
  * `breakpoints` and kept in sync with `--bp-*` on :root.
  */
 export function breakpointQueryCss(): string {
-  const { galleryMd, gallerySm, workspace, table, ticket, sparkline } = breakpoints;
+  const { systemMd, systemSm, workspace, table, ticket, sparkline } = breakpoints;
 
   return `@container (max-width: ${ticket}px) {
   .ticket-row {
@@ -84,22 +84,7 @@ export function breakpointQueryCss(): string {
   }
 }
 
-@container gallery (max-width: ${galleryMd}px) {
-  .gallery-grid {
-    --gallery-cols: 6;
-    --gallery-span: 3;
-  }
-}
-
-@container gallery (max-width: ${gallerySm}px) {
-  .gallery-grid {
-    --gallery-cols: 2;
-    --gallery-span: 1;
-    --gallery-span-wide: 2;
-  }
-}
-
-@container system (max-width: ${galleryMd}px) {
+@container system (max-width: ${systemMd}px) {
   .system-swatches,
   .system-type-list,
   .system-breakpoint-list,
@@ -108,7 +93,7 @@ export function breakpointQueryCss(): string {
   }
 }
 
-@container system (max-width: ${gallerySm}px) {
+@container system (max-width: ${systemSm}px) {
   .system-swatches,
   .system-type-list,
   .system-breakpoint-list,
@@ -155,7 +140,6 @@ export function breakpointQueryCss(): string {
     grid-area: theme;
   }
 
-  .gallery-head,
   .system-head {
     flex-wrap: wrap;
     align-items: flex-start;

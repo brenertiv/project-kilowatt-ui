@@ -48,7 +48,7 @@ Components are prop-driven: they take an `AsyncState` plus the rows, never a que
 
 ## Components
 
-`src/components/data` holds the boilerplate built on this layer, each with a Cosmos fixture:
+`src/components/data` holds the boilerplate built on this layer, each with a fixture:
 
 | Component                                   | What it is for                                                            |
 | ------------------------------------------- | ------------------------------------------------------------------------- |

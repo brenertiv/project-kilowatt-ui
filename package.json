@@ -13,8 +13,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "cosmos": "cosmos",
-    "cosmos:export": "cosmos-export"
+    "cosmos": "COSMOS=1 cosmos",
+    "cosmos:export": "COSMOS=1 cosmos-export"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.20.5",

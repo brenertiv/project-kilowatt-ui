@@ -84,6 +84,15 @@ export const InfoIcon = define('info');
 export const TrendDownIcon = define('trending_down');
 export const LinkIcon = define('link');
 export const FilterOffIcon = define('filter_alt_off');
+export const DevicesIcon = define('devices');
+export const FitScreenIcon = define('fit_screen');
+export const PhoneIcon = define('smartphone');
+export const TabletIcon = define('tablet');
+export const LaptopIcon = define('laptop');
+export const FullscreenIcon = define('fullscreen');
+export const FullscreenExitIcon = define('fullscreen_exit');
+export const LightModeIcon = define('light_mode');
+export const DarkModeIcon = define('dark_mode');
 
 export const iconCatalog: { name: string; Icon: ComponentType<IconProps> }[] = [
   { name: 'CheckIcon', Icon: CheckIcon },
@@ -120,4 +129,13 @@ export const iconCatalog: { name: string; Icon: ComponentType<IconProps> }[] = [
   { name: 'TrendDownIcon', Icon: TrendDownIcon },
   { name: 'LinkIcon', Icon: LinkIcon },
   { name: 'FilterOffIcon', Icon: FilterOffIcon },
+  { name: 'DevicesIcon', Icon: DevicesIcon },
+  { name: 'FitScreenIcon', Icon: FitScreenIcon },
+  { name: 'PhoneIcon', Icon: PhoneIcon },
+  { name: 'TabletIcon', Icon: TabletIcon },
+  { name: 'LaptopIcon', Icon: LaptopIcon },
+  { name: 'FullscreenIcon', Icon: FullscreenIcon },
+  { name: 'FullscreenExitIcon', Icon: FullscreenExitIcon },
+  { name: 'LightModeIcon', Icon: LightModeIcon },
+  { name: 'DarkModeIcon', Icon: DarkModeIcon },
 ];

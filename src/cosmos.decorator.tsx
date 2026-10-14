@@ -4,12 +4,15 @@ import { useFixtureSelect } from 'react-cosmos/client';
 import { AppProviders, ToastOutlet } from './AppProviders';
 import { ChevronLeftIcon } from './icons';
 import { useTheme } from './theme/ThemeProvider';
+import { useInWorkbench } from './workbench/inputs';
 import type { ColorScheme } from './tokens';
 
 /**
- * Root decorator: wraps every fixture under `src/` in the same provider stack
- * the app shell uses, plus a memory router so links and route hooks work,
- * and one `scheme` select so light and dark are a control in every fixture.
+ * Root decorator for every fixture under `src/`. The in-app workbench already
+ * runs inside the app shell, so there it renders the fixture as is. Under
+ * React Cosmos, which mounts fixtures on its own, it supplies the provider
+ * stack, a memory router so links and route hooks work, a `scheme` select, and
+ * a way back to the library.
  */
 
 const schemes: ColorScheme[] = ['light', 'dark'];
@@ -42,6 +45,8 @@ function SchemeControl({ children }: { children: ReactNode }) {
 }
 
 export default function RootDecorator({ children }: { children: ReactNode }) {
+  const inWorkbench = useInWorkbench();
+  if (inWorkbench) return children;
   return (
     <AppProviders>
       <MemoryRouter>

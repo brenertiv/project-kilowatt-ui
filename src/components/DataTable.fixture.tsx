@@ -5,7 +5,7 @@ import { formatCalendarDate } from '../lib/dates';
 import { meterSources, type Meter } from '../meters';
 import { meters } from '../fixtures/sampleData';
 import { useFixtureInput, useFixtureSelect } from 'react-cosmos/client';
-import { ServerTableDemo, VirtualizedTableDemo } from '../gallery/tableDemos';
+import { ServerTableDemo, VirtualizedTableDemo } from '../fixtures/tableDemos';
 import { ChipCell, StatusCell } from './cells';
 import { DataTable, type DataTableFeatures } from './DataTable';
 

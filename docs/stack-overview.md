@@ -1,6 +1,6 @@
 # Stack Overview
 
-Kilowatt UI is Enertiv's design system and component library: a React single-page app that documents the tokens, hosts a gallery of every component, and runs React Cosmos for exercising components and pages in isolation. It deploys as a static site.
+Kilowatt UI is Enertiv's design system and component library: a React single-page app that documents the tokens, and renders every component and page in isolation in a workbench. It deploys as a static site.
 
 ## Runtime
 
@@ -30,9 +30,9 @@ Kilowatt UI is Enertiv's design system and component library: a React single-pag
 - **Chart colors** are an eight-slot categorical palette validated for colorblind-safe separation on both surfaces, with sequential and diverging ramps derived in OKLCH.
 - **Motion** is CSS transitions at 150ms on one curve, with reduced-motion guards.
 
-## React Cosmos
+## Workbench
 
-`npm run cosmos` runs React Cosmos 7 with its Vite plugin on port 5100. `Name.fixture.tsx` files sit beside components, `useFixtureInput` and `useFixtureSelect` expose state in the control panel, and `src/cosmos.decorator.tsx` wraps every fixture in the app's provider stack with a light/dark select. The in-app workbench it replaced is gone. See `docs/cosmos.md`.
+`src/workbench` is an in-app fixture host after React Cosmos: `Name.fixture.tsx` files sit beside components, `useFixtureInput` and `useFixtureSelect` expose state in a control drawer, `Viewport` opens a fixture at a size, and the URL carries the fixture and its inputs. Fixtures import `react-cosmos/client`; Vite aliases it to `src/fixtures/client.tsx`, so `npm run cosmos` (which sets `COSMOS=1` to drop the alias) can open the same fixtures in React Cosmos 7 on port 5100 as an optional second host. See `docs/workbench.md` and `docs/cosmos.md`.
 
 ## Tooling
 
@@ -54,6 +54,7 @@ A GitHub Actions workflow builds on every push to `main` and publishes `dist/` t
 
 - `README.md` for setup and the layer map.
 - `docs/design-system-rules.md` for the rules of using the system.
-- `docs/cosmos.md` for fixture conventions.
+- `docs/workbench.md` for fixture conventions.
+- `docs/cosmos.md` for running the same fixtures in React Cosmos.
 - `docs/data-layer.md` for the API shapes, mock adapter and async state.
 - The **System** page in the app renders the live token values, contrast measurements, type roles, spacing, shape and the icon catalog, and the **Docs** page renders everything in `docs/`.

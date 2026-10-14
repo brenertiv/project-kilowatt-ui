@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@base-ui/react/button';
 import { useTranslation } from 'react-i18next';
 import { CopyIcon } from '../icons';
+import { FigmaCoverage, FigmaLinkField } from '../figma/FigmaLink';
 import { useTheme } from '../theme/ThemeProvider';
 import { systemToJson, systemToMarkdown } from './export';
 import {
@@ -50,6 +51,14 @@ export function DesignSystem() {
           </Button>
         </div>
       </header>
+
+      <section className="system-figma" aria-label={t('figma.title')}>
+        <h2>{t('figma.title')}</h2>
+        <div className="figma-link-column">
+          <FigmaLinkField scope={{ kind: 'file' }} />
+          <FigmaCoverage />
+        </div>
+      </section>
 
       <nav className="system-toc" aria-label={t('system.toc')}>
         {systemSections.map((section) => (

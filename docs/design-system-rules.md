@@ -107,5 +107,5 @@ The token source of truth is `src/tokens.ts`, mirrored from the Figma file **Ene
 1. Change tokens in `src/tokens.ts` and the stylesheet fallback together.
 2. Run the test suite. Palette and contrast expectations are tests, so a drift shows up immediately.
 3. For chart colors, run the dataviz palette validator on both surfaces and keep the output with the change.
-4. Check both schemes in the gallery. The Theme editor can preview a change before it lands.
+4. Check both schemes in the workbench. The Theme editor can preview a change before it lands.
 5. Update this document in the same change.

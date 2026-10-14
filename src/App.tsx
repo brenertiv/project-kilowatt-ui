@@ -1,30 +1,35 @@
-import { Field } from '@base-ui/react/field';
-import { Switch } from '@base-ui/react/switch';
-import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router';
+import { Toggle } from '@base-ui/react/toggle';
+import { BrowserRouter, NavLink, Navigate, Route, Routes, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { AppProviders, ToastOutlet } from './AppProviders';
 import { useTheme } from './theme/ThemeProvider';
 import { ThemeEditor } from './theme/ThemeEditor';
-import { Gallery } from './gallery/Gallery';
 import { DesignSystem } from './designSystem/DesignSystem';
 import { DocsPage } from './docs/DocsPage';
+import { DarkModeIcon, LightModeIcon } from './icons';
+import { Workbench } from './workbench/Workbench';
 import EnertivAvatar from './assets/enertiv-avatar.svg?react';
+
+/** The workbench used to live at /workbench; keep those links working. */
+function LegacyWorkbenchRedirect() {
+  const rest = useParams()['*'] ?? '';
+  return <Navigate to={`/components/${rest}`} replace />;
+}
 
 function DarkModeToggle() {
   const { colorScheme, setColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
 
   return (
-    <Field.Root className="topbar-theme">
-      <Field.Label>Dark mode</Field.Label>
-      <Switch.Root
-        className="ui-switch"
-        checked={isDark}
-        onCheckedChange={(checked) => setColorScheme(checked ? 'dark' : 'light')}
-      >
-        <Switch.Thumb className="ui-switch-thumb" />
-      </Switch.Root>
-    </Field.Root>
+    <Toggle
+      className="ui-icon-btn topbar-scheme"
+      pressed={isDark}
+      onPressedChange={(pressed) => setColorScheme(pressed ? 'dark' : 'light')}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Light mode' : 'Dark mode'}
+    >
+      {isDark ? <DarkModeIcon fill /> : <LightModeIcon />}
+    </Toggle>
   );
 }
 
@@ -33,7 +38,7 @@ function MainNav() {
 
   return (
     <nav className="topbar-nav" aria-label={t('nav.label')}>
-      <NavLink to="/components" end className="topbar-nav-link">
+      <NavLink to="/components" className="topbar-nav-link">
         {t('nav.components')}
       </NavLink>
       <NavLink to="/design-system" className="topbar-nav-link">
@@ -63,10 +68,13 @@ function Shell() {
       <div className="workspace">
         <Routes>
           <Route path="/" element={<Navigate to="/components" replace />} />
-          <Route path="/components" element={<Gallery />} />
+          <Route path="/components" element={<Workbench />} />
+          <Route path="/components/:slug" element={<Workbench />} />
+          <Route path="/components/:slug/:name" element={<Workbench />} />
           <Route path="/design-system" element={<DesignSystem />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/docs/:slug" element={<DocsPage />} />
+          <Route path="/workbench/*" element={<LegacyWorkbenchRedirect />} />
           <Route path="*" element={<Navigate to="/components" replace />} />
         </Routes>
       </div>

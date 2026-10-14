@@ -16,7 +16,11 @@ export default function PagesDecorator({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMockFailure('*', fail);
     mockControls.latencyMs = latency;
-    queryClient.clear();
+    // The page's queries start before this parent effect runs. Resetting them
+    // (rather than clearing the cache) cancels those requests and refetches the
+    // active ones through the same query objects, so the page's observers stay
+    // attached and the new switches apply from the first load.
+    void queryClient.resetQueries();
     return () => {
       setMockFailure('*', false);
       mockControls.latencyMs = 350;
