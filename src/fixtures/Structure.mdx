@@ -36,7 +36,7 @@ A static level within a known range, such as occupancy, not a task's progress. `
 
 ## Avatar
 
-A person: `ui-avatar` on `Avatar.Root` (32px circle) with `Avatar.Image` and an initials `Avatar.Fallback`, which shows while the image loads, if it fails, or when there is no image. Images get the system's 1px image outline. The story puts the name (`ui-popup-title`) and role (`ui-description`) beside it.
+A person: `ui-avatar` on `Avatar.Root` (32px circle) with `Avatar.Image` and an initials `Avatar.Fallback`, which shows while the image loads, if it fails, or when there is no image. Images get the system's 1px image outline. The story's photo is a local asset, `src/assets/avatar-photo.svg`; in the app, pass the person's image URL from the API. The story puts the name (`ui-popup-title`) and role (`ui-description`) beside it in a flex row.
 
 <Canvas of={StructureStories.AvatarRecipe} />
 

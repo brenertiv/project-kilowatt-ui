@@ -108,7 +108,7 @@ export const Empty: StoryObj<typeof EmptyCell> = {
 /** Missing inputs: numeric, delta and date cells show the dash, and a zero delta stays neutral. */
 export const MissingValues: StoryObj<typeof EmptyCell> = {
   render: () => (
-    <div className="demo-row">
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-2)' }}>
       <NumericCell value={null} />
       <DeltaCell value={undefined} />
       <DateCell iso={null} />

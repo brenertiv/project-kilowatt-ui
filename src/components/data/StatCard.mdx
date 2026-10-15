@@ -42,13 +42,13 @@ Don't:
 - The value is a large paragraph, not a heading, so cards do not crowd the page outline. The label is an overline above it.
 - A missing value reads as "No value" rather than a bare dash.
 - The delta's direction is spoken as "up", "down" or "no change" next to the number, so it does not rely on the arrow or the color.
-- While refreshing the card is marked busy; while loading it shows a skeleton announced as loading; on error it shows an alert with a Retry button.
+- While refreshing the card is marked busy and announces "Updating"; while loading it shows a skeleton announced as loading; on error it shows an alert with a Retry button.
 - The caller provides a `label` that names the metric and its window, e.g. "Consumption, last 30 days". Icons are decorative.
 
 ## Composition
 
 - Sits under a [PageHeader](?path=/docs/data-pageheader--docs), in a grid, above lists and tables.
-- Uses `StatSkeleton` for loading and `ErrorState` for failure, the same states [DataState](?path=/docs/data-datastate--docs) renders.
+- Renders its `state` through [DataState](?path=/docs/data-datastate--docs) with `StatSkeleton` as the skeleton, so loading, refreshing and failure match every other data component. Empty and idle still show the card, with the dash when there is no value.
 - Leading icons come from `src/icons.tsx`, e.g. `BuildingIcon`.
 
 ## Props

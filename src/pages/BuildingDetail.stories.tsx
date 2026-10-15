@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect } from 'storybook/test';
 import { portfolio } from 'src/fixtures/data';
 import { withPageFrame } from 'src/stories/decorators';
 import { BuildingDetail } from 'src/pages/BuildingDetail';
@@ -28,6 +29,10 @@ export const Default: Story = {};
 /** An id that matches no building: the page shows its not-found state instead of empty sections. */
 export const MissingBuilding: Story = {
   args: { id: '00000000-0000-4000-8000-000000000000' },
+  play: async ({ canvas }) => {
+    // The query retries once before failing, so give the 404 time to settle.
+    await expect(await canvas.findByText('Building not found', undefined, { timeout: 5000 })).toBeVisible();
+  },
 };
 
 /** Every request fails: each section shows its error state with a retry. */

@@ -49,6 +49,12 @@ export function errorMessage(error: unknown, fallback = 'Something went wrong.')
   return fallback;
 }
 
+/** True when the API answered 404: the record does not exist, so retrying will not help. */
+export function isNotFound(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  return (error as { response?: { status?: number } }).response?.status === 404;
+}
+
 /** Arrays, cursor pages and nullish data count as empty. */
 export function isEmptyData(data: unknown): boolean {
   if (data === null || data === undefined) return true;

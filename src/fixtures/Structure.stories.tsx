@@ -6,6 +6,7 @@ import { Progress } from '@base-ui/react/progress';
 import { ScrollArea } from '@base-ui/react/scroll-area';
 import { Separator } from '@base-ui/react/separator';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import avatarPhoto from 'src/assets/avatar-photo.svg';
 import { tickets } from 'src/data';
 import { ChevronDownIcon, PlusIcon } from 'src/icons';
 import { tokenContrast } from 'src/stories/a11y';
@@ -109,9 +110,9 @@ export const AvatarRecipe: StoryObj<AvatarArgs> = {
   name: 'Avatar',
   args: { name: 'Alex Rivera', role: 'On-call operator', initials: 'AR' },
   render: ({ name, role, initials }) => (
-    <div className="demo-row">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
       <Avatar.Root className="ui-avatar">
-        <Avatar.Image src="https://i.pravatar.cc/64?img=12" alt={name} />
+        <Avatar.Image src={avatarPhoto} alt={name} />
         <Avatar.Fallback>{initials}</Avatar.Fallback>
       </Avatar.Root>
       <div>
@@ -129,7 +130,7 @@ export const AvatarInitials: StoryObj<AvatarArgs> = {
   name: 'Avatar, initials',
   args: AvatarRecipe.args,
   render: ({ name, role, initials }) => (
-    <div className="demo-row">
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
       <Avatar.Root className="ui-avatar">
         <Avatar.Fallback>{initials}</Avatar.Fallback>
       </Avatar.Root>
@@ -191,7 +192,7 @@ export const SeparatorRecipe: StoryObj<SeparatorArgs> = {
   name: 'Separator',
   args: { label: 'Operations', text: 'Tickets, meters, and occupancy in one queue.' },
   render: ({ label, text }) => (
-    <div className="demo-stack">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       <span className="ui-label">{label}</span>
       <Separator className="ui-separator" />
       <span className="ui-description">{text}</span>

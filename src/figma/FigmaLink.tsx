@@ -60,7 +60,9 @@ export function FigmaLinkField() {
         <>
           <OpenLink href={link.url} label={t('figma.open')} />
           <div className="figma-link-form">
-            <p className="ui-input figma-link-current" aria-label={t('figma.linkedTo')}>
+            {/* A paragraph may not carry aria-label, so "Linked to" is hidden text before the file name. */}
+            <p className="ui-input figma-link-current">
+              <span className="ui-sr-only">{t('figma.linkedTo')} </span>
               <span className="figma-link-name">{link.fileName ?? link.fileKey}</span>
               <span className="figma-link-meta">
                 {link.nodeId ? t('figma.node', { id: link.nodeId }) : t('figma.wholeFile')}
@@ -114,4 +116,3 @@ export function FigmaLinkField() {
     </div>
   );
 }
-

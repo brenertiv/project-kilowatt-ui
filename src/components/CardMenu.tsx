@@ -10,7 +10,7 @@ export type CardMenuItem = {
   label: ReactNode;
   /** Called when the item is chosen. */
   onSelect: () => void;
-  /** Draw in the negative color for irreversible actions. Defaults to false. */
+  /** Draw in the negative color, through `data-destructive` on its `ui-item`, for irreversible actions. Defaults to false. */
   destructive?: boolean;
   /** Shows the item but blocks choosing it. Use when the action exists but is unavailable right now. Defaults to false. */
   disabled?: boolean;
