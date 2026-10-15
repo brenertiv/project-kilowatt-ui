@@ -1,0 +1,59 @@
+import { ArgTypes, Canvas, Description, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as EntityCardStories from './EntityCard.stories';
+
+<Meta of={EntityCardStories} />
+
+# EntityCard
+
+<Description of={EntityCardStories} />
+
+<Canvas of={EntityCardStories.Default} />
+
+## When to use
+
+- A single record on a detail page: a work order, a meter, a building's summary.
+- A small grid of records, each with a few fields, where a list row would be too cramped.
+- When the record's name may be a placeholder such as `???`. The card replaces it with "Unnamed" plus the noun and explains why.
+
+## When not to use
+
+- Many records: use [EntityList](?path=/docs/data-entitylist--docs), or a [DataTable](?path=/docs/table-datatable--docs) when readers compare fields across rows.
+- One headline number: use [StatCard](?path=/docs/data-statcard--docs).
+- A name inside running text or a cell: use `EntityName`.
+- The page's own heading: use [PageHeader](?path=/docs/data-pageheader--docs). The card title is an `h3`.
+
+## Do and don't
+
+Do:
+
+- Pass the raw API name as `title` and set `noun`. Never clean or replace placeholder names yourself.
+- Render API values in `meta` with the data components: `DateText` and `DateRangeText` for dates, `RelationLink` for relations, `StatusChip` for statuses.
+- Put one or two status chips in `status`, using the wrappers such as `ActionStatusChip`.
+- Pass `state` so loading, refresh and errors render inside the card. The loading skeleton has one line per `meta` entry.
+- Set `to` when the record has its own page.
+
+Don't:
+
+- Don't wrap the card in `DataState`; pass `state` instead.
+- Don't print a bare relation id or assume a relation was expanded. Use `RelationLink`.
+- Don't put more than a handful of `meta` rows in a card. When the list grows, it belongs on the record's page.
+
+## Accessibility
+
+- The title is an `h3`, under the page's `h1` from `PageHeader` and any section `h2`.
+- With `to`, the title is a link whose name is the record's name.
+- A placeholder name is shown in italics with an info icon that is focusable and labelled with the raw value, so keyboard and screen reader users get the explanation too.
+- `meta` renders as a description list, so each label is tied to its value.
+- The caller provides accessible names for any icon-only buttons in `actions`.
+
+## Composition
+
+- Built on [DataState](?path=/docs/data-datastate--docs) with a `CardSkeleton`.
+- Holds [StatusChip](?path=/docs/data-statuschip--docs) in `status` and `RelationLink`, `DateText` and `DateRangeText` in `meta`.
+- Sits below a [PageHeader](?path=/docs/data-pageheader--docs), often beside a row of [StatCard](?path=/docs/data-statcard--docs)s.
+
+## Props
+
+<ArgTypes of={EntityCardStories} />
+
+<Stories includePrimary={false} />

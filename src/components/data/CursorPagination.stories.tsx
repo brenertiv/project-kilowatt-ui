@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { actionSets } from '../../fixtures/data';
-import { CursorPagination } from './CursorPagination';
+import { actionSets } from 'src/fixtures/data';
+import { CursorPagination } from 'src/components/data/CursorPagination';
 
 const results = actionSets.few;
 const nextUrl = '/action/?cursor=cD0yMDI2LTEwLTAx&page_size=5';

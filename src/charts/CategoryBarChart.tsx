@@ -7,23 +7,32 @@ import { toRows, xValues, type ChartData } from './types';
 import { useChartRoot } from './useChartRoot';
 import { addCursor, addSharedTooltip, createValueAxis, createXYChart } from './xy';
 
-type CategoryBarChartProps = {
+export type CategoryBarChartProps = {
+  /** The same `ChartData` passed to the enclosing `ChartFrame`. Each point's `x` is a category name. */
   data: ChartData;
+  /** Formats the value axis, and tooltips for series without their own `unit`. Defaults to `count` formatting. */
   unit?: Unit;
-  /** Stack series on one bar per category instead of grouping them side by side. */
+  /** Stack series on one bar per category instead of grouping them side by side. Defaults to false. Use when the total matters. */
   stacked?: boolean;
-  /** Horizontal bars read better for long category names. */
+  /** Horizontal bars read better for long category names. Defaults to false. */
   horizontal?: boolean;
-  /** Category whose bar is drawn in the accent to carry the story. */
+  /** Category whose bar is drawn in the accent to carry the story. Applies to a single series only. */
   highlight?: string;
-  /** Print the value at the bar tip. Use for a single short series only. */
+  /** Print the value at the bar tip. Defaults to false. Applies to a single series only; use for short ones. */
   valueLabels?: boolean;
+  /** Accessible name for the plot, e.g. "Consumption by building". Required: the plot is an image to assistive tech. */
   ariaLabel: string;
 };
 
 /**
- * Bars over a category axis, grouped or stacked. Columns cap at 24px, round
- * their data end, and keep a 2px surface gap from their neighbours.
+ * Bars over a category axis, grouped or stacked, vertical or horizontal. Columns cap at 24px, round
+ * their data end, and keep a 2px surface gap from their neighbours. Use it to compare categories
+ * such as buildings or systems; for change over time use `TimeSeriesChart`, and for a single number
+ * use `StatCard`. Render it inside `<ChartFrame>` (it throws otherwise); colors come from series ids
+ * via the token palette, so never pass colors.
+ *
+ * @summary Grouped, stacked or horizontal bar chart over categories, inside ChartFrame.
+ * @import import { CategoryBarChart } from 'src/charts/CategoryBarChart';
  */
 export function CategoryBarChart({
   data,

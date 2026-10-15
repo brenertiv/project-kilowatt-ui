@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { createColumnHelper } from '@tanstack/react-table';
 import { fn } from 'storybook/test';
-import { ServerTableDemo } from '../fixtures/tableDemos';
-import { meters } from '../fixtures/sampleData';
-import { formatCalendarDate } from '../lib/dates';
-import { largeMeterInventory, meterSources, type Meter } from '../meters';
-import { ChipCell, StatusCell } from './cells';
-import { DataTable, type DataTableFeatures } from './DataTable';
+import { ServerTableDemo } from 'src/fixtures/tableDemos';
+import { meters } from 'src/fixtures/sampleData';
+import { formatCalendarDate } from 'src/lib/dates';
+import { largeMeterInventory, meterSources, type Meter } from 'src/meters';
+import { ChipCell, StatusCell } from 'src/components/cells';
+import { DataTable, type DataTableFeatures } from 'src/components/DataTable';
 
 const helper = createColumnHelper<DataTableFeatures, Meter>();
 const columns = helper.columns([
@@ -31,7 +31,8 @@ const sourceFilter = { columnId: 'source', label: 'Source', allLabel: 'All sourc
 
 const meta = {
   title: 'Table/DataTable',
-  component: DataTable<Meter>,
+  component: DataTable,
+  tags: ['!autodocs'],
   args: {
     data: meters.few,
     columns,
@@ -57,7 +58,7 @@ const meta = {
 } satisfies Meta<typeof DataTable<Meter>>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof DataTable<Meter>>;
 
 /** The usual list page: a page of rows with search and a source filter in the toolbar. */
 export const Default: Story = {

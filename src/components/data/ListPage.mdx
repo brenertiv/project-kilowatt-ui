@@ -1,0 +1,65 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ListPageStories from './ListPage.stories';
+
+<Meta
+  of={ListPageStories}
+  summary="The list page pattern: ListParams in state, useEntityList plus fromQuery for the data, PageHeader, FilterBar editing the params, EntityList in a Card, and CursorPagination writing the cursor back. Copy this wiring for any paged, searchable list."
+/>
+
+# List page
+
+How to wire a paged, searchable list of API records. It is a pattern, not a component: the story's `WorkOrderListPage` composes data components from `src/components/data`, and `src/pages/WorkOrders.tsx` is the full page built the same way.
+
+<Canvas of={ListPageStories.Default} />
+
+## Recipe
+
+```tsx
+import { useState } from 'react';
+import Card from '@mui/material/Card';
+import { useEntityList } from 'src/api/queries';
+import { fromQuery } from 'src/api/state';
+import type { ListParams } from 'src/api/types';
+import { CursorPagination } from 'src/components/data/CursorPagination';
+import { EntityList } from 'src/components/data/EntityList';
+import { FilterBar } from 'src/components/data/FilterBar';
+import { PageHeader } from 'src/components/data/PageHeader';
+
+const [params, setParams] = useState<ListParams>({ page_size: 5, ordering: '-due_date' });
+const query = useEntityList('action', params);
+const state = fromQuery(query);
+const items = (query.data?.results ?? []).map((action) => ({ id: action.id, primary: action.name, to: `/work-orders/${action.id}` }));
+
+<PageHeader title="Work orders" description="Open and scheduled work across the portfolio." />
+<FilterBar params={params} onChange={setParams} searchPlaceholder="Search work orders" ordering={ordering} pageSizes={[5, 10, 25]} />
+<Card>
+  <EntityList aria-label="Work orders" items={items} state={state} skeletonRows={params.page_size} empty={{ title: 'No work orders match', description: 'Try a different search.' }} />
+</Card>
+<CursorPagination page={query.data} noun="work orders" state={state} onCursor={(cursor) => setParams((current) => ({ ...current, cursor }))} />
+```
+
+## How it fits together
+
+- `ListParams` (cursor, page size, ordering, search and field filters) is the only state. Everything else is derived from it.
+- `useEntityList(entity, params)` runs the query; `fromQuery` turns it into the `AsyncState` every data component takes.
+- `FilterBar` edits search, ordering and page size and hands back new params; the server does the filtering.
+- `EntityList` renders rows, the skeleton, the empty message and the error with retry through `DataState`. Rows carry `primary`, `secondary`, `trailing` (status chips) and a `to` link.
+- `CursorPagination` reads the page's cursors and writes the chosen one back into the params. It never shows a total, because the API gives none.
+
+## Do and don't
+
+- Do map API records to `items` in the page, using `DateText` for dates and the status chip wrappers for status and priority.
+- Do pass lookup tables to `ActionStatusChip` and `ActionPriorityChip` so bare ids still resolve.
+- Don't hand-roll loading, empty or error markup; pass `state` and `empty`.
+- Don't use this over a table: `DataTable` has its own toolbar and pagination.
+
+## Accessibility
+
+- Give `EntityList` an `aria-label` naming the list.
+- `PageHeader` supplies the page heading. `CursorPagination` is labelled for assistive technology, and its count uses `noun` to say how many records are on the page ("5 work orders on this page").
+
+## States
+
+`RequestsFail` and `SlowNetwork` drive the mock API through `parameters.mockApi` to show the error state with retry and the first-load skeleton and dimmed refetch.
+
+<Stories includePrimary={false} />

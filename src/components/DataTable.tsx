@@ -94,6 +94,7 @@ declare module '@tanstack/table-core' {
   }
 }
 
+/** The TanStack Table features and row models every DataTable uses. Pass it to `createColumnHelper` to type columns. */
 export const dataTableFeatures = tableFeatures({
   columnFilteringFeature,
   globalFilteringFeature,
@@ -114,83 +115,122 @@ export const dataTableFeatures = tableFeatures({
   sortFns: { alphanumeric: sortFn_alphanumeric, basic: sortFn_basic, text: sortFn_text },
 });
 
+/** The feature set type, for `createColumnHelper<DataTableFeatures, Row>()`. */
 export type DataTableFeatures = typeof dataTableFeatures;
 
+/** One column definition for a DataTable of `TData` rows. Build them with `defineColumns` or `createColumnHelper`. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- cell value type varies per column
 export type DataTableColumn<TData extends RowData> = ColumnDef<DataTableFeatures, TData, any>;
 
+/** A single-select filter shown in the toolbar, narrowing one column to one value. */
 export type DataTableFilter = {
   /** Id of the column this filter narrows. The column needs `filterFn: 'equalsString'`. */
   columnId: string;
+  /** Accessible name for the select, e.g. "Source". */
   label: string;
+  /** Text for the option that clears the filter, e.g. "All sources". */
   allLabel: string;
+  /** The values to offer. Each is shown as written and matched exactly against the column value. */
   options: string[];
 };
 
 /** Sorting, search, column filters and pagination: the slices that can be controlled or synced to the URL. */
 export type DataTableState = TableUrlState;
 
+/** Row height. `compact` fits more rows on screen. */
 export type DataTableDensity = 'comfortable' | 'compact';
 
+/** Tuning for `virtualize`. Every field is optional. */
 export type DataTableVirtualizeOptions = {
-  /** Switch to virtual rows once the visible row count exceeds this. Default 200. */
+  /** Switch to virtual rows once the visible row count exceeds this. Defaults to 200. */
   threshold?: number;
-  /** Estimated row height in pixels. Default 37 (comfortable) / 29 (compact). */
+  /** Estimated row height in pixels. Defaults to 37 (comfortable) or 29 (compact). */
   rowHeight?: number;
-  /** Height of the scroll container in pixels. Default 520. */
+  /** Height of the scroll container in pixels. Defaults to 520. */
   maxHeight?: number;
 };
 
-export type DataTableProps<TData extends RowData> = {
-  /** Keep `data` and `columns` referentially stable between renders. */
-  data: TData[];
-  columns: DataTableColumn<TData>[];
-  /** Accessible name for the table. */
-  label: string;
-  /** Plural noun for the row count, e.g. "meters". */
-  noun: string;
-  /** Column ids matched by the search box. Omit to hide search. */
-  searchColumns?: string[];
-  searchPlaceholder?: string;
-  filter?: DataTableFilter;
-  /** Column ids rendered end-aligned with tabular digits. Prefer `meta.align: 'end'` on the column. */
-  numericColumns?: string[];
-  /** Page size options. `0` means "All rows". The first entry is the default. */
-  pageSizes?: number[];
-  /** `server` hands sorting, filtering and paging to the caller via `state`/`onStateChange`. */
-  mode?: 'client' | 'server';
-  server?: {
-    rowCount: number;
-    isFetching?: boolean;
-    isError?: boolean;
-    onRetry?: () => void;
-  };
-  /** Controlled table state. Any slice you omit is managed internally. */
-  state?: Partial<DataTableState>;
-  onStateChange?: (next: DataTableState) => void;
-  /** Persist column visibility, order, sizing, pinning and density under `kilowatt-table:${tableId}`. */
-  tableId?: string;
-  /** Adds a leading checkbox column. */
-  selectable?: boolean;
-  /** Rendered in the bar above the table while rows are selected. */
-  bulkActions?: (selectedRows: TData[], clear: () => void) => ReactNode;
-  /** Adds a leading expand toggle; the result renders in a full-width row under the row. */
-  renderExpanded?: (row: TData) => ReactNode;
-  getRowId?: (row: TData) => string;
-  /** Virtualize the body for large row counts. */
-  virtualize?: boolean | DataTableVirtualizeOptions;
-  /** Initial density. Setting it shows the density toggle in the toolbar. */
-  density?: DataTableDensity;
-  /** Shows an "Export CSV" button that exports the filtered, sorted rows (all pages) of the visible columns. */
-  exportFileName?: string;
-  /** Shows the "Columns" visibility menu. Defaults to true when `tableId` is set. */
-  columnMenu?: boolean;
-  /** Renders a skeleton in place of the table. */
-  isLoading?: boolean;
-  /** Renders an error state with a Retry button. A string becomes the message. */
-  error?: boolean | string | Error | null;
+/** Server-mode inputs: the total and the request status the caller owns. */
+export type DataTableServerOptions = {
+  /** Total rows matching the current search and filters, across every page. Drives the row count and page count. */
+  rowCount: number;
+  /** A page request is in flight. Keeps the current rows at reduced opacity and marks the table busy. Defaults to false. */
+  isFetching?: boolean;
+  /** The page request failed. Shows the error state, like `error`. Defaults to false. */
+  isError?: boolean;
+  /** Retry handler for the error state. Takes precedence over the top-level `onRetry`. */
   onRetry?: () => void;
-  /** Sync sorting, search, filters and pagination to the URL under this prefix. Needs a react-router context. */
+};
+
+/** Props for `DataTable`. `TData` is the row type. */
+export type DataTableProps<TData extends RowData> = {
+  /** The rows. In client mode, every row; in server mode, the current page. Keep `data` and `columns` referentially stable between renders. */
+  data: TData[];
+  /** Column definitions, from `defineColumns` or `createColumnHelper<DataTableFeatures, TData>()`. */
+  columns: DataTableColumn<TData>[];
+  /** Accessible name for the table, e.g. "Meters". */
+  label: string;
+  /** Plural noun for the row count and the empty message, e.g. "meters". */
+  noun: string;
+  /** Column ids matched by the search box (case-insensitive substring). Omit to hide search. */
+  searchColumns?: string[];
+  /** Placeholder for the search box, e.g. "Search meters". Also its accessible name, so set it whenever `searchColumns` is set. */
+  searchPlaceholder?: string;
+  /** Adds a single-select filter to the toolbar. Omit for no filter. */
+  filter?: DataTableFilter;
+  /** Column ids rendered end-aligned with tabular digits. Prefer `meta.align: 'end'` on the column. Defaults to none. */
+  numericColumns?: string[];
+  /** Page size options. `0` means "All rows". The first entry is the default. Defaults to `[10, 25, 50]`. */
+  pageSizes?: number[];
+  /**
+   * `client` sorts, filters and pages `data` in the browser; use it for small sets. `server` hands sorting,
+   * filtering and paging to the caller via `state`/`onStateChange` and needs `server.rowCount`; use it for
+   * portfolio-scale data. Defaults to `client`.
+   */
+  mode?: 'client' | 'server';
+  /** Server-mode total and request status. Required for `mode="server"`; ignored in client mode except for `isFetching`, `isError` and `onRetry`. */
+  server?: DataTableServerOptions;
+  /** Controlled table state. Any slice you omit is managed internally. With `syncToUrl`, it only seeds the defaults. */
+  state?: Partial<DataTableState>;
+  /** Called with the full state after every sort, search, filter or page change. Sort, search and filter changes reset to the first page. */
+  onStateChange?: (next: DataTableState) => void;
+  /**
+   * Persist column visibility, order, sizing, pinning and density in localStorage under `kilowatt-table:${tableId}`.
+   * Also shows the Columns menu unless `columnMenu` is false. Omit for no persistence.
+   */
+  tableId?: string;
+  /** Adds a leading checkbox column, pinned left, and a selected count in the footer. Selection is per row id, so set `getRowId`. Defaults to false. */
+  selectable?: boolean;
+  /** Rendered in the bar above the table while rows are selected. Receives the selected rows and a function that clears the selection. Needs `selectable`. */
+  bulkActions?: (selectedRows: TData[], clear: () => void) => ReactNode;
+  /** Adds a leading expand toggle; the result renders in a full-width row under the row. Omit for no expansion. */
+  renderExpanded?: (row: TData) => ReactNode;
+  /** Stable id for each row, used for selection, expansion and React keys. Defaults to the row index; set it whenever rows can reorder or change. */
+  getRowId?: (row: TData) => string;
+  /**
+   * Virtualize the body for large row counts: only rows in view render, inside a fixed-height scroll container.
+   * It applies to the rows on the current page, so pair it with an "All rows" page size (`0`). Defaults to false.
+   */
+  virtualize?: boolean | DataTableVirtualizeOptions;
+  /** Initial density. Setting it shows the density toggle in the toolbar. A density saved under `tableId` wins. Defaults to `comfortable`, with no toggle. */
+  density?: DataTableDensity;
+  /**
+   * Shows an "Export CSV" button and names the file. Client mode exports the filtered, sorted rows (all pages) of the
+   * visible columns; server mode exports the rows on the current page. Omit to hide the button.
+   */
+  exportFileName?: string;
+  /** Shows the "Columns" visibility menu, with a Reset item that restores the default layout. Defaults to true when `tableId` is set, false otherwise. */
+  columnMenu?: boolean;
+  /** Renders a skeleton in place of the table. Use for the first load, before any rows arrive. Defaults to false. */
+  isLoading?: boolean;
+  /** Renders an error state in place of the table. A string or an `Error` becomes the message. Defaults to no error. */
+  error?: boolean | string | Error | null;
+  /** Shows a Retry button in the error state. `server.onRetry` takes precedence when set. */
+  onRetry?: () => void;
+  /**
+   * Sync sorting, search, filters and pagination to the URL under this prefix, so the view survives reloads and links.
+   * The URL becomes the source of truth. Needs a react-router context. Omit to keep state in memory.
+   */
   syncToUrl?: string;
 };
 
@@ -317,7 +357,15 @@ function fromTablePagination(pagination: PaginationState): PaginationState {
   return { ...pagination, pageSize: pagination.pageSize >= allRowsPageSize ? 0 : pagination.pageSize };
 }
 
-/** Data table with sorting, search, filters, paging, column controls, selection, expansion and virtualization. */
+/**
+ * The table for rows of records: sorting, search, a filter, paging, column controls, selection, expansion,
+ * CSV export and virtualization, with loading, error and empty states built in. Use client mode for small sets
+ * and server mode with controlled state for portfolio-scale data. For a short list of records with a primary
+ * and secondary line, use `EntityList` instead.
+ *
+ * @summary A sortable, filterable, paged data table with column controls and built-in states.
+ * @import import { DataTable } from 'src/components/DataTable';
+ */
 export function DataTable<TData extends RowData>(props: DataTableProps<TData>) {
   if (props.syncToUrl) {
     return <UrlSyncedDataTable {...props} syncToUrl={props.syncToUrl} />;

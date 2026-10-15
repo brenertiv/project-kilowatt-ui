@@ -10,6 +10,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 /** Recipes for content that floats over the page, over Base UI. There are no wrapper components: copy the markup and classes. */
 const meta = {
   title: 'Primitives/Overlays',
+  tags: ['!autodocs'],
 } satisfies Meta;
 
 export default meta;

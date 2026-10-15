@@ -1,0 +1,56 @@
+import { ArgTypes, Canvas, Description, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as FilterBarStories from './FilterBar.stories';
+
+<Meta of={FilterBarStories} />
+
+# FilterBar
+
+<Description of={FilterBarStories} />
+
+<Canvas of={FilterBarStories.Default} />
+
+## When to use
+
+- Above a list fed by `useEntityList`, to search, sort and change the page size through the API's `ListParams`.
+- When the API does the filtering. The bar only edits params; the server returns the matching page.
+
+## When not to use
+
+- Over a table: [DataTable](?path=/docs/table-datatable--docs) has its own toolbar for search and filters, and sortable column headers.
+- To filter rows already in memory: filter the array, or use `DataTable` in client mode.
+- For a single control: a lone `TextField` or select is enough.
+
+## Do and don't
+
+Do:
+
+- Keep `params` in the page's state (or the URL) and pass them back in. The bar is controlled.
+- Name what is searched in `searchPlaceholder`, e.g. "Search work orders". It is also the field's accessible name.
+- Offer only `ordering` values the API accepts, with labels that say the direction: "Due date, latest first".
+- Clear `cursor` in any extra control you add as `children`, the way the built-in controls do.
+- Put `CursorPagination` below the list it filters.
+
+Don't:
+
+- Don't fire a request per keystroke yourself. Search is trimmed and debounced by 250ms before `onChange` runs.
+- Don't keep a cursor across a filter change. The bar resets it so the list restarts from the first page.
+- Don't show a total count next to the bar. The API gives none.
+
+## Accessibility
+
+- The search field is a search input named by `searchPlaceholder`, or "Search".
+- Sort and Rows are labelled selects; they appear only when `ordering` or `pageSizes` is set.
+- The caller provides labels for any extra controls passed as `children`.
+- Results change after a delay, so the list below should announce its state: `EntityList` and `CursorPagination` do.
+
+## Composition
+
+- Sits under a [PageHeader](?path=/docs/data-pageheader--docs) and above an [EntityList](?path=/docs/data-entitylist--docs), with `CursorPagination` below.
+- Shares `ListParams` with `useEntityList` and `CursorPagination`'s `onCursor`.
+- The Patterns/ListPage story shows the three wired together against the mock API.
+
+## Props
+
+<ArgTypes of={FilterBarStories} />
+
+<Stories includePrimary={false} />

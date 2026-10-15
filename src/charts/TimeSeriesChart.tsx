@@ -8,20 +8,25 @@ import { downsample, toRows, type ChartAnnotation, type ChartData } from './type
 import { useChartRoot } from './useChartRoot';
 import { addCursor, addSharedTooltip, createValueAxis, createXYChart } from './xy';
 
+/** Spacing of time-series samples. */
 export type TimeUnit = 'minute' | 'hour' | 'day' | 'week' | 'month';
 
-type TimeSeriesChartProps = {
+export type TimeSeriesChartProps = {
+  /** The same `ChartData` passed to the enclosing `ChartFrame`. Each point's `x` is an ISO date or epoch ms; a null `y` breaks the line. */
   data: ChartData;
   /** Spacing of the underlying samples. Drives axis labelling and gap detection. */
   interval: TimeUnit;
+  /** Formats the value axis, and tooltips for series without their own `unit`. Defaults to `count` formatting. */
   unit?: Unit;
-  /** Draw a ~10% wash under each line. */
+  /** Draw a 10% wash under each line. Defaults to false. Leave off when washes would overlap and muddy each other. */
   area?: boolean;
-  /** Start the value axis at zero. Default true: lines rarely justify a cropped baseline. */
+  /** Start the value axis at zero. Defaults to true: lines rarely justify a cropped baseline. Set false only when the variation is the story. */
   zeroBased?: boolean;
+  /** Labelled markers on single points, e.g. the daily peak. Use sparingly: one or two per chart. Defaults to none. */
   annotations?: ChartAnnotation[];
-  /** Cap on points per series before drawing. */
+  /** Cap on points per series before drawing; longer series are thinned evenly, keeping the last point. Defaults to 500. */
   maxPoints?: number;
+  /** Accessible name for the plot, e.g. "Demand by hour". Required: the plot is an image to assistive tech. */
   ariaLabel: string;
 };
 
@@ -38,8 +43,14 @@ function toEpoch(x: string | number) {
 }
 
 /**
- * Lines over a date axis. One y axis, 2px strokes, a crosshair with one tooltip
- * listing every series, selective direct labels through `annotations`.
+ * Lines over a date axis: one y axis, 2px strokes, a crosshair with one tooltip listing every
+ * series, and selective direct labels through `annotations`. Use it for a measure over time, such as
+ * hourly demand against a baseline; for categories use `CategoryBarChart`, and for a single number
+ * use `StatCard`. Render it inside `<ChartFrame>` (it throws otherwise); colors come from series ids
+ * via the token palette, so never pass colors.
+ *
+ * @summary Line chart over time, inside ChartFrame, with a shared crosshair tooltip.
+ * @import import { TimeSeriesChart } from 'src/charts/TimeSeriesChart';
  */
 export function TimeSeriesChart({
   data,
@@ -144,6 +155,7 @@ export function TimeSeriesChart({
   return <div ref={hostRef} className="chart-host chart-plot" role="img" aria-label={ariaLabel} />;
 }
 
+/** A plain-text summary of each series' range, e.g. for a longer accessible description. */
 export function describeSeries(data: ChartData, unit: Unit = 'count') {
   return data.series
     .map((series) => {

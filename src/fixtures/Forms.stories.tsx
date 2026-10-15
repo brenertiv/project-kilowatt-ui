@@ -7,12 +7,13 @@ import { Slider } from '@base-ui/react/slider';
 import { Toggle } from '@base-ui/react/toggle';
 import { ToggleGroup } from '@base-ui/react/toggle-group';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { buildings, meters } from '../data';
-import { CheckIcon, ChevronDownIcon, ChevronUpDownIcon, MinusIcon, PlusIcon, XIcon } from '../icons';
+import { buildings, meters } from 'src/data';
+import { CheckIcon, ChevronDownIcon, ChevronUpDownIcon, MinusIcon, PlusIcon, XIcon } from 'src/icons';
 
 /** Recipes for choosing values over Base UI. There are no wrapper components: copy the markup and classes. */
 const meta = {
   title: 'Primitives/Forms',
+  tags: ['!autodocs'],
 } satisfies Meta;
 
 export default meta;

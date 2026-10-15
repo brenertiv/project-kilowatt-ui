@@ -8,13 +8,13 @@ Primitives in `src/primitives.ts` mirror the Figma **Enertiv UI Foundations** pr
 
 ```bash
 npm install
-npm run dev        # the app: System and Docs
-npm run storybook  # the components, at http://localhost:6006
+npm run storybook  # the design system, at http://localhost:6006
+npm run dev        # the app: the System page, the Theme editor and Figma sync
 ```
 
 ## Docs
 
-Markdown in `docs/` is rendered in the app under **Docs** (`/docs/<file-name>`), with a section index built from the level-two headings. `docs/design-system-rules.md` holds the rules for using the system and lives apart from component code on purpose. Drop another `.md` file in the folder and it appears in the Docs list automatically.
+Markdown in `docs/` is the source for the **Guides** section of Storybook. `scripts/build-docs.ts` (`npm run docs:build`, run by the Storybook scripts) turns each file into an MDX page, and turns the token tables into the **Foundations** pages and the token downloads (`/kilowatt-tokens.css`, the DTCG files `/tokens.light.json` and `/tokens.dark.json`). `docs/design-system-rules.md` holds the rules for using the system. Drop another `.md` file in the folder and it appears under Guides; list it in `internalDocs` in the script to keep it out.
 
 ## Storybook
 

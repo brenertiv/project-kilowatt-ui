@@ -1,0 +1,82 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ControlsStories from './Controls.stories';
+
+<Meta
+  of={ControlsStories}
+  summary="Recipes for on/off and pick-a-view controls: Base UI Switch, Checkbox and Tabs with ui-switch, ui-checkbox and ui-tabs classes. No wrapper components; copy the markup."
+/>
+
+# Controls
+
+On/off and view-switching controls built from Base UI parts and `ui-*` classes in `src/styles.css`. There are no wrapper components. Checked and selected states use the secondary color.
+
+## Switch
+
+A setting that takes effect at once, with no Save button. `Switch.Root` gets `ui-switch` (36 by 20px), `Switch.Thumb` gets `ui-switch-thumb`, and both sit inside a `label` with `ui-inline-label`, which lays out the control and its text in a row.
+
+```tsx
+import { Switch } from '@base-ui/react/switch';
+
+<label className="ui-inline-label">
+  <Switch.Root className="ui-switch" defaultChecked onCheckedChange={setAlerts}>
+    <Switch.Thumb className="ui-switch-thumb" />
+  </Switch.Root>
+  Real-time alerts
+</label>
+```
+
+<Canvas of={ControlsStories.SwitchControl} />
+
+## Checkbox
+
+An option applied with the rest of a form. `Checkbox.Root` gets `ui-checkbox` (16px, 4px radius) and `Checkbox.Indicator` gets `ui-checkbox-indicator` holding `CheckIcon` from `src/icons`. For a parent whose children are only partly checked, set `indeterminate` on `Checkbox.Root`.
+
+```tsx
+import { Checkbox } from '@base-ui/react/checkbox';
+import { CheckIcon } from 'src/icons';
+
+<label className="ui-inline-label">
+  <Checkbox.Root className="ui-checkbox" defaultChecked>
+    <Checkbox.Indicator className="ui-checkbox-indicator">
+      <CheckIcon />
+    </Checkbox.Indicator>
+  </Checkbox.Root>
+  Include submetered loads
+</label>
+```
+
+<Canvas of={ControlsStories.CheckboxControl} />
+
+## Tabs
+
+Switching between views of the same subject. `ui-tabs` on the root, `ui-tabs-list` on the list, `ui-tab` on each tab, `ui-tab-indicator` for the sliding underline (place it last inside the list), and `ui-tab-panel` on each panel. Tabs share the list width equally; check a long list at phone width (see Tabs on a phone).
+
+```tsx
+import { Tabs } from '@base-ui/react/tabs';
+
+<Tabs.Root className="ui-tabs" defaultValue="usage">
+  <Tabs.List className="ui-tabs-list">
+    <Tabs.Tab className="ui-tab" value="usage">Usage</Tabs.Tab>
+    <Tabs.Tab className="ui-tab" value="demand">Demand</Tabs.Tab>
+    <Tabs.Indicator className="ui-tab-indicator" />
+  </Tabs.List>
+  <Tabs.Panel className="ui-tab-panel" value="usage">…</Tabs.Panel>
+  <Tabs.Panel className="ui-tab-panel" value="demand">…</Tabs.Panel>
+</Tabs.Root>
+```
+
+<Canvas of={ControlsStories.TabsControl} />
+
+## Do and don't
+
+- Do use a switch only when the change applies immediately; use a checkbox when a Save button applies it.
+- Do keep the label inside the wrapping `label` so clicking the text toggles the control.
+- Don't use tabs to move between different subjects; they switch views of one subject.
+
+## Accessibility
+
+- Base UI gives the switch the switch role, the checkbox its checked, unchecked and mixed states, and tabs the tablist pattern with arrow-key movement and linked panels.
+- The wrapping `label` is the accessible name for switches and checkboxes; the caller must supply it.
+- `ui-switch`, `ui-checkbox` and `ui-tab` show the 2px secondary-color focus ring on keyboard focus.
+
+<Stories includePrimary={false} />

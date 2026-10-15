@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { energyMix } from '../data';
-import type { ChartData } from './types';
-import { ChartFrame } from './ChartFrame';
-import { DonutChart } from './DonutChart';
+import { energyMix } from 'src/data';
+import type { ChartData } from 'src/charts/types';
+import { ChartFrame } from 'src/charts/ChartFrame';
+import { DonutChart } from 'src/charts/DonutChart';
 
 /** One series per slice, each holding a single point: the shape `DonutChart` expects. */
 function mix(count: number): ChartData {

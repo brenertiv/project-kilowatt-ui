@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { demand } from '../fixtures/sampleData';
-import { ChartFrame } from './ChartFrame';
-import { TimeSeriesChart } from './TimeSeriesChart';
+import { demand } from 'src/fixtures/sampleData';
+import { ChartFrame } from 'src/charts/ChartFrame';
+import { TimeSeriesChart } from 'src/charts/TimeSeriesChart';
 
 const meta = {
   title: 'Charts/TimeSeries',
   component: TimeSeriesChart,
+  // The attached .mdx page replaces the generated docs page.
+  tags: ['!autodocs'],
   args: {
     data: demand.pair,
     interval: 'hour',

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import type { ListParams } from '../../api/types';
-import { FilterBar } from './FilterBar';
+import type { ListParams } from 'src/api/types';
+import { FilterBar } from 'src/components/data/FilterBar';
 
 const ordering = [
   { value: '-due_date', label: 'Due date, latest first' },
@@ -14,6 +14,7 @@ const ordering = [
 const meta = {
   title: 'Data/FilterBar',
   component: FilterBar,
+  tags: ['!autodocs'],
   decorators: [
     (Story) => (
       // A plain div, not Box: story imports end up in the snippet agents copy.

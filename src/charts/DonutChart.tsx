@@ -6,19 +6,27 @@ import { useChartFrame } from './ChartFrame';
 import type { ChartData } from './types';
 import { useChartRoot } from './useChartRoot';
 
-type DonutChartProps = {
-  /** One point per series: the slice value is the first point's y. */
+export type DonutChartProps = {
+  /** One series per slice, each with one point: the slice value is the first point's y. The same object goes to `ChartFrame`. */
   data: ChartData;
+  /** Formats slice values in tooltips and the default center total. Defaults to `'count'`. */
   unit?: Unit;
-  /** Hero figure in the hole. Defaults to the total. */
+  /** Hero figure in the hole, as preformatted text. Defaults to the compact total of every slice. */
   centerValue?: string;
+  /** Caption under the center figure, e.g. "Annual total". Omit it and only the figure shows. */
   centerLabel?: string;
+  /** Accessible name for the plot, e.g. "Energy mix". Required: the plot is an image to assistive tech. */
   ariaLabel: string;
 };
 
 /**
- * Part-to-whole at a glance. Six slices at most; past that, fold into "Other"
- * or use a bar. Slices keep a 2px surface gap and never pull out on hover.
+ * Part-to-whole at a glance. Six slices at most; past that, fold into "Other" or use
+ * `CategoryBarChart`, which also suits comparing parts precisely. Slices keep a 2px surface gap and
+ * never pull out on hover. Render it inside `<ChartFrame>` (it throws otherwise); colors come from
+ * series ids via the token palette, so never pass colors.
+ *
+ * @summary Donut chart for part-to-whole, with a total in the hole, inside ChartFrame.
+ * @import import { DonutChart } from 'src/charts/DonutChart';
  */
 export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ariaLabel }: DonutChartProps) {
   const { hidden, colors } = useChartFrame();

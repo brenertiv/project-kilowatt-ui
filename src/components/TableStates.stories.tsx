@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { TableEmptyRow, TableError, TableSkeleton } from './TableStates';
+import { TableEmptyRow, TableError, TableSkeleton } from 'src/components/TableStates';
 
 const meta = {
   title: 'Table/States',

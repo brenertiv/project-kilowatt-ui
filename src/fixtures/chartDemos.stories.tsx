@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ChartFrame } from '../charts/ChartFrame';
-import { radarData, RadarPlot, TreemapDemo } from './chartDemos';
+import { ChartFrame } from 'src/charts/ChartFrame';
+import { radarData, RadarPlot, TreemapDemo } from 'src/fixtures/chartDemos';
 
 const meta = {
   title: 'Internal/ChartDemos',

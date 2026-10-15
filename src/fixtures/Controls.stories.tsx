@@ -3,11 +3,12 @@ import { Switch } from '@base-ui/react/switch';
 import { Tabs } from '@base-ui/react/tabs';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { CheckIcon } from '../icons';
+import { CheckIcon } from 'src/icons';
 
 /** Recipes for on/off and pick-one controls over Base UI. There are no wrapper components: copy the markup and classes. */
 const meta = {
   title: 'Primitives/Controls',
+  tags: ['!autodocs'],
 } satisfies Meta;
 
 export default meta;

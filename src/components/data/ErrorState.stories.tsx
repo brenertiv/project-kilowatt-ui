@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { ErrorState } from './ErrorState';
+import { ErrorState } from 'src/components/data/ErrorState';
 
 const meta = {
   title: 'Data/ErrorState',

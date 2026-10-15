@@ -1,0 +1,67 @@
+import { ArgTypes, Canvas, Description, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as DataStateStories from './DataState.stories';
+
+<Meta of={DataStateStories} />
+
+# DataState
+
+<Description of={DataStateStories} />
+
+<Canvas of={DataStateStories.Ready} />
+
+## When to use
+
+- Around any content that comes from the API and has no state handling of its own: a hand-built list, a chart panel, a section of a detail page.
+- Whenever you would otherwise write a spinner, an "empty" message or an error block. `DataState` is the one way to render the async states.
+
+What each status renders:
+
+| Status     | Renders                                                     |
+| ---------- | ----------------------------------------------------------- |
+| `loading`  | `skeleton`, or a `CardSkeleton`                             |
+| `fetching` | the children, dimmed and marked busy                        |
+| `empty`    | a compact `EmptyState` with the `empty` copy                |
+| `error`    | a compact `ErrorState` with `state.error` and a Retry       |
+| `idle`     | a compact `EmptyState` asking for a filter, or the `idle` copy |
+| `ready`    | the children                                                |
+
+## When not to use
+
+- Around an [EntityCard](?path=/docs/data-entitycard--docs), [EntityList](?path=/docs/data-entitylist--docs) or [StatCard](?path=/docs/data-statcard--docs): pass `state` to the component instead. Wrapping them again doubles the states.
+- Around a table: [DataTable](?path=/docs/table-datatable--docs) has its own loading, refetch and error states.
+- For a page title that is still loading: give `state` to [PageHeader](?path=/docs/data-pageheader--docs).
+
+## Do and don't
+
+Do:
+
+- Derive `state` with `fromQuery(result)` on a page. It reads the API's message into `state.error` and wires `refetch` to `state.onRetry`.
+- Pass a `skeleton` shaped like the content: `ListSkeleton` for rows, `StatSkeleton` for a metric, `CardSkeleton` with the right `lines` for a card.
+- Name what is missing in `empty`, e.g. "No alerts", and add an `action` when the user can do something about it.
+- Use `idle` when a required filter has not been set yet, so "nothing asked" looks different from "nothing found".
+
+Don't:
+
+- Don't pass a query result. `DataState` takes an `AsyncState`, so a story can reach every state with no network.
+- Don't hide the children while fetching. The previous data stays on screen, dimmed, until the new page arrives.
+- Don't treat a placeholder record (named `???`) as empty. It is data; render it with `EntityName`.
+
+## Accessibility
+
+- Loading skeletons are a status region announced as "Loading".
+- Fetching content is marked busy and labelled "Updating".
+- Empty and idle messages are a status region; errors are an alert, so they are announced when they appear.
+- The Retry button is a real button with a visible label.
+- The caller provides empty and error copy that names the subject, so the announcement means something out of context.
+
+## Composition
+
+- Built from [EmptyState](?path=/docs/data-emptystate--docs), [ErrorState](?path=/docs/data-errorstate--docs) and the [skeletons](?path=/docs/data-skeletons--docs).
+- `EntityCard` and `EntityList` are built on it; `StatCard` renders the same states.
+- Pages get `state` from `fromQuery` over `useEntityList`, `useEntity` or `useEnergyData`.
+
+## Props
+
+<ArgTypes of={DataStateStories} />
+
+<Stories includePrimary={false} />

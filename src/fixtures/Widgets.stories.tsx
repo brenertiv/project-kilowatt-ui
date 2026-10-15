@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ChartDemo, DndDemo, GridDemo, MapDemo, MetricCardDemo, OverviewPanelDemo, TableDemo } from './stackDemos';
+import { ChartDemo, DndDemo, GridDemo, MapDemo, MetricCardDemo, OverviewPanelDemo, TableDemo } from 'src/fixtures/stackDemos';
 
 /**
  * Smoke tests for the third-party widget stack (amCharts, TanStack Table, Leaflet,

@@ -1,0 +1,37 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta
+  title="Introduction"
+  summary="What Kilowatt is, where its parts live, and the rules for building with it: import documented components, use tokens only, check a component's stories and props before using it."
+/>
+
+# Kilowatt
+
+Kilowatt is Enertiv's design system: tokens mirrored from the Figma file **Enertiv UI Foundations**, Base UI primitives styled with plain CSS, Material UI components themed from the tokens, data components built on the Enertiv API's shapes, amCharts charts, and page views composed from all of them.
+
+## Where things are
+
+| Section | What it holds |
+| --- | --- |
+| **Guides** | The rules for using the system, how to write stories, the data layer, Figma sync, typography and the stack. Start with **Rules**. |
+| **Foundations** | Every token with its CSS variable and light and dark values: color, typography, space, shape, layout, icons, and the primitive scales underneath. |
+| **Primitives** | Base UI recipes with the `ui-*` classes: buttons, fields, controls, forms, overlays and structure. |
+| **Data**, **Table**, **Charts**, **Menus** | The components. Each has one story per state and a props table. |
+| **Patterns** and **Pages** | Components composed into real screens, running against the mock API. |
+
+## Building with Kilowatt
+
+1. **Use what exists.** Before writing UI, find the component and read its stories and props. Import it. Don't re-implement it.
+2. **Use tokens only.** Color, type, space, radius and shadow come from the CSS variables on the Foundations pages, or from the Material UI theme. Never use a hex value, a pixel radius or a font family of your own.
+3. **Cover every state.** Data components take an `AsyncState`: loading, fetching, empty, error and ready. A screen that only handles ready is unfinished.
+4. **Write copy through i18n.** User-facing strings go in `src/i18n/en.json`.
+
+## For coding agents
+
+This Storybook is built to be read by agents as well as people.
+
+- **MCP.** While `npm run storybook` runs, the MCP server is at `http://localhost:6006/mcp`, with `docs-list`, `docs-show` and `docs-show-story`, plus story previews and test runs. Add it with `npx mcp-add --type http --url "http://localhost:6006/mcp" --scope project`.
+- **Manifests.** Every build serves `/manifests/components.json`, with each component's description, import line, props and story snippets, and `/manifests/docs.json`, with these pages.
+- **Tokens.** `/kilowatt-tokens.css` is the CSS variables. `/tokens.light.json` and `/tokens.dark.json` are DTCG 2025.10 files. `/kilowatt-design-system.json` and `/kilowatt-design-system.md` are the full system.
+
+The **Internal** section holds demos and live views that are not part of the system's API. Those are left out of the manifest.

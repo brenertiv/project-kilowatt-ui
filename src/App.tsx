@@ -5,12 +5,11 @@ import { AppProviders, ToastOutlet } from './AppProviders';
 import { useTheme } from './theme/ThemeProvider';
 import { ThemeEditor } from './theme/ThemeEditor';
 import { DesignSystem } from './designSystem/DesignSystem';
-import { DocsPage } from './docs/DocsPage';
 import { ArrowOutwardIcon, DarkModeIcon, LightModeIcon } from './icons';
 import EnertivAvatar from './assets/enertiv-avatar.svg?react';
 
 /**
- * Components are documented in Storybook (`npm run storybook`). The dev server
+ * Components, foundations and guides are documented in Storybook (`npm run storybook`). The dev server
  * links to the local one; a build links to `VITE_STORYBOOK_URL` when it is set.
  */
 const storybookUrl: string | null =
@@ -41,9 +40,6 @@ function MainNav() {
       <NavLink to="/design-system" className="topbar-nav-link">
         {t('nav.designSystem')}
       </NavLink>
-      <NavLink to="/docs" className="topbar-nav-link">
-        {t('nav.docs')}
-      </NavLink>
       {storybookUrl ? (
         <a href={storybookUrl} className="topbar-nav-link" target="_blank" rel="noreferrer">
           {t('nav.components')}
@@ -72,8 +68,6 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Navigate to="/design-system" replace />} />
           <Route path="/design-system" element={<DesignSystem />} />
-          <Route path="/docs" element={<DocsPage />} />
-          <Route path="/docs/:slug" element={<DocsPage />} />
           <Route path="*" element={<Navigate to="/design-system" replace />} />
         </Routes>
       </div>

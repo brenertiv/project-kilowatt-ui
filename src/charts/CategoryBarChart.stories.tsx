@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { categories } from '../fixtures/sampleData';
-import { CategoryBarChart } from './CategoryBarChart';
-import { ChartFrame } from './ChartFrame';
+import { categories } from 'src/fixtures/sampleData';
+import { CategoryBarChart } from 'src/charts/CategoryBarChart';
+import { ChartFrame } from 'src/charts/ChartFrame';
 
 const meta = {
   title: 'Charts/CategoryBar',

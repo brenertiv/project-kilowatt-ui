@@ -1,6 +1,6 @@
 # Stack Overview
 
-Kilowatt UI is Enertiv's design system and component library: a React single-page app that documents the tokens and guidelines, and a Storybook that documents every component and page in isolation. Both deploy as static sites.
+Kilowatt UI is Enertiv's design system and component library: a Storybook that documents the foundations, guides and every component and page, and a small React app for the System page, the Theme editor and Figma sync.
 
 ## Runtime
 
@@ -9,7 +9,7 @@ Kilowatt UI is Enertiv's design system and component library: a React single-pag
 | Language             | TypeScript 5.9, strict                                       | `tsc` runs as part of every build                                                                                                                                                                                                                                          |
 | UI                   | React 19                                                     | Function components and hooks throughout                                                                                                                                                                                                                                   |
 | Components           | Material UI (`@mui/material`) and Base UI (`@base-ui/react`) | Material UI for data display and page composition, themed from the tokens through `src/mui/theme.ts`. Base UI for the unstyled primitives already built on it: menu, dialog, select, combobox, tabs, switch, slider, toast, tooltip. Styling outside Material is plain CSS |
-| Routing              | React Router 8                                               | Pages: System and Docs; components live in Storybook                                                                                                                                                                                                                       |
+| Routing              | React Router 8                                               | The app has one page, System; everything else lives in Storybook                                                                                                                                                                                                           |
 | Data fetching        | TanStack Query 5 with Axios                                  | Entity types, cursor-paged envelopes and query hooks mirror the Enertiv API in `src/api`. Everything runs against an in-process mock adapter with latency and a failure switch until the backend is attached. See `docs/data-layer.md`                                     |
 | Tables               | TanStack Table 9 with TanStack Virtual 3                     | Sorting, filtering, pagination, column visibility, pinning, resizing, selection, expansion, server mode and virtualization behind one `DataTable`                                                                                                                          |
 | Charts               | amCharts 5                                                   | Wrapped by a token-driven theme, a root hook and a shared frame; chart code never sets colors or fonts directly                                                                                                                                                            |
@@ -18,7 +18,6 @@ Kilowatt UI is Enertiv's design system and component library: a React single-pag
 | Drag and drop        | @hello-pangea/dnd                                            | Queue reordering                                                                                                                                                                                                                                                           |
 | Internationalization | i18next with react-i18next                                   | All UI copy lives in `src/i18n/en.json`                                                                                                                                                                                                                                    |
 | Dates and numbers    | date-fns, date-fns-tz, `Intl`                                | One formatting module shared by charts, tables and metric cards                                                                                                                                                                                                            |
-| Markdown             | react-markdown with remark-gfm                               | Renders the `docs/` folder inside the app                                                                                                                                                                                                                                  |
 
 ## Design system
 
@@ -45,7 +44,7 @@ The component manifest and `@storybook/addon-mcp` let coding agents query compon
 | Bundle analysis      | rollup-plugin-visualizer                                                                                                                                                                               |
 | Node                 | 24 or newer                                                                                                                                                                                            |
 
-Scripts: `npm run dev`, `npm run build`, `npm run storybook`, `npm run build-storybook`, `npm test` (with `test:unit` and `test:stories`), `npm run lint`, `npm run format`.
+Scripts: `npm run dev`, `npm run build`, `npm run storybook`, `npm run build-storybook`, `npm run docs:build`, `npm test` (with `test:unit` and `test:stories`), `npm run lint`, `npm run format`.
 
 ## Deployment
 
@@ -58,4 +57,4 @@ A GitHub Actions workflow builds on every push to `main` and publishes `dist/` t
 - `docs/stories.md` for story conventions.
 - `docs/storybook-plan.md` for the Storybook migration and the agent-facing setup.
 - `docs/data-layer.md` for the API shapes, mock adapter and async state.
-- The **System** page in the app renders the live token values, contrast measurements, type roles, spacing, shape and the icon catalog, and the **Docs** page renders everything in `docs/`.
+- Storybook's **Guides** are built from `docs/`, and its **Foundations** pages are built from the token tables. The **System** page in the app renders the live token values next to the Figma sync tools.

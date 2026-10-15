@@ -6,12 +6,13 @@ import { Progress } from '@base-ui/react/progress';
 import { ScrollArea } from '@base-ui/react/scroll-area';
 import { Separator } from '@base-ui/react/separator';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { tickets } from '../data';
-import { ChevronDownIcon, PlusIcon } from '../icons';
+import { tickets } from 'src/data';
+import { ChevronDownIcon, PlusIcon } from 'src/icons';
 
 /** Recipes for grouping, revealing and measuring content over Base UI. There are no wrapper components: copy the markup and classes. */
 const meta = {
   title: 'Primitives/Structure',
+  tags: ['!autodocs'],
 } satisfies Meta;
 
 export default meta;

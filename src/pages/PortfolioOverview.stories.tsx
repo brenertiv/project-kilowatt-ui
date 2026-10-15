@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { withPageFrame } from '../stories/decorators';
-import { PortfolioOverview } from './PortfolioOverview';
+import { withPageFrame } from 'src/stories/decorators';
+import { PortfolioOverview } from 'src/pages/PortfolioOverview';
 
 const meta = {
   title: 'Pages/PortfolioOverview',

@@ -1,0 +1,62 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as FormsStories from './Forms.stories';
+
+<Meta
+  of={FormsStories}
+  summary="Recipes for choosing values: Base UI Select, Combobox, NumberField, Slider, ToggleGroup and RadioGroup with ui-* classes. Pick by list length and precision. No wrapper components; copy the markup from each story."
+/>
+
+# Forms
+
+Value pickers built from Base UI parts and `ui-*` classes in `src/styles.css`. There are no wrapper components: copy the markup from the story's code panel. For a plain text input, see Primitives/Field. Selected and pressed states use the secondary color.
+
+## Select
+
+Pick one from a short, known list (under about ten). `Select.Trigger` gets `ui-select` with `Select.Value` and a `ui-select-icon` holding `ChevronUpDownIcon`. In the portal, `Select.Positioner` gets `ui-positioner`, `Select.Popup` gets `ui-popup`, and each `Select.Item` gets `ui-item` with a `ui-item-indicator` holding `CheckIcon`. Pass `items` to `Select.Root` so the trigger shows the label, not the value.
+
+<Canvas of={FormsStories.SelectRecipe} />
+
+## Combobox
+
+Pick one from a long list the user searches by typing. `Combobox.InputGroup` gets `ui-combobox` and holds a `ui-input` plus two `ui-icon-btn` buttons (`Combobox.Clear` with `XIcon`, `Combobox.Trigger` with `ChevronDownIcon`). The popup uses the same `ui-positioner`, `ui-popup`, `ui-item` and `ui-item-indicator` classes as Select, and `Combobox.Empty` gets `ui-empty` for the no-match message.
+
+<Canvas of={FormsStories.ComboboxRecipe} />
+
+## Number field
+
+An exact number within limits, such as a threshold. `NumberField.Root` gets `ui-number`; its label sits in `NumberField.ScrubArea` with `ui-scrub`, so dragging the label scrubs the value. `NumberField.Group` gets `ui-number-group`, holding `ui-stepper` decrement and increment buttons (`MinusIcon`, `PlusIcon`) around a `ui-input ui-number-input`.
+
+<Canvas of={FormsStories.NumberFieldRecipe} />
+
+## Slider
+
+An approximate value where feel matters more than the digit, such as a setpoint. `ui-slider-head` holds the `ui-label` and the `ui-slider-value` readout; then `ui-slider-control`, `ui-slider-track`, `ui-slider-indicator` and `ui-slider-thumb`. Format the readout with the unit through `Slider.Value`'s render function.
+
+<Canvas of={FormsStories.SliderRecipe} />
+
+## Toggle group
+
+A compact switch between a few short options, such as units. `ToggleGroup` gets `ui-toggle-group` and each `Toggle` gets `ui-toggle`. `defaultValue` is an array; set `multiple` to allow several pressed at once.
+
+<Canvas of={FormsStories.ToggleGroupRecipe} />
+
+## Radio group
+
+Pick one of a few options that should all stay visible. Each option is a `label` with `ui-inline-label` around `Radio.Root` (`ui-radio`) and `Radio.Indicator` (`ui-radio-indicator`). The story stacks them with the `demo-stack` helper.
+
+<Canvas of={FormsStories.RadioGroupRecipe} />
+
+## Do and don't
+
+- Do choose by the list: radio group for two to a few visible options, select for under about ten, combobox for longer or searchable lists.
+- Do choose by precision: number field for an exact value, slider for an approximate one.
+- Don't use a toggle group for long labels or more than a handful of options.
+- Don't drop the `ui-positioner` class; it sets the stacking order that keeps popups above the page.
+
+## Accessibility
+
+- Base UI handles the listbox, combobox, spinbutton, slider and radio-group roles, keyboard selection and focus return.
+- The caller must name every control: `aria-label` on a select trigger or radio group with no visible label, `htmlFor` or `Slider.Label` otherwise, and `aria-label` on icon-only buttons (Clear, Open, Decrease, Increase).
+- Every trigger, input, stepper, toggle, radio and slider thumb shows the 2px secondary-color focus ring.
+
+<Stories includePrimary={false} />

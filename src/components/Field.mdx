@@ -1,0 +1,65 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as FieldStories from './Field.stories';
+
+<Meta
+  of={FieldStories}
+  summary="Text field recipe: Base UI's Field and Input with ui-field, ui-label, ui-input and ui-description, plus Field.Error for validation. There is no Field component of ours; copy the markup."
+/>
+
+# Field
+
+There is no Kilowatt `Field` component. A text field is Base UI's `Field` (from `@base-ui/react/field`) wrapping its `Input` (from `@base-ui/react/input`), styled with `ui-*` classes. `Field.Root` wires the label, help text and error to the input, so you never write `id` or `htmlFor` by hand.
+
+<Canvas of={FieldStories.Default} />
+
+## Recipe
+
+```tsx
+import { Field } from '@base-ui/react/field';
+import { Input } from '@base-ui/react/input';
+
+<Field.Root className="ui-field" name="site">
+  <Field.Label className="ui-label">Site name</Field.Label>
+  <Input className="ui-input" placeholder="Enter a site" />
+  <Field.Description className="ui-description">Used on tickets and meter rollups.</Field.Description>
+  <Field.Error className="ui-description ui-field-error" match>
+    Site name is required.
+  </Field.Error>
+</Field.Root>
+```
+
+## Parts
+
+- `ui-field` on `Field.Root`: full width; give it a `name`.
+- `ui-label` on `Field.Label`: 12px secondary text above the input.
+- `ui-input` on `Input`: full width, control height (36px), divider border, tertiary placeholder.
+- `ui-input-compact`: a 108px input with tabular numerals, for short numeric values.
+- `ui-description` on `Field.Description`: help text under the input, at most 65 characters wide.
+- `Field.Error` with `match`: the validation message. The story gives it `ui-description ui-field-error`.
+
+## States
+
+- Invalid: set `invalid` on `Field.Root` and show the reason in `Field.Error` in place of the help text.
+- Disabled: set `disabled` on `Field.Root`, and say in the help text who can change the value.
+- Empty: a placeholder alone is fine for a short field; it never replaces the label.
+
+## Do and don't
+
+Do:
+
+- Always render a visible `Field.Label`.
+- Write the error as the fix ("Site name is required."), not a code.
+
+Don't:
+
+- Don't use a placeholder as the label.
+- Don't hand-roll a label and input outside `Field.Root`; the wiring is what makes it accessible.
+- Don't use this for numbers with steppers, selects or search-as-you-type: see Primitives/Forms.
+
+## Accessibility
+
+- `Field.Root` links `Field.Label` to the input, and the description and error to it as its description, and marks the input invalid or disabled for assistive technology.
+- `ui-input` shows the 2px secondary-color focus ring on keyboard focus.
+- The caller supplies the label text and an error message that says how to fix the value.
+
+<Stories includePrimary={false} />

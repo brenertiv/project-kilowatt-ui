@@ -1,11 +1,11 @@
 import Card from '@mui/material/Card';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { propertyAlertSets } from '../../fixtures/data';
-import { DataState } from './DataState';
-import { EntityList } from './EntityList';
-import { ListSkeleton } from './Skeletons';
-import { AlertStateChip } from './StatusChip';
+import { propertyAlertSets } from 'src/fixtures/data';
+import { DataState } from 'src/components/data/DataState';
+import { EntityList } from 'src/components/data/EntityList';
+import { ListSkeleton } from 'src/components/data/Skeletons';
+import { AlertStateChip } from 'src/components/data/StatusChip';
 
 const items = propertyAlertSets.few.map((alert) => ({
   id: alert.id,
@@ -17,6 +17,7 @@ const items = propertyAlertSets.few.map((alert) => ({
 const meta = {
   title: 'Data/DataState',
   component: DataState,
+  tags: ['!autodocs'],
   decorators: [
     (Story) => (
       <Card sx={{ maxWidth: 640 }}>

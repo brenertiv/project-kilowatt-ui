@@ -1,12 +1,12 @@
 import Button from '@mui/material/Button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import type { Action, Location } from '../../api/types';
-import { actionPriorities, actionSets, actionStatuses, portfolio } from '../../fixtures/data';
-import { DateRangeText, DateText } from './DateText';
-import { EntityCard } from './EntityCard';
-import { RelationLink } from './RelationLink';
-import { ActionPriorityChip, ActionStatusChip } from './StatusChip';
+import type { Action, Location } from 'src/api/types';
+import { actionPriorities, actionSets, actionStatuses, portfolio } from 'src/fixtures/data';
+import { DateRangeText, DateText } from 'src/components/data/DateText';
+import { EntityCard } from 'src/components/data/EntityCard';
+import { RelationLink } from 'src/components/data/RelationLink';
+import { ActionPriorityChip, ActionStatusChip } from 'src/components/data/StatusChip';
 
 /** The card props a work order page builds from one `Action` record. */
 function workOrder(action: Action) {
@@ -52,6 +52,7 @@ function workOrder(action: Action) {
 const meta = {
   title: 'Data/EntityCard',
   component: EntityCard,
+  tags: ['!autodocs'],
   decorators: [
     (Story) => (
       // A plain div, not Box: story imports end up in the snippet agents copy.

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CardSkeleton, ListSkeleton, StatSkeleton } from './Skeletons';
+import { CardSkeleton, ListSkeleton, StatSkeleton } from 'src/components/data/Skeletons';
 
 const meta = {
   title: 'Data/Skeletons',

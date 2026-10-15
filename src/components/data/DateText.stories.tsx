@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { portfolio } from '../../fixtures/data';
-import { DateRangeText, DateText, RelativeTime } from './DateText';
+import { portfolio } from 'src/fixtures/data';
+import { DateRangeText, DateText, RelativeTime } from 'src/components/data/DateText';
 
 const now = new Date('2026-10-13T12:00:00-04:00');
 const action = portfolio.actions[0]!;

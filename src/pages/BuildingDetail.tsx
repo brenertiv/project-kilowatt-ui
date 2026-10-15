@@ -23,8 +23,21 @@ import { activeActionStatuses, countOf } from './shared';
 
 const pageSize = 50;
 
-/** One building: where it is, what is in it, and what is happening to it. */
-export function BuildingDetail({ id }: { id: string }) {
+export type BuildingDetailProps = {
+  /** The building's location id. An id that matches no building shows the error state with a retry. */
+  id: string;
+};
+
+/**
+ * One building: where it is, what is in it, and what is happening to it: address and type, headline
+ * counts, meters, active work orders, recent bills and equipment. Use it as the reference for a
+ * detail page built from `PageHeader`, `StatCard` and `EntityList`; for the whole portfolio, see
+ * `PortfolioOverview`.
+ *
+ * @summary Building detail page: header, headline StatCards, meters, work orders, bills, equipment.
+ * @import import { BuildingDetail } from 'src/pages/BuildingDetail';
+ */
+export function BuildingDetail({ id }: BuildingDetailProps) {
   const building = useEntity('location', id, { expand: 'location_type' });
   const rooms = useEntityList('sublocation', { location: id, page_size: pageSize });
   const roomIds = rooms.data?.results.map((room) => room.id).join(',');

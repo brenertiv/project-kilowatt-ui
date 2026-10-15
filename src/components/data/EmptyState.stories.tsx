@@ -1,7 +1,7 @@
 import Button from '@mui/material/Button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { FilterOffIcon, PlusIcon } from '../../icons';
-import { EmptyState } from './EmptyState';
+import { FilterOffIcon, PlusIcon } from 'src/icons';
+import { EmptyState } from 'src/components/data/EmptyState';
 
 const meta = {
   title: 'Data/EmptyState',

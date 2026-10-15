@@ -50,6 +50,11 @@ const pagesBase = process.env.GITHUB_PAGES === 'true' ? '/project-kilowatt-ui/' 
 
 export default defineConfig({
   base: pagesBase,
+  resolve: {
+    // `src/...` resolves from the repository root, so stories and the import lines
+    // agents copy from the manifest use the same path anywhere in the tree.
+    alias: [{ find: /^src\//, replacement: fileURLToPath(new URL('./src/', import.meta.url)) }],
+  },
   plugins: [
     react(),
     svgr(),

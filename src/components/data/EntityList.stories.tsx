@@ -1,11 +1,11 @@
 import Card from '@mui/material/Card';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import type { PropertyAlert } from '../../api/types';
-import { propertyAlertSets } from '../../fixtures/data';
-import { RelativeTime } from './DateText';
-import { EntityList } from './EntityList';
-import { AlertStateChip } from './StatusChip';
+import type { PropertyAlert } from 'src/api/types';
+import { propertyAlertSets } from 'src/fixtures/data';
+import { RelativeTime } from 'src/components/data/DateText';
+import { EntityList } from 'src/components/data/EntityList';
+import { AlertStateChip } from 'src/components/data/StatusChip';
 
 const now = new Date('2026-10-13T12:00:00-04:00');
 
@@ -26,6 +26,7 @@ function alertItems(alerts: PropertyAlert[], linked = true) {
 const meta = {
   title: 'Data/EntityList',
   component: EntityList,
+  tags: ['!autodocs'],
   decorators: [
     (Story) => (
       <Card sx={{ maxWidth: 640 }}>

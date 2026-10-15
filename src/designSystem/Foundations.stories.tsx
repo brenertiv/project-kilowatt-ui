@@ -1,0 +1,57 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ReactNode } from 'react';
+import { useTheme } from 'src/theme/ThemeProvider';
+import {
+  ColorSection,
+  IconsSection,
+  LayoutSection,
+  PrimitivesSection,
+  ShapeSection,
+  SpaceSection,
+  TypographySection,
+} from 'src/designSystem/sections';
+
+/**
+ * The System page's live sections, rendered with the current theme. The
+ * Foundations docs pages embed these under their literal token tables; the
+ * tables are what agents read, these are what people look at.
+ */
+const meta = {
+  title: 'Internal/Foundations',
+  tags: ['!manifest', '!autodocs'],
+  parameters: { layout: 'fullscreen' },
+  decorators: [
+    (Story) => (
+      <main className="system">
+        <Story />
+      </main>
+    ),
+  ],
+} satisfies Meta;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+function WithTheme({ children }: { children: (theme: ReturnType<typeof useTheme>) => ReactNode }) {
+  return children(useTheme());
+}
+
+export const Primitives: Story = { render: () => <PrimitivesSection /> };
+
+export const Color: Story = {
+  render: () => (
+    <WithTheme>{({ lightValues, darkColors }) => <ColorSection lightValues={lightValues} darkColors={darkColors} />}</WithTheme>
+  ),
+};
+
+export const Typography: Story = {
+  render: () => <WithTheme>{({ values }) => <TypographySection values={values} />}</WithTheme>,
+};
+
+export const Space: Story = { render: () => <WithTheme>{({ values }) => <SpaceSection values={values} />}</WithTheme> };
+
+export const Shape: Story = { render: () => <WithTheme>{({ values }) => <ShapeSection values={values} />}</WithTheme> };
+
+export const Layout: Story = { render: () => <LayoutSection /> };
+
+export const Icons: Story = { render: () => <IconsSection /> };

@@ -1,0 +1,93 @@
+import { ArgTypes, Canvas, Description, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as TimeSeriesChartStories from './TimeSeriesChart.stories';
+
+<Meta of={TimeSeriesChartStories} />
+
+# TimeSeriesChart
+
+<Description of={TimeSeriesChartStories} />
+
+<Canvas of={TimeSeriesChartStories.TwoSeries} />
+
+## When to use
+
+- A measure over time: hourly demand, daily consumption, monthly spend.
+- One series against a baseline, such as today against last week. Mark the baseline `role: 'comparison'` and it draws in the neutral track color.
+- A few peer series on the same measure and unit, such as demand by system. Up to seven.
+
+## When not to use
+
+- One headline number: use [StatCard](?path=/docs/data-statcard--docs).
+- Values across categories, such as consumption by building: use [CategoryBar](?path=/docs/charts-categorybar--docs).
+- Shares of a whole: use [Donut](?path=/docs/charts-donut--docs).
+- A daily or weekly pattern, such as load by weekday and hour: use [Heatmap](?path=/docs/charts-heatmap--docs).
+- Two measures of different scale, such as kW and °F: there is one y axis. Use two charts, or index both to a common base.
+
+## Data shape
+
+Pass the same `ChartData` to the chart and to its `ChartFrame`. Each point's `x` is an ISO date or epoch ms, spaced by `interval`.
+
+```ts
+import type { ChartData } from 'src/charts/types';
+
+const demand: ChartData = {
+  xLabel: 'Hour',
+  series: [
+    { id: 'today', label: 'Today', unit: 'kW', points: [
+      { x: '2026-10-15T00:00', y: 212 },
+      { x: '2026-10-15T01:00', y: null }, // a gap: the line breaks here
+      { x: '2026-10-15T02:00', y: 208 },
+    ] },
+    { id: 'baseline', label: 'Last week', unit: 'kW', role: 'comparison', points: [
+      { x: '2026-10-15T00:00', y: 204 },
+      { x: '2026-10-15T01:00', y: 199 },
+      { x: '2026-10-15T02:00', y: 201 },
+    ] },
+  ],
+};
+```
+
+- A `null` `y` breaks the line instead of interpolating across the gap.
+- Series longer than `maxPoints` (500 by default) are thinned evenly before drawing, keeping the last point.
+- An annotation's `x` must match a point's `x` in the series named by `seriesId`, as the same instant.
+
+## Do and don't
+
+- Do keep the value axis zero-based (the default). Set `zeroBased` to false only when the variation, not the magnitude, is the story.
+- Do use `area` for one or two series. Turn it off when washes would overlap and muddy each other.
+- Do annotate sparingly: one or two labelled points, such as the daily peak, not every point.
+- Do set `legendShape="line"` and `xKind="date"` on the frame so the legend keys and the table match.
+- Don't pass colors. Colors come from series ids via the token palette, assigned by the frame.
+- Don't render the chart outside `ChartFrame`: it throws "Chart kinds must render inside `<ChartFrame>`."
+- Don't mix units in one chart. The `unit` prop formats the single value axis.
+
+## Accessibility
+
+- `ariaLabel` is required and names the plot, which is an image to assistive tech, e.g. "Demand by hour".
+- The frame's Chart/Table toggle shows every value as a table, so nothing depends on hover or color.
+- With two or more series, the frame's legend entries are toggle buttons with `aria-pressed`; hiding a series hides its line without repainting the others. The last visible series cannot be hidden.
+- The crosshair tooltip lists every visible series at the hovered x, each with a color key beside text in the text tokens.
+- Reduced motion: `useChartRoot` passes `reduceMotion` to the chart's setup, but this chart does not act on it yet, so show and hide transitions still animate.
+
+## Composition
+
+Render it as the only child of [ChartFrame](?path=/docs/charts-chartframe--docs), which owns the title, legend, states and table view.
+
+```tsx
+<ChartFrame title="Demand" subtitle="Hourly kW" data={demand} xKind="date" legendShape="line" height={260}>
+  <TimeSeriesChart
+    data={demand}
+    interval="hour"
+    unit="kW"
+    area
+    annotations={[{ x: '2026-10-15T14:00', seriesId: 'today', label: 'Peak' }]}
+    ariaLabel="Demand by hour"
+  />
+</ChartFrame>
+```
+
+## Props
+
+<ArgTypes of={TimeSeriesChartStories} />
+
+<Stories includePrimary={false} />

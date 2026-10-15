@@ -1,6 +1,6 @@
 # Storybook Migration Plan
 
-Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0, 1 and 2 are done. D4 assumes a public site, like the current GitHub Pages one.
+Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 to 3 are done. D4 assumes a public site, like the current GitHub Pages one.
 
 This plan removes React Cosmos and the in-app workbench. It moves every component, fixture and doc into one standalone Storybook, published from this repo. The published Storybook is the place we point coding agents to learn how to build with Kilowatt, so the plan treats agents as primary readers alongside people.
 
@@ -274,3 +274,52 @@ The Phase 3 JSDoc pass covers them.
 **Hard-coded English:** the `aria-label`s "Breadcrumb" in `PageHeader` and "Pagination" in `CursorPagination`.
 
 **Test flake:** a fresh Vitest browser run can fail once while Vite re-optimizes dependencies. The error is "Failed to fetch dynamically imported module", "failed to find the current suite", or a null `useState`. The second run passes. Pin `optimizeDeps.include` before the story tests gate CI.
+
+## 8. Phase 3 notes
+
+**How the docs ended up:**
+- `docs/*.md` stays the source. `scripts/build-docs.ts` writes it out as MDX under **Guides**, and writes the token tables from `systemToMarkdown` as literal MDX under **Foundations**, with the live System section embedded below each table.
+- The same script writes the token downloads: `kilowatt-tokens.css`, the system JSON and Markdown, and the DTCG 2025.10 files `tokens.light.json` and `tokens.dark.json`. DTCG dimensions allow only px and rem, so letter spacing in em travels as a number.
+- Output goes to `src/docs/generated/`, which is not committed. The Storybook scripts regenerate it.
+- The app's `/docs` page and react-markdown are gone. `/design-system` stays in the app because it holds the Figma sync tools and the Theme editor, which are dev tools rather than documentation.
+
+**Agent-facing manifest:**
+- Every component has a description, an `@summary` and an `@import`, and documents every prop.
+- Guidance MDX pages cover DataTable, StatCard, StatusChip, DataState, EntityCard, EntityList, PageHeader, FilterBar, ChartFrame, TimeSeriesChart, the six Primitives recipes and Patterns/ListPage.
+
+**Manifest import lines:**
+- Story files now import by `src/...` path, through an alias in `vite.config.ts` and `tsconfig.json`, so their imports reach the manifest unchanged.
+- Storybook 10.6 still adds a line naming the package `project-kilowatt-ui` for any element passed in `args`, such as `icon: <BuildingIcon />`. That line sits beside the correct `src/icons` line.
+- The Primitives have no `meta.component`, so the manifest guesses a component from the title and files their icon imports under the wrong package.
+- The Phase 4 `llms.txt` generator should drop `'project-kilowatt-ui'` lines, and take the Primitives' import from their MDX page.
+
+**Bugs the JSDoc pass found (not fixed):**
+- **Charts:**
+  - HeatmapChart doesn't use the frame context, so it doesn't throw outside `ChartFrame` the way the others do.
+  - `useChartRoot` computes `reduceMotion`, but no chart reads it.
+  - `TimeSeriesChart`'s default `annotations = []` is a fresh array on each render and is listed in the chart deps, so the root rebuilds on any re-render.
+  - The donut's total counts hidden slices.
+  - The heatmap's min and max are infinite when every value is null.
+  - `CategoryBarChart` value labels ignore `unit`.
+  - `ChartFrame`'s strings are hard-coded English.
+- **Table:**
+  - In server mode, CSV export covers only the current page, though the rules say "every page".
+  - The search input's only accessible name is `searchPlaceholder`. FilterBar has the same problem.
+  - The empty row says "No … match these filters" even when nothing is filtered.
+  - DataTable's, the cells' and the table states' labels are hard-coded English.
+  - `ActionsCell` keys menu items by label, so two items with the same label collide.
+  - Destructive styling is split between `.is-destructive` and `[data-destructive]`.
+  - Server mode needs a row count, which the cursor-paged API never gives.
+- **Data:**
+  - StatCard draws its own loading and error states instead of using `DataState`.
+  - EmptyState never uses `data.empty.description`.
+  - `BuildingDetail` with an unknown id shows the error state, not a not-found state.
+- **Primitives:**
+  - `ui-field-error` has no CSS rule, and `ui-input` has no invalid style.
+  - Only `.ui-btn` and `.ui-select` look different when disabled. The icon button, input, switch, checkbox, radio, toggle, stepper, slider and tab do not.
+  - `ui-btn-ghost` keeps its border.
+  - The dialog and radio recipes use the demo layout classes `demo-row`, `demo-end` and `demo-stack`.
+  - The rules don't say whether a new button outside both Base UI and Material UI surfaces should be `ui-btn` or MUI `Button`.
+  - The Avatar recipe loads its photo from pravatar.cc.
+- **Where guidance pages land:** attached guidance pages are in `/manifests/components.json` under each component's `docs`, not in `/manifests/docs.json`. MCP `docs-show` includes them.
+- **Fixed during the pass:** the `aria-label`s "Breadcrumb" and "Pagination" now go through i18n.

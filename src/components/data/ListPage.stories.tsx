@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import Card from '@mui/material/Card';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useEntityList } from '../../api/queries';
-import { fromQuery } from '../../api/state';
-import type { ListParams } from '../../api/types';
-import { actionPriorities, actionStatuses } from '../../fixtures/data';
-import { CursorPagination } from './CursorPagination';
-import { DateText } from './DateText';
-import { EntityList } from './EntityList';
-import { FilterBar } from './FilterBar';
-import { PageHeader } from './PageHeader';
-import { ActionPriorityChip, ActionStatusChip } from './StatusChip';
+import { useEntityList } from 'src/api/queries';
+import { fromQuery } from 'src/api/state';
+import type { ListParams } from 'src/api/types';
+import { actionPriorities, actionStatuses } from 'src/fixtures/data';
+import { CursorPagination } from 'src/components/data/CursorPagination';
+import { DateText } from 'src/components/data/DateText';
+import { EntityList } from 'src/components/data/EntityList';
+import { FilterBar } from 'src/components/data/FilterBar';
+import { PageHeader } from 'src/components/data/PageHeader';
+import { ActionPriorityChip, ActionStatusChip } from 'src/components/data/StatusChip';
 
 const ordering = [
   { value: '-due_date', label: 'Due date, latest first' },
@@ -75,6 +75,7 @@ function WorkOrderListPage() {
 
 const meta = {
   title: 'Patterns/ListPage',
+  tags: ['!autodocs'],
   component: WorkOrderListPage,
 } satisfies Meta<typeof WorkOrderListPage>;
 

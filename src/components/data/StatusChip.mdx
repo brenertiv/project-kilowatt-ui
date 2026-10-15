@@ -1,0 +1,63 @@
+import { ArgTypes, Canvas, Description, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as StatusChipStories from './StatusChip.stories';
+
+<Meta of={StatusChipStories} />
+
+# StatusChip
+
+<Description of={StatusChipStories} />
+
+<Canvas of={StatusChipStories.Default} />
+
+## When to use
+
+- Any status or category shown as a short label: a work order's status, an alert's state, a building type.
+- Beside a title in an [EntityCard](?path=/docs/data-entitycard--docs), as `trailing` content in an [EntityList](?path=/docs/data-entitylist--docs) row, or in a [PageHeader](?path=/docs/data-pageheader--docs)'s `meta`.
+
+Pick the most specific component:
+
+- Work-order status: `ActionStatusChip`.
+- Work-order priority: `ActionPriorityChip`.
+- Property alert state: `AlertStateChip`.
+- Any other lookup-backed field, bare id or expanded: `LookupChip` with a tone map.
+- Anything else: `StatusChip` with a `tone`.
+
+## When not to use
+
+- In a table cell: use `StatusCell` or `ChipCell` in a [DataTable](?path=/docs/table-datatable--docs).
+- For something clickable, such as a filter toggle: use a button or a filter control in the [FilterBar](?path=/docs/data-filterbar--docs). A status chip is not interactive.
+- For a long sentence: a chip holds one or two words.
+
+## Do and don't
+
+Do:
+
+- Choose the tone by meaning: success for done, warning for waiting, error for blocked or overdue, info for in progress, neutral otherwise.
+- Use the wrappers for work-order status, priority and alert state, so every view tones them the same way.
+- Pass the lookup table to `LookupChip` and the wrappers when the field may be a bare id. An unresolved id shows as "Status 7" rather than disappearing.
+- Keep the default small size in tables, lists and cards; use medium beside a page title.
+
+Don't:
+
+- Don't pass a color. The chip has no color prop; color comes from `tone`.
+- Don't use a status tone for a plain fact. A building type is neutral.
+- Don't rely on color alone: every chip carries its label.
+
+## Accessibility
+
+- The label is the chip's text, so the status is read out in words. Color only reinforces it.
+- Neutral chips are outlined and toned chips filled, so a status stands apart from a plain fact by shape as well as hue.
+- Icons are optional and decorative; the label must stand on its own.
+- The chip is static text, not a control, and takes no focus.
+
+## Composition
+
+- Goes in `EntityCard`'s `status`, `EntityList` items' `trailing`, and `PageHeader`'s `meta`.
+- `LookupChip` resolves relations the same way [RelationLink](?path=/docs/data-relationlink--docs) does: it accepts the bare id or the expanded record.
+- Lookup tables come from `useLookup('action_status')` and `useLookup('action_priority')`.
+
+## Props
+
+<ArgTypes of={StatusChipStories} />
+
+<Stories includePrimary={false} />

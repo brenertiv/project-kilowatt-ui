@@ -6,16 +6,26 @@ import { useTranslation } from 'react-i18next';
 import { InboxIcon } from '../../icons';
 
 export type EmptyStateProps = {
+  /** What is missing, e.g. "No alerts". Defaults to "Nothing here yet". */
   title?: ReactNode;
+  /** One sentence on why it is empty or what would fill it. Omitted when not set. */
   description?: ReactNode;
+  /** A 32px icon from `src/icons.tsx` that names the subject. Defaults to the inbox icon. */
   icon?: ReactNode;
-  /** A call to action, usually a button. */
+  /** A call to action, usually a button, for when the user can fix the emptiness (add, clear filters). */
   action?: ReactNode;
-  /** Less vertical room, for a card body or a list. */
+  /** Less vertical room, for a card body or a list. Defaults to the full-page spacing. */
   compact?: boolean;
 };
 
-/** The request succeeded and there is nothing in it. Says so, and offers the next step when there is one. */
+/**
+ * The request succeeded and there is nothing in it. Says so, and offers the next step when there is one.
+ * Usually you get it through `DataState` (or the `empty` prop of `EntityList`); render it directly only where
+ * there is no async state to switch on. For a failed request use `ErrorState`; for an empty table, `TableEmptyRow`.
+ *
+ * @summary A centered "nothing here" message with an icon, optional description and call to action.
+ * @import import { EmptyState } from 'src/components/data';
+ */
 export function EmptyState({ title, description, icon, action, compact }: EmptyStateProps) {
   const { t } = useTranslation();
   return (

@@ -21,36 +21,47 @@ type FrameState = {
 
 const FrameContext = createContext<FrameState | null>(null);
 
+/** Reads hidden series and colors from the enclosing `ChartFrame`. For chart kinds; throws outside a frame. */
 export function useChartFrame(): FrameState {
   const context = useContext(FrameContext);
   if (!context) throw new Error('Chart kinds must render inside <ChartFrame>.');
   return context;
 }
 
-type ChartFrameProps = {
+export type ChartFrameProps = {
+  /** What the chart shows, e.g. "Demand". Rendered as the heading that names the figure. */
   title: string;
+  /** The measure and period, e.g. "Hourly kW". */
   subtitle?: string;
+  /** The same `ChartData` the chart inside gets. Drives the legend, the series colors, the table view and the empty state. */
   data: ChartData;
+  /** One chart kind: `TimeSeriesChart`, `CategoryBarChart`, `DonutChart` or `HeatmapChart`. Shown only in the chart view once data is ready. */
   children: ReactNode;
-  /** Mark shape for legend keys. */
+  /** Mark shape for legend keys: `'line'` for line charts, `'rect'` for bars, slices and areas. Defaults to `'rect'`. */
   legendShape?: LegendItem['shape'];
-  /** Lets the reader hide series from the legend. On by default for two or more series. */
+  /** Lets the reader hide series from the legend; the last visible series cannot be hidden. Defaults to true. Set false when every series must stay on screen. */
   toggleableLegend?: boolean;
+  /** Controls rendered before the Chart/Table toggle, e.g. a range picker. */
   toolbar?: ReactNode;
+  /** First load with nothing to show yet: the plot area shows a skeleton at `height`. Defaults to false. */
   loading?: boolean;
-  /** The previous render stays visible at reduced opacity while a refetch runs. */
+  /** The previous render stays visible at reduced opacity while a refetch runs. Defaults to false. */
   fetching?: boolean;
+  /** A message for a failed request. Replaces the plot with the message and, with `onRetry`, a Retry button. Defaults to null. */
   error?: string | null;
+  /** Called by the Retry button in the error state. Without it, the error shows no button. */
   onRetry?: () => void;
+  /** Shown when every point in `data` is null. Defaults to "No data for this range.". Name the range or the reason when you know it. */
   emptyMessage?: string;
-  /** Height of the plot area. Fixed so layouts never jump between states. */
+  /** Height of the plot area in px. Fixed so layouts never jump between states. Defaults to 240. */
   height?: number;
-  /** How to print x values in the table view. */
+  /** How to print x values in the table view: `'date'` formats ISO dates and epoch ms. Defaults to `'category'`. */
   xKind?: 'date' | 'category';
-  /** Hide the categorical legend, e.g. for a heatmap whose color encodes magnitude, and show `scale` instead. */
+  /** Show the categorical legend. Defaults to true. Set false for a heatmap, whose color encodes magnitude, and pass `scale` instead. */
   legend?: boolean;
-  /** A color scale or other key rendered where the legend would go. */
+  /** A color scale or other key rendered where the legend would go, e.g. `<HeatScale>`. Shown in the chart view only. */
   scale?: ReactNode;
+  /** Extra class on the outer `figure`, for layout from the parent. */
   className?: string;
 };
 
@@ -105,10 +116,15 @@ function ChartTable({ data, xKind }: { data: ChartData; xKind: 'date' | 'categor
 }
 
 /**
- * The card chrome every chart shares: title, legend, toolbar, and loading,
- * fetching, empty and error states, plus a "view as table" toggle so every value
- * is reachable without hover or color. Chart kinds render as children and read
- * hidden series and colors from the frame.
+ * The card chrome every chart shares: title, legend, toolbar, loading, fetching, empty and error
+ * states at a fixed height, and a Chart/Table toggle so every value is reachable without hover or
+ * color. Chart kinds render as its child and must sit inside it: `TimeSeriesChart`,
+ * `CategoryBarChart` and `DonutChart` throw outside one. The frame assigns series colors from the
+ * token palette by series id, so never pass colors. For a single
+ * number, use `StatCard` instead of a chart.
+ *
+ * @summary Shared chart card: title, legend with series toggles, async states and a table view.
+ * @import import { ChartFrame } from 'src/charts/ChartFrame';
  */
 export function ChartFrame({
   title,

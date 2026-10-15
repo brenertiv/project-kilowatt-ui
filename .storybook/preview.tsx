@@ -83,6 +83,25 @@ const preview: Preview = {
       },
     },
     layout: 'padded',
+    options: {
+      storySort: {
+        order: [
+          'Introduction',
+          'Guides',
+          ['Rules', 'Writing stories', '*'],
+          'Foundations',
+          ['Color', 'Typography', 'Space', 'Shape', 'Layout', 'Icons', 'Primitives'],
+          'Primitives',
+          'Data',
+          'Table',
+          'Charts',
+          'Menus',
+          'Patterns',
+          'Pages',
+          'Internal',
+        ],
+      },
+    },
     controls: { expanded: true, sort: 'requiredFirst' },
     a11y: {
       // 'todo' reports violations in the panel and test output without failing. Move to

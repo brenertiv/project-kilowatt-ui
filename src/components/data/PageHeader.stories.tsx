@@ -1,12 +1,13 @@
 import Button from '@mui/material/Button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { PlusIcon } from '../../icons';
-import { PageHeader } from './PageHeader';
-import { StatusChip } from './StatusChip';
+import { PlusIcon } from 'src/icons';
+import { PageHeader } from 'src/components/data/PageHeader';
+import { StatusChip } from 'src/components/data/StatusChip';
 
 const meta = {
   title: 'Data/PageHeader',
   component: PageHeader,
+  tags: ['!autodocs'],
   args: {
     title: '120 Broadway',
     eyebrow: 'Building',

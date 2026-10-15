@@ -15,6 +15,7 @@ type FieldArgs = {
 
 const meta = {
   title: 'Primitives/Field',
+  tags: ['!autodocs'],
   args: {
     label: 'Site name',
     placeholder: 'Enter a site',

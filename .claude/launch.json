@@ -16,7 +16,7 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "exec npx storybook dev --port \"${PORT:-6006}\" --no-open --ci"
+        "npx tsx scripts/build-docs.ts && exec npx storybook dev --port \"${PORT:-6006}\" --no-open --ci"
       ],
       "port": 6006,
       "autoPort": true

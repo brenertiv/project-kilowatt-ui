@@ -15,7 +15,22 @@ function useBusyProps() {
   return { role: 'status', 'aria-busy': true, 'aria-label': t('data.loading') } as const;
 }
 
-export function CardSkeleton({ lines = 3, title = true }: { lines?: number; title?: boolean }) {
+export type CardSkeletonProps = {
+  /** Body lines under the title. Match the card's meta rows. Defaults to 3. */
+  lines?: number;
+  /** Draws a wider title line first. Turn it off when the card's title is already on screen. Defaults to true. */
+  title?: boolean;
+};
+
+/**
+ * Stands in for a card while it loads: a title line and a few body lines, announced as loading. It is the
+ * default skeleton of `DataState` and `EntityCard`; pass it yourself only to change `lines` or `title`. For a
+ * list use `ListSkeleton`, for a metric `StatSkeleton`, for a table `TableSkeleton`.
+ *
+ * @summary A loading placeholder shaped like a card: a title line and body lines.
+ * @import import { CardSkeleton } from 'src/components/data';
+ */
+export function CardSkeleton({ lines = 3, title = true }: CardSkeletonProps) {
   const busy = useBusyProps();
   return (
     <Stack spacing={1.5} sx={{ p: 4 }} {...busy}>
@@ -27,7 +42,21 @@ export function CardSkeleton({ lines = 3, title = true }: { lines?: number; titl
   );
 }
 
-export function ListSkeleton({ rows = 5, secondary = true }: { rows?: number; secondary?: boolean }) {
+export type ListSkeletonProps = {
+  /** Rows to draw. Match the expected page size. Defaults to 5. */
+  rows?: number;
+  /** Draws a smaller second line in each row, for lists with secondary text. Defaults to true. */
+  secondary?: boolean;
+};
+
+/**
+ * Stands in for an entity list while it loads, one divided row per expected record, announced as loading.
+ * `EntityList` uses it already; pass it as `DataState`'s `skeleton` for a hand-built list.
+ *
+ * @summary A loading placeholder shaped like a list: divided rows with primary and secondary lines.
+ * @import import { ListSkeleton } from 'src/components/data';
+ */
+export function ListSkeleton({ rows = 5, secondary = true }: ListSkeletonProps) {
   const busy = useBusyProps();
   return (
     <Stack {...busy} sx={{ '& > *': { px: 4, py: 2.5, borderBottom: 1, borderColor: 'divider' } }}>
@@ -47,6 +76,13 @@ export function ListSkeleton({ rows = 5, secondary = true }: { rows?: number; se
   );
 }
 
+/**
+ * Stands in for a `StatCard`'s body while it loads: label, value and period lines, announced as loading.
+ * `StatCard` uses it already when its `state` is loading; use it directly only for a hand-built metric tile.
+ *
+ * @summary A loading placeholder shaped like a metric: label, large value and period lines.
+ * @import import { StatSkeleton } from 'src/components/data';
+ */
 export function StatSkeleton() {
   const busy = useBusyProps();
   return (

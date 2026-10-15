@@ -7,23 +7,38 @@ import { useTranslation } from 'react-i18next';
 import type { ListParams } from '../../api/types';
 import { SearchIcon } from '../../icons';
 
-export type OrderingOption = { value: string; label: string };
+/** One choice in the FilterBar's Sort menu. */
+export type OrderingOption = {
+  /** An `ordering` value the API accepts: a field, or `-field` for descending, e.g. `-due_date`. */
+  value: string;
+  /** What the reader sees, e.g. "Due date, latest first". */
+  label: string;
+};
 
 export type FilterBarProps = {
+  /** The current list params. The bar reads `search`, `ordering` and `page_size` from it and follows outside changes, such as a reset. */
   params: ListParams;
-  /** Receives the next params. Changing a filter clears the cursor so the list restarts from the first page. */
+  /** Receives the next params. Changing a filter clears the cursor so the list restarts from the first page. Search is debounced by 250ms and trimmed. */
   onChange: (next: ListParams) => void;
+  /** Placeholder and accessible name for the search field. Name what is searched, e.g. "Search work orders". Defaults to "Search". */
   searchPlaceholder?: string;
-  /** `ordering` values the API accepts, e.g. `-due_date`. */
+  /** `ordering` values the API accepts, e.g. `-due_date`. Shows a Sort menu with a "Default order" choice first. Omit to hide the menu. */
   ordering?: OrderingOption[];
+  /** Page sizes to offer, e.g. `[25, 50, 100]`. Shows a Rows menu at the end of the bar; the first size is shown when `params.page_size` is unset. Omit to hide the menu. */
   pageSizes?: number[];
-  /** Extra filter controls, rendered inline. */
+  /** Extra filter controls, rendered inline after the Sort menu. They must call `onChange` themselves, with `cursor: undefined`. */
   children?: ReactNode;
 };
 
 const searchDelayMs = 250;
 
-/** Search, sort and page size over the API's list params. Any change restarts the cursor. */
+/**
+ * Search, sort and page size over the API's list params. Any change restarts the cursor. Put it above an
+ * `EntityList` or list card, with `CursorPagination` below. `DataTable` has its own toolbar; use that for tables.
+ *
+ * @summary Search, Sort and Rows controls bound to ListParams, resetting the cursor on change.
+ * @import import { FilterBar } from 'src/components/data';
+ */
 export function FilterBar({ params, onChange, searchPlaceholder, ordering, pageSizes, children }: FilterBarProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState(params.search ?? '');

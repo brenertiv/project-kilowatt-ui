@@ -1,0 +1,86 @@
+import { ArgTypes, Canvas, Description, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ChartFrameStories from './ChartFrame.stories';
+
+<Meta of={ChartFrameStories} />
+
+# ChartFrame
+
+<Description of={ChartFrameStories} />
+
+<Canvas of={ChartFrameStories.Default} />
+
+## When to use
+
+- Around every chart. Each chart kind renders as the frame's only child, and the frame supplies the title, legend, series colors, loading, fetching, empty and error states, and the Chart/Table toggle.
+- When a chart's data loads asynchronously. Pass `loading`, `fetching`, `error` and `onRetry` from the query and the frame keeps the plot area at a fixed `height` through every state.
+
+## When not to use
+
+- For one headline number, such as consumption this month: use [StatCard](?path=/docs/data-statcard--docs). A chart of one value is a card with extra steps.
+- For a list of records or values to compare row by row: use a table. The frame's table view is a reading aid for a chart, not a data table.
+- As a generic card for content that is not a chart: use the MUI `Card`.
+
+## Data shape
+
+The frame and the chart inside it take the same `ChartData` object. Pass it to both.
+
+```ts
+import type { ChartData } from 'src/charts/types';
+
+const demand: ChartData = {
+  xLabel: 'Hour', // first table header
+  series: [
+    // id is the color identity: keep it stable across filters and refetches
+    { id: 'today', label: 'Today', unit: 'kW', points: [{ x: '2026-10-15T00:00', y: 212 }, { x: '2026-10-15T01:00', y: null }] },
+    // role 'comparison' draws a baseline in the neutral track color
+    { id: 'baseline', label: 'Last week', unit: 'kW', role: 'comparison', points: [{ x: '2026-10-15T00:00', y: 204 }, { x: '2026-10-15T01:00', y: 199 }] },
+  ],
+};
+```
+
+- `x` is an ISO date or epoch ms for a time series, a category name otherwise. Set `xKind="date"` on the frame for dates so the table prints them as dates.
+- A `y` of `null` is a missing reading, not zero. When every `y` is `null`, the frame shows `emptyMessage` instead of the plot.
+- At most seven series that are not comparisons: the palette has seven slots, and an eighth throws. Fold the tail into Other or facet.
+
+## Do and don't
+
+- Do give every frame a `title` that names the measure, and put the unit and period in `subtitle`, e.g. "Hourly kW".
+- Do keep series ids stable. Color follows the id, so hiding or filtering a series never repaints the others.
+- Do write an `emptyMessage` that names the range or reason, e.g. "No readings for this day yet."
+- Do set `legendShape="line"` around a `TimeSeriesChart` so the legend keys match the marks.
+- Don't pass colors. The frame assigns them from the token palette by series id; there is no color prop.
+- Don't render a chart kind outside the frame. `TimeSeriesChart`, `CategoryBarChart` and `DonutChart` throw "Chart kinds must render inside `<ChartFrame>`."
+- Don't put two measures of different scale in one frame. One axis per chart: use two frames, or index both to a common base.
+- Don't set `toggleableLegend` off unless every series must stay on screen. Readers use the toggles to isolate a series.
+
+## Accessibility
+
+- The frame is a `figure` labelled by its `title`. Each chart kind also takes a required `ariaLabel`, which names the plot, e.g. "Demand by hour". Write it as the question the chart answers, not "chart".
+- The Chart/Table toggle switches the plot for a table of every value, with the series labels and units as headers. Every value is reachable without hover or color.
+- The legend appears for two or more series and is absent for one; the title names a single series. With `toggleableLegend` on (the default), each entry is a toggle button with `aria-pressed`. The last visible series cannot be hidden.
+- Identity never rests on color alone: the legend pairs each color key with the series label, and chart text wears text tokens, not series colors.
+- The loading state sets `aria-busy`; the error state is a `role="alert"` region with a Retry button when `onRetry` is passed.
+- Reduced motion: `useChartRoot` reads `prefers-reduced-motion` and passes `reduceMotion` to each chart's setup. The chart kinds do not act on it yet, so series show and hide transitions still animate.
+
+## Composition
+
+Exactly one chart kind goes inside a frame, as its child:
+
+- [TimeSeries](?path=/docs/charts-timeseries--docs): a measure over time. Use `xKind="date"` and `legendShape="line"`.
+- [CategoryBar](?path=/docs/charts-categorybar--docs): categories compared, grouped, stacked or horizontal.
+- [Donut](?path=/docs/charts-donut--docs): part-to-whole, six slices at most.
+- [Heatmap](?path=/docs/charts-heatmap--docs): magnitude over two category axes. Set `legend` to false and pass `HeatScale` in the `scale` slot.
+
+Controls such as a range picker go in `toolbar`, before the Chart/Table toggle. The frame renders [Legend](?path=/docs/charts-legend--docs) for you.
+
+```tsx
+<ChartFrame title="Demand" subtitle="Hourly kW" data={demand} xKind="date" legendShape="line">
+  <TimeSeriesChart data={demand} interval="hour" unit="kW" ariaLabel="Demand by hour" />
+</ChartFrame>
+```
+
+## Props
+
+<ArgTypes of={ChartFrameStories} />
+
+<Stories includePrimary={false} />

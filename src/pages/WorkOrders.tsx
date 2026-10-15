@@ -28,7 +28,14 @@ const ordering = [
 
 const activeFilter = 'active';
 
-/** Every work order in the portfolio, searchable, sortable and paged the way the API pages. */
+/**
+ * Every work order in the portfolio, searchable, sortable and paged the way the API pages. Use it as
+ * the reference for a list page built from `FilterBar`, `EntityList` and `CursorPagination`; for a
+ * building's own work orders, see `BuildingDetail`.
+ *
+ * @summary Work order list page with search, status filter, sort and cursor paging.
+ * @import import { WorkOrders } from 'src/pages/WorkOrders';
+ */
 export function WorkOrders() {
   const [params, setParams] = useState<ListParams>({
     page_size: 10,

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { portfolio } from '../../fixtures/data';
-import { RelationLink } from './RelationLink';
+import { portfolio } from 'src/fixtures/data';
+import { RelationLink } from 'src/components/data/RelationLink';
 
 const building = portfolio.buildings[0]!;
 

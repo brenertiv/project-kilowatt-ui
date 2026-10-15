@@ -1,0 +1,68 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as StructureStories from './Structure.stories';
+
+<Meta
+  of={StructureStories}
+  summary="Recipes for grouping, revealing and measuring content: Base UI Accordion, Collapsible, Progress, Meter, Avatar, ScrollArea and Separator with ui-* classes. No wrapper components; copy the markup from each story."
+/>
+
+# Structure
+
+Grouping, revealing and measuring parts built from Base UI and `ui-*` classes in `src/styles.css`. There are no wrapper components: copy the markup from the story's code panel. Open and filled states use the secondary color.
+
+## Accordion
+
+A stack of titled sections the user expands, one at a time unless `multiple` is set. `ui-accordion` on the root, `ui-accordion-item` on each item (divided by a border), `ui-accordion-trigger` inside `Accordion.Header`, and `ui-accordion-panel` around a `ui-accordion-body`. End the trigger with `PlusIcon` from `src/icons` and the `ui-icon-plus` class; it turns 45 degrees when open.
+
+<Canvas of={StructureStories.AccordionRecipe} />
+
+## Collapsible
+
+One section of secondary detail that can be shown or hidden. `Collapsible.Trigger` reuses `ui-accordion-trigger`, ending with `ChevronDownIcon` and `ui-icon-chevron` (it flips when open), and `Collapsible.Panel` reuses `ui-accordion-panel` with a `ui-accordion-body`.
+
+<Canvas of={StructureStories.CollapsibleRecipe} />
+
+## Progress
+
+How far a running task has got. `Progress.Root` gets `ui-progress` (a grid with the label and value on one row), then `ui-label`, `ui-progress-value`, and `Progress.Track` (`ui-track`) holding `Progress.Indicator` (`ui-track-indicator`). Pass `value={null}` when the end is unknown, and leave out `Progress.Value`.
+
+<Canvas of={StructureStories.ProgressRecipe} />
+
+## Meter
+
+A static level within a known range, such as occupancy, not a task's progress. `Meter` uses the same `ui-progress`, `ui-label`, `ui-progress-value`, `ui-track` and `ui-track-indicator` classes.
+
+<Canvas of={StructureStories.MeterRecipe} />
+
+## Avatar
+
+A person: `ui-avatar` on `Avatar.Root` (32px circle) with `Avatar.Image` and an initials `Avatar.Fallback`, which shows while the image loads, if it fails, or when there is no image. Images get the system's 1px image outline. The story puts the name (`ui-popup-title`) and role (`ui-description`) beside it.
+
+<Canvas of={StructureStories.AvatarRecipe} />
+
+## Scroll area
+
+A fixed-height region with the themed scrollbar: `ui-scroll` on the root (set its height), `ui-scroll-viewport`, and `ScrollArea.Scrollbar` (`ui-scrollbar`) holding `ScrollArea.Thumb` (`ui-scrollbar-thumb`).
+
+<Canvas of={StructureStories.ScrollAreaRecipe} />
+
+## Separator
+
+A 1px divider-colored rule between two groups of content: `ui-separator` on `Separator`. Menus use the same class between item groups.
+
+<Canvas of={StructureStories.SeparatorRecipe} />
+
+## Do and don't
+
+- Do use progress for a task moving toward done and meter for a level that is simply measured.
+- Do give every progress bar and meter a label.
+- Don't hide information the user needs to act on inside a collapsed panel.
+- Don't use a separator where spacing alone separates the groups.
+
+## Accessibility
+
+- Base UI wires each accordion and collapsible trigger to its panel with expanded state, and gives progress and meter their roles and values.
+- Pass `alt` on `Avatar.Image`; the person's name beside the avatar is the readable text.
+- Accordion triggers show the 2px secondary-color focus ring on keyboard focus.
+
+<Stories includePrimary={false} />

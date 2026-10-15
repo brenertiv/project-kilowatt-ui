@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { loadProfile } from '../data';
-import type { ChartData } from './types';
-import { ChartFrame } from './ChartFrame';
-import { HeatScale, HeatmapChart } from './HeatmapChart';
+import { loadProfile } from 'src/data';
+import type { ChartData } from 'src/charts/types';
+import { ChartFrame } from 'src/charts/ChartFrame';
+import { HeatScale, HeatmapChart } from 'src/charts/HeatmapChart';
 
 /** One row per weekday, one column per hour. */
 function profile(days: number): ChartData {

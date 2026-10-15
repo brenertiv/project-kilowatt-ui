@@ -1,5 +1,6 @@
 import type { StorybookConfig } from '@storybook/react-vite';
 import type { PluginOption } from 'vite';
+import remarkGfm from 'remark-gfm';
 
 /**
  * Plugins from `vite.config.ts` that belong to the app build, not to Storybook:
@@ -17,14 +18,21 @@ function withoutAppPlugins(plugins: PluginOption[] = []): PluginOption[] {
 
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',
+  // src/docs/generated holds the Foundations and Guides pages written by scripts/build-docs.ts.
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx)'],
+  // Token downloads at the site root: kilowatt-tokens.css, tokens.light.json and the rest.
+  staticDirs: [{ from: '../src/docs/generated/static', to: '/' }],
   addons: [
-    '@storybook/addon-docs',
+    {
+      name: '@storybook/addon-docs',
+      // GitHub tables, which the guides and foundations pages are full of.
+      options: { mdxPluginOptions: { mdxCompileOptions: { remarkPlugins: [remarkGfm] } } },
+    },
     '@storybook/addon-a11y',
     '@storybook/addon-designs',
     '@storybook/addon-vitest',
-    // The test toolset turns on once the Vitest story project is set up.
-    { name: '@storybook/addon-mcp', options: { toolsets: { dev: true, docs: true, test: false } } },
+    // test runs the story tests through @storybook/addon-vitest.
+    { name: '@storybook/addon-mcp', options: { toolsets: { dev: true, docs: true, test: true } } },
   ],
   features: {
     // Writes /manifests/components.json and /manifests/docs.json, which the MCP

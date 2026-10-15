@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { BuildingIcon } from '../../icons';
-import { StatCard } from './StatCard';
+import { BuildingIcon } from 'src/icons';
+import { StatCard } from 'src/components/data/StatCard';
 
 const meta = {
   title: 'Data/StatCard',
   component: StatCard,
+  tags: ['!autodocs'],
   decorators: [
     (Story) => (
       // A plain div, not Box: story imports end up in the snippet agents copy.

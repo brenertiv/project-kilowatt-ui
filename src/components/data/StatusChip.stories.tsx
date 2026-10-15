@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { actionPriorities, actionStatuses } from '../../fixtures/data';
-import { CheckCircleIcon } from '../../icons';
+import { actionPriorities, actionStatuses } from 'src/fixtures/data';
+import { CheckCircleIcon } from 'src/icons';
 import {
   ActionPriorityChip,
   ActionStatusChip,
@@ -9,13 +9,14 @@ import {
   StatusChip,
   actionStatusTone,
   type Tone,
-} from './StatusChip';
+} from 'src/components/data/StatusChip';
 
 const tones: Tone[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
 const meta = {
   title: 'Data/StatusChip',
   component: StatusChip,
+  tags: ['!autodocs'],
   subcomponents: { LookupChip, ActionStatusChip, ActionPriorityChip, AlertStateChip },
   decorators: [
     (Story) => (

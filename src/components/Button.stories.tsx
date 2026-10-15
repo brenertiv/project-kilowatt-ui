@@ -1,7 +1,7 @@
 import { Button } from '@base-ui/react/button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { MoreIcon, PlusIcon } from '../icons';
+import { MoreIcon, PlusIcon } from 'src/icons';
 
 /** The parts a button recipe varies. There is no Button component: use Base UI's `Button` with a `ui-btn` class. */
 type ButtonArgs = {
@@ -14,6 +14,7 @@ type ButtonArgs = {
 
 const meta = {
   title: 'Primitives/Button',
+  tags: ['!autodocs'],
   args: { label: 'Dispatch ticket', disabled: false, onClick: fn() },
   argTypes: { onClick: { control: false } },
 } satisfies Meta<ButtonArgs>;

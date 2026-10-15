@@ -10,10 +10,13 @@ import { activeActionStatuses, countOf, latestMonthSpend } from './shared';
 const pageSize = 50;
 
 /**
- * The portfolio at a glance: who it is, how many buildings, what needs
- * attention, and what the latest bills came to. Everything on it is a
- * query against the entity endpoints, so the page is the integration test
- * for the data layer.
+ * The portfolio at a glance: who it is, how many buildings, what needs attention, and what the
+ * latest bills came to. Everything on it is a query against the entity endpoints, so the page is the
+ * integration test for the data layer. Use it as the reference for a dashboard page built from
+ * `PageHeader`, `StatCard` and `EntityList`; for one building, see `BuildingDetail`.
+ *
+ * @summary Portfolio dashboard page: header, four headline StatCards, buildings and open alerts.
+ * @import import { PortfolioOverview } from 'src/pages/PortfolioOverview';
  */
 export function PortfolioOverview() {
   const clients = useEntityList('client', { parent_client__isnull: true, page_size: 1 });

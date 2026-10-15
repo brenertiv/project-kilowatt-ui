@@ -6,22 +6,41 @@ import { inkOn, rampIndex, sequentialRamp } from './color';
 import type { ChartData } from './types';
 import { useChartRoot } from './useChartRoot';
 
-type HeatmapChartProps = {
-  /** Each series is a row; each point's x is a column. */
+export type HeatmapChartProps = {
+  /** Each series is a row; each point's x is a column. Null points leave the cell empty. The same object goes to `ChartFrame`. */
   data: ChartData;
+  /** Formats values in tooltips and cell labels. Defaults to `'count'`. */
   unit?: Unit;
+  /** Number of bands in the color ramp. Defaults to 7. Fewer bands are easier to tell apart; pass the same value to `HeatScale`. */
   steps?: number;
-  /** Print values inside cells. Only when cells are wide enough to hold them. */
+  /** Print values inside cells. Defaults to false. Only when cells are wide enough to hold them. */
   cellLabels?: boolean;
+  /** Accessible name for the plot, e.g. "Load profile heatmap". Required: the plot is an image to assistive tech. */
   ariaLabel: string;
+};
+
+export type HeatScaleProps = {
+  /** The lowest value in the heatmap's data. */
+  min: number;
+  /** The highest value in the heatmap's data. */
+  max: number;
+  /** Formats the two end labels. Defaults to `'count'`; match the heatmap's `unit`. */
+  unit?: Unit;
+  /** Number of bands. Defaults to 7; match the heatmap's `steps`. */
+  steps?: number;
 };
 
 /** Which categorical slot the ramp is built from. Blue by default, per the palette. */
 const rampSlot = 'chart1';
 
 /**
- * Magnitude over two categorical axes. One hue, light to dark, flipped in dark
- * mode so "more" always reads as more. Pair with `<HeatScale>` in the frame's scale slot.
+ * Magnitude over two categorical axes, such as load by weekday and hour. One hue, light to dark,
+ * flipped in dark mode so "more" always reads as more. Render it inside `<ChartFrame>` with
+ * `legend={false}` and a `<HeatScale>` in the frame's `scale` slot. Colors come from the token ramp,
+ * never from props. For a few categories compared on one measure, use `CategoryBarChart` instead.
+ *
+ * @summary Heatmap over two category axes with a one-hue sequential ramp, inside ChartFrame.
+ * @import import { HeatmapChart } from 'src/charts/HeatmapChart';
  */
 export function HeatmapChart({ data, unit = 'count', steps = 7, cellLabels = false, ariaLabel }: HeatmapChartProps) {
   const cells = data.series.flatMap((series) =>
@@ -122,8 +141,14 @@ export function HeatmapChart({ data, unit = 'count', steps = 7, cellLabels = fal
   return <div ref={hostRef} className="chart-host chart-plot" role="img" aria-label={ariaLabel} />;
 }
 
-/** Color key for a heatmap: the ramp with its min and max. */
-export function HeatScale({ min, max, unit = 'count', steps = 7 }: { min: number; max: number; unit?: Unit; steps?: number }) {
+/**
+ * Color key for a heatmap: the ramp with its min and max. Pass it to `ChartFrame`'s `scale` slot next
+ * to a `HeatmapChart`, with the same `unit` and `steps`. For categorical series, the frame's legend is the key instead.
+ *
+ * @summary The min-to-max color ramp key for a HeatmapChart.
+ * @import import { HeatScale } from 'src/charts/HeatmapChart';
+ */
+export function HeatScale({ min, max, unit = 'count', steps = 7 }: HeatScaleProps) {
   const { values, colorScheme } = useTheme();
   const ramp = sequentialRamp(values[rampSlot], steps, colorScheme);
   return (

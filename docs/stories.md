@@ -36,10 +36,13 @@ export const Loading: Story = { args: { state: { status: 'loading' } } };
 - **State lives in args.** Every prop that changes the component goes in `args`, with `argTypes` for selects and radios. Don't hold state in hooks inside a render function; the manifest and the copied snippet only see args. Callback props take `fn()` from `storybook/test`, so the Actions panel logs them.
 - **One concept per story.** Name a story for the situation it shows (`Loading`, `Empty`, `LongContent`, `Failed`), never for a grab bag ("All states"). Name error stories `Failed`, so the export doesn't shadow the global `Error`.
 - **A JSDoc line on every story.** Say when to use that state or variant. Agents receive it with the snippet.
-- **Keep imports short.** Every import in a story file is merged into the import block agents copy. Wrap layout in a plain `<div style={...}>`, not MUI `Box`, and import sample data rather than defining helpers inline.
+- **Import by repository path.** Story files import with `src/...` paths (`import { BuildingIcon } from 'src/icons'`), never relative ones. Every import in a story file is merged into the import block agents copy, and a relative path is useless outside its folder. `src/` resolves from the repository root in Vite, Vitest and TypeScript.
+- **Keep imports short.** Wrap layout in a plain `<div style={...}>`, not MUI `Box`.
+- **JSDoc on the component.** Give it a description, an `@summary` line and an `@import` line naming the exact import to copy, e.g. `@import import { StatCard } from 'src/components/data';`. Give every prop a line saying what it does and its default. The manifest is built from these.
 - **Components without a single export.** When one file exports several related components (`StatusChip` and its wrappers, the table cells), the main one is `component` and the rest go in `subcomponents`. Each sibling gets its own story with a `render`.
 - **Charts.** Charts throw outside `ChartFrame`. A chart story's `render` shows the real `<ChartFrame><TimeSeriesChart /></ChartFrame>` composition at a fixed height, so the snippet is correct usage.
-- **Primitives.** These are Base UI recipes with no component behind them. Their stories render the raw Base UI markup with the `ui-*` classes, and type their args locally.
+- **Primitives.** These are Base UI recipes with no component behind them. Their stories render the raw Base UI markup with the `ui-*` classes, and type their args locally. Their guidance is an attached MDX page beside the story file.
+- **Guidance pages.** A component that needs more than its props table gets `Name.mdx` beside its stories. It uses `<Meta of={NameStories} />` and covers when to use it, when not to, do and don't, accessibility, composition, props and stories, and the stories meta gets `'!autodocs'`. Write the prose as literal MDX, because agents read the source.
 
 ## What every story gets
 

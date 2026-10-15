@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { EntityName } from './EntityName';
+import { EntityName } from 'src/components/data/EntityName';
 
 const meta = {
   title: 'Data/EntityName',

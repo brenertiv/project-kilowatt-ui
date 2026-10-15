@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { sparklines } from '../fixtures/sampleData';
-import { ActionsCell, ChipCell, DateCell, DeltaCell, EmptyCell, LinkCell, NumericCell, SparklineCell, StatusCell } from './cells';
+import { sparklines } from 'src/fixtures/sampleData';
+import { ActionsCell, ChipCell, DateCell, DeltaCell, EmptyCell, LinkCell, NumericCell, SparklineCell, StatusCell } from 'src/components/cells';
 
 const units = ['count', 'kW', 'kWh', 'MWh', 'therms', 'gal', 'USD', 'percent', '°F', 'score'];
 
