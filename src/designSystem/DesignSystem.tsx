@@ -59,7 +59,7 @@ export function DesignSystem() {
       <section className="system-figma" aria-label={t('figma.title')}>
         <h2>{t('figma.title')}</h2>
         <div className="figma-link-column">
-          <FigmaLinkField scope={{ kind: 'file' }} />
+          <FigmaLinkField />
           <SyncPanel />
         </div>
       </section>

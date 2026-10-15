@@ -13,7 +13,7 @@ Direction is decided once per layer and recorded here, never per sync run.
 | Code-computed tokens: tints, utilities, chart slots, track, subtle and strong dividers                   | Code    | code → Figma | Declared in `src/tokens.ts` as a primitive step per mode and pushed into a `code` collection in Figma as aliases.                                                      |
 | Derived variables: type scale clamps, the space scale, shadows, scrollbar colors                         | Code    | not synced   | Computed in `src/tokens.ts`. Designers read them on the System page.                                                                                                   |
 | Fonts                                                                                                    | Figma   | Figma → code | The font stacks take their first family from `primitives/typography/fontFamily/*`. The sans family is Roboto on both sides.                                            |
-| Components                                                                                               | Neither | linked       | `src/figma/links.json` maps each fixture to its node. Review is the fixture beside the Figma frame.                                                                    |
+| Components                                                                                               | Neither | linked       | Each component's stories set `parameters.design` to its node, shown in Storybook's Design panel. Review is the story beside the Figma frame.                           |
 | Theme editor overrides                                                                                   | Local   | not synced   | Experiments. Promote one by changing a default in code, then push.                                                                                                     |
 
 Anything Figma owns that code wants to change goes through Figma first. Anything code owns shows up in Figma as read-only output.
@@ -21,7 +21,7 @@ Anything Figma owns that code wants to change goes through Figma first. Anything
 ## The three artifacts
 
 - **Snapshot**, `src/figma/variables.json`. A full dump of every local variable collection in the file, with modes, values and alias chains kept by name. Committed. It is the only thing that crosses the boundary from Figma, and the primitives and tokens are built from it at import time, so code cannot drift from the snapshot. Drift can only exist between the snapshot and the live file, which is why the snapshot date is shown on the System page.
-- **Links**, `src/figma/links.json`. The whole-file link and one link per component, entered from the app.
+- **Links**. `src/figma/links.json` holds the whole-file link, entered on the System page. Each component's node link is `parameters.design: figmaDesign(url)` on its story meta (`docs/stories.md`).
 - **Push plan**, computed from `src/tokens.ts`. Every code-owned token with the primitive step it names per mode, compared with the `code` collection in the snapshot. The System page shows what is missing or points elsewhere and hands over the script.
 
 ## Reading from Figma
@@ -50,7 +50,7 @@ The script is idempotent. It creates the `code` collection with Light and Dark m
 - `src/figma/snapshot.test.ts`: the reader follows aliases per mode, multiplies alias opacity into alpha, and fails loudly on missing paths and loops.
 - `src/primitives.test.ts`: the ramps keep exactly the steps Figma gives them, and every opaque semantic color resolves to a ramp step in both modes.
 - `src/figma/push.test.ts`: every code-owned token is declared as a primitive step per mode, and the plan tells missing from changed.
-- `src/figma/links.test.ts`: every component link names a fixture that exists.
+- `src/figma/links.test.ts`: `links.json` is canonical, and `figmaDesign` accepts only a Figma node link. A bad link in a story throws when the file loads, so the story tests catch it.
 
 ## Decisions recorded on 2026-10-14
 

@@ -1,20 +1,20 @@
 import { Toggle } from '@base-ui/react/toggle';
-import { BrowserRouter, NavLink, Navigate, Route, Routes, useParams } from 'react-router';
+import { BrowserRouter, NavLink, Navigate, Route, Routes } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { AppProviders, ToastOutlet } from './AppProviders';
 import { useTheme } from './theme/ThemeProvider';
 import { ThemeEditor } from './theme/ThemeEditor';
 import { DesignSystem } from './designSystem/DesignSystem';
 import { DocsPage } from './docs/DocsPage';
-import { DarkModeIcon, LightModeIcon } from './icons';
-import { Workbench } from './workbench/Workbench';
+import { ArrowOutwardIcon, DarkModeIcon, LightModeIcon } from './icons';
 import EnertivAvatar from './assets/enertiv-avatar.svg?react';
 
-/** The workbench used to live at /workbench; keep those links working. */
-function LegacyWorkbenchRedirect() {
-  const rest = useParams()['*'] ?? '';
-  return <Navigate to={`/components/${rest}`} replace />;
-}
+/**
+ * Components are documented in Storybook (`npm run storybook`). The dev server
+ * links to the local one; a build links to `VITE_STORYBOOK_URL` when it is set.
+ */
+const storybookUrl: string | null =
+  (import.meta.env.VITE_STORYBOOK_URL as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:6006' : null);
 
 function DarkModeToggle() {
   const { colorScheme, setColorScheme } = useTheme();
@@ -38,15 +38,18 @@ function MainNav() {
 
   return (
     <nav className="topbar-nav" aria-label={t('nav.label')}>
-      <NavLink to="/components" className="topbar-nav-link">
-        {t('nav.components')}
-      </NavLink>
       <NavLink to="/design-system" className="topbar-nav-link">
         {t('nav.designSystem')}
       </NavLink>
       <NavLink to="/docs" className="topbar-nav-link">
         {t('nav.docs')}
       </NavLink>
+      {storybookUrl ? (
+        <a href={storybookUrl} className="topbar-nav-link" target="_blank" rel="noreferrer">
+          {t('nav.components')}
+          <ArrowOutwardIcon />
+        </a>
+      ) : null}
     </nav>
   );
 }
@@ -67,15 +70,11 @@ function Shell() {
       </header>
       <div className="workspace">
         <Routes>
-          <Route path="/" element={<Navigate to="/components" replace />} />
-          <Route path="/components" element={<Workbench />} />
-          <Route path="/components/:slug" element={<Workbench />} />
-          <Route path="/components/:slug/:name" element={<Workbench />} />
+          <Route path="/" element={<Navigate to="/design-system" replace />} />
           <Route path="/design-system" element={<DesignSystem />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/docs/:slug" element={<DocsPage />} />
-          <Route path="/workbench/*" element={<LegacyWorkbenchRedirect />} />
-          <Route path="*" element={<Navigate to="/components" replace />} />
+          <Route path="*" element={<Navigate to="/design-system" replace />} />
         </Routes>
       </div>
       <ToastOutlet />

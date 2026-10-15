@@ -3,7 +3,7 @@ import { demandDay } from '../data';
 import { meterInventory, type Meter } from '../meters';
 
 /**
- * Sample data for fixtures. Each set is built to reach every state a component
+ * Sample data for stories. Each set is built to reach every state a component
  * defines: empty, single, typical, dense, missing values and long text.
  */
 

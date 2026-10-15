@@ -74,6 +74,14 @@ const preview: Preview = {
   },
   initialGlobals: { scheme: 'light' },
   parameters: {
+    docs: {
+      // react-docgen leaves a component's JSDoc tags in its description: the manifest
+      // reads @summary and @import from there, but the docs page shows only the prose.
+      extractComponentDescription: (component: unknown) => {
+        const docgen = (component as { __docgenInfo?: { description?: string } } | undefined)?.__docgenInfo;
+        return (docgen?.description ?? '').replace(/^@\w+[\s\S]*$/m, '').trim();
+      },
+    },
     layout: 'padded',
     controls: { expanded: true, sort: 'requiredFirst' },
     a11y: {

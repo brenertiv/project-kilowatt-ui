@@ -14,8 +14,6 @@ export const figmaLinksEndpoint = '/__figma/links';
 /** Edits reach the repository only through the dev server, so the production build is read-only. */
 export const figmaLinksEditable = import.meta.env.DEV;
 
-export type FigmaScope = { kind: 'file' } | { kind: 'component'; slug: string };
-
 let state: FigmaLinks = normalizeFigmaLinks(initial);
 const listeners = new Set<() => void>();
 
@@ -38,24 +36,16 @@ export function useFigmaLinks(): FigmaLinks {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-export function linkFor(links: FigmaLinks, scope: FigmaScope): string | null {
-  return scope.kind === 'file' ? links.file : (links.components[scope.slug] ?? null);
-}
-
-/** The registry with one link set or cleared. Pure, so the result can be checked before it is written. */
-export function withLink(links: FigmaLinks, scope: FigmaScope, url: string | null): FigmaLinks {
-  if (scope.kind === 'file') return normalizeFigmaLinks({ ...links, file: url });
-  const components = { ...links.components };
-  if (url) components[scope.slug] = url;
-  else delete components[scope.slug];
-  return normalizeFigmaLinks({ ...links, components });
+/** The registry with the file link set or cleared. Pure, so the result can be checked before it is written. */
+export function withFileLink(links: FigmaLinks, url: string | null): FigmaLinks {
+  return normalizeFigmaLinks({ ...links, file: url });
 }
 
 /** Parses, writes the registry to disk through the dev server, then updates every subscriber. */
-export async function setFigmaLink(scope: FigmaScope, url: string | null): Promise<void> {
+export async function setFigmaFileLink(url: string | null): Promise<void> {
   if (!figmaLinksEditable) throw new Error('Figma links can only be edited from the dev server.');
   if (url !== null && !parseFigmaUrl(url)) throw new Error('Not a Figma link.');
-  const next = withLink(state, scope, url);
+  const next = withFileLink(state, url);
   const response = await fetch(figmaLinksEndpoint, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },

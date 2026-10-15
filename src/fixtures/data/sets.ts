@@ -1,6 +1,6 @@
 /**
- * Named sample sets. Each entity exposes the same set names so a fixture can
- * offer them in one dropdown and every component state is one choice away.
+ * Named sample sets. Each entity exposes the same set names so a story can
+ * show each as its own story and every component state is one click away.
  */
 export type SampleSets<T> = {
   /** Nothing to show. */

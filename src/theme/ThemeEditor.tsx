@@ -252,7 +252,6 @@ export function ThemeEditor() {
     <Dialog.Root>
       <Dialog.Trigger
         className="ui-btn ui-btn-ghost"
-        data-tour="theme-editor"
         aria-label={dirty ? 'Theme, unsaved changes' : 'Theme'}
       >
         <TuneIcon />

@@ -13,7 +13,7 @@ const isVitest = Boolean(process.env.VITEST);
 
 /**
  * Lets the app write the Figma link registry back to `src/figma/links.json`
- * while the dev server runs, so a link pasted in the workbench lands in the
+ * while the dev server runs, so a link pasted on the System page lands in the
  * working tree as an ordinary edit. `PUT /__figma/links` takes the whole
  * registry, validates it and writes it in canonical form. Dev server only.
  */
@@ -46,12 +46,6 @@ function figmaLinks(): Plugin {
   };
 }
 
-/**
- * Fixtures import `react-cosmos/client`. The in-app workbench serves that API
- * from `src/fixtures/client.tsx`; `COSMOS=1` (set by the cosmos scripts) leaves
- * the specifier alone so the real package answers inside React Cosmos.
- */
-const useCosmosClient = Boolean(process.env.COSMOS);
 const pagesBase = process.env.GITHUB_PAGES === 'true' ? '/project-kilowatt-ui/' : '/';
 
 export default defineConfig({
@@ -67,16 +61,6 @@ export default defineConfig({
       }),
     visualizer({ filename: 'dist/stats.html', gzipSize: true, emitFile: true }),
   ].filter(Boolean),
-  resolve: {
-    alias: useCosmosClient
-      ? []
-      : [
-          {
-            find: /^react-cosmos\/client$/,
-            replacement: fileURLToPath(new URL('./src/fixtures/client.tsx', import.meta.url)),
-          },
-        ],
-  },
   test: {
     projects: [
       {

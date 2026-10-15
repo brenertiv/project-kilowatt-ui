@@ -2,7 +2,7 @@ import type { IsoDate, IsoDateTime, Uuid } from '../../api/types';
 
 /**
  * Deterministic helpers for synthesized sample data. Every build of the
- * sample portfolio yields the same records, so fixtures, tests and
+ * sample portfolio yields the same records, so stories, tests and
  * screenshots stay stable.
  */
 

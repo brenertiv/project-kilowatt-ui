@@ -4,7 +4,7 @@ How components get data before the backend exists, and how they keep working aft
 
 ## Entity shapes
 
-`src/api/types.ts` holds the entity types, copied field for field from live API responses: `Client`, `Location`, `Sublocation`, `Equipment`, `Meter`, `UtilityBill`, `PropertyAlert`, `Action` (a work order), and the lookup tables for status, priority, alert type and bill type. Values in fixtures are synthesized; only the shapes come from the API.
+`src/api/types.ts` holds the entity types, copied field for field from live API responses: `Client`, `Location`, `Sublocation`, `Equipment`, `Meter`, `UtilityBill`, `PropertyAlert`, `Action` (a work order), and the lookup tables for status, priority, alert type and bill type. Values in the sample data are synthesized; only the shapes come from the API.
 
 The API's conventions, which every component must honor:
 
@@ -20,13 +20,13 @@ The energy-data envelope `{ data, units, names }` has only been observed empty. 
 
 `src/api/mock.ts` answers the same paths with the same envelopes, filter grammar and expansion rules, in process, with a simulated round trip. `src/api/client.ts` routes every request through it. Supported: every entity list and retrieve, the lookups, `/meter/{id}/data/` and `/equipment/{id}/data/`, equality filters, `__in`, `__isnull`, the `_id` alias, `search`, `ordering` and `expand`.
 
-`mockControls` is the switchboard: `latencyMs` sets the delay (tests set 0), and `setMockFailure('/meter/', true)` makes that entity's list, retrieve and data routes reject with a 500 so error and retry states are reachable from a fixture. `setMockFailure('*', true)` fails everything.
+`mockControls` is the switchboard: `latencyMs` sets the delay (tests set 0), and `setMockFailure('/meter/', true)` makes that entity's list, retrieve and data routes reject with a 500 so error and retry states are reachable from a story (`parameters.mockApi`). `setMockFailure('*', true)` fails everything.
 
 ## Sample data
 
 `src/fixtures/data` builds one coherent portfolio from a fixed seed: a parent client with tenants, eight buildings with units and rooms, equipment and meters in those rooms, a year of bills, alerts in every flag combination, and work orders in every status. Every relation resolves. The build is deterministic, so screenshots and tests are stable.
 
-Each entity exposes the same named sets: `none`, `one`, `few`, `page`, `all`, `sparse`, `long` and `placeholder`. A fixture offers them in one select so every state is one choice away.
+Each entity exposes the same named sets: `none`, `one`, `few`, `page`, `all`, `sparse`, `long` and `placeholder`. Stories show each set as its own story, so every state is one click away.
 
 ## Async state
 
@@ -40,7 +40,7 @@ type AsyncState = {
 };
 ```
 
-Components are prop-driven: they take an `AsyncState` plus the rows, never a query result, so a fixture can put them in any state with no network. Pages derive the state with `fromQuery(result)`, which also reads the API's `detail` message out of an error and wires `refetch` to `onRetry`.
+Components are prop-driven: they take an `AsyncState` plus the rows, never a query result, so a story can put them in any state with no network. Pages derive the state with `fromQuery(result)`, which also reads the API's `detail` message out of an error and wires `refetch` to `onRetry`.
 
 ## Query hooks
 
@@ -48,7 +48,7 @@ Components are prop-driven: they take an `AsyncState` plus the rows, never a que
 
 ## Components
 
-`src/components/data` holds the boilerplate built on this layer, each with a fixture:
+`src/components/data` holds the boilerplate built on this layer, each with stories:
 
 | Component                                   | What it is for                                                            |
 | ------------------------------------------- | ------------------------------------------------------------------------- |

@@ -14,7 +14,7 @@ import {
 /**
  * In-process stand-in for the Enertiv API. Same paths, same envelopes, same
  * filter grammar, so the query layer and the components cannot tell the
- * difference. Fixtures and pages run against this until the backend exists.
+ * difference. Stories and pages run against this until the backend exists.
  */
 
 export const mockControls = {

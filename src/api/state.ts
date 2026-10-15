@@ -1,7 +1,7 @@
 /**
  * One async contract for every data component. Components take an
  * `AsyncState` and never a query result, so they stay prop-driven and a
- * fixture can put them in any state without a network. Pages derive the
+ * story can put them in any state without a network. Pages derive the
  * state from TanStack Query with `fromQuery`.
  */
 

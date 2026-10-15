@@ -56,35 +56,29 @@ describe('parseFigmaUrl', () => {
 });
 
 describe('normalizeFigmaLinks', () => {
-  it('canonicalizes links and sorts components', () => {
-    const links = normalizeFigmaLinks({
-      file: `https://figma.com/file/${key}/Foundations?t=zzz`,
-      components: {
-        'data-table': `https://www.figma.com/design/${key}/Foundations?node-id=9-9&t=x`,
-        button: `https://www.figma.com/design/${key}/Foundations?node-id=1%3A1`,
-      },
-    });
-    expect(links.file).toBe(`https://www.figma.com/design/${key}/Foundations`);
-    expect(Object.keys(links.components)).toEqual(['button', 'data-table']);
-    expect(links.components.button).toBe(`https://www.figma.com/design/${key}/Foundations?node-id=1-1`);
+  it('canonicalizes the file link', () => {
+    const links = normalizeFigmaLinks({ file: `https://figma.com/file/${key}/Foundations?t=zzz` });
+    expect(links).toEqual({ file: `https://www.figma.com/design/${key}/Foundations` });
   });
 
   it('treats a missing or empty file as unlinked', () => {
-    expect(normalizeFigmaLinks({})).toEqual({ file: null, components: {} });
-    expect(normalizeFigmaLinks({ file: '', components: {} }).file).toBeNull();
+    expect(normalizeFigmaLinks({})).toEqual({ file: null });
+    expect(normalizeFigmaLinks({ file: '' }).file).toBeNull();
+  });
+
+  it('accepts the old empty components map and refuses component links', () => {
+    expect(normalizeFigmaLinks({ file: null, components: {} })).toEqual({ file: null });
+    expect(() =>
+      normalizeFigmaLinks({ components: { button: `https://www.figma.com/design/${key}/N?node-id=1-1` } }),
+    ).toThrow(/parameters\.design/);
   });
 
   it('names the bad entry when it rejects', () => {
     expect(() => normalizeFigmaLinks(null)).toThrow(/object/);
     expect(() => normalizeFigmaLinks({ file: 'https://example.com' })).toThrow(/^file: not a Figma link/);
-    expect(() =>
-      normalizeFigmaLinks({ components: { 'Data Table': `https://www.figma.com/design/${key}/N` } }),
-    ).toThrow(/not a component slug/);
-    expect(() => normalizeFigmaLinks({ components: { button: 42 } })).toThrow(/components\.button/);
-    expect(() => normalizeFigmaLinks({ components: [] })).toThrow(/components/);
   });
 
   it('serializes with a trailing newline for the committed file', () => {
-    expect(serializeFigmaLinks({ file: null, components: {} })).toBe('{\n  "file": null,\n  "components": {}\n}\n');
+    expect(serializeFigmaLinks({ file: null })).toBe('{\n  "file": null\n}\n');
   });
 });

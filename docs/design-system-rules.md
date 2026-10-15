@@ -34,14 +34,14 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 
 ## Data components
 
-- Components that show API data live in `src/components/data` and are built on Material UI. They are prop-driven: a component takes rows plus an `AsyncState`, never a query result. Pages derive the state with `fromQuery`. A fixture must reach loading, fetching, empty, error and, where names appear, placeholder.
+- Components that show API data live in `src/components/data` and are built on Material UI. They are prop-driven: a component takes rows plus an `AsyncState`, never a query result. Pages derive the state with `fromQuery`. Its stories must reach loading, fetching, empty, error and, where names appear, placeholder.
 - `DataState` is the one way to render the async states. No component hand-rolls a spinner, an empty message or an error block.
 - Relations render through `RelationLink`, which accepts the bare id or the expanded record. Never assume the request expanded a relation.
 - Names go through `EntityName` or `EntityCard`, which replace placeholder values such as `???` and `0` with "Unnamed {noun}" and explain why. The raw placeholder is never printed as a name.
 - Status vocabularies render through `StatusChip` and its wrappers (`ActionStatusChip`, `ActionPriorityChip`, `AlertStateChip`). Tones follow meaning: success for done, warning for waiting, error for blocked or overdue, info for in progress, neutral otherwise. A chip always carries its label.
 - Dates render through `DateText`, `RelativeTime` and `DateRangeText`. Calendar dates never shift time zone; timestamps render in the operations zone.
 - The API gives no totals. A count says what is on the page and whether there is more; it never invents a total.
-- Page views live in `src/pages`, compose these components, and run real queries. Their fixtures expose fail and latency switches.
+- Page views live in `src/pages`, compose these components, and run real queries. Their stories cover failing and slow requests through `parameters.mockApi`.
 
 ## Charts
 
@@ -107,5 +107,5 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 1. Change tokens in `src/tokens.ts` and the stylesheet fallback together.
 2. Run the test suite. Palette and contrast expectations are tests, so a drift shows up immediately.
 3. For chart colors, run the dataviz palette validator on both surfaces and keep the output with the change.
-4. Check both schemes in the workbench. The Theme editor can preview a change before it lands.
+4. Check both schemes in Storybook. The Theme editor can preview a change before it lands.
 5. Update this document in the same change.

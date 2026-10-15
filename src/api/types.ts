@@ -1,7 +1,7 @@
 /**
  * Entity shapes mirrored from the Enertiv API. Field names, id types and
  * envelope shapes match the live responses so components built against this
- * file survive the backend hookup unchanged. Values in fixtures are
+ * file survive the backend hookup unchanged. Values in the sample data are
  * synthesized; only the shapes come from the API.
  *
  * Conventions the API follows and components must honor:

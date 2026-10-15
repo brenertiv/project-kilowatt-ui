@@ -12,15 +12,6 @@
       "autoPort": true
     },
     {
-      "name": "cosmos",
-      "runtimeExecutable": "sh",
-      "runtimeArgs": [
-        "-c",
-        "COSMOS=1 exec npx cosmos"
-      ],
-      "port": 5100
-    },
-    {
       "name": "storybook",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

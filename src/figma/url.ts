@@ -21,12 +21,14 @@ export type FigmaLink = {
   url: string;
 };
 
-/** What the repository links to: the file the system mirrors, and one node per component. */
+/**
+ * What the repository links to: the file the system mirrors. A component's own
+ * node link lives in its story's `parameters.design` (see `src/stories/figma.ts`),
+ * beside the component and in the manifest agents read.
+ */
 export type FigmaLinks = {
   /** The design file the tokens and components are mirrored from, as a whole-file link. */
   file: string | null;
-  /** Workbench component slug (`data-table`) to a link to that component's node in Figma. */
-  components: Record<string, string>;
 };
 
 const kinds = new Set<string>(['design', 'board', 'proto', 'slides', 'make', 'file']);
@@ -78,25 +80,17 @@ function canonicalUrl(value: unknown, where: string): string {
 
 /**
  * Checks a registry read from disk or sent by the app and returns it in
- * canonical form: every link parsed, component keys sorted so the file diffs
- * one line per change. Throws with the offending entry on bad input.
+ * canonical form. Throws with the offending entry on bad input.
  */
 export function normalizeFigmaLinks(input: unknown): FigmaLinks {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Figma links must be an object');
   const record = input as Record<string, unknown>;
   const file = record.file == null || record.file === '' ? null : canonicalUrl(record.file, 'file');
-  const rawComponents = record.components ?? {};
-  if (!rawComponents || typeof rawComponents !== 'object' || Array.isArray(rawComponents)) {
-    throw new Error('components must be an object of slug to link');
+  const components = record.components;
+  if (components && typeof components === 'object' && Object.keys(components).length > 0) {
+    throw new Error('components: component links now live in each story\'s parameters.design');
   }
-  const components: Record<string, string> = {};
-  for (const [slug, value] of Object.entries(rawComponents as Record<string, unknown>).sort(([a], [b]) =>
-    a.localeCompare(b),
-  )) {
-    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) throw new Error(`components: "${slug}" is not a component slug`);
-    components[slug] = canonicalUrl(value, `components.${slug}`);
-  }
-  return { file, components };
+  return { file };
 }
 
 /** Serialized the way the dev server writes `links.json`. */

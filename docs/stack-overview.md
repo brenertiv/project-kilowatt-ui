@@ -1,6 +1,6 @@
 # Stack Overview
 
-Kilowatt UI is Enertiv's design system and component library: a React single-page app that documents the tokens, and renders every component and page in isolation in a workbench. It deploys as a static site.
+Kilowatt UI is Enertiv's design system and component library: a React single-page app that documents the tokens and guidelines, and a Storybook that documents every component and page in isolation. Both deploy as static sites.
 
 ## Runtime
 
@@ -9,14 +9,13 @@ Kilowatt UI is Enertiv's design system and component library: a React single-pag
 | Language             | TypeScript 5.9, strict                                       | `tsc` runs as part of every build                                                                                                                                                                                                                                          |
 | UI                   | React 19                                                     | Function components and hooks throughout                                                                                                                                                                                                                                   |
 | Components           | Material UI (`@mui/material`) and Base UI (`@base-ui/react`) | Material UI for data display and page composition, themed from the tokens through `src/mui/theme.ts`. Base UI for the unstyled primitives already built on it: menu, dialog, select, combobox, tabs, switch, slider, toast, tooltip. Styling outside Material is plain CSS |
-| Routing              | React Router 8                                               | Pages: Components, System, Docs, Workbench                                                                                                                                                                                                                                 |
+| Routing              | React Router 8                                               | Pages: System and Docs; components live in Storybook                                                                                                                                                                                                                       |
 | Data fetching        | TanStack Query 5 with Axios                                  | Entity types, cursor-paged envelopes and query hooks mirror the Enertiv API in `src/api`. Everything runs against an in-process mock adapter with latency and a failure switch until the backend is attached. See `docs/data-layer.md`                                     |
 | Tables               | TanStack Table 9 with TanStack Virtual 3                     | Sorting, filtering, pagination, column visibility, pinning, resizing, selection, expansion, server mode and virtualization behind one `DataTable`                                                                                                                          |
 | Charts               | amCharts 5                                                   | Wrapped by a token-driven theme, a root hook and a shared frame; chart code never sets colors or fonts directly                                                                                                                                                            |
 | Maps                 | Leaflet with react-leaflet                                   | Portfolio map demo                                                                                                                                                                                                                                                         |
 | Dashboard layout     | react-grid-layout 2                                          | Draggable widget grid                                                                                                                                                                                                                                                      |
 | Drag and drop        | @hello-pangea/dnd                                            | Queue reordering                                                                                                                                                                                                                                                           |
-| Product tours        | driver.js                                                    | Guided walkthrough demo                                                                                                                                                                                                                                                    |
 | Internationalization | i18next with react-i18next                                   | All UI copy lives in `src/i18n/en.json`                                                                                                                                                                                                                                    |
 | Dates and numbers    | date-fns, date-fns-tz, `Intl`                                | One formatting module shared by charts, tables and metric cards                                                                                                                                                                                                            |
 | Markdown             | react-markdown with remark-gfm                               | Renders the `docs/` folder inside the app                                                                                                                                                                                                                                  |
@@ -30,21 +29,23 @@ Kilowatt UI is Enertiv's design system and component library: a React single-pag
 - **Chart colors** are an eight-slot categorical palette validated for colorblind-safe separation on both surfaces, with sequential and diverging ramps derived in OKLCH.
 - **Motion** is CSS transitions at 150ms on one curve, with reduced-motion guards.
 
-## Workbench
+## Storybook
 
-`src/workbench` is an in-app fixture host after React Cosmos: `Name.fixture.tsx` files sit beside components, `useFixtureInput` and `useFixtureSelect` expose state in a control drawer, `Viewport` opens a fixture at a size, and the URL carries the fixture and its inputs. Fixtures import `react-cosmos/client`; Vite aliases it to `src/fixtures/client.tsx`, so `npm run cosmos` (which sets `COSMOS=1` to drop the alias) can open the same fixtures in React Cosmos 7 on port 5100 as an optional second host. See `docs/workbench.md` and `docs/cosmos.md`.
+Storybook 10 (`@storybook/react-vite`) documents every component, primitive recipe, pattern and page. `Name.stories.tsx` files sit beside components, one story per state, with args for every prop. `.storybook/preview.tsx` supplies the app's provider stack, a router, a fresh query client per story and a light/dark toolbar. Stories set `parameters.mockApi` to fail or slow the mock API.
+
+The component manifest and `@storybook/addon-mcp` let coding agents query components, props and story snippets. `@storybook/addon-a11y` and `@storybook/addon-vitest` render every story in Chromium with an axe check. `@storybook/addon-designs` shows a component's Figma node. See `docs/stories.md`.
 
 ## Tooling
 
 | Concern              | Tool                                                                                                                                                                                                   |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Build and dev server | Vite 7 with `@vitejs/plugin-react`, `vite-plugin-checker` for in-editor type errors, `vite-plugin-svgr` for the brand mark                                                                             |
-| Tests                | Vitest 5 with jsdom and Testing Library. Unit tests cover tokens, theme persistence, color math, chart data adapters, CSV export, table URL state, the docs registry, the mock API and the sample data |
+| Tests                | Vitest 5 in two projects. `unit` runs in jsdom with Testing Library and covers tokens, theme persistence, color math, chart data adapters, CSV export, table URL state, the docs registry, the mock API and the sample data. `storybook` renders every story in Chromium through Playwright, with an axe check |
 | Lint and format      | ESLint 10 with typescript-eslint and the React Hooks plugin, Prettier 3                                                                                                                                |
 | Bundle analysis      | rollup-plugin-visualizer                                                                                                                                                                               |
 | Node                 | 24 or newer                                                                                                                                                                                            |
 
-Scripts: `npm run dev`, `npm run build`, `npm test`, `npm run lint`, `npm run format`.
+Scripts: `npm run dev`, `npm run build`, `npm run storybook`, `npm run build-storybook`, `npm test` (with `test:unit` and `test:stories`), `npm run lint`, `npm run format`.
 
 ## Deployment
 
@@ -54,7 +55,7 @@ A GitHub Actions workflow builds on every push to `main` and publishes `dist/` t
 
 - `README.md` for setup and the layer map.
 - `docs/design-system-rules.md` for the rules of using the system.
-- `docs/workbench.md` for fixture conventions.
-- `docs/cosmos.md` for running the same fixtures in React Cosmos.
+- `docs/stories.md` for story conventions.
+- `docs/storybook-plan.md` for the Storybook migration and the agent-facing setup.
 - `docs/data-layer.md` for the API shapes, mock adapter and async state.
 - The **System** page in the app renders the live token values, contrast measurements, type roles, spacing, shape and the icon catalog, and the **Docs** page renders everything in `docs/`.

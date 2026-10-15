@@ -10,11 +10,9 @@ import * as am5 from '@amcharts/amcharts5';
 import * as am5percent from '@amcharts/amcharts5/percent';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd';
-import { driver } from 'driver.js';
 import L from 'leaflet';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import { GridLayout, useContainerWidth, type Layout } from 'react-grid-layout';
-import { useTranslation } from 'react-i18next';
 import { fetchTickets } from '../api/operations';
 import { buildings, demandSeries, tickets as catalogTickets, type Ticket } from '../data';
 import { formatOperationsTime } from '../lib/dates';
@@ -23,7 +21,6 @@ import { ArrowOutwardIcon, BuildingIcon, TrendUpIcon, WarningIcon } from '../ico
 
 import 'leaflet/dist/leaflet.css';
 import 'react-grid-layout/css/styles.css';
-import 'driver.js/dist/driver.css';
 
 const features = tableFeatures({});
 const columnsHelper = createColumnHelper<typeof features, Ticket>();
@@ -423,37 +420,5 @@ export function DndDemo() {
         )}
       </Droppable>
     </DragDropContext>
-  );
-}
-
-export function TourDemo() {
-  const { t } = useTranslation();
-
-  function startTour() {
-    const steps = [
-      {
-        element: '[data-tour="theme-editor"]',
-        popover: { title: t('tour.theme.title'), description: t('tour.theme.body') },
-      },
-      {
-        element: '[data-tour="controls"]',
-        popover: { title: t('tour.controls.title'), description: t('tour.controls.body') },
-      },
-    ].filter((step) => document.querySelector(step.element));
-    if (steps.length === 0) return;
-
-    const tour = driver({
-      showProgress: true,
-      overlayColor: 'rgba(17, 18, 20, 0.45)',
-      popoverClass: 'ui-tour',
-      steps,
-    });
-    tour.drive();
-  }
-
-  return (
-    <Button className="ui-btn" onClick={startTour}>
-      {t('tour.start')}
-    </Button>
   );
 }

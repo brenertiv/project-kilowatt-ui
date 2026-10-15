@@ -8,24 +8,25 @@ Primitives in `src/primitives.ts` mirror the Figma **Enertiv UI Foundations** pr
 
 ```bash
 npm install
-npm run dev
+npm run dev        # the app: System and Docs
+npm run storybook  # the components, at http://localhost:6006
 ```
 
 ## Docs
 
 Markdown in `docs/` is rendered in the app under **Docs** (`/docs/<file-name>`), with a section index built from the level-two headings. `docs/design-system-rules.md` holds the rules for using the system and lives apart from component code on purpose. Drop another `.md` file in the folder and it appears in the Docs list automatically.
 
-## Workbench
+## Storybook
 
-The **Components** tab is the workbench: it renders every `Name.fixture.tsx` in isolation inside the app, with a right-hand drawer for the component switcher, its states and its inputs, viewport presets, and a URL under `/components` that records the fixture and any changed input. Fixtures import `react-cosmos/client`, which the app aliases to the workbench's implementation, so `npm run cosmos` can also open the same fixtures in React Cosmos at `http://localhost:5100`. See `docs/workbench.md` and `docs/cosmos.md`.
+Every component, recipe and page has a `Name.stories.tsx` beside it, one story per state, rendered in Storybook with the app's providers and a light/dark switch. Storybook writes a component manifest (`/manifests/components.json`). With `npm run storybook` it also serves an MCP endpoint at `http://localhost:6006/mcp`, so coding agents can look up components, props and usage before writing UI. `npm run test:stories` renders every story in Chromium with an accessibility check. See `docs/stories.md`, and `docs/storybook-plan.md` for the migration plan.
 
 ## Figma links and sync
 
-The Figma file owns the primitives and semantic roles; code owns the tints, utilities and chart slots. `src/figma/variables.json` is the committed snapshot the primitives and tokens are built from, `src/figma/links.json` maps fixtures to Figma nodes, and the **System** tab shows the snapshot date and the code-owned tokens still to push. See `docs/figma.md` for the contract and the commands.
+The Figma file owns the primitives and semantic roles; code owns the tints, utilities and chart slots. `src/figma/variables.json` is the committed snapshot the primitives and tokens are built from, `src/figma/links.json` holds the whole-file link (each component's node link is `parameters.design` in its stories), and the **System** tab shows the snapshot date and the code-owned tokens still to push. See `docs/figma.md` for the contract and the commands.
 
 ## Data layer and pages
 
-`src/api` mirrors the Enertiv API: entity types copied from live responses, a cursor-paged mock adapter with a failure switch, the `AsyncState` contract and TanStack Query hooks. `src/components/data` holds the Material UI components built on it, and `src/pages` composes them into page views that run in the workbench against the mock. See `docs/data-layer.md`.
+`src/api` mirrors the Enertiv API: entity types copied from live responses, a cursor-paged mock adapter with a failure switch, the `AsyncState` contract and TanStack Query hooks. `src/components/data` holds the Material UI components built on it, and `src/pages` composes them into page views whose stories run against the mock. See `docs/data-layer.md`.
 
 ## Charts
 

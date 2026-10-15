@@ -1,6 +1,6 @@
 # Storybook Migration Plan
 
-Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 and 1 are done. D4 assumes a public site, like the current GitHub Pages one.
+Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0, 1 and 2 are done. D4 assumes a public site, like the current GitHub Pages one.
 
 This plan removes React Cosmos and the in-app workbench. It moves every component, fixture and doc into one standalone Storybook, published from this repo. The published Storybook is the place we point coding agents to learn how to build with Kilowatt, so the plan treats agents as primary readers alongside people.
 
@@ -165,8 +165,8 @@ Done when: every fixture has a story counterpart, `vitest --project storybook` p
   - The `react-cosmos*` dependencies and the `cosmos` and `cosmos:export` scripts.
   - The `react-cosmos/client` alias in `vite.config.ts` and `tsconfig.json`.
   - The cosmos entry in `.claude/launch.json` and `docs/cosmos.md`.
-- Remove the `/components` route from `App.tsx`, along with `/design-system` and `/docs` if D1 says Storybook replaces them.
-- Figma: move each `links.json` component entry into its story meta as `parameters.design`. Re-point `links.test.ts` so it checks the file URL and that every `parameters.design` URL parses. `FigmaLinkField` editing goes away; links are edited in the story file.
+- Remove the `/components` route from `App.tsx`. Done: the app now opens on `/design-system`, and its nav links to Storybook (`VITE_STORYBOOK_URL`, or the local one in dev). `/design-system` and `/docs` stay until Phase 3 recreates them in Storybook. Removing them sooner would leave the foundations and guides with no home.
+- Figma: move each `links.json` component entry into its story meta as `parameters.design`. Done. The registry had no component entries, so nothing moved. `links.json` holds only the file link and refuses component entries. `figmaDesign(url)` in `src/stories/figma.ts` validates a node link when the story file loads. `links.test.ts` covers both. The product-tour demo and driver.js are also gone, because their targets were the workbench drawer.
 - `grep -ri cosmos` and `grep -ri workbench` both return nothing outside the changelog.
 
 ### Phase 3: Docs and foundations in Storybook (about 2–3 days)
