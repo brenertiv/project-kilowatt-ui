@@ -83,7 +83,7 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 ## Icons
 
 - One icon set per surface: Material Symbols Outlined, Google's variable icon font, wrapped once in `src/icons.tsx`. Nothing else references the font or its ligature names. Icons use `currentColor` and take hover, selected and disabled states from CSS.
-- The font's axes are tokens: weight follows text weight (400), optical size 20 at 16px, grade 0. `FILL` is the one axis components may set, and only to mark an active state.
+- The font's axes are tokens: weight 300 (`--icon-weight`, a step lighter than text), optical size 20 at 16px, grade 0. `FILL` is the one axis components may set, and only to mark an active state.
 - Icons render at 16px in controls and 12px inside a checkbox. The icon class, not the surrounding font size, sets the size.
 - Outline is the default variant. Fill marks the active state.
 

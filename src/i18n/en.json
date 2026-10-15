@@ -24,7 +24,7 @@
   "system.layout.lead": "Primary content sits on a 12-column grid, capped at the content max. Breakpoints live in code, not in CSS variables inside queries.",
   "system.layout.gridTitle": "Content grid",
   "system.layout.gridMeta": "{{columns}} columns. Default span {{span}}. Wide span {{wide}}. Max width {{max}}.",
-  "system.icons.lead": "Material Symbols Outlined, the variable icon font, at 16px and weight 400 in currentColor. Hover a tile for the hover state, press for the filled active state. Click to copy the component.",
+  "system.icons.lead": "Material Symbols Outlined, the variable icon font, at 16px and weight 300 in currentColor. Hover a tile for the hover state, press for the filled active state. Click to copy the component.",
   "system.icons.copied": "Copied",
   "system.icons.copyFailed": "Clipboard access was blocked.",
   "system.sections.primitives": "Primitives",

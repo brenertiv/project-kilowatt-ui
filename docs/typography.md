@@ -52,7 +52,7 @@ Weights are not tokens. Hierarchy comes from size, color and position.
 | 400 | Everything, including headings, metrics, table headers and `strong` |
 | 500 | Section eyebrows, the selected tab, table column headers, avatar initials, the wordmark |
 
-No 600 or 700 is used anywhere. The icon font carries its own `--icon-weight` at 400 to match text.
+No 600 or 700 is used anywhere. The icon font carries its own `--icon-weight` at 300, a step lighter than text.
 
 ## Relation to Figma
 

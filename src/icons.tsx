@@ -4,7 +4,7 @@ import type { ComponentType, CSSProperties, HTMLAttributes } from 'react';
  * The one icon set for the whole surface: Material Symbols Outlined, Google's
  * variable icon font. Each icon is a ligature rendered by the font, so a glyph
  * costs no SVG and recolors with `currentColor`. The variable axes are set in
- * CSS on `.ui-icon`: weight follows text weight, optical size matches 16px,
+ * CSS on `.ui-icon`: weight 300 (`--icon-weight`), optical size matches 16px,
  * and `FILL` marks the active state.
  *
  * Add icons here by ligature name, never write a ligature elsewhere.
@@ -13,7 +13,7 @@ import type { ComponentType, CSSProperties, HTMLAttributes } from 'react';
 export type IconProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children'> & {
   /** Filled variant, for the active state of a toggle or tab. */
   fill?: boolean;
-  /** Font weight on the `wght` axis. Defaults to the text weight (400). */
+  /** Font weight on the `wght` axis. Defaults to `--icon-weight` (300). */
   weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700;
   /** Rendered size. The `.ui-icon` class pins 16px; pass a size only off-grid. */
   size?: number;
@@ -27,8 +27,8 @@ function define(ligature: string): ComponentType<IconProps> {
             ...(size ? { width: size, height: size, fontSize: size } : {}),
             fontVariationSettings: [
               `'FILL' ${fill ? 1 : 0}`,
-              `'wght' ${weight ?? 400}`,
-              `'GRAD' 0`,
+              `'wght' ${weight ?? 'var(--icon-weight)'}`,
+              `'GRAD' var(--icon-grade)`,
               `'opsz' ${size && size >= 40 ? 48 : size && size >= 24 ? 24 : 20}`,
             ].join(', '),
           }

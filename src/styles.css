@@ -1370,9 +1370,10 @@ strong {
 }
 
 /* Material Symbols Outlined, Google's variable icon font. Axes are set here so
-   every glyph shares one weight, grade and optical size; FILL marks active. */
+   every glyph shares one weight, grade and optical size; FILL marks active.
+   Icons sit at 300, a step lighter than text, so they read as marks beside it. */
 :root {
-  --icon-weight: 400;
+  --icon-weight: 300;
   --icon-grade: 0;
 }
 

@@ -78,6 +78,56 @@ function StoryProviders({ scheme, children }: { scheme: ColorScheme; children: R
   );
 }
 
+/**
+ * The toolbar's grid toggle, drawn in Kilowatt's cyan on its spacing: 8px cells (--space)
+ * with a heavier line every 32px. Storybook's own grid only draws gray, so its lines are
+ * set transparent (parameters.backgrounds.grid) and this draws over the same element:
+ * the story's page in canvas view, each story preview on a docs page.
+ */
+const GRID_RGB = '46, 166, 225'; // color/brand/500
+const GRID_MINOR = 0.06;
+const GRID_MAJOR = 0.13;
+
+function gridCss(selector: string, offset: number) {
+  const line = (alpha: number, angle = '') => `linear-gradient(${angle}rgba(${GRID_RGB}, ${alpha}) 1px, transparent 1px)`;
+  const at = `${offset}px ${offset}px`;
+  return `${selector} {
+    background-image: ${line(GRID_MAJOR)}, ${line(GRID_MAJOR, '90deg, ')}, ${line(GRID_MINOR)}, ${line(GRID_MINOR, '90deg, ')} !important;
+    background-size: 32px 32px, 32px 32px, 8px 8px, 8px 8px !important;
+    background-position: ${at}, ${at}, ${at}, ${at} !important;
+    background-blend-mode: normal !important;
+  }`;
+}
+
+function KilowattGrid({ css, children }: { css: string | null; children: ReactNode }) {
+  useEffect(() => {
+    if (!css) return;
+    const style = document.createElement('style');
+    style.dataset.kilowattGrid = '';
+    style.textContent = css;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, [css]);
+  return children;
+}
+
+const withGrid: Decorator = (Story, { globals, viewMode, id, parameters }) => {
+  const backgrounds = globals.backgrounds as { grid?: boolean } | string | undefined;
+  const on = typeof backgrounds === 'object' && Boolean(backgrounds?.grid);
+  // Same origin as Storybook's grid: the docs preview padding, or the padded layout's 16px.
+  const offset = viewMode === 'docs' ? 20 : (parameters.layout ?? 'padded') === 'padded' ? 16 : 0;
+  // `html` in front outranks Storybook's own grid rule on the same element.
+  const selector =
+    viewMode === 'docs'
+      ? `html #anchor--${id} .docs-story, html #anchor--primary--${id} .docs-story`
+      : 'html body.sb-show-main';
+  return (
+    <KilowattGrid css={on ? gridCss(selector, offset) : null}>
+      <Story />
+    </KilowattGrid>
+  );
+};
+
 const withProviders: Decorator = (Story, context) => (
   <StoryProviders scheme={context.globals.scheme === 'dark' ? 'dark' : 'light'}>
     <Story />
@@ -86,7 +136,7 @@ const withProviders: Decorator = (Story, context) => (
 
 const preview: Preview = {
   // Listed innermost first: the mock switches apply inside the providers.
-  decorators: [withMockApi, withProviders],
+  decorators: [withMockApi, withProviders, withGrid],
   tags: ['autodocs'],
   globalTypes: {
     scheme: {
@@ -115,6 +165,8 @@ const preview: Preview = {
       },
     },
     layout: 'padded',
+    // Storybook's grid lines are transparent; withGrid draws Kilowatt's cyan grid instead.
+    backgrounds: { grid: { cellSize: 8, cellAmount: 4, opacity: 0 } },
     options: {
       storySort: {
         order: [
