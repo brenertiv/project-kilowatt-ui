@@ -32,19 +32,19 @@ Nothing here is sensitive: it's component docs and design tokens, with sample da
 ```json
 {
   "mcpServers": {
-    "kilowatt": { "type": "http", "url": "https://<project>.vercel.app/mcp" }
+    "kilowatt": { "type": "http", "url": "https://kilowatt-ui.vercel.app/mcp" }
   }
 }
 ```
 
 **Claude, Cursor and VS Code** take the same URL as a remote MCP server. In Claude, add it as a custom connector.
 
-**Agents that only fetch URLs** start at `https://<project>.vercel.app/llms.txt`.
+**Agents that only fetch URLs** start at `https://kilowatt-ui.vercel.app/llms.txt`.
 
 ## Checking a deployment
 
 ```bash
-curl -s -X POST "https://<project>.vercel.app/mcp" \
+curl -s -X POST "https://kilowatt-ui.vercel.app/mcp" \
   -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"docs-list","arguments":{}}}'
 ```

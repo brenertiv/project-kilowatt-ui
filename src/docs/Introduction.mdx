@@ -9,6 +9,57 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 Kilowatt is Enertiv's design system: tokens mirrored from the Figma file **Enertiv UI Foundations**, Base UI primitives styled with plain CSS, Material UI components themed from the tokens, data components built on the Enertiv API's shapes, amCharts charts, and page views composed from all of them.
 
+This site is public at `https://kilowatt-ui.vercel.app`, with no login. Your coding agent can read it too, through the MCP server at `/mcp`.
+
+## Connect your agent
+
+Point your agent at this URL:
+
+```text
+https://kilowatt-ui.vercel.app/mcp
+```
+
+It's a remote MCP server over HTTP, with no key or token. Set it up once per project:
+
+- **Claude Code.** Run this in your project:
+
+  ```bash
+  claude mcp add --transport http --scope project kilowatt https://kilowatt-ui.vercel.app/mcp
+  ```
+
+  Or add it to the project's `.mcp.json` by hand:
+
+  ```json
+  {
+    "mcpServers": {
+      "kilowatt": { "type": "http", "url": "https://kilowatt-ui.vercel.app/mcp" }
+    }
+  }
+  ```
+
+- **Cursor.** Add the same `kilowatt` entry, with only `url`, under `mcpServers` in `.cursor/mcp.json`.
+- **VS Code.** Add it under `servers` in `.vscode/mcp.json`, as `{ "type": "http", "url": "https://kilowatt-ui.vercel.app/mcp" }`.
+- **Claude (web and desktop).** Under **Settings → Connectors**, add a custom connector with the URL.
+- **Agents that only fetch URLs.** Start them at [`https://kilowatt-ui.vercel.app/llms.txt`](./llms.txt).
+
+Then tell the agent to use it. A line like this in your project's `AGENTS.md` or `CLAUDE.md` does it:
+
+```md
+Before writing UI, look up Kilowatt components with the `kilowatt` MCP server (`docs-list`, then `docs-show`). Import documented components; don't rebuild them.
+```
+
+To check the connection, ask the agent to list Kilowatt's components. It should call `docs-list` and answer with the components in the sidebar.
+
+### What the server gives an agent
+
+| Tool | What it returns |
+| --- | --- |
+| `docs-list` | Every component and guide, with its id. |
+| `docs-show` | One component's description, import line, props, guidance and story snippets, or one guide. |
+| `docs-show-story` | One story's snippet. |
+
+Each deployment serves an MCP server built from the same commit as its Storybook, so the docs an agent reads always match the site.
+
 ## Where things are
 
 | Section | What it holds |
@@ -26,11 +77,9 @@ Kilowatt is Enertiv's design system: tokens mirrored from the Figma file **Enert
 3. **Cover every state.** Data components take an `AsyncState`: loading, fetching, empty, error and ready. A screen that only handles ready is unfinished.
 4. **Write copy through i18n.** User-facing strings go in `src/i18n/en.json`.
 
-## For coding agents
+## Other ways agents read Kilowatt
 
-This Storybook is built to be read by agents as well as people.
-
-- **MCP.** While `npm run storybook` runs, the MCP server is at `http://localhost:6006/mcp`, with `docs-list`, `docs-show` and `docs-show-story`, plus story previews and test runs. Add it with `npx mcp-add --type http --url "http://localhost:6006/mcp" --scope project`. This deployed site serves the same docs tools at `/mcp`. Add that URL as a remote MCP server, or as a custom connector in Claude.
+- **Local MCP, for work on Kilowatt itself.** In this repository, `npm run storybook` serves an MCP server at `http://localhost:6006/mcp`, which `.mcp.json` already registers as `kilowatt-storybook`. It has the same docs tools, plus story previews and test runs. Projects that only use Kilowatt don't need it; they use the deployed server above.
 - **llms.txt.** [`llms.txt`](./llms.txt) indexes every page as Markdown: `components/<id>.md`, `guides/<slug>.md` and `foundations/<slug>.md`.
 - **Manifests.** Every build serves `/manifests/components.json`, with each component's description, import line, props and story snippets, and `/manifests/docs.json`, with these pages.
 - **Tokens.** `/kilowatt-tokens.css` is the CSS variables. `/tokens.light.json` and `/tokens.dark.json` are DTCG 2025.10 files. `/kilowatt-design-system.json` and `/kilowatt-design-system.md` are the full system.
