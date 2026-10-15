@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect } from 'storybook/test';
 import { portfolio } from 'src/fixtures/data';
+import { tokenContrast } from 'src/stories/a11y';
 import { withPageFrame } from 'src/stories/decorators';
 import { BuildingDetail } from 'src/pages/BuildingDetail';
 
@@ -28,6 +29,8 @@ export const Default: Story = {};
 
 /** An id that matches no building: the page shows its not-found state instead of empty sections. */
 export const MissingBuilding: Story = {
+  // Contrast off: textDisabled icon on backgroundDefault in the not-found EmptyState. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { id: '00000000-0000-4000-8000-000000000000' },
   play: async ({ canvas }) => {
     // The query retries once before failing, so give the 404 time to settle.

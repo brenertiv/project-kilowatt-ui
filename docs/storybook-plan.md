@@ -248,7 +248,7 @@ These came out of converting the fixtures. The code-side ones are fixed (2026-10
   | `#0a8864` | white or `#edf1f5` | 3.9–4.45 | `successMain` as text | StatCard, cells Delta, MaterialBridge Chips, Widgets Metric Card |
   | `#2ea6e1` | white, `#edf1f5` or `#dcf0fa` | 2.3–2.7 | `secondaryMain` as text, incl. on `secondaryTint` | cells Row Link, Structure Avatar and Scroll area, Foundations Layout, Widgets Queue Reorder |
   | `#fb9c3a` | white or `#edf1f5` | 1.9–2.1 | `warningMain` as text | Widgets Dashboard Grid, MaterialBridge Chips, Foundations Color |
-  | `#6598c2` | `#edf1f5` | 2.71 (3:1 needed at 32px) | `textDisabled` on `backgroundDefault`, the EmptyState icon | EmptyState |
+  | `#6598c2` | `#edf1f5` | 2.71 (3:1 needed at 32px) | `textDisabled` on `backgroundDefault`, the EmptyState icon | EmptyState, BuildingDetail Missing Building |
   | `#72abdb`, `#8faad8`, `#fb594c`, `#ffb44c` | `#365670` | 2.4–4.4 | dark-mode text and status colors on dark `backgroundPaper`, as drawn by the contrast table | Foundations Color |
 
   The table first listed here had three more pairs (`#869aa9`, white on `#89a0c7`, white on `#6cb8a2`). They are not tokens: they are `textSecondary`, a chip fill and `successMain` under the refresh dim below.
