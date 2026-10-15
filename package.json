@@ -15,10 +15,11 @@
     "test": "vitest run",
     "figma:snapshot": "node scripts/figma-snapshot.mjs",
     "storybook": "npm run docs:build && storybook dev -p 6006",
-    "build-storybook": "npm run docs:build && storybook build",
+    "build-storybook": "npm run docs:build && storybook build && tsx scripts/build-llms.ts && tsx scripts/check-docs.ts",
     "test:unit": "vitest run --project unit",
     "test:stories": "vitest run --project storybook",
-    "docs:build": "tsx scripts/build-docs.ts"
+    "docs:build": "tsx scripts/build-docs.ts",
+    "docs:check": "tsx scripts/check-docs.ts"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.20.5",

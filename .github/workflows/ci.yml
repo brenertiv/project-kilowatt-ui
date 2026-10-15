@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+      - name: Type-check, stories and Storybook config included
+        run: npx tsc --noEmit -p .storybook
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Install Chromium for the story tests
+        run: npx playwright install --with-deps chromium
+      # Every story renders in Chromium with an axe check (reported, not failing, until the
+      # findings in docs/storybook-plan.md are fixed). A fresh Vite cache has once failed a
+      # run while it optimized dependencies; a second run settles it, and a real failure
+      # fails both.
+      - name: Story tests
+        run: npm run test:stories || npm run test:stories
+
+      # Builds the generated docs, the static Storybook, llms.txt and the per-page Markdown,
+      # then fails if any component is missing its summary, description, import line or
+      # prop docs, or if an exported component has no story.
+      - name: Build Storybook and check docs coverage
+        run: npm run build-storybook
+      - name: Build the app
+        run: npm run build
+      - name: Type-check the remote MCP server
+        run: npm ci --prefix mcp && npx tsc -p mcp
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static
+          retention-days: 7

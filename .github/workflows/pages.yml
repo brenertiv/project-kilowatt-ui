@@ -1,5 +1,10 @@
 name: Deploy GitHub Pages
 
+# Publishes the Storybook: components, foundations and guides, plus what agents read from
+# it, at https://brenertiv.github.io/project-kilowatt-ui/. Agents read llms.txt, the
+# per-page Markdown, /manifests/*.json and the DTCG token files. The remote MCP server
+# (mcp/) reads its manifests from here.
+
 on:
   push:
     branches: [main]
@@ -17,8 +22,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_PAGES: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,13 +29,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - name: Add SPA fallback
-        run: cp dist/index.html dist/404.html && touch dist/.nojekyll
+      # Generated docs, the static Storybook, llms.txt, and the docs coverage check.
+      - run: npm run build-storybook
+      - run: touch storybook-static/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: storybook-static
 
   deploy:
     needs: build

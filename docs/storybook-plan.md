@@ -1,6 +1,6 @@
 # Storybook Migration Plan
 
-Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 to 3 are done. D4 assumes a public site, like the current GitHub Pages one.
+Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 to 5 are done in the repository. Nothing is pushed yet, and the remote MCP server is not deployed. D4 assumes a public site, like the current GitHub Pages one.
 
 This plan removes React Cosmos and the in-app workbench. It moves every component, fixture and doc into one standalone Storybook, published from this repo. The published Storybook is the place we point coding agents to learn how to build with Kilowatt, so the plan treats agents as primary readers alongside people.
 
@@ -325,3 +325,49 @@ The Phase 3 JSDoc pass covers them.
   - Open: the Avatar recipe loads its photo from pravatar.cc.
 - **Where guidance pages land:** attached guidance pages are in `/manifests/components.json` under each component's `docs`, not in `/manifests/docs.json`. MCP `docs-show` includes them.
 - **Fixed during the pass:** the `aria-label`s "Breadcrumb" and "Pagination" now go through i18n.
+
+## 9. Phase 4 notes
+
+**Agent instructions:**
+- `AGENTS.md` holds the agent instructions, and `CLAUDE.md` imports it.
+- `.mcp.json` registers the local Storybook MCP server as `kilowatt-storybook`. Phase 5 adds the remote one.
+
+**Build scripts:**
+- `scripts/build-llms.ts` runs after `storybook build` and writes `llms.txt`, `introduction.md`, `guides/*.md`, `foundations/*.md` and `components/<id>.md`.
+  - A component page carries the import, description, guidance, props table and every story snippet.
+  - It cleans the manifest's import lines. `'project-kilowatt-ui'` lines for icons become `src/icons`. Story-only imports (sample data, `storybook/test`) are dropped.
+- `scripts/check-docs.ts` fails the build when any of these is true:
+  - an exported component in `src/components`, `src/charts` or `src/pages` has no story;
+  - a manifest entry lacks a summary;
+  - a component lacks a description or an import line;
+  - fewer than 90% of a component's props are described.
+
+  Recipes with no component pass on their guidance page.
+
+**CI** (`.github/workflows/ci.yml`, on pull requests and `main`):
+- Lint, type-check, unit tests, story tests in Chromium, the Storybook build with the docs check, and the app build. The built Storybook is uploaded as an artifact.
+- The story tests retry once. A cold run passed on the first try (230 tests), and the earlier flake only showed up with several Vitest runs in parallel. The a11y check still reports without failing.
+
+**Evals:**
+- `docs/agent-evals.md` has five prompts, three access modes (MCP, static, repository only) and a 10-point rubric.
+- `scripts/grade-eval.ts` checks the rubric's mechanical items.
+- No eval run has been recorded yet.
+
+## 10. Phase 5 notes
+
+**Pages:**
+- `.github/workflows/pages.yml` now builds and deploys Storybook, with the generated docs, `llms.txt` and the docs check, in place of the app.
+- Storybook's assets are relative, so the site works under `/project-kilowatt-ui/` with no base setting. This was checked by serving the build from that subpath.
+- The app is no longer deployed.
+
+**Remote MCP:**
+- `mcp/` holds a Node 24 server (`handler.ts`, `server.ts`) on `@storybook/mcp`. It serves `docs-list`, `docs-show` and `docs-show-story` from the published manifests, which it caches for 5 minutes, or from a local build.
+- It takes an optional bearer token (`MCP_TOKEN`) for when the Storybook goes private.
+- Tested locally: against the build served under the Pages subpath, against a local build directory, and with the token on.
+- It is not deployed yet. Picking a host (Fly.io, Render, Railway or a VM) is the remaining decision. Once it has a URL, add it to `.mcp.json`, `AGENTS.md` and the Introduction page.
+
+**Clean import lines:** `scripts/build-llms.ts` now rewrites the published `manifests/components.json` with cleaned import lines. Agents using the static site or the remote MCP get import lines that resolve. The local dev-server MCP still shows Storybook's raw lines.
+
+**Still open:**
+- Chromatic (visual review and a hosted MCP with OAuth) is optional and not set up.
+- The a11y gate and the bugs from sections 7 and 8 are being fixed in a separate session.
