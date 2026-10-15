@@ -3,8 +3,8 @@ import snapshot from './variables.json';
 /**
  * The committed snapshot of the Figma variables, `variables.json`, and the
  * reader the primitives and tokens build on. Figma owns these values; code
- * never edits the snapshot by hand. Refresh it with `figma/snapshot.figma.js`
- * and `npm run figma:snapshot` (see `docs/figma.md`).
+ * never edits the snapshot by hand. The tooling that refreshed it from Figma
+ * has been removed for now, so it stays as committed until that returns.
  *
  * Paths are `collection/variable`, e.g. `primitives/color/brand/500` or
  * `color/text/primary`. Aliases are followed across collections; a collection

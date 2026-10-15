@@ -7,13 +7,9 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "figma:snapshot": "node scripts/figma-snapshot.mjs",
     "storybook": "npm run docs:build && storybook dev -p 6006",
     "build-storybook": "npm run docs:build && storybook build && tsx scripts/build-llms.ts && tsx scripts/check-docs.ts",
     "test:unit": "vitest run --project unit",
@@ -45,7 +41,6 @@
   },
   "devDependencies": {
     "@storybook/addon-a11y": "^10.6.2",
-    "@storybook/addon-designs": "^11.1.4",
     "@storybook/addon-docs": "^10.6.2",
     "@storybook/addon-mcp": "^10.6.2",
     "@storybook/addon-vitest": "^10.6.2",
@@ -68,14 +63,11 @@
     "playwright": "^1.64.1",
     "prettier": "^3.9.6",
     "remark-gfm": "^4.0.1",
-    "rollup-plugin-visualizer": "^7.1.1",
     "storybook": "^10.6.2",
     "tsx": "^4.23.15",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.70.0",
     "vite": "^7.1.5",
-    "vite-plugin-checker": "^0.14.5",
-    "vite-plugin-svgr": "^5.2.0",
     "vitest": "^5.0.4"
   }
 }

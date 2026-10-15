@@ -13,7 +13,7 @@ import '../src/styles.css';
 
 installBreakpointStyles();
 
-// Theme editor overrides persist in localStorage. Start every Storybook session
+// The theme provider persists its state in localStorage. Start every Storybook session
 // from the shipped theme so docs and visual tests show the real defaults.
 try {
   localStorage.removeItem('kilowatt-theme');

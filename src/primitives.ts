@@ -4,8 +4,7 @@ import { figmaColor, figmaNumber, figmaString, figmaVariables } from './figma/sn
  * Primitives: the raw ramps and scales, read from the Figma "primitives"
  * collection in the committed snapshot (`src/figma/variables.json`). Figma
  * owns every value here; nothing is typed by hand. Semantic tokens in
- * `tokens.ts` take their values from these steps, and the Theme editor edits
- * semantic tokens, never primitives.
+ * `tokens.ts` take their values from these steps.
  *
  * CSS variable names follow the Figma path with slashes turned into dashes
  * and camel case flattened: `color/brand/600` becomes `--color-brand-600`,

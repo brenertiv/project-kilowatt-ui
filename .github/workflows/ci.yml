@@ -42,8 +42,6 @@ jobs:
       # Vite cache doesn't re-optimize mid-run.
       - name: Unit and story tests
         run: npm test
-      - name: Build the app
-        run: npm run build
 
       - uses: actions/upload-artifact@v4
         with:

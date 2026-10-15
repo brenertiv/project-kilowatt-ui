@@ -29,16 +29,6 @@ import {
 } from '../tokens';
 import { measureContrast, type WcagLevel } from './contrast';
 
-export const systemSections = [
-  { id: 'primitives', labelKey: 'system.sections.primitives' },
-  { id: 'color', labelKey: 'system.sections.color' },
-  { id: 'typography', labelKey: 'system.sections.typography' },
-  { id: 'space', labelKey: 'system.sections.space' },
-  { id: 'shape', labelKey: 'system.sections.shape' },
-  { id: 'layout', labelKey: 'system.sections.layout' },
-  { id: 'icons', labelKey: 'system.sections.icons' },
-] as const;
-
 function colorOf(id: string, palette: Record<string, string>) {
   return palette[id] ?? tokenById[id]?.defaultValue ?? '';
 }

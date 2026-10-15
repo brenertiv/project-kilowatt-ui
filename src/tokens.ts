@@ -227,7 +227,7 @@ export const tokens: Token[] = [
  */
 export type TokenLayer = 'core' | 'semantic';
 
-/** Identity knobs. Semantic tokens build on these; both layers are editable in the Theme editor. */
+/** Identity knobs. Semantic tokens build on these. */
 export const coreTokenIds = [
   'backgroundDefault',
   'textPrimary',
@@ -310,7 +310,7 @@ function scrollbarThumbHover(values: Record<string, string>) {
 /**
  * A CSS variable that is part of the system but has no stored value of its own:
  * a fixed step on a scale, an alias of an editable token, or computed from one.
- * The Theme editor shows these read-only with their resolved value.
+ * The Foundations pages show them with their resolved value.
  */
 export type DerivedToken = {
   cssVar: string;

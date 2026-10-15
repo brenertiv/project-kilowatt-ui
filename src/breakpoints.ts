@@ -11,9 +11,9 @@ export const breakpoints = {
 export type BreakpointName = keyof typeof breakpoints;
 
 export const breakpointRoles: Record<BreakpointName, string> = {
-  systemMd: 'System page grids collapse to two columns',
-  systemSm: 'System page grids stack to one column',
-  workspace: 'Top bar stacks brand, utilities, and navigation',
+  systemMd: 'Foundations section grids collapse to two columns',
+  systemSm: 'Foundations section grids stack to one column',
+  workspace: 'Phone width: search fields take the full row and inputs use the larger text size',
   table: 'Hide a secondary table column; wrap cells',
   ticket: 'Stack ticket rows',
   sparkline: 'Drop sparklines rather than squashing them',
@@ -113,56 +113,12 @@ export function breakpointQueryCss(): string {
 }
 
 @media (max-width: ${workspace}px) {
-  .topbar {
-    height: auto;
-    min-height: 56px;
-    padding-block: var(--space-2);
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "brand theme"
-      "nav nav";
-  }
-
-  .brand {
-    grid-area: brand;
-  }
-
-  .topbar-nav {
-    grid-area: nav;
-    justify-self: stretch;
-  }
-
-  .topbar-nav-link {
-    flex: 1;
-  }
-
-  .topbar-actions {
-    grid-area: theme;
-  }
-
-  .system-head {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-
-  .system-exports {
-    width: 100%;
-  }
-
-  .system-toc {
-    flex-wrap: wrap;
-  }
-
   .search {
     width: 100%;
   }
 
   .ui-input {
     font-size: var(--text-md);
-  }
-
-  .editor-panel-grid {
-    grid-template-columns: 1fr;
   }
 }
 `;

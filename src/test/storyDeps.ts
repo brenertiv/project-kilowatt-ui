@@ -16,7 +16,6 @@ export const storyDeps = [
   'storybook/preview-api',
   '@storybook/addon-docs',
   '@storybook/addon-docs/blocks',
-  '@storybook/addon-designs/blocks',
   'react',
   'react/jsx-runtime',
   'react/jsx-dev-runtime',

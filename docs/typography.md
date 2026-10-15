@@ -1,6 +1,6 @@
 # Typography
 
-The type primitives as they stand: families, scale, line height and weight. Semantic roles are documented on the System page and are omitted here for now. Source of truth is `src/tokens.ts`; the stylesheet `:root` carries matching fallbacks.
+The type primitives as they stand: families, scale, line height and weight. Semantic roles are documented on the Foundations Typography page and are omitted here. Source of truth is `src/tokens.ts`; the stylesheet `:root` carries matching fallbacks.
 
 ## Families
 
@@ -10,7 +10,7 @@ The type primitives as they stand: families, scale, line height and weight. Sema
 | `--font-serif` | "Roboto Serif", Georgia, serif |
 | `--font-mono` | "Roboto Mono", ui-monospace, monospace |
 
-All three are editable in the Theme editor and loaded from Google Fonts.
+All three load from Google Fonts.
 
 ## Scale
 

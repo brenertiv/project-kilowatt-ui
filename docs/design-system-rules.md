@@ -2,16 +2,16 @@
 
 Rules for building Kilowatt UI. These are decisions, not suggestions: when code and this document disagree, fix one of them in the same change. Component code lives in `src/`; this file lives beside it on purpose so rules can change without touching components.
 
-The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read through the committed snapshot `src/figma/variables.json`; `src/primitives.ts` and `src/tokens.ts` are built from it. `docs/figma.md` records who owns which layer and how the sync runs. The Design System page in the app renders the live values; this document explains how to use them.
+The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read through the committed snapshot `src/figma/variables.json`; `src/primitives.ts` and `src/tokens.ts` are built from it. The Foundations pages in Storybook show the live values; this document explains how to use them. Syncing with Figma is paused: the snapshot changes only by hand for now.
 
 ## Tokens
 
 - Tokens are the only source of color, type, space, radius and shadow. No component declares a hex value, a pixel radius or a font family of its own.
 - Styling is plain CSS with custom properties. The one exception is Material UI, which is styled through the theme bridge in `src/mui/theme.ts` and nowhere else: no `sx` colors, no `styled()` literals, no inline Emotion in components.
-- Three layers. **Primitives** are the Figma ramps and scales, read from the snapshot by `src/primitives.ts` with exactly the steps Figma has and emitted as `--color-slate-300`, `--spacing-2`, `--radius-md` and so on; they change only when the snapshot is refreshed. **Core** tokens are the identity knobs (page background, primary text, secondary, success, warning, error, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles: the Figma-owned ones (surfaces, divider, text emphasis, action overlays, the six palettes) read both modes from the snapshot under Figma's names; the code-owned ones (tints, utilities, chart slots, track, divider steps) are declared as primitive steps and pushed back to Figma. Both layers are editable in the Theme editor.
+- Three layers. **Primitives** are the Figma ramps and scales, read from the snapshot by `src/primitives.ts` with exactly the steps Figma has and emitted as `--color-slate-300`, `--spacing-2`, `--radius-md` and so on; they change only when the snapshot changes. **Core** tokens are the identity knobs (page background, primary text, secondary, success, warning, error, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles: the Figma-owned ones (surfaces, divider, text emphasis, action overlays, the six palettes) read both modes from the snapshot under Figma's names; the code-owned ones (tints, utilities, chart slots, track, divider steps) are declared in code as primitive steps.
 - **Derived** variables (type scale steps, space scale, inner radius, shadow steps, scrollbar colors) are computed from the layers above and are never stored. Change the source token to move them.
 - Every color token has a light and a dark value. A new color token is not done until both exist and the Design System contrast list has been checked.
-- Adding a token means: add it to `src/tokens.ts`, give it a role group so the Design System page and the CSS export pick it up, and update the stylesheet `:root` fallback.
+- Adding a token means: add it to `src/tokens.ts`, give it a role group so the Foundations pages and the token exports pick it up, and update the stylesheet `:root` fallback.
 
 ## Color
 
@@ -26,7 +26,7 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 ## Material UI
 
 - Material UI is the component library for data display and page composition: cards, lists, chips, badges, skeletons, alerts, pagination, app bars and drawers. Base UI remains in place for the primitives already built on it. New work reaches for Material first; existing Base UI components migrate when they are next touched, not before.
-- The bridge in `src/mui/theme.ts` is the only place Material learns a value. It reads the same resolved tokens the stylesheet receives, so the Theme editor and the scheme switch reach every Material component with no second source of truth. Add a token mapping there; never pass a color to a component.
+- The bridge in `src/mui/theme.ts` is the only place Material learns a value. It reads the same resolved tokens the stylesheet receives, so a token change and the scheme switch reach every Material component with no second source of truth. Add a token mapping there; never pass a color to a component.
 - Material's palette roles are Figma's: `primary`, `secondary`, `success`, `error`, `warning` and `info` each carry main, light, dark and contrast text from the snapshot, `divider` is the divider, `background.default` is the page and `background.paper` the raised surface.
 - Material defaults that contradict the system are switched off in the bridge: ripples, button elevation, uppercase button text, the dark-mode elevation overlay. Cards are outlined. Motion uses the system curve and durations.
 - `sx` is for layout only: spacing, flex, grid, width. Its spacing unit is 4px, so `spacing={4}` is 16px.
@@ -98,7 +98,7 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 ## Accessibility baseline
 
 - Every control has a visible focus ring and an accessible name. Icon-only buttons carry an `aria-label`.
-- Contrast: body text 4.5:1, large text and UI parts 3:1. The Design System page measures the token pairs that matter.
+- Contrast: body text 4.5:1, large text and UI parts 3:1. The contrast table on the Foundations Color page measures the token pairs that matter.
 - Charts expose a text description and a table view. Tables expose sort state, row counts and selection counts to assistive technology.
 - Hit targets are at least 24px, and 28px for card controls.
 
@@ -107,5 +107,5 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 1. Change tokens in `src/tokens.ts` and the stylesheet fallback together.
 2. Run the test suite. Palette and contrast expectations are tests, so a drift shows up immediately.
 3. For chart colors, run the dataviz palette validator on both surfaces and keep the output with the change.
-4. Check both schemes in Storybook. The Theme editor can preview a change before it lands.
+4. Check both schemes in Storybook.
 5. Update this document in the same change.

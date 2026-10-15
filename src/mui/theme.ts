@@ -3,7 +3,7 @@ import { shadowScale, typeScale, type ColorScheme, type ThemeValues } from '../t
 
 /**
  * The Material UI theme bridge. Material UI reads the same resolved token
- * values the stylesheet receives, so a change in the Theme editor or a scheme
+ * values the stylesheet receives, so a token change or a scheme
  * switch rebuilds this theme and every Material component follows. Nothing in
  * here is a literal of its own: every color, size, radius and curve is a token.
  */

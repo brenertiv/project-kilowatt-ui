@@ -43,7 +43,7 @@ Kilowatt is Enertiv's design system. Its Storybook is the reference for every co
   - `npx tsc --noEmit -p .storybook`
   - `npm test` (unit tests, plus every story rendered in Chromium with an accessibility check)
   - `npm run build-storybook` (builds the site, writes `llms.txt`, and fails if a component is missing docs)
-- **Tokens.** The Figma file owns primitives and semantic colors (`docs/figma.md`). Don't edit `src/figma/variables.json` by hand.
+- **Tokens.** Primitives and semantic colors come from `src/figma/variables.json`, a snapshot of the Figma file. Don't edit it by hand; ask before changing a Figma-owned value.
 
 ## Layout of the repository
 

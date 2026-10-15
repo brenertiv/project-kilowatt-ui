@@ -28,7 +28,7 @@ export function motionDuration(reduceMotion: boolean): number | undefined {
  * the chart and may return its own cleanup.
  *
  * The root is rebuilt when theme values change, so colors and fonts follow the
- * Theme editor and the dark-mode switch without per-chart listeners.
+ * dark-mode switch without per-chart listeners.
  */
 export function useChartRoot(setup: ChartSetup, deps: readonly unknown[] = []): RefObject<HTMLDivElement | null> {
   const hostRef = useRef<HTMLDivElement>(null);

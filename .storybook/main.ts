@@ -1,20 +1,5 @@
 import type { StorybookConfig } from '@storybook/react-vite';
-import type { PluginOption } from 'vite';
 import remarkGfm from 'remark-gfm';
-
-/**
- * Plugins from `vite.config.ts` that belong to the app build, not to Storybook:
- * the type-check overlay, the bundle visualizer, and the dev-server middleware
- * that writes the Figma link registry.
- */
-const appOnlyPlugins = new Set(['vite-plugin-checker', 'visualizer', 'kilowatt-figma-links']);
-
-function withoutAppPlugins(plugins: PluginOption[] = []): PluginOption[] {
-  return plugins.flat(Infinity as 1).filter((plugin) => {
-    if (!plugin || typeof plugin !== 'object' || !('name' in plugin)) return true;
-    return !appOnlyPlugins.has(plugin.name);
-  });
-}
 
 const config: StorybookConfig = {
   framework: '@storybook/react-vite',
@@ -29,7 +14,6 @@ const config: StorybookConfig = {
       options: { mdxPluginOptions: { mdxCompileOptions: { remarkPlugins: [remarkGfm] } } },
     },
     '@storybook/addon-a11y',
-    '@storybook/addon-designs',
     '@storybook/addon-vitest',
     // test runs the story tests through @storybook/addon-vitest.
     { name: '@storybook/addon-mcp', options: { toolsets: { dev: true, docs: true, test: true } } },
@@ -45,9 +29,6 @@ const config: StorybookConfig = {
     // and lifts `@summary` into the manifest. It resolves our imported union types
     // too, and skips props inherited from MUI and Base UI, which is what we want.
     reactDocgen: 'react-docgen',
-  },
-  async viteFinal(config) {
-    return { ...config, plugins: withoutAppPlugins(config.plugins) };
   },
 };
 

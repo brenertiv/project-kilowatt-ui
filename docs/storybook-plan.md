@@ -382,3 +382,16 @@ Publishing went to Vercel. It started on GitHub Pages, then briefly on Cloudflar
 **Still open:**
 - Chromatic is optional and not set up.
 - The code-side a11y gate and the bugs from sections 7 and 8 are fixed and merged into `main` (the `claude/practical-mcnulty-9e2890`, `claude/fix-open-jsdoc-bugs` and `claude/storybook-ci-gate` merges). Contrast findings on Figma-owned tokens stay exempted until Figma changes.
+
+## 11. Storybook only
+
+The repository now ships only the Storybook.
+
+**Removed:**
+- The standalone app: `index.html`, `src/main.tsx`, `src/App.tsx`, the System page and the Theme editor.
+- All Figma tooling: the sync panel, the push plan, the snapshot scripts, the file and component link registry, `figmaDesign` and the Design panel addon. `docs/figma.md` went with it.
+- The dev, build and preview scripts, the app-only Vite plugins (type-check overlay, bundle visualizer, SVG components) and 83 CSS rules that only the removed UI used.
+
+**Kept:**
+- `src/figma/variables.json` and its reader, `snapshot.ts`. The primitives and tokens are still built from them, and the Foundations pages and token exports still show the values.
+- The snapshot changes only by hand until Figma sync returns.

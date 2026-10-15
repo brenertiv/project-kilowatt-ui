@@ -13,7 +13,7 @@ import {
 import { tokenContrast } from 'src/stories/a11y';
 
 /**
- * The System page's live sections, rendered with the current theme. The
+ * The live Foundations sections, rendered with the current theme. The
  * Foundations docs pages embed these under their literal token tables; the
  * tables are what agents read, these are what people look at.
  */

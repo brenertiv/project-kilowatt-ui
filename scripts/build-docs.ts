@@ -34,7 +34,6 @@ const guideTitles: Record<string, string> = {
   'design-system-rules.md': 'Rules',
   'stories.md': 'Writing stories',
   'data-layer.md': 'Data layer',
-  'figma.md': 'Figma sync',
   'stack-overview.md': 'Stack overview',
   'typography.md': 'Typography',
 };

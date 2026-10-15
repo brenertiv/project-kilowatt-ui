@@ -4,7 +4,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import storybook from 'eslint-plugin-storybook';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'storybook-static', '!.storybook'] },
+  { ignores: ['dist', 'node_modules', 'storybook-static', '.claude', '.vercel', '!.storybook'] },
   tseslint.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],

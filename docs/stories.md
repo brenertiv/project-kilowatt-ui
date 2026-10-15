@@ -64,16 +64,6 @@ The **Scheme** toolbar switches light and dark. The theme is set on `<html>`, so
 
 Demos of third-party libraries, internal comparisons and playgrounds go under `Internal/` with `tags: ['!manifest']`. They stay browsable but agents don't learn them as part of the system. `tags: ['!test']` takes a story out of the test run. Only use it with a comment saying why and what would bring the story back.
 
-## Figma
-
-Link a component to its Figma node on the meta:
-
-```tsx
-parameters: { design: figmaDesign('https://www.figma.com/design/<key>/<file>?node-id=12-345') },
-```
-
-`figmaDesign` (in `src/stories/figma.ts`) stores the link in canonical form. If the link isn't a Figma node, it throws when the file loads, so the story tests catch it. The link shows in the **Design** panel. The whole-file link lives on the **System** page (see `docs/figma.md`).
-
 ## Tests
 
 `npm run test:stories` renders every story in Chromium. It runs any `play` function and an axe accessibility check, and any axe violation fails the story. `npm test` runs the unit and story projects together. The story project pre-bundles a fixed list of packages, `src/test/storyDeps.ts`. When `src` imports a package (or a MUI or Base UI subpath) for the first time, add it there; `storyDeps.test.ts` names any that are missing.
