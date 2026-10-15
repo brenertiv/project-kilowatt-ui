@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import type { AsyncState } from '../../api/state';
 import { TrendDownIcon, TrendUpIcon } from '../../icons';
 import { formatDelta, formatUnit, type Unit } from '../../lib/format';
-import { ErrorState } from './ErrorState';
+import { DataState } from './DataState';
 import { StatSkeleton } from './Skeletons';
 import { noValue } from './dateFormat';
 
@@ -30,7 +30,7 @@ export type StatCardProps = {
   period?: ReactNode;
   /** A leading icon from `src/icons.tsx` that names the subject, e.g. `<BuildingIcon />`. */
   icon?: ReactNode;
-  /** The async state of the data behind the card. Loading shows a skeleton, error shows a retry. Defaults to ready. */
+  /** The async state of the data behind the card. Rendered through `DataState`: loading shows a `StatSkeleton`, fetching dims the card, error shows a retry. Empty and idle show the card with its value (or the dash). Defaults to ready. */
   state?: AsyncState;
 };
 
@@ -64,76 +64,74 @@ export function StatCard({
   state,
 }: StatCardProps) {
   const { t } = useTranslation();
-  const status = state?.status ?? 'ready';
   const hasValue = typeof value === 'number' && Number.isFinite(value);
-
-  let body: ReactNode;
-  if (status === 'loading') body = <StatSkeleton />;
-  else if (status === 'error') body = <ErrorState message={state?.error} onRetry={state?.onRetry} compact />;
-  else {
-    body = (
-      <Stack
-        spacing={1}
-        aria-busy={status === 'fetching' || undefined}
-        sx={{ opacity: status === 'fetching' ? 0.6 : 1, transition: 'opacity 150ms' }}
-      >
-        <Typography variant="overline" component="p" color="text.secondary">
-          {label}
-        </Typography>
-        <Typography
-          variant="h3"
-          component="p"
-          sx={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1.1 }}
-        >
-          {hasValue ? (
-            formatUnit(value, unit, { compact })
-          ) : (
-            // A paragraph may not carry aria-label, so the spoken "No value" is hidden text beside the dash.
-            <>
-              <span aria-hidden="true">{noValue}</span>
-              <span className="ui-sr-only">{t('data.noValue')}</span>
-            </>
-          )}
-        </Typography>
-        {typeof delta === 'number' || period ? (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', color: 'text.secondary' }}>
-            {typeof delta === 'number' && hasValue ? (
-              <Box
-                component="span"
-                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: deltaTone(delta, goodDirection) }}
-              >
-                {delta > 0 ? <TrendUpIcon /> : delta < 0 ? <TrendDownIcon /> : null}
-                <Typography
-                  variant="body2"
-                  component="span"
-                  sx={{ fontVariantNumeric: 'tabular-nums', color: 'inherit' }}
-                >
-                  {formatDelta(delta, deltaUnit)}
-                </Typography>
-                <Box
-                  component="span"
-                  sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
-                >
-                  {delta > 0 ? t('data.delta.up') : delta < 0 ? t('data.delta.down') : t('data.delta.flat')}
-                </Box>
-              </Box>
-            ) : null}
-            {period ? (
-              <Typography variant="body2" component="span">
-                {period}
-              </Typography>
-            ) : null}
-          </Stack>
-        ) : null}
-      </Stack>
-    );
-  }
+  // A metric with nothing behind it still shows its label and the no-value dash, so empty and idle draw as ready.
+  const cardState: AsyncState =
+    !state || state.status === 'empty' || state.status === 'idle' ? { ...state, status: 'ready' } : state;
 
   return (
     <Card>
       <CardContent sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', '&:last-child': { pb: 4 } }}>
         {icon ? <Box sx={{ color: 'text.secondary', display: 'flex', pt: 0.5 }}>{icon}</Box> : null}
-        <Box sx={{ minWidth: 0, flex: 1 }}>{body}</Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <DataState state={cardState} skeleton={<StatSkeleton />}>
+            <Stack spacing={1}>
+              <Typography variant="overline" component="p" color="text.secondary">
+                {label}
+              </Typography>
+              <Typography
+                variant="h3"
+                component="p"
+                sx={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1.1 }}
+              >
+                {hasValue ? (
+                  formatUnit(value, unit, { compact })
+                ) : (
+                  // A paragraph may not carry aria-label, so the spoken "No value" is hidden text beside the dash.
+                  <>
+                    <span aria-hidden="true">{noValue}</span>
+                    <span className="ui-sr-only">{t('data.noValue')}</span>
+                  </>
+                )}
+              </Typography>
+              {typeof delta === 'number' || period ? (
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', color: 'text.secondary' }}>
+                  {typeof delta === 'number' && hasValue ? (
+                    <Box
+                      component="span"
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        color: deltaTone(delta, goodDirection),
+                      }}
+                    >
+                      {delta > 0 ? <TrendUpIcon /> : delta < 0 ? <TrendDownIcon /> : null}
+                      <Typography
+                        variant="body2"
+                        component="span"
+                        sx={{ fontVariantNumeric: 'tabular-nums', color: 'inherit' }}
+                      >
+                        {formatDelta(delta, deltaUnit)}
+                      </Typography>
+                      <Box
+                        component="span"
+                        sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}
+                      >
+                        {delta > 0 ? t('data.delta.up') : delta < 0 ? t('data.delta.down') : t('data.delta.flat')}
+                      </Box>
+                    </Box>
+                  ) : null}
+                  {period ? (
+                    <Typography variant="body2" component="span">
+                      {period}
+                    </Typography>
+                  ) : null}
+                </Stack>
+              ) : null}
+            </Stack>
+          </DataState>
+        </Box>
       </CardContent>
     </Card>
   );

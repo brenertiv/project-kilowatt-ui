@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { errorMessage, fromQuery, isEmptyData, type QueryLike } from './state';
+import { errorMessage, fromQuery, isEmptyData, isNotFound, type QueryLike } from './state';
 
 function query<T>(overrides: Partial<QueryLike<T>>): QueryLike<T> {
   return { status: 'success', fetchStatus: 'idle', data: undefined, error: null, refetch: vi.fn(), ...overrides };
@@ -43,5 +43,12 @@ describe('helpers', () => {
     expect(errorMessage(new Error('Network down'))).toBe('Network down');
     expect(errorMessage({ response: { status: 404 } })).toBe('Not found.');
     expect(errorMessage(undefined)).toBe('Something went wrong.');
+  });
+
+  it('tells a missing record from other failures', () => {
+    expect(isNotFound({ response: { status: 404 } })).toBe(true);
+    expect(isNotFound({ response: { status: 500 } })).toBe(false);
+    expect(isNotFound(new Error('Network down'))).toBe(false);
+    expect(isNotFound(null)).toBe(false);
   });
 });

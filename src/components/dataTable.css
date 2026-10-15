@@ -167,15 +167,6 @@
   flex-shrink: 0;
 }
 
-.ui-item.is-destructive {
-  color: var(--error-main);
-}
-
-.ui-item.is-destructive[data-highlighted] {
-  background: color-mix(in oklab, var(--error-main) 12%, var(--background-paper));
-  color: var(--error-main);
-}
-
 /* Bulk actions bar */
 .ui-table-bulk {
   position: sticky;

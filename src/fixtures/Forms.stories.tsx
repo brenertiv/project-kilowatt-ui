@@ -176,7 +176,7 @@ export const RadioGroupRecipe: StoryObj<RadioArgs> = {
   name: 'Radio group',
   args: { disabled: false },
   render: ({ disabled }) => (
-    <RadioGroup className="demo-stack" aria-label="Meter type" defaultValue="electric" disabled={disabled}>
+    <RadioGroup className="ui-radio-group" aria-label="Meter type" defaultValue="electric" disabled={disabled}>
       {meterTypes.map((option) => (
         <label key={option.value} className="ui-inline-label">
           <Radio.Root value={option.value} className="ui-radio">

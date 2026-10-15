@@ -4,15 +4,16 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import { useEntity, useEntityList, useLookup } from '../api/queries';
-import { fromQuery } from '../api/state';
+import { fromQuery, isNotFound } from '../api/state';
 import { isExpanded } from '../api/types';
-import { PlusIcon } from '../icons';
+import { BuildingIcon, PlusIcon } from '../icons';
 import { formatUnit } from '../lib/format';
 import {
   ActionStatusChip,
   DateRangeText,
   DateText,
   EntityList,
+  EmptyState,
   EntityName,
   ErrorState,
   PageHeader,
@@ -24,7 +25,7 @@ import { activeActionStatuses, countOf } from './shared';
 const pageSize = 50;
 
 export type BuildingDetailProps = {
-  /** The building's location id. An id that matches no building shows the error state with a retry. */
+  /** The building's location id. An id that matches no building shows a not-found state; any other failure shows the error state with a retry. */
   id: string;
 };
 
@@ -65,6 +66,17 @@ export function BuildingDetail({ id }: BuildingDetailProps) {
   });
   const statuses = useLookup('action_status');
 
+  if (building.status === 'error' && isNotFound(building.error)) {
+    return (
+      <Box component="main">
+        <EmptyState
+          icon={<BuildingIcon size={32} />}
+          title="Building not found"
+          description="No building matches this link. It may have been removed, or the link may be wrong."
+        />
+      </Box>
+    );
+  }
   if (building.status === 'error') {
     return <ErrorState message={fromQuery(building).error} onRetry={() => void building.refetch()} />;
   }

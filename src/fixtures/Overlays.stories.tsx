@@ -104,7 +104,7 @@ export const DialogRecipe: StoryObj<DialogArgs> = {
           <Dialog.Popup className="ui-dialog">
             <Dialog.Title className="ui-dialog-title">{title}</Dialog.Title>
             <Dialog.Description className="ui-description">{description}</Dialog.Description>
-            <div className="demo-row demo-end">
+            <div className="ui-dialog-actions">
               <Dialog.Close className="ui-btn">Cancel</Dialog.Close>
               <Dialog.Close className="ui-btn ui-btn-solid">{primaryAction}</Dialog.Close>
             </div>
@@ -128,7 +128,7 @@ export const AlertDialogRecipe: StoryObj<TextArgs> = {
           <AlertDialog.Popup className="ui-dialog">
             <AlertDialog.Title className="ui-dialog-title">{title}</AlertDialog.Title>
             <AlertDialog.Description className="ui-description">{description}</AlertDialog.Description>
-            <div className="demo-row demo-end">
+            <div className="ui-dialog-actions">
               <AlertDialog.Close className="ui-btn">Keep</AlertDialog.Close>
               <AlertDialog.Close className="ui-btn ui-btn-solid">Delete</AlertDialog.Close>
             </div>

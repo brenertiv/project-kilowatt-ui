@@ -670,24 +670,6 @@ strong {
   min-height: 48px;
 }
 
-.demo-row,
-.demo-stack {
-  display: flex;
-  gap: var(--space);
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.demo-stack {
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.demo-end {
-  justify-content: flex-end;
-  margin-top: var(--space-2);
-}
-
 .ui-btn,
 .ui-select,
 .ui-input,
@@ -801,6 +783,7 @@ strong {
 
 .ui-btn-ghost {
   background: transparent;
+  border-color: transparent;
 }
 
 /* Figma button/*: rest on the sunken surface, lift to the raised surface on hover,
@@ -944,6 +927,12 @@ strong {
 .ui-checkbox-indicator[data-unchecked],
 .ui-radio-indicator[data-unchecked] {
   display: none;
+}
+
+.ui-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .ui-radio-indicator {
@@ -1236,6 +1225,15 @@ strong {
 
 .ui-dialog-form {
   display: contents;
+}
+
+/* The row of Dialog.Close buttons at the end of a dialog: cancel first, primary last. */
+.ui-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .ui-dialog[data-starting-style],
@@ -2865,7 +2863,6 @@ button.chart-legend-item:focus-visible {
   gap: var(--space-3);
   flex-wrap: wrap;
 }
-
 
 .figma-sync-list {
   display: flex;

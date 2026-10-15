@@ -309,21 +309,22 @@ The Phase 3 JSDoc pass covers them.
   - Fixed: the empty row says "No {noun} match these filters." only while a search or filter is set, otherwise "No {noun} to show."
   - Fixed: DataTable's, the cells' and the table states' labels come from `src/i18n/en.json` under `table.*`.
   - Fixed: `ActionsCell` keys menu items by position, so repeated labels don't collide.
-  - Open: destructive styling is split between `.is-destructive` and `[data-destructive]`.
+  - Fixed: destructive menu items use one hook, `data-destructive` on `ui-item`, in `ActionsCell` and `CardMenu`. The `.is-destructive` rule is gone.
   - Open: server mode needs a row count, which the cursor-paged API never gives.
 - **Data:**
-  - Open: StatCard draws its own loading and error states instead of using `DataState`.
+  - Fixed: StatCard renders its `state` through `DataState` with `StatSkeleton`. Empty and idle still draw the card with its value or the dash.
   - Fixed: EmptyState shows `data.empty.description` when neither `title` nor `description` is set. A custom title still gets no generic sentence.
-  - Open: `BuildingDetail` with an unknown id shows the error state, not a not-found state.
+  - Fixed: `BuildingDetail` with an unknown id shows a "Building not found" empty state. `isNotFound` in `src/api/state.ts` tells a 404 from other failures.
   - Fixed: the WorkOrders status filter ("Status", "Active", "All statuses") goes through i18n. The page's title and sort labels are still English literals.
 - **Primitives:**
   - Fixed: `ui-field-error` sets the error color, and `ui-input` takes an error border and focus ring when `data-invalid` or `aria-invalid`.
   - Fixed: the icon button, input, stepper, toggle and tab mute their text when disabled and stop responding to hover; the switch, checkbox, radio and slider fade to 50%; a disabled field's label dims too. All key off Base UI's `data-disabled` (and `:disabled` for native inputs).
-  - Open: `ui-btn-ghost` keeps its border.
-  - Open: the dialog and radio recipes use the demo layout classes `demo-row`, `demo-end` and `demo-stack`.
+  - Fixed: `ui-btn-ghost` has a transparent border at rest and shows it on hover.
+  - Fixed: the demo layout classes are gone. Dialogs end in a `ui-dialog-actions` row, radio groups take `ui-radio-group`, and the Avatar, Separator and cells stories lay out inline.
   - Open: the rules don't say whether a new button outside both Base UI and Material UI surfaces should be `ui-btn` or MUI `Button`.
-  - Open: the Avatar recipe loads its photo from pravatar.cc.
+  - Fixed: the Avatar recipe's photo is a local asset, `src/assets/avatar-photo.svg`.
 - **Where guidance pages land:** attached guidance pages are in `/manifests/components.json` under each component's `docs`, not in `/manifests/docs.json`. MCP `docs-show` includes them.
+- **Figma:** Fixed: `FigmaLink` no longer puts `aria-label` on a `<p>`; "Linked Figma file" is hidden text before the file name.
 - **Fixed during the pass:** the `aria-label`s "Breadcrumb" and "Pagination" now go through i18n.
 
 ## 9. Phase 4 notes

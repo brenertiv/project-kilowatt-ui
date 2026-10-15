@@ -139,7 +139,7 @@ export type ActionItem = {
   label: string;
   /** Called when the item is chosen. */
   onSelect: () => void;
-  /** Draws the item in the negative color. Use for irreversible actions such as delete. Defaults to false. */
+  /** Draws the item in the negative color, through `data-destructive` on its `ui-item`. Use for irreversible actions such as delete. Defaults to false. */
   destructive?: boolean;
 };
 
@@ -172,7 +172,8 @@ export function ActionsCell({ items, label }: ActionsCellProps) {
             {items.map((item, index) => (
               <Menu.Item
                 key={index}
-                className={item.destructive ? 'ui-item is-destructive' : 'ui-item'}
+                className="ui-item"
+                data-destructive={item.destructive || undefined}
                 onClick={item.onSelect}
               >
                 {item.label}
