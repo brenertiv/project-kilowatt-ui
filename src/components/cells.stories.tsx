@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 import { sparklines } from 'src/fixtures/sampleData';
 import { ActionsCell, ChipCell, DateCell, DeltaCell, EmptyCell, LinkCell, NumericCell, SparklineCell, StatusCell } from 'src/components/cells';
+import { tokenContrast } from 'src/stories/a11y';
 
 const units = ['count', 'kW', 'kWh', 'MWh', 'therms', 'gal', 'USD', 'percent', '°F', 'score'];
 
@@ -55,6 +56,8 @@ export const Numeric: StoryObj<typeof NumericCell> = {
 
 /** A signed change colored by whether it is good. Set `upIsGood` to false for costs and consumption. */
 export const Delta: StoryObj<typeof DeltaCell> = {
+  // Contrast off: successMain text on backgroundDefault. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { value: 0.056, unit: 'percent', upIsGood: true },
   argTypes: { unit: { control: 'select', options: units } },
   render: (args) => <DeltaCell {...args} />,
@@ -68,6 +71,8 @@ export const CalendarDate: StoryObj<typeof DateCell> = {
 
 /** A router link to the row's detail page, usually in the first column. */
 export const RowLink: StoryObj<typeof LinkCell> = {
+  // Contrast off: secondaryMain link text on backgroundDefault. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { href: '/buildings/1', children: '1 World Trade Center' },
   argTypes: { children: { control: 'text' } },
   render: (args) => <LinkCell {...args} />,

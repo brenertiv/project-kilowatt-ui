@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@base-ui/react/button';
 import { ErrorIcon } from '../icons';
 
@@ -22,11 +23,12 @@ export type TableSkeletonProps = {
  * @summary A loading skeleton shaped like a table.
  * @import import { TableSkeleton } from 'src/components/TableStates';
  */
-export function TableSkeleton({ columns, rows = 8, label = 'Loading table' }: TableSkeletonProps) {
+export function TableSkeleton({ columns, rows = 8, label }: TableSkeletonProps) {
+  const { t } = useTranslation();
   const count = Math.max(1, columns);
   const style = { gridTemplateColumns: `repeat(${count}, minmax(0, 1fr))` };
   return (
-    <div className="ui-table-skeleton" role="status" aria-busy="true" aria-label={label}>
+    <div className="ui-table-skeleton" role="status" aria-busy="true" aria-label={label ?? t('table.loading')}>
       <div className="ui-table-skeleton-row is-header" style={style}>
         {Array.from({ length: count }, (_, column) => (
           <span key={column} className="ui-skeleton" style={{ width: headerWidths[column % headerWidths.length] }} />
@@ -62,14 +64,15 @@ export type TableErrorProps = {
  * @summary A table's error state with an optional Retry button.
  * @import import { TableError } from 'src/components/TableStates';
  */
-export function TableError({ message = 'Something went wrong while loading this table.', onRetry }: TableErrorProps) {
+export function TableError({ message, onRetry }: TableErrorProps) {
+  const { t } = useTranslation();
   return (
     <div className="ui-table-state" role="alert">
       <ErrorIcon className="ui-table-state-icon" />
-      <p>{message}</p>
+      <p>{message ?? t('table.error')}</p>
       {onRetry ? (
         <Button className="ui-btn" onClick={onRetry}>
-          Retry
+          {t('data.retry')}
         </Button>
       ) : null}
     </div>
@@ -79,7 +82,7 @@ export function TableError({ message = 'Something went wrong while loading this 
 export type TableEmptyRowProps = {
   /** Number of columns the row spans. Set it to the table's visible column count. */
   colSpan: number;
-  /** The empty message, e.g. "No meters match these filters." */
+  /** The empty message, e.g. "No meters match these filters." when filtered, or "No meters to show." */
   children: ReactNode;
 };
 

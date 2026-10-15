@@ -19,6 +19,7 @@ import { Menu } from '@base-ui/react/menu';
 import { Select } from '@base-ui/react/select';
 import { Toggle } from '@base-ui/react/toggle';
 import { ToggleGroup } from '@base-ui/react/toggle-group';
+import { useTranslation } from 'react-i18next';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   columnFilteringFeature,
@@ -74,6 +75,7 @@ import {
   SearchIcon,
 } from '../icons';
 import { formatCount } from '../lib/format';
+import { EmptyCell } from './cells';
 import { downloadCsv, toCsv } from './csv';
 import { TableEmptyRow, TableError, TableSkeleton } from './TableStates';
 import { defaultTableUrlState, type TableUrlState } from './tableUrlState';
@@ -174,8 +176,10 @@ export type DataTableProps<TData extends RowData> = {
   noun: string;
   /** Column ids matched by the search box (case-insensitive substring). Omit to hide search. */
   searchColumns?: string[];
-  /** Placeholder for the search box, e.g. "Search meters". Also its accessible name, so set it whenever `searchColumns` is set. */
+  /** Placeholder for the search box, e.g. "Search by name or id". A hint only: the box is named by `searchLabel`. */
   searchPlaceholder?: string;
+  /** Accessible name for the search box, read by screen readers but not shown. Defaults to "Search {noun}". */
+  searchLabel?: string;
   /** Adds a single-select filter to the toolbar. Omit for no filter. */
   filter?: DataTableFilter;
   /** Column ids rendered end-aligned with tabular digits. Prefer `meta.align: 'end'` on the column. Defaults to none. */
@@ -407,6 +411,7 @@ function DataTableInner<TData extends RowData>({
   noun,
   searchColumns,
   searchPlaceholder,
+  searchLabel,
   filter,
   numericColumns = [],
   pageSizes = defaultPageSizes,
@@ -427,6 +432,7 @@ function DataTableInner<TData extends RowData>({
   error,
   onRetry,
 }: DataTableProps<TData>) {
+  const { t } = useTranslation();
   const statusId = useId();
   const isServer = mode === 'server';
 
@@ -460,7 +466,7 @@ function DataTableInner<TData extends RowData>({
         header: ({ table }) => (
           <Checkbox.Root
             className="ui-checkbox"
-            aria-label="Select all rows on page"
+            aria-label={t('table.selectAll')}
             checked={table.getIsAllPageRowsSelected()}
             indeterminate={!table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected()}
             onCheckedChange={(checked) => table.toggleAllPageRowsSelected(checked)}
@@ -473,7 +479,7 @@ function DataTableInner<TData extends RowData>({
         cell: ({ row }) => (
           <Checkbox.Root
             className="ui-checkbox"
-            aria-label="Select row"
+            aria-label={t('table.selectRow')}
             checked={row.getIsSelected()}
             disabled={!row.getCanSelect()}
             onCheckedChange={(checked) => row.toggleSelected(checked)}
@@ -496,11 +502,11 @@ function DataTableInner<TData extends RowData>({
     if (renderExpanded) {
       leading.push({
         id: expandColumnId,
-        header: () => <span className="ui-sr-only">Expand</span>,
+        header: () => <span className="ui-sr-only">{t('table.expand')}</span>,
         cell: ({ row }) => (
           <Button
             className="ui-icon-btn ui-table-expander"
-            aria-label={row.getIsExpanded() ? 'Collapse row' : 'Expand row'}
+            aria-label={row.getIsExpanded() ? t('table.collapseRow') : t('table.expandRow')}
             aria-expanded={row.getIsExpanded()}
             onClick={row.getToggleExpandedHandler()}
           >
@@ -518,7 +524,7 @@ function DataTableInner<TData extends RowData>({
       });
     }
     return leading.length ? [...leading, ...columns] : columns;
-  }, [columns, selectable, renderExpanded]);
+  }, [columns, selectable, renderExpanded, t]);
 
   const defaultLayout = useMemo(() => {
     const pinning: ColumnPinningState = { start: [], end: [] };
@@ -593,6 +599,8 @@ function DataTableInner<TData extends RowData>({
   const errorMessage = typeof error === 'string' ? error : error instanceof Error ? error.message : undefined;
   const hasError = Boolean(error) || Boolean(server?.isError);
   const retry = server?.onRetry ?? onRetry;
+  // Decides the empty message: "match these filters" only makes sense when something is filtered.
+  const isFiltered = current.globalFilter.trim() !== '' || current.columnFilters.length > 0;
 
   // ----- Measured header widths drive pinned offsets and the first resize -----
   const headRef = useRef<HTMLTableSectionElement>(null);
@@ -753,11 +761,11 @@ function DataTableInner<TData extends RowData>({
       <div className="ui-table-toolbar">
         {searchColumns ? (
           <label className="search">
+            <span className="ui-sr-only">{searchLabel ?? t('table.search', { noun })}</span>
             <SearchIcon />
             <Input
               className="ui-input"
               type="search"
-              aria-label={searchPlaceholder}
               placeholder={searchPlaceholder}
               value={current.globalFilter}
               onValueChange={(value) => table.setGlobalFilter(value)}
@@ -780,17 +788,17 @@ function DataTableInner<TData extends RowData>({
             {showDensity ? (
               <ToggleGroup
                 className="ui-toggle-group"
-                aria-label="Row density"
+                aria-label={t('table.density')}
                 value={[density]}
                 onValueChange={(value) => {
                   const next = value[0];
                   if (next === 'comfortable' || next === 'compact') setDensity(next);
                 }}
               >
-                <Toggle value="comfortable" className="ui-toggle" aria-label="Comfortable rows">
+                <Toggle value="comfortable" className="ui-toggle" aria-label={t('table.comfortable')}>
                   <DensityComfortableIcon />
                 </Toggle>
-                <Toggle value="compact" className="ui-toggle" aria-label="Compact rows">
+                <Toggle value="compact" className="ui-toggle" aria-label={t('table.compact')}>
                   <DensityCompactIcon />
                 </Toggle>
               </ToggleGroup>
@@ -799,11 +807,11 @@ function DataTableInner<TData extends RowData>({
               <Menu.Root>
                 <Menu.Trigger className="ui-btn">
                   <ColumnsIcon />
-                  Columns
+                  {t('table.columns')}
                 </Menu.Trigger>
                 <Menu.Portal>
                   <Menu.Positioner className="ui-positioner" sideOffset={4} align="end">
-                    <Menu.Popup className="ui-popup" aria-label="Visible columns">
+                    <Menu.Popup className="ui-popup" aria-label={t('table.visibleColumns')}>
                       {hideableColumns.map((column) => (
                         <Menu.CheckboxItem
                           key={column.id}
@@ -823,7 +831,7 @@ function DataTableInner<TData extends RowData>({
                       <Menu.Separator className="ui-separator" />
                       <Menu.Item className="ui-item" onClick={resetLayout}>
                         <span className="ui-table-menu-check" />
-                        Reset
+                        {t('table.reset')}
                       </Menu.Item>
                     </Menu.Popup>
                   </Menu.Positioner>
@@ -833,7 +841,7 @@ function DataTableInner<TData extends RowData>({
             {exportFileName ? (
               <Button className="ui-btn" onClick={exportCsv} disabled={isLoading || rows.length === 0}>
                 <DownloadIcon />
-                Export CSV
+                {t('table.export')}
               </Button>
             ) : null}
           </div>
@@ -856,9 +864,7 @@ function DataTableInner<TData extends RowData>({
             {!cell.column.accessorFn || !isEmpty(cell.getValue()) ? (
               <table.FlexRender cell={cell} />
             ) : (
-              <span className="ui-table-empty" aria-label="None">
-                —
-              </span>
+              <EmptyCell />
             )}
           </td>
         ))}
@@ -928,7 +934,7 @@ function DataTableInner<TData extends RowData>({
                           <button
                             type="button"
                             className="ui-table-resizer"
-                            aria-label={`Resize column ${columnLabel(column)}`}
+                            aria-label={t('table.resize', { column: columnLabel(column) })}
                             data-resizing={column.getIsResizing() ? '' : undefined}
                             onPointerDown={startResize(header)}
                             onTouchStart={startResize(header)}
@@ -961,15 +967,20 @@ function DataTableInner<TData extends RowData>({
             ) : (
               rows.map((row) => renderRow(row))
             )}
-            {rows.length === 0 ? <TableEmptyRow colSpan={leafCount}>No {noun} match these filters.</TableEmptyRow> : null}
+            {rows.length === 0 ? (
+              <TableEmptyRow colSpan={leafCount}>
+                {isFiltered ? t('table.emptyFiltered', { noun }) : t('table.empty', { noun })}
+              </TableEmptyRow>
+            ) : null}
           </tbody>
         </table>
       </div>
     );
   }
 
-  const pageSizeItems = pageSizes.map((size) => ({ label: size === 0 ? 'All rows' : `${size} per page`, value: String(size) }));
-  if (!pageSizes.includes(pageSize)) pageSizeItems.push({ label: pageSize === 0 ? 'All rows' : `${pageSize} per page`, value: String(pageSize) });
+  const pageSizeLabel = (size: number) => (size === 0 ? t('table.allRows') : t('table.perPage', { size: formatCount(size) }));
+  const pageSizeItems = pageSizes.map((size) => ({ label: pageSizeLabel(size), value: String(size) }));
+  if (!pageSizes.includes(pageSize)) pageSizeItems.push({ label: pageSizeLabel(pageSize), value: String(pageSize) });
 
   return (
     <div
@@ -979,8 +990,8 @@ function DataTableInner<TData extends RowData>({
     >
       {toolbar}
       {selectable && selectedCount > 0 ? (
-        <div className="ui-table-bulk" role="region" aria-label="Bulk actions">
-          <span className="ui-table-bulk-count">{formatCount(selectedCount)} selected</span>
+        <div className="ui-table-bulk" role="region" aria-label={t('table.bulkActions')}>
+          <span className="ui-table-bulk-count">{t('table.selected', { count: formatCount(selectedCount) })}</span>
           {bulkActions?.(
             selectedRows.map((row) => row.original),
             clearSelection,
@@ -990,22 +1001,24 @@ function DataTableInner<TData extends RowData>({
       {body}
       <div className="ui-table-footer">
         <span id={statusId} className="ui-table-status" role="status">
-          {total === 0 ? `0 ${noun}` : `${formatCount(first)}–${formatCount(last)} of ${formatCount(total)} ${noun}`}
-          {selectable && selectedCount > 0 ? `, ${formatCount(selectedCount)} selected` : ''}
+          {total === 0
+            ? t('table.countNone', { noun })
+            : t('table.range', { first: formatCount(first), last: formatCount(last), total: formatCount(total), noun })}
+          {selectable && selectedCount > 0 ? t('table.selectedSuffix', { count: formatCount(selectedCount) }) : ''}
         </span>
         <div className="ui-table-pager">
           <TableSelect
-            label="Rows per page"
+            label={t('table.rowsPerPage')}
             items={pageSizeItems}
             value={String(pageSize)}
             onValueChange={(value) => table.setPageSize(Number(value) === 0 ? allRowsPageSize : Number(value))}
           />
           <span className="ui-table-status">
-            Page {formatCount(pageIndex + 1)} of {formatCount(pageCount)}
+            {t('table.page', { page: formatCount(pageIndex + 1), pages: formatCount(pageCount) })}
           </span>
           <Button
             className="ui-icon-btn"
-            aria-label="Previous page"
+            aria-label={t('table.previousPage')}
             disabled={!table.getCanPreviousPage()}
             onClick={() => table.previousPage()}
           >
@@ -1013,7 +1026,7 @@ function DataTableInner<TData extends RowData>({
           </Button>
           <Button
             className="ui-icon-btn"
-            aria-label="Next page"
+            aria-label={t('table.nextPage')}
             disabled={!table.getCanNextPage()}
             onClick={() => table.nextPage()}
           >

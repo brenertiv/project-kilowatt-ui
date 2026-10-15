@@ -723,11 +723,11 @@ strong {
 
 .ui-btn:hover:not([data-disabled]),
 .ui-select:hover:not([data-disabled]),
-.ui-toggle:hover,
-.ui-icon-btn:hover,
+.ui-toggle:hover:not([data-disabled]),
+.ui-icon-btn:hover:not([data-disabled]),
 .ui-stepper:hover:not([data-disabled]),
 .ui-accordion-trigger:hover:not([data-disabled]),
-.ui-tab:hover:not([data-selected]) {
+.ui-tab:hover:not([data-selected], [data-disabled]) {
   background: var(--action-hover);
 }
 
@@ -752,6 +752,41 @@ strong {
   color: var(--text-disabled);
   background: var(--background-default);
   cursor: not-allowed;
+}
+
+/* Every other control reads as disabled too. Base UI marks disabled parts with data-disabled;
+   native inputs also match :disabled. Text and icons drop to the disabled text token, fields
+   take the page surface like a disabled button, and hover never responds. */
+.ui-input:is([data-disabled], :disabled),
+.ui-stepper[data-disabled] {
+  color: var(--text-disabled);
+  background: var(--background-default);
+  cursor: not-allowed;
+}
+
+.ui-icon-btn:is([data-disabled], :disabled),
+.ui-toggle[data-disabled],
+.ui-tab[data-disabled] {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* Marks with no text to mute (switch, checkbox, radio, slider) fade as a whole. */
+.ui-switch[data-disabled],
+.ui-checkbox[data-disabled],
+.ui-radio[data-disabled],
+.ui-slider[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-slider[data-disabled] .ui-slider-thumb {
+  cursor: not-allowed;
+}
+
+.ui-label[data-disabled],
+.ui-inline-label:has([data-disabled]) {
+  color: var(--text-disabled);
 }
 
 .ui-btn-solid {
@@ -816,12 +851,34 @@ strong {
   color: var(--text-tertiary);
 }
 
+/* Field.Root with `invalid` (or a failed validity check) marks the input data-invalid. */
+.ui-input:is([data-invalid], [aria-invalid='true']) {
+  border-color: var(--error-main);
+}
+
+.ui-input:is([data-invalid], [aria-invalid='true']):focus-visible {
+  outline-color: var(--error-main);
+}
+
 .ui-label {
   display: block;
   margin-bottom: var(--space-1);
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   white-space: nowrap;
+}
+
+/* Text for assistive technology only, e.g. a label for an input the layout shows without one. */
+.ui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .ui-description {
@@ -835,6 +892,12 @@ strong {
 
 .ui-field {
   width: 100%;
+}
+
+/* Field.Error, in place of the help text while the field is invalid. After .ui-description so its color wins. */
+.ui-field-error {
+  margin-top: var(--space-1);
+  color: var(--error-main);
 }
 
 .ui-inline-label {
@@ -1516,7 +1579,8 @@ strong {
 
 .overview-kicker {
   font-weight: 400;
-  color: color-mix(in oklab, var(--secondary-contrast-text) 72%, transparent);
+  /* 78%, like the description below: 72% fell under 4.5:1 on the secondary fill. */
+  color: color-mix(in oklab, var(--secondary-contrast-text) 78%, transparent);
 }
 
 .overview-panel .ui-description {
@@ -1920,6 +1984,11 @@ strong {
 
 .map-host .leaflet-control-zoom a {
   font-weight: 400;
+}
+
+/* Leaflet's attribution link sits in running text; an underline, not only color, marks it as a link. */
+.map-host .leaflet-control-attribution a {
+  text-decoration: underline;
 }
 
 .map-host.leaflet-container {

@@ -4,6 +4,7 @@ import type { Decorator, Preview } from '@storybook/react-vite';
 import { AppProviders, ToastOutlet } from '../src/AppProviders';
 import { createQueryClient } from '../src/api/queryClient';
 import { installBreakpointStyles } from '../src/breakpoints';
+import { a11yRules } from '../src/stories/a11y';
 import { withMockApi } from '../src/stories/decorators';
 import { useTheme } from '../src/theme/ThemeProvider';
 import type { ColorScheme } from '../src/tokens';
@@ -104,16 +105,11 @@ const preview: Preview = {
     },
     controls: { expanded: true, sort: 'requiredFirst' },
     a11y: {
-      // 'todo' reports violations in the panel and test output without failing. Move to
-      // 'error' once the contrast and labelling findings in docs/storybook-plan.md are fixed.
-      test: 'todo',
-      config: {
-        rules: [
-          // Icons are Material Symbols ligatures: the glyph's text ("more_horiz") is not
-          // what a sighted user sees, so axe's visible-label check misfires on icon buttons.
-          { id: 'label-content-name-mismatch', enabled: false },
-        ],
-      },
+      // Any axe violation fails the story test. Stories whose only failures are Figma-owned
+      // token pairs turn color-contrast off one by one (src/stories/a11y.ts); the open pairs
+      // are listed in docs/storybook-plan.md.
+      test: 'error',
+      config: { rules: a11yRules },
     },
     viewport: {
       options: {

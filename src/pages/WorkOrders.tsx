@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import { useTranslation } from 'react-i18next';
 import { useEntityList, useLookup } from '../api/queries';
 import { fromQuery } from '../api/state';
 import type { ListParams, Location } from '../api/types';
@@ -37,6 +38,7 @@ const activeFilter = 'active';
  * @import import { WorkOrders } from 'src/pages/WorkOrders';
  */
 export function WorkOrders() {
+  const { t } = useTranslation();
   const [params, setParams] = useState<ListParams>({
     page_size: 10,
     ordering: 'due_date',
@@ -81,13 +83,13 @@ export function WorkOrders() {
         <TextField
           select
           size="small"
-          label="Status"
+          label={t('workOrders.status')}
           value={statusValue}
           onChange={(event) => setStatus(event.target.value)}
           sx={{ minWidth: 180 }}
         >
-          <MenuItem value={activeFilter}>Active</MenuItem>
-          <MenuItem value="">All statuses</MenuItem>
+          <MenuItem value={activeFilter}>{t('workOrders.active')}</MenuItem>
+          <MenuItem value="">{t('workOrders.allStatuses')}</MenuItem>
           {(statuses.data ?? []).map((status) => (
             <MenuItem key={status.id} value={String(status.id)}>
               {status.name}

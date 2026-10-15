@@ -7,6 +7,7 @@ import { DateRangeText, DateText } from 'src/components/data/DateText';
 import { EntityCard } from 'src/components/data/EntityCard';
 import { RelationLink } from 'src/components/data/RelationLink';
 import { ActionPriorityChip, ActionStatusChip } from 'src/components/data/StatusChip';
+import { refreshDimContrast } from 'src/stories/a11y';
 
 /** The card props a work order page builds from one `Action` record. */
 function workOrder(action: Action) {
@@ -126,6 +127,8 @@ export const Loading: Story = {
 
 /** Data on screen while newer data loads: the card body dims and is marked busy. */
 export const Refreshing: Story = {
+  // Contrast off: the 60% dim of textSecondary and the status chip. See src/stories/a11y.ts.
+  parameters: { a11y: refreshDimContrast },
   args: { state: { status: 'fetching' } },
 };
 

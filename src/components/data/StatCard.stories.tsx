@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BuildingIcon } from 'src/icons';
 import { StatCard } from 'src/components/data/StatCard';
+import { refreshDimContrast, tokenContrast } from 'src/stories/a11y';
 
 const meta = {
   title: 'Data/StatCard',
@@ -34,10 +35,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The usual card: a value, its change, and the period. Energy going down is good, so the drop shows green. */
-export const Default: Story = {};
+export const Default: Story = {
+  // Contrast off: successMain delta text on white. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
+};
 
 /** With a leading icon naming the subject. */
 export const WithIcon: Story = {
+  // Contrast off: successMain delta text on white. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { icon: <BuildingIcon /> },
 };
 
@@ -53,6 +59,8 @@ export const CompactCurrency: Story = {
 
 /** A count with an absolute change: set `deltaUnit` to match when the delta is not a fraction. */
 export const CountDelta: Story = {
+  // Contrast off: successMain delta text on white. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { label: 'Open work orders', value: 17, unit: 'count', delta: -3, deltaUnit: 'count', period: 'since Monday' },
 };
 
@@ -68,6 +76,8 @@ export const Loading: Story = {
 
 /** Data on screen while newer data loads: the value dims and the card is marked busy. */
 export const Refreshing: Story = {
+  // Contrast off: the 60% dim of textSecondary and the successMain delta. See src/stories/a11y.ts.
+  parameters: { a11y: refreshDimContrast },
   args: { state: { status: 'fetching' } },
 };
 

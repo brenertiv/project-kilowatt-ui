@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import { formatUnit, type Unit } from '../lib/format';
 import { useTheme } from '../theme/ThemeProvider';
+import { useChartFrame } from './ChartFrame';
 import { inkOn, rampIndex, sequentialRamp } from './color';
 import type { ChartData } from './types';
 import { useChartRoot } from './useChartRoot';
@@ -35,7 +37,7 @@ const rampSlot = 'chart1';
 
 /**
  * Magnitude over two categorical axes, such as load by weekday and hour. One hue, light to dark,
- * flipped in dark mode so "more" always reads as more. Render it inside `<ChartFrame>` with
+ * flipped in dark mode so "more" always reads as more. Render it inside `<ChartFrame>` (it throws otherwise) with
  * `legend={false}` and a `<HeatScale>` in the frame's `scale` slot. Colors come from the token ramp,
  * never from props. For a few categories compared on one measure, use `CategoryBarChart` instead.
  *
@@ -43,13 +45,16 @@ const rampSlot = 'chart1';
  * @import import { HeatmapChart } from 'src/charts/HeatmapChart';
  */
 export function HeatmapChart({ data, unit = 'count', steps = 7, cellLabels = false, ariaLabel }: HeatmapChartProps) {
+  // Unused beyond the check: the heatmap keys on magnitude, not series colors, but must sit in a frame like the others.
+  useChartFrame();
   const cells = data.series.flatMap((series) =>
     series.points
       .filter((point) => point.y !== null)
       .map((point) => ({ row: series.label, column: String(point.x), value: point.y as number })),
   );
-  const min = Math.min(...cells.map((cell) => cell.value));
-  const max = Math.max(...cells.map((cell) => cell.value));
+  // With every value null there are no cells; 0 keeps the ramp math finite instead of ±Infinity.
+  const min = cells.length ? Math.min(...cells.map((cell) => cell.value)) : 0;
+  const max = cells.length ? Math.max(...cells.map((cell) => cell.value)) : 0;
 
   const hostRef = useChartRoot(
     ({ root, values, scheme }) => {
@@ -149,10 +154,15 @@ export function HeatmapChart({ data, unit = 'count', steps = 7, cellLabels = fal
  * @import import { HeatScale } from 'src/charts/HeatmapChart';
  */
 export function HeatScale({ min, max, unit = 'count', steps = 7 }: HeatScaleProps) {
+  const { t } = useTranslation();
   const { values, colorScheme } = useTheme();
   const ramp = sequentialRamp(values[rampSlot], steps, colorScheme);
   return (
-    <div className="heat-scale" aria-label={`Scale from ${formatUnit(min, unit)} to ${formatUnit(max, unit)}`}>
+    <div
+      className="heat-scale"
+      role="img"
+      aria-label={t('chart.scale', { min: formatUnit(min, unit), max: formatUnit(max, unit) })}
+    >
       <span className="heat-scale-end">{formatUnit(min, unit, { compact: true })}</span>
       <span className="heat-scale-ramp" aria-hidden="true">
         {ramp.map((step) => (

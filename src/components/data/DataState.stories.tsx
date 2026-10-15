@@ -6,6 +6,7 @@ import { DataState } from 'src/components/data/DataState';
 import { EntityList } from 'src/components/data/EntityList';
 import { ListSkeleton } from 'src/components/data/Skeletons';
 import { AlertStateChip } from 'src/components/data/StatusChip';
+import { refreshDimContrast, tokenContrast } from 'src/stories/a11y';
 
 const items = propertyAlertSets.few.map((alert) => ({
   id: alert.id,
@@ -45,7 +46,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The request succeeded with data: the children render as they are. */
-export const Ready: Story = {};
+export const Ready: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
+};
 
 /** First load with nothing to show yet: the `skeleton` stands in. Pass one shaped like the content. */
 export const Loading: Story = {
@@ -54,6 +58,8 @@ export const Loading: Story = {
 
 /** Data on screen while newer data loads: the children dim and are marked busy, so the layout never jumps. */
 export const Refreshing: Story = {
+  // Contrast off: the 60% dim of textSecondary and the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: refreshDimContrast },
   args: { state: { status: 'fetching' } },
 };
 

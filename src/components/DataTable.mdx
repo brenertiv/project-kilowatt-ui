@@ -64,7 +64,7 @@ Sort, search and filter changes return to the first page.
 
 - **Do** set `getRowId` to a stable id. Selection, expansion and React keys use it.
 - **Do** keep `data` and `columns` referentially stable: define columns outside the component or memoize them.
-- **Do** set `searchPlaceholder` whenever you set `searchColumns`. It is also the search box's accessible name.
+- **Do** name what is searched when you set `searchColumns`. The search box is named "Search {noun}" by default; pass `searchLabel` to change that and `searchPlaceholder` for a hint such as "Name or id".
 - **Do** set `tableId` on tables people return to, so their column layout and density persist.
 - **Do** pass `isLoading` for the first load and `error` with `onRetry` for a failed request. Don't hand-roll a spinner or an error block.
 - **Don't** pass `numericColumns` for new tables. Put `meta.align: 'end'` on the column, or use a numeric `ColumnSpec` type.
@@ -76,7 +76,9 @@ Sort, search and filter changes return to the first page.
 - `label` is the table's accessible name. The footer count ("1–10 of 42 meters", plus the selected count) is a live status region that describes the table.
 - Sortable headers are buttons and expose `aria-sort`.
 - Column resize handles are buttons: Left and Right arrows resize by 16 pixels, double-click resets.
-- Selection checkboxes, the expand toggle, the pager buttons, the density toggle and the selects all carry accessible names.
+- Selection checkboxes, the expand toggle, the pager buttons, the density toggle, the selects and the search box all carry accessible names. The search box's name is hidden label text, not its placeholder.
+- An empty body says "No {noun} match these filters." only while a search or filter is applied; otherwise "No {noun} to show."
+- Every string the table renders comes from `src/i18n/en.json` under `table.*`.
 - While a server page loads the table is marked `aria-busy`. Virtualized tables set `aria-rowcount` to the full row count.
 - The loading skeleton is a status region and the error state is an alert.
 

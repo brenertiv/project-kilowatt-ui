@@ -4,8 +4,12 @@ import * as am5xy from '@amcharts/amcharts5/xy';
 import { formatUnit, type Unit } from '../lib/format';
 import { useChartFrame } from './ChartFrame';
 import { toRows, xValues, type ChartData } from './types';
-import { useChartRoot } from './useChartRoot';
+import { motionDuration, useChartRoot } from './useChartRoot';
 import { addCursor, addSharedTooltip, createValueAxis, createXYChart } from './xy';
+
+function formatValueLabel(value: unknown, unit: Unit) {
+  return typeof value === 'number' ? formatUnit(value, unit, { compact: true }) : '';
+}
 
 export type CategoryBarChartProps = {
   /** The same `ChartData` passed to the enclosing `ChartFrame`. Each point's `x` is a category name. */
@@ -45,9 +49,11 @@ export function CategoryBarChart({
 }: CategoryBarChartProps) {
   const { hidden, colors } = useChartFrame();
   const seriesRef = useRef(new Map<string, am5xy.ColumnSeries>());
+  const durationRef = useRef<number | undefined>(undefined);
 
   const hostRef = useChartRoot(
-    ({ root, values }) => {
+    ({ root, values, reduceMotion }) => {
+      durationRef.current = motionDuration(reduceMotion);
       const chart = createXYChart(root);
       const categories = xValues(data).map((x) => ({ x }));
 
@@ -114,13 +120,15 @@ export function CategoryBarChart({
           });
         }
         if (valueLabels && data.series.length === 1) {
-          item.bullets.push((bulletRoot) =>
+          const labelUnit = series.unit ?? unit ?? 'count';
+          item.bullets.push((bulletRoot, _series, dataItem) =>
             am5.Bullet.new(bulletRoot, {
               locationY: horizontal ? 0.5 : 1,
               locationX: horizontal ? 1 : 0.5,
               sprite: am5.Label.new(bulletRoot, {
-                text: '{valueY}{valueX}',
-                populateText: true,
+                // Formatted like the axis and tooltip, in the series' unit.
+                text: formatValueLabel((dataItem.dataContext as Record<string, unknown>)[series.id], labelUnit),
+                populateText: false,
                 centerX: horizontal ? 0 : am5.p50,
                 centerY: horizontal ? am5.p50 : am5.p100,
                 dx: horizontal ? 6 : 0,
@@ -141,12 +149,13 @@ export function CategoryBarChart({
         addSharedTooltip(root, chart, xAxis, built, (x) => String(x), values);
       } else {
         for (const entry of built) {
-          entry.item.set(
-            'tooltip',
-            am5.Tooltip.new(root, {
-              labelText: `[${values.textPrimary}]{valueX.formatNumber("#,###.#")}[/] [${values.textSecondary}]${entry.label}[/]`,
-            }),
-          );
+          const tooltip = am5.Tooltip.new(root, { labelText: '' });
+          tooltip.label.adapters.add('text', (_text, target) => {
+            const value = (target.dataItem as am5.DataItem<am5xy.IColumnSeriesDataItem> | undefined)?.get('valueX');
+            const printed = typeof value === 'number' ? formatUnit(value, entry.unit ?? 'count') : '—';
+            return `[${values.textPrimary}]${printed}[/] [${values.textSecondary}]${entry.label}[/]`;
+          });
+          entry.item.set('tooltip', tooltip);
         }
       }
 
@@ -159,8 +168,8 @@ export function CategoryBarChart({
 
   useEffect(() => {
     for (const [id, series] of seriesRef.current) {
-      if (hidden.has(id)) series.hide();
-      else series.show();
+      if (hidden.has(id)) series.hide(durationRef.current);
+      else series.show(durationRef.current);
     }
   }, [hidden]);
 

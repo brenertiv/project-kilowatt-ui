@@ -8,6 +8,7 @@ import { Separator } from '@base-ui/react/separator';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { tickets } from 'src/data';
 import { ChevronDownIcon, PlusIcon } from 'src/icons';
+import { tokenContrast } from 'src/stories/a11y';
 
 /** Recipes for grouping, revealing and measuring content over Base UI. There are no wrapper components: copy the markup and classes. */
 const meta = {
@@ -103,6 +104,8 @@ export const MeterRecipe: StoryObj<ValueArgs> = {
 
 /** A person with a photo: `ui-avatar` with an image; the initials fallback shows while it loads or if it fails. */
 export const AvatarRecipe: StoryObj<AvatarArgs> = {
+  // Contrast off: secondaryMain initials on secondaryTint. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   name: 'Avatar',
   args: { name: 'Alex Rivera', role: 'On-call operator', initials: 'AR' },
   render: ({ name, role, initials }) => (
@@ -121,6 +124,8 @@ export const AvatarRecipe: StoryObj<AvatarArgs> = {
 
 /** A person with no photo: leave out `Avatar.Image` and the initials show. */
 export const AvatarInitials: StoryObj<AvatarArgs> = {
+  // Contrast off: secondaryMain initials on secondaryTint. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   name: 'Avatar, initials',
   args: AvatarRecipe.args,
   render: ({ name, role, initials }) => (
@@ -155,6 +160,8 @@ export const CollapsibleRecipe: StoryObj<CollapsibleArgs> = {
 
 /** A fixed-height region that scrolls with the themed scrollbar: `ui-scroll`, `ui-scroll-viewport` and `ui-scrollbar`. */
 export const ScrollAreaRecipe: StoryObj<ScrollAreaArgs> = {
+  // Contrast off: secondaryMain ticket ids on white. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   name: 'Scroll area',
   args: { rowCount: 12, height: 160 },
   argTypes: { rowCount: { control: { type: 'range', min: 1, max: 60 } } },

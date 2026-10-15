@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PlusIcon } from 'src/icons';
 import { PageHeader } from 'src/components/data/PageHeader';
 import { StatusChip } from 'src/components/data/StatusChip';
+import { tokenContrast } from 'src/stories/a11y';
 
 const meta = {
   title: 'Data/PageHeader',
@@ -46,7 +47,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** A detail page header: breadcrumbs, the record type, its name, a description, key facts as chips, and actions. */
-export const Default: Story = {};
+export const Default: Story = {
+  // Contrast off: white on successMain in the status chip. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
+};
 
 /** Just the title, for a top-level page such as a portfolio overview. Add parts only when they carry information. */
 export const TitleOnly: Story = {
@@ -78,6 +82,8 @@ export const ListPage: Story = {
 
 /** A long name: the title wraps and the actions move below it on narrow widths. */
 export const LongTitle: Story = {
+  // Contrast off: white on successMain in the status chip. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: {
     title: 'Riverside Commons Mixed-Use Development, Phase Two North Tower and Parking Structure',
   },

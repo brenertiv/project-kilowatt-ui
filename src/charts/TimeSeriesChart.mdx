@@ -67,7 +67,7 @@ const demand: ChartData = {
 - The frame's Chart/Table toggle shows every value as a table, so nothing depends on hover or color.
 - With two or more series, the frame's legend entries are toggle buttons with `aria-pressed`; hiding a series hides its line without repainting the others. The last visible series cannot be hidden.
 - The crosshair tooltip lists every visible series at the hovered x, each with a color key beside text in the text tokens.
-- Reduced motion: `useChartRoot` passes `reduceMotion` to the chart's setup, but this chart does not act on it yet, so show and hide transitions still animate.
+- Reduced motion: under `prefers-reduced-motion`, hiding or showing a series from the legend is instant, and the crosshair tooltip jumps rather than glides.
 
 ## Composition
 

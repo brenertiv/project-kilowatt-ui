@@ -20,8 +20,10 @@ export type FilterBarProps = {
   params: ListParams;
   /** Receives the next params. Changing a filter clears the cursor so the list restarts from the first page. Search is debounced by 250ms and trimmed. */
   onChange: (next: ListParams) => void;
-  /** Placeholder and accessible name for the search field. Name what is searched, e.g. "Search work orders". Defaults to "Search". */
+  /** Placeholder for the search field: name what is searched, e.g. "Search work orders". A hint only; the field's name is `searchLabel`. */
   searchPlaceholder?: string;
+  /** Visible label and accessible name for the search field, like the Sort and Rows labels. Defaults to "Search". */
+  searchLabel?: string;
   /** `ordering` values the API accepts, e.g. `-due_date`. Shows a Sort menu with a "Default order" choice first. Omit to hide the menu. */
   ordering?: OrderingOption[];
   /** Page sizes to offer, e.g. `[25, 50, 100]`. Shows a Rows menu at the end of the bar; the first size is shown when `params.page_size` is unset. Omit to hide the menu. */
@@ -39,7 +41,15 @@ const searchDelayMs = 250;
  * @summary Search, Sort and Rows controls bound to ListParams, resetting the cursor on change.
  * @import import { FilterBar } from 'src/components/data';
  */
-export function FilterBar({ params, onChange, searchPlaceholder, ordering, pageSizes, children }: FilterBarProps) {
+export function FilterBar({
+  params,
+  onChange,
+  searchPlaceholder,
+  searchLabel,
+  ordering,
+  pageSizes,
+  children,
+}: FilterBarProps) {
   const { t } = useTranslation();
   const [search, setSearch] = useState(params.search ?? '');
   // Follow the params when the caller changes them, e.g. a reset, without an effect.
@@ -66,8 +76,8 @@ export function FilterBar({ params, onChange, searchPlaceholder, ordering, pageS
         type="search"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder={searchPlaceholder ?? t('data.search')}
-        aria-label={searchPlaceholder ?? t('data.search')}
+        label={searchLabel ?? t('data.search')}
+        placeholder={searchPlaceholder}
         sx={{ minWidth: 240 }}
         slotProps={{
           input: {

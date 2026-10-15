@@ -75,7 +75,15 @@ export function PageHeader({ title, eyebrow, description, breadcrumbs, actions, 
             </Typography>
           ) : null}
           <Typography variant="h4" component="h1" sx={{ overflowWrap: 'anywhere' }}>
-            {loading ? <Skeleton width="40%" /> : title}
+            {loading ? (
+              <>
+                {/* The heading keeps a name while the skeleton stands in for the title. */}
+                <span className="ui-sr-only">{t('data.loading')}</span>
+                <Skeleton width="40%" aria-hidden="true" />
+              </>
+            ) : (
+              title
+            )}
           </Typography>
           {description || loading ? (
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 720 }}>

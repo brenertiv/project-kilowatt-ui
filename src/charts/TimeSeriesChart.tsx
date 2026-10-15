@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { formatUnit, type Unit } from '../lib/format';
 import { useChartFrame } from './ChartFrame';
 import { downsample, toRows, type ChartAnnotation, type ChartData } from './types';
-import { useChartRoot } from './useChartRoot';
+import { motionDuration, useChartRoot } from './useChartRoot';
 import { addCursor, addSharedTooltip, createValueAxis, createXYChart } from './xy';
 
 /** Spacing of time-series samples. */
@@ -38,6 +38,9 @@ const axisFormats: Record<TimeUnit, string> = {
   month: 'MMM yyyy',
 };
 
+// One shared empty list: a fresh `[]` default would change the chart's deps on every render and rebuild the root.
+const noAnnotations: ChartAnnotation[] = [];
+
 function toEpoch(x: string | number) {
   return typeof x === 'number' ? x : new Date(x).getTime();
 }
@@ -58,15 +61,17 @@ export function TimeSeriesChart({
   unit,
   area = false,
   zeroBased = true,
-  annotations = [],
+  annotations = noAnnotations,
   maxPoints = 500,
   ariaLabel,
 }: TimeSeriesChartProps) {
   const { hidden, colors } = useChartFrame();
   const seriesRef = useRef(new Map<string, am5xy.LineSeries>());
+  const durationRef = useRef<number | undefined>(undefined);
 
   const hostRef = useChartRoot(
-    ({ root, values }) => {
+    ({ root, values, reduceMotion }) => {
+      durationRef.current = motionDuration(reduceMotion);
       const chart = createXYChart(root);
       const xAxis = chart.xAxes.push(
         am5xy.DateAxis.new(root, {
@@ -147,8 +152,8 @@ export function TimeSeriesChart({
 
   useEffect(() => {
     for (const [id, series] of seriesRef.current) {
-      if (hidden.has(id)) series.hide();
-      else series.show();
+      if (hidden.has(id)) series.hide(durationRef.current);
+      else series.show(durationRef.current);
     }
   }, [hidden]);
 

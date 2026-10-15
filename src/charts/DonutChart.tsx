@@ -4,14 +4,14 @@ import * as am5percent from '@amcharts/amcharts5/percent';
 import { formatPercent, formatUnit, type Unit } from '../lib/format';
 import { useChartFrame } from './ChartFrame';
 import type { ChartData } from './types';
-import { useChartRoot } from './useChartRoot';
+import { motionDuration, useChartRoot } from './useChartRoot';
 
 export type DonutChartProps = {
   /** One series per slice, each with one point: the slice value is the first point's y. The same object goes to `ChartFrame`. */
   data: ChartData;
   /** Formats slice values in tooltips and the default center total. Defaults to `'count'`. */
   unit?: Unit;
-  /** Hero figure in the hole, as preformatted text. Defaults to the compact total of every slice. */
+  /** Hero figure in the hole, as preformatted text. Defaults to the compact total of the visible slices, so it follows the legend. */
   centerValue?: string;
   /** Caption under the center figure, e.g. "Annual total". Omit it and only the figure shows. */
   centerLabel?: string;
@@ -31,16 +31,24 @@ export type DonutChartProps = {
 export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ariaLabel }: DonutChartProps) {
   const { hidden, colors } = useChartFrame();
   const sliceRef = useRef(new Map<string, am5.DataItem<am5percent.IPieSeriesDataItem>>());
+  const centerRef = useRef<am5.Label | null>(null);
+  const durationRef = useRef<number | undefined>(undefined);
 
   const slices = data.series.map((series) => ({
     id: series.id,
     category: series.label,
     value: series.points[0]?.y ?? 0,
   }));
-  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  // Slices hidden from the legend drop out of the total and the percentages, as they do from the ring.
+  const total = slices.reduce((sum, slice) => (hidden.has(slice.id) ? sum : sum + slice.value), 0);
+  const totalRef = useRef(total);
+  useEffect(() => {
+    totalRef.current = total;
+  });
 
   const hostRef = useChartRoot(
-    ({ root, values }) => {
+    ({ root, values, reduceMotion }) => {
+      durationRef.current = motionDuration(reduceMotion);
       const chart = root.container.children.push(
         am5percent.PieChart.new(root, {
           innerRadius: am5.percent(70),
@@ -75,7 +83,8 @@ export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ari
         const item = target.dataItem as am5.DataItem<am5percent.IPieSeriesDataItem> | undefined;
         const value = item?.get('value') ?? 0;
         const category = item?.get('category') ?? '';
-        return `[${values.textPrimary}]${formatUnit(value, unit)}[/] [${values.textSecondary}]${category} · ${formatPercent(total ? value / total : 0)}[/]`;
+        const shown = totalRef.current;
+        return `[${values.textPrimary}]${formatUnit(value, unit)}[/] [${values.textSecondary}]${category} · ${formatPercent(shown ? value / shown : 0)}[/]`;
       });
 
       series.data.setAll(slices);
@@ -88,7 +97,7 @@ export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ari
       const center = chart.seriesContainer.children.push(
         am5.Container.new(root, { centerX: am5.p50, centerY: am5.p50, layout: root.verticalLayout }),
       );
-      center.children.push(
+      centerRef.current = center.children.push(
         am5.Label.new(root, {
           text: centerValue ?? formatUnit(total, unit, { compact: true }),
           fontSize: 22,
@@ -111,6 +120,7 @@ export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ari
 
       return () => {
         sliceRef.current.clear();
+        centerRef.current = null;
       };
     },
     [data, unit, centerValue, centerLabel, colors],
@@ -118,10 +128,11 @@ export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ari
 
   useEffect(() => {
     for (const [id, item] of sliceRef.current) {
-      if (hidden.has(id)) item.hide();
-      else item.show();
+      if (hidden.has(id)) item.hide(durationRef.current);
+      else item.show(durationRef.current);
     }
-  }, [hidden]);
+    if (centerValue === undefined) centerRef.current?.set('text', formatUnit(total, unit, { compact: true }));
+  }, [hidden, total, unit, centerValue]);
 
   return <div ref={hostRef} className="chart-host chart-plot" role="img" aria-label={ariaLabel} />;
 }

@@ -25,7 +25,7 @@ import * as FilterBarStories from './FilterBar.stories';
 Do:
 
 - Keep `params` in the page's state (or the URL) and pass them back in. The bar is controlled.
-- Name what is searched in `searchPlaceholder`, e.g. "Search work orders". It is also the field's accessible name.
+- Name what is searched in `searchPlaceholder`, e.g. "Search work orders". The field's label stays "Search" (or `searchLabel`), so the hint can disappear while typing without losing the name.
 - Offer only `ordering` values the API accepts, with labels that say the direction: "Due date, latest first".
 - Clear `cursor` in any extra control you add as `children`, the way the built-in controls do.
 - Put `CursorPagination` below the list it filters.
@@ -38,7 +38,7 @@ Don't:
 
 ## Accessibility
 
-- The search field is a search input named by `searchPlaceholder`, or "Search".
+- The search field is a search input with a visible label, "Search" or `searchLabel`. The placeholder is only a hint, never its name.
 - Sort and Rows are labelled selects; they appear only when `ordering` or `pageSizes` is set.
 - The caller provides labels for any extra controls passed as `children`.
 - Results change after a delay, so the list below should announce its state: `EntityList` and `CursorPagination` do.

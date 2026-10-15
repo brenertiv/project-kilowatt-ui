@@ -8,8 +8,11 @@ import { categoricalPalette } from './color';
  *
  * Mark specs follow the dataviz method: 2px lines, 4px rounded column caps,
  * 2px surface gaps between fills, hairline solid grid, text in text tokens.
+ *
+ * With `reduceMotion`, every state change, interpolation and tooltip move is
+ * instant, so nothing on the chart slides or fades.
  */
-export function createChartTheme(values: ThemeValues) {
+export function createChartTheme(values: ThemeValues, options: { reduceMotion?: boolean } = {}) {
   const color = (hex: string) => am5.color(hex);
   const innerRadius = Number.parseInt(values.radiusControl, 10) || 4;
 
@@ -124,6 +127,12 @@ export function createChartTheme(values: ThemeValues) {
         stroke: color(values.backgroundPaper),
         strokeWidth: 2,
       });
+
+      if (options.reduceMotion) {
+        r('Sprite').setAll({ stateAnimationDuration: 0 });
+        r('Component').setAll({ interpolationDuration: 0 });
+        r('Tooltip').setAll({ animationDuration: 0 });
+      }
     }
   };
 }

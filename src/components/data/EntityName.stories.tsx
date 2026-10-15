@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { EntityName } from 'src/components/data/EntityName';
+import { EntityName, PlaceholderHint } from 'src/components/data/EntityName';
 
 const meta = {
   title: 'Data/EntityName',
   component: EntityName,
+  subcomponents: { PlaceholderHint },
   args: {
     name: 'Chiller 2',
     noun: 'equipment',

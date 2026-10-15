@@ -39,8 +39,8 @@ import { Input } from '@base-ui/react/input';
 
 ## States
 
-- Invalid: set `invalid` on `Field.Root` and show the reason in `Field.Error` in place of the help text.
-- Disabled: set `disabled` on `Field.Root`, and say in the help text who can change the value.
+- Invalid: set `invalid` on `Field.Root` and show the reason in `Field.Error` in place of the help text. The input takes an error-colored border (and focus ring), and `ui-field-error` sets the message in the error color.
+- Disabled: set `disabled` on `Field.Root`, and say in the help text who can change the value. The label and input text drop to the disabled text token and the input sits on the page surface, like a disabled button.
 - Empty: a placeholder alone is fine for a short field; it never replaces the label.
 
 ## Do and don't

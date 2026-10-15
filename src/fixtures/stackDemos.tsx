@@ -306,7 +306,7 @@ export function MapDemo() {
     <MapContainer className="map-host" center={[40.73, -74.0]} zoom={12} scrollWheelZoom={false} attributionControl>
       <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {buildings.map((building) => (
-        <Marker key={building.value} position={[building.lat, building.lng]} icon={mapIcon}>
+        <Marker key={building.value} position={[building.lat, building.lng]} icon={mapIcon} title={building.label}>
           <Popup>
             <span className="map-popup">
               <BuildingIcon />
@@ -354,18 +354,18 @@ export function GridDemo() {
           resizeConfig={{ enabled: false }}
         >
           <div key="tickets" className="grid-widget">
-            <header className="panel-head">
+            <div className="panel-head">
               <span className="grid-handle ui-label">Tickets</span>
-            </header>
+            </div>
             <div className="panel-value">{formatCount(4)} open</div>
             <div className="panel-meta is-warning">
               <WarningIcon />2 due
             </div>
           </div>
           <div key="demand" className="grid-widget">
-            <header className="panel-head">
+            <div className="panel-head">
               <span className="grid-handle ui-label">Peak kW</span>
-            </header>
+            </div>
             <div className="panel-value">{formatKilowatts(412)}</div>
             <div className="panel-meta is-negative">
               <TrendUpIcon />
@@ -373,9 +373,9 @@ export function GridDemo() {
             </div>
           </div>
           <div key="sites" className="grid-widget">
-            <header className="panel-head">
+            <div className="panel-head">
               <span className="grid-handle ui-label">Sites</span>
-            </header>
+            </div>
             <div className="panel-value">{formatCount(buildings.length)} buildings</div>
           </div>
         </GridLayout>

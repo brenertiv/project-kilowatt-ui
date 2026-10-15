@@ -1,4 +1,5 @@
 import { createContext, useContext, useId, useMemo, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@base-ui/react/button';
 import { Toggle } from '@base-ui/react/toggle';
 import { ToggleGroup } from '@base-ui/react/toggle-group';
@@ -51,7 +52,7 @@ export type ChartFrameProps = {
   error?: string | null;
   /** Called by the Retry button in the error state. Without it, the error shows no button. */
   onRetry?: () => void;
-  /** Shown when every point in `data` is null. Defaults to "No data for this range.". Name the range or the reason when you know it. */
+  /** Shown when every point in `data` is null. Defaults to "No data for this range." (`chart.empty`). Name the range or the reason when you know it. */
   emptyMessage?: string;
   /** Height of the plot area in px. Fixed so layouts never jump between states. Defaults to 240. */
   height?: number;
@@ -79,14 +80,21 @@ function formatX(x: string | number, kind: 'date' | 'category') {
   return String(x);
 }
 
-function ChartTable({ data, xKind }: { data: ChartData; xKind: 'date' | 'category' }) {
+function ChartTable({ data, xKind, title }: { data: ChartData; xKind: 'date' | 'category'; title: string }) {
+  const { t } = useTranslation();
   const xs = xValues(data);
   return (
-    <div className="table-wrap chart-table-wrap">
+    // A focusable, named region so keyboard users can scroll a table wider or taller than the card.
+    <div
+      className="table-wrap chart-table-wrap"
+      role="region"
+      aria-label={t('chart.tableLabel', { title })}
+      tabIndex={0}
+    >
       <table className="ui-table chart-table">
         <thead>
           <tr>
-            <th scope="col">{data.xLabel ?? (xKind === 'date' ? 'Date' : 'Category')}</th>
+            <th scope="col">{data.xLabel ?? (xKind === 'date' ? t('chart.date') : t('chart.category'))}</th>
             {data.series.map((series) => (
               <th key={series.id} scope="col" className="is-numeric">
                 {series.label}
@@ -119,7 +127,7 @@ function ChartTable({ data, xKind }: { data: ChartData; xKind: 'date' | 'categor
  * The card chrome every chart shares: title, legend, toolbar, loading, fetching, empty and error
  * states at a fixed height, and a Chart/Table toggle so every value is reachable without hover or
  * color. Chart kinds render as its child and must sit inside it: `TimeSeriesChart`,
- * `CategoryBarChart` and `DonutChart` throw outside one. The frame assigns series colors from the
+ * `CategoryBarChart`, `DonutChart` and `HeatmapChart` throw outside one. The frame assigns series colors from the
  * token palette by series id, so never pass colors. For a single
  * number, use `StatCard` instead of a chart.
  *
@@ -138,13 +146,14 @@ export function ChartFrame({
   fetching = false,
   error = null,
   onRetry,
-  emptyMessage = 'No data for this range.',
+  emptyMessage,
   height = 240,
   xKind = 'category',
   legend = true,
   scale,
   className,
 }: ChartFrameProps) {
+  const { t } = useTranslation();
   const id = useId();
   const { values } = useTheme();
   const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
@@ -181,7 +190,8 @@ export function ChartFrame({
   let body: ReactNode;
   if (loading) {
     body = (
-      <div className="chart-state" aria-busy="true">
+      <div className="chart-state" role="status" aria-busy="true">
+        <span className="ui-sr-only">{t('data.loading')}</span>
         <span className="ui-skeleton chart-skeleton" />
       </div>
     );
@@ -191,7 +201,7 @@ export function ChartFrame({
         <p className="ui-description">{error}</p>
         {onRetry ? (
           <Button className="ui-btn" onClick={onRetry}>
-            Retry
+            {t('data.retry')}
           </Button>
         ) : null}
       </div>
@@ -199,11 +209,11 @@ export function ChartFrame({
   } else if (empty) {
     body = (
       <div className="chart-state">
-        <p className="ui-description">{emptyMessage}</p>
+        <p className="ui-description">{emptyMessage ?? t('chart.empty')}</p>
       </div>
     );
   } else if (view === 'table') {
-    body = <ChartTable data={data} xKind={xKind} />;
+    body = <ChartTable data={data} xKind={xKind} title={title} />;
   } else {
     body = children;
   }
@@ -227,13 +237,13 @@ export function ChartFrame({
                 if (chosen) setView(chosen);
               }}
               className="ui-toggle-group chart-view-toggle"
-              aria-label="View as"
+              aria-label={t('chart.viewAs')}
             >
               <Toggle value="chart" className="ui-toggle">
-                Chart
+                {t('chart.chart')}
               </Toggle>
               <Toggle value="table" className="ui-toggle">
-                Table
+                {t('chart.table')}
               </Toggle>
             </ToggleGroup>
           </div>
