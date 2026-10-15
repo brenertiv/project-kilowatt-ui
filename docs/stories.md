@@ -76,7 +76,7 @@ parameters: { design: figmaDesign('https://www.figma.com/design/<key>/<file>?nod
 
 ## Tests
 
-`npm run test:stories` renders every story in Chromium. It runs any `play` function and an axe accessibility check, and any axe violation fails the story. `npm test` runs the unit and story projects together.
+`npm run test:stories` renders every story in Chromium. It runs any `play` function and an axe accessibility check, and any axe violation fails the story. `npm test` runs the unit and story projects together. The story project pre-bundles a fixed list of packages, `src/test/storyDeps.ts`. When `src` imports a package (or a MUI or Base UI subpath) for the first time, add it there; `storyDeps.test.ts` names any that are missing.
 
 The one exception is `color-contrast` between Figma-owned tokens, which code can't fix: a story whose only failures are such pairs sets `parameters: { a11y: tokenContrast }` from `src/stories/a11y.ts`, with a comment naming the pair. Never use it for a pair code produces (an opacity, a `color-mix`, the wrong token for the job); fix those. The open pairs are listed in `docs/storybook-plan.md`.
 

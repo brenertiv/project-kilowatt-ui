@@ -8,6 +8,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { playwright } from '@vitest/browser-playwright';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { normalizeFigmaLinks, serializeFigmaLinks } from './src/figma/url';
+import { storyDeps } from './src/test/storyDeps';
 
 const isVitest = Boolean(process.env.VITEST);
 
@@ -81,6 +82,9 @@ export default defineConfig({
         // Renders every story in Chromium: a smoke test, any play function, and an axe check.
         extends: true,
         plugins: [storybookTest({ configDir: fileURLToPath(new URL('./.storybook', import.meta.url)) })],
+        // Pre-bundle every story dependency up front, so Vite never re-optimizes and
+        // reloads mid-run (see src/test/storyDeps.ts).
+        optimizeDeps: { include: storyDeps },
         test: {
           name: 'storybook',
           browser: {
