@@ -2,7 +2,7 @@
 
 Design system and component library for Kilowatt. Open **Theme** in the header to view and edit every primitive and semantic token; derived variables are listed alongside with their resolved values.
 
-Live preview: https://brenertiv.github.io/project-kilowatt-ui/
+Storybook: https://brenertiv.github.io/project-kilowatt-ui/ (components, foundations and guides, plus `llms.txt` for agents)
 
 Primitives in `src/primitives.ts` mirror the Figma **Enertiv UI Foundations** primitives collection one to one. Token values follow its semantic collection: the UI gray ramps for light and dark, the brand ramp, feedback colors, spacing, radius, type styles and shadows. Text roles map to Figma `text/primary`, `icon/default` and `text/secondary` so body copy clears AA on the raised surface. The chart series palette and the utility colors are steps from the Figma color ramps, with the series order chosen by search and validated for colorblind separation in both modes.
 
@@ -22,7 +22,7 @@ Every component, recipe and page has a `Name.stories.tsx` beside it, one story p
 
 ## For coding agents
 
-`AGENTS.md` (imported by `CLAUDE.md`) tells agents where to look and the rules that matter most. `.mcp.json` registers the Storybook MCP server (`npm run storybook`, then `http://localhost:6006/mcp`). `npm run build-storybook` also writes `llms.txt` and one Markdown page per component, guide and foundations page into `storybook-static/`, for agents that can only fetch URLs. The same build fails if a component lacks its summary, description, import line or prop docs, or if an exported component has no story. `docs/agent-evals.md` has the prompts and rubric for checking that agents build with the system.
+`AGENTS.md` (imported by `CLAUDE.md`) tells agents where to look and the rules that matter most. `.mcp.json` registers the Storybook MCP server (`npm run storybook`, then `http://localhost:6006/mcp`). `npm run build-storybook` also writes `llms.txt` and one Markdown page per component, guide and foundations page into `storybook-static/`, for agents that can only fetch URLs. The same build fails if a component lacks its summary, description, import line or prop docs, or if an exported component has no story. `docs/agent-evals.md` has the prompts and rubric for checking that agents build with the system. `mcp/` is the remote MCP server for the published Storybook, for agents that don't run Storybook locally; see `mcp/README.md`.
 
 ## Figma links and sync
 

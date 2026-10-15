@@ -9,6 +9,10 @@
  * - `guides/<slug>.md`, `foundations/<slug>.md` and `introduction.md`: the
  *   docs pages, with their MDX stripped back to Markdown.
  *
+ * It also rewrites each import block in `manifests/components.json` the same
+ * way, so the published manifest, and the remote MCP server reading it, give
+ * agents import lines that resolve.
+ *
  * Runs after `storybook build` (see `npm run build-storybook`):
  *
  *   npx tsx scripts/build-llms.ts [storybook-static]
@@ -54,11 +58,17 @@ export function cleanImports(block: string) {
   for (const line of block.split('\n').map((text) => text.trim()).filter(Boolean)) {
     const from = /from '([^']+)'/.exec(line)?.[1];
     if (!from) continue;
-    if (from === 'project-kilowatt-ui') {
-      const names = /\{([^}]*)\}/.exec(line)?.[1].split(',').map((name) => name.trim()).filter((name) => name.endsWith('Icon'));
-      if (names?.length) lines.add(`import { ${names.join(', ')} } from 'src/icons';`);
+    const names = /\{([^}]*)\}/.exec(line)?.[1].split(',').map((name) => name.trim()).filter(Boolean) ?? [];
+    // Icons always come from src/icons. Storybook files them under our package name, or under
+    // the package of the component it guessed for a recipe with no component of ours.
+    const icons = names.filter((name) => name.endsWith('Icon'));
+    if (from !== 'src/icons' && icons.length) {
+      lines.add(`import { ${icons.join(', ')} } from 'src/icons';`);
+      const rest = names.filter((name) => !name.endsWith('Icon'));
+      if (from !== 'project-kilowatt-ui' && rest.length) lines.add(`import { ${rest.join(', ')} } from '${from}';`);
       continue;
     }
+    if (from === 'project-kilowatt-ui') continue;
     if (from === 'storybook/test' || /^src\/(fixtures|stories|data|meters)\b/.test(from)) continue;
     lines.add(line);
   }
@@ -140,10 +150,16 @@ function write(path: string, text: string) {
 }
 
 function main() {
-  const { components } = read<{ components: Record<string, Component> }>('manifests/components.json');
+  const manifest = read<{ components: Record<string, Component> }>('manifests/components.json');
+  const { components } = manifest;
   const { docs } = read<{ docs: Record<string, DocEntry> }>('manifests/docs.json');
   const index = read<{ entries: Record<string, { title: string; type: string }> }>('index.json');
   const titleOf = (id: string) => Object.values(index.entries).find((entry) => entry.title && id.startsWith(slug(entry.title)))?.title ?? id;
+
+  for (const component of Object.values(components)) {
+    if (component.import) component.import = cleanImports(component.import);
+  }
+  write('manifests/components.json', JSON.stringify(manifest));
 
   const pageLinks = new Map<string, string[]>();
   const link = (group: string, line: string) => pageLinks.set(group, [...(pageLinks.get(group) ?? []), line]);

@@ -46,6 +46,8 @@ jobs:
         run: npm run build-storybook
       - name: Build the app
         run: npm run build
+      - name: Type-check the remote MCP server
+        run: npm ci --prefix mcp && npx tsc -p mcp
 
       - uses: actions/upload-artifact@v4
         with:

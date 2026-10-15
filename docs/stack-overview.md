@@ -48,7 +48,10 @@ Scripts: `npm run dev`, `npm run build`, `npm run storybook`, `npm run build-sto
 
 ## Deployment
 
-A GitHub Actions workflow builds on every push to `main` and publishes `dist/` to GitHub Pages, with a single-page-app fallback so deep links resolve.
+- **Storybook.** On every push to `main`, `.github/workflows/pages.yml` builds Storybook (`npm run build-storybook`) and publishes `storybook-static/` to GitHub Pages at https://brenertiv.github.io/project-kilowatt-ui/. That build includes the generated docs, `llms.txt` and the docs coverage check.
+- **The app** is a dev tool and is no longer deployed.
+- **Remote MCP.** `mcp/` is a small Node server that reads the published manifests. It runs on any Node host; see `mcp/README.md`.
+- **CI.** `.github/workflows/ci.yml` runs lint, the type-check, the unit and story tests and both builds on every pull request.
 
 ## Documentation
 

@@ -9,7 +9,8 @@ Kilowatt is Enertiv's design system. Its Storybook is the reference for every co
   - `docs-show` gives one component's description, import line, props, guidance and story snippets.
   - `docs-show-story` gives one story's snippet.
   - `test-run` runs the story tests.
-- **Without MCP**, read the static files from a built Storybook (`npm run build-storybook`, then `storybook-static/`, or the published site):
+- **Published Storybook:** https://brenertiv.github.io/project-kilowatt-ui/. A remote MCP server for it lives in `mcp/` (see `mcp/README.md`).
+- **Without MCP**, read the static files from the published site, or from a local build (`npm run build-storybook`, then `storybook-static/`):
   - `llms.txt`, the index.
   - `components/<id>.md` and `guides/<slug>.md`, one page each.
   - `manifests/components.json`.
