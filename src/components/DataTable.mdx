@@ -48,6 +48,8 @@ The types map to cells: `numeric`, `percent` and `currency` use `NumericCell`, `
 
 For anything a spec cannot express, write the column with `createColumnHelper<DataTableFeatures, Row>()` and add it to the list: a `LinkCell` on the name, an `ActionsCell` in a trailing column pinned right, a `SparklineCell`, or a column that the toolbar filter narrows (it needs `filterFn: 'equalsString'`). Column `meta` takes `align`, `pin`, `order` and `exportValue`.
 
+The table is TanStack Table for state and MUI for markup: `Table`, `TableSortLabel` headers, `TablePagination` in the footer, and a toolbar of `TextField`, `ToggleButtonGroup`, `Button` and `Menu`. It takes the theme as is, so don't restyle it with classes.
+
 Empty values (`null`, `undefined` or an empty string) render an em dash with the accessible name "None". Don't render your own placeholder.
 
 ## Client and server mode
@@ -74,9 +76,9 @@ Sort, search and filter changes return to the first page.
 ## Accessibility
 
 - `label` is the table's accessible name. The footer count ("1–10 of 42 meters", plus the selected count) is a live status region that describes the table.
-- Sortable headers are buttons and expose `aria-sort`.
+- Sortable headers are MUI `TableSortLabel` buttons, and the header cell exposes `aria-sort`.
 - Column resize handles are buttons: Left and Right arrows resize by 16 pixels, double-click resets.
-- Selection checkboxes, the expand toggle, the pager buttons, the density toggle, the selects and the search box all carry accessible names. The search box's name is hidden label text, not its placeholder.
+- Selection checkboxes, the expand toggle, the pager buttons, the density toggle, the selects and the search box all carry accessible names. The search box is named by `aria-label`, not its placeholder; the filter select by its visible label.
 - An empty body says "No {noun} match these filters." only while a search or filter is applied; otherwise "No {noun} to show."
 - Every string the table renders comes from `src/i18n/en.json` under `table.*`.
 - While a server page loads the table is marked `aria-busy`. Virtualized tables set `aria-rowcount` to the full row count.

@@ -18,7 +18,7 @@ import * as ChartFrameStories from './ChartFrame.stories';
 
 - For one headline number, such as consumption this month: use [StatCard](?path=/docs/data-statcard--docs). A chart of one value is a card with extra steps.
 - For a list of records or values to compare row by row: use a table. The frame's table view is a reading aid for a chart, not a data table.
-- As a generic card for content that is not a chart: use the MUI `Card`.
+- As a generic card for content that is not a chart: use the MUI `Card`. The frame is already an outlined `Card`, so don't nest it in another one; place it straight in the page grid.
 
 ## Data shape
 
@@ -56,10 +56,10 @@ const demand: ChartData = {
 ## Accessibility
 
 - The frame is a `figure` labelled by its `title`. Each chart kind also takes a required `ariaLabel`, which names the plot, e.g. "Demand by hour". Write it as the question the chart answers, not "chart".
-- The Chart/Table toggle switches the plot for a table of every value, with the series labels and units as headers. Every value is reachable without hover or color. The table sits in a focusable region named "{title} as a table", so keyboard users can scroll it when it overflows the card.
+- The Chart/Table toggle is an exclusive MUI `ToggleButtonGroup`; each button reports `aria-pressed`. It switches the plot for a table of every value, with the series labels and units as headers. Every value is reachable without hover or color. The table sits in a focusable region named "{title} as a table", so keyboard users can scroll it when it overflows the card.
 - The legend appears for two or more series and is absent for one; the title names a single series. With `toggleableLegend` on (the default), each entry is a toggle button with `aria-pressed`. The last visible series cannot be hidden.
 - Identity never rests on color alone: the legend pairs each color key with the series label, and chart text wears text tokens, not series colors.
-- The loading state is a `role="status"` region with `aria-busy` and the hidden text "Loading"; the error state is a `role="alert"` region with a Retry button when `onRetry` is passed.
+- The loading state is a `role="status"` region with `aria-busy` around a skeleton named "Loading"; the error state is an MUI `Alert` (`role="alert"`) with a Retry button when `onRetry` is passed. While `fetching`, the plot area is dimmed and marked `aria-busy`.
 - Reduced motion: `useChartRoot` reads `prefers-reduced-motion`. Under it the chart theme makes state changes, interpolation and tooltip moves instant, and every chart kind hides and shows series (or slices) with no transition.
 - Every string the frame renders (the toggle, the table headers, the empty and error copy) comes from `src/i18n/en.json` under `chart.*`.
 

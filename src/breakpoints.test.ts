@@ -7,8 +7,6 @@ describe('breakpoints', () => {
     const css = breakpointQueryCss();
     expect(css).toContain(`@container system (max-width: ${breakpoints.systemMd}px)`);
     expect(css).toContain(`@container system (max-width: ${breakpoints.systemSm}px)`);
-    expect(css).toContain(`@media (max-width: ${breakpoints.workspace}px)`);
-    expect(css).toContain(`@container (max-width: ${breakpoints.table}px)`);
     expect(css).toContain(`@container (max-width: ${breakpoints.ticket}px)`);
     expect(css).toContain(`@container (max-width: ${breakpoints.sparkline}px)`);
     expect(css).not.toContain('gallery');

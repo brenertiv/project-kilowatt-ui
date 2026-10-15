@@ -185,7 +185,7 @@ function main() {
   const order = ['Start here', 'Guides', 'Foundations', ...sections];
   const llms = [
     '# Kilowatt UI',
-    "> Enertiv's design system: tokens mirrored from Figma, Base UI primitives with plain CSS, Material UI components themed from the tokens, data components on the Enertiv API's shapes, amCharts charts and page views. Import documented components rather than rebuilding them, use tokens only, and cover every async state.",
+    "> Enertiv's design system: tokens mirrored from Figma, Material UI as the one component library (stock MUI plus a short list of departures), data components on the Enertiv API's shapes, amCharts charts and page views. Import documented components rather than rebuilding them, use tokens only, and cover every async state.",
     'Each component page has its import line, props, guidance and example snippets. Read Guides/Rules first. Agents that speak MCP can query the same content from the Storybook MCP server (`/mcp` on a running Storybook dev server).',
     ...order.filter((group) => pageLinks.has(group)).map((group) => `## ${group}\n\n${pageLinks.get(group)!.sort().join('\n')}`),
     [

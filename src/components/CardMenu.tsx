@@ -1,5 +1,10 @@
-import type { ReactNode } from 'react';
-import { Menu } from '@base-ui/react/menu';
+import { useId, useState, type ReactNode } from 'react';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import { MoreIcon } from '../icons';
 
 /** One entry in a `CardMenu`. */
@@ -8,9 +13,11 @@ export type CardMenuItem = {
   id: string;
   /** Menu item text. */
   label: ReactNode;
-  /** Called when the item is chosen. */
+  /** Called when the item is chosen. The menu closes first. */
   onSelect: () => void;
-  /** Draw in the negative color, through `data-destructive` on its `ui-item`, for irreversible actions. Defaults to false. */
+  /** A leading icon from `src/icons.tsx`, e.g. `<DownloadIcon />`. Optional; omit it on every item or give it to all of them. */
+  icon?: ReactNode;
+  /** Draw in the error color, after a divider, for irreversible actions. Put destructive items last. Defaults to false. */
   destructive?: boolean;
   /** Shows the item but blocks choosing it. Use when the action exists but is unavailable right now. Defaults to false. */
   disabled?: boolean;
@@ -24,36 +31,58 @@ export type CardMenuProps = {
 };
 
 /**
- * The "more" control that sits in a card's top-right corner: a compact icon
- * button opening a small menu. Items are plain callbacks so cards decide what
- * their actions mean. For per-row actions in a table, use `ActionsCell` instead.
+ * The "more" control that sits in a card's top-right corner: a small MUI
+ * `IconButton` opening a `Menu`, aligned to the button's right edge. Items are
+ * plain callbacks so cards decide what their actions mean. Put it in the
+ * `action` slot of a `CardHeader`. For per-row actions in a table, use
+ * `ActionsCell` instead.
  *
  * @summary A card's top-right overflow menu of actions.
  * @import import { CardMenu } from 'src/components/CardMenu';
  */
 export function CardMenu({ label, items }: CardMenuProps) {
+  const id = useId();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const open = anchor !== null;
+  const firstDestructive = items.findIndex((item) => item.destructive);
+
   return (
-    <Menu.Root>
-      <Menu.Trigger className="ui-icon-btn ui-icon-btn-sm card-more" aria-label={label}>
+    <>
+      <IconButton
+        size="small"
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-controls={open ? `${id}-menu` : undefined}
+        aria-expanded={open || undefined}
+        onClick={(event) => setAnchor(event.currentTarget)}
+      >
         <MoreIcon />
-      </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Positioner className="ui-positioner" align="end" sideOffset={4}>
-          <Menu.Popup className="ui-popup">
-            {items.map((item) => (
-              <Menu.Item
-                key={item.id}
-                className="ui-item"
-                data-destructive={item.destructive || undefined}
-                disabled={item.disabled}
-                onClick={item.onSelect}
-              >
-                {item.label}
-              </Menu.Item>
-            ))}
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
+      </IconButton>
+      <Menu
+        id={`${id}-menu`}
+        anchorEl={anchor}
+        open={open}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        {/* MenuList needs direct children, not fragments, for keyboard focus. */}
+        {items.flatMap((item, index) => [
+          ...(index > 0 && index === firstDestructive ? [<Divider key={`${item.id}-divider`} />] : []),
+          <MenuItem
+            key={item.id}
+            disabled={item.disabled}
+            sx={item.destructive ? { color: 'error.main' } : undefined}
+            onClick={() => {
+              setAnchor(null);
+              item.onSelect();
+            }}
+          >
+            {item.icon ? <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon> : null}
+            <ListItemText>{item.label}</ListItemText>
+          </MenuItem>,
+        ])}
+      </Menu>
+    </>
   );
 }

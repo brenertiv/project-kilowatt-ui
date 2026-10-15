@@ -1,3 +1,5 @@
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ChartFrame } from 'src/charts/ChartFrame';
 import { radarData, RadarPlot, TreemapDemo } from 'src/fixtures/chartDemos';
@@ -23,10 +25,10 @@ export const Radar: Story = {
 /** Drill-down treemap of energy by building, then by system. */
 export const Treemap: Story = {
   render: () => (
-    <div className="card" style={{ height: 420, display: 'flex', flexDirection: 'column' }}>
-      <div className="card-body" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ height: 420, display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <TreemapDemo />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   ),
 };

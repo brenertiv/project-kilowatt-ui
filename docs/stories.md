@@ -41,7 +41,7 @@ export const Loading: Story = { args: { state: { status: 'loading' } } };
 - **JSDoc on the component.** Give it a description, an `@summary` line and an `@import` line naming the exact import to copy, e.g. `@import import { StatCard } from 'src/components/data';`. Give every prop a line saying what it does and its default. The manifest is built from these.
 - **Components without a single export.** When one file exports several related components (`StatusChip` and its wrappers, the table cells), the main one is `component` and the rest go in `subcomponents`. Each sibling gets its own story with a `render`.
 - **Charts.** Charts throw outside `ChartFrame`. A chart story's `render` shows the real `<ChartFrame><TimeSeriesChart /></ChartFrame>` composition at a fixed height, so the snippet is correct usage.
-- **Primitives.** These are Base UI recipes with no component behind them. Their stories render the raw Base UI markup with the `ui-*` classes, and type their args locally. Their guidance is an attached MDX page beside the story file.
+- **Primitives.** These show stock MUI components (buttons, fields, controls, form inputs, overlays, structure, toasts) as Kilowatt uses them. Their stories render MUI directly and type their args locally. Their guidance is an attached MDX page beside the story file.
 - **Guidance pages.** A component that needs more than its props table gets `Name.mdx` beside its stories. It uses `<Meta of={NameStories} />` and covers when to use it, when not to, do and don't, accessibility, composition, props and stories, and the stories meta gets `'!autodocs'`. Write the prose as literal MDX, because agents read the source.
 
 ## What every story gets

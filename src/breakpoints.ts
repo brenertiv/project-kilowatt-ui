@@ -2,8 +2,6 @@
 export const breakpoints = {
   systemMd: 900,
   systemSm: 560,
-  workspace: 640,
-  table: 480,
   ticket: 320,
   sparkline: 240,
 } as const;
@@ -13,8 +11,6 @@ export type BreakpointName = keyof typeof breakpoints;
 export const breakpointRoles: Record<BreakpointName, string> = {
   systemMd: 'Foundations section grids collapse to two columns',
   systemSm: 'Foundations section grids stack to one column',
-  workspace: 'Phone width: search fields take the full row and inputs use the larger text size',
-  table: 'Hide a secondary table column; wrap cells',
   ticket: 'Stack ticket rows',
   sparkline: 'Drop sparklines rather than squashing them',
 };
@@ -26,8 +22,6 @@ export function breakpointVarName(name: BreakpointName) {
 export const breakpointCssVars = {
   '--bp-system-md': `${breakpoints.systemMd}px`,
   '--bp-system-sm': `${breakpoints.systemSm}px`,
-  '--bp-workspace': `${breakpoints.workspace}px`,
-  '--bp-table': `${breakpoints.table}px`,
   '--bp-ticket': `${breakpoints.ticket}px`,
   '--bp-sparkline': `${breakpoints.sparkline}px`,
 } as const;
@@ -39,7 +33,7 @@ const STYLE_ID = 'kilowatt-breakpoints';
  * `breakpoints` and kept in sync with `--bp-*` on :root.
  */
 export function breakpointQueryCss(): string {
-  const { systemMd, systemSm, workspace, table, ticket, sparkline } = breakpoints;
+  const { systemMd, systemSm, ticket, sparkline } = breakpoints;
 
   return `@container (max-width: ${ticket}px) {
   .ticket-row {
@@ -47,22 +41,6 @@ export function breakpointQueryCss(): string {
     grid-template-areas:
       "id status"
       "title title";
-  }
-
-  .ticket-row .ui-description {
-    white-space: normal;
-  }
-}
-
-@container (max-width: ${table}px) {
-  .ui-table th:nth-child(3),
-  .ui-table td:nth-child(3) {
-    display: none;
-  }
-
-  .ui-table th,
-  .ui-table td {
-    white-space: normal;
   }
 }
 
@@ -112,15 +90,6 @@ export function breakpointQueryCss(): string {
   }
 }
 
-@media (max-width: ${workspace}px) {
-  .search {
-    width: 100%;
-  }
-
-  .ui-input {
-    font-size: var(--text-md);
-  }
-}
 `;
 }
 

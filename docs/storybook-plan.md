@@ -439,4 +439,36 @@ The theme now runs on MUI's CSS theme variables, and MUI owns the color scheme.
 
 **Found along the way (not fixed):** in dark mode the chart comparison series uses `track` (`#365670`), the same as `backgroundPaper`, so the "Last week" line nearly disappears on chart cards.
 
-**Next phase:** move the Base UI recipes, `DataTable`, `CardMenu` and the charts to a Legacy section, then rebuild or keep each one.
+**Next phase:** replace Base UI with MUI everywhere (section 14).
+
+## 14. Base UI replaced by MUI
+
+Base UI is gone. `@base-ui/react` is uninstalled, and Material UI is the only component library. There is no Legacy section.
+
+**What was rebuilt:**
+- **`DataTable`, cells and table states:** on MUI. Table and TablePagination render, Checkbox selects, Menu holds the column chooser and row actions, TextField and Select filter, ToggleButtonGroup sets density, and Skeleton and Alert show the states.
+  - TanStack Table still runs it, the public API is unchanged, and every feature carried over.
+  - Column pinning and the resize handle are custom, because MUI has neither.
+  - `dataTable.css` is deleted.
+- **`CardMenu`:** IconButton and Menu.
+- **`ChartFrame`:** an outlined Card with a ToggleButtonGroup for Chart/Table, Alert with Retry for errors, Skeleton for loading, and an MUI table view. Its titles became `h4` headings. `ChartLegend` still uses native buttons with plain CSS; it never used Base UI.
+- **Toasts:** a small `ToastProvider` and `useToast()` on MUI Snackbar (`src/components/Toast.tsx`), mounted by `AppProviders`. Base UI's toast and tooltip providers are gone.
+- **Primitives:** the six recipe pages now show stock MUI (Button, TextField, Switch, Checkbox, Tabs, Select, Autocomplete, Slider, ToggleButtonGroup, RadioGroup, Menu, Tooltip, Popover, Dialog, Snackbar, Accordion, LinearProgress, Avatar, Collapse, Divider), each with guidance. A Toast page joins them.
+
+**The stylesheet:**
+- It went from about 2,300 lines to about 1,000. The rules for every `ui-*` class except the icon font's `ui-icon` are gone, and so are the old card and chart-frame rules.
+- The Foundations visuals keep plain CSS under `system-*` names.
+- Visually hidden text uses MUI's `visuallyHidden`, so `@mui/utils` is now a direct dependency.
+- The `workspace` and `table` breakpoints only drove the old table and input rules, so they're removed. MUI's breakpoints take over, and the phone-width work (CMP-FOUND-02) can build on them.
+
+**Contrast exemptions:** four stories carry an exemption, because stock MUI colors fail on Kilowatt's page gray:
+- Button's icon button: icon ink at 4.44:1. axe reads the icon font's ligature as text.
+- Field's disabled helper text: 2.71:1. Disabled text is exempt under WCAG anyway.
+- Forms' unselected toggle text: 4.44:1. A real failure.
+- Structure's avatar initials: 1.65:1. A real failure.
+
+Two theme departures would fix the real ones:
+- a darker `palette.action.active`, which MUI uses for icon and unselected-control ink;
+- a passing default Avatar background.
+
+The DataTable avoids the icon failure by sitting on an outlined Paper.

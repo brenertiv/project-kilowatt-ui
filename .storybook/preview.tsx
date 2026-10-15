@@ -4,7 +4,7 @@ import type { Decorator, Preview } from '@storybook/react-vite';
 import { DocsContainer, type DocsContainerProps } from '@storybook/addon-docs/blocks';
 import { addons } from 'storybook/preview-api';
 import { schemeOf, systemScheme, themes, type Scheme } from './themes';
-import { AppProviders, ToastOutlet } from '../src/AppProviders';
+import { AppProviders } from '../src/AppProviders';
 import { createQueryClient } from '../src/api/queryClient';
 import { installBreakpointStyles } from '../src/breakpoints';
 import { installTokenStyles } from '../src/theme/tokenStyles';
@@ -54,9 +54,9 @@ function SchemeSync({ scheme, children }: { scheme: ColorScheme; children: React
 }
 
 /**
- * What a page sees in the app: the provider stack, a router, and the toast
- * outlet. Each story gets its own query client so cached data never carries
- * from one story to the next.
+ * What a page sees in the app: the provider stack (theme, toasts, query client)
+ * and a router. Each story gets its own query client so cached data never
+ * carries from one story to the next.
  */
 function StoryProviders({ scheme, children }: { scheme: ColorScheme; children: ReactNode }) {
   const [client] = useState(createQueryClient);
@@ -65,7 +65,6 @@ function StoryProviders({ scheme, children }: { scheme: ColorScheme; children: R
       <MemoryRouter>
         <SchemeSync scheme={scheme}>
           {children}
-          <ToastOutlet />
         </SchemeSync>
       </MemoryRouter>
     </AppProviders>

@@ -1,4 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import { fn } from 'storybook/test';
 import { TableEmptyRow, TableError, TableSkeleton } from 'src/components/TableStates';
 
@@ -37,19 +43,19 @@ export const EmptyRow: StoryObj<typeof TableEmptyRow> = {
   args: { colSpan: 3, children: 'No meters match these filters.' },
   argTypes: { children: { control: 'text' } },
   render: (args) => (
-    <div className="table-wrap">
-      <table className="ui-table">
-        <thead>
-          <tr>
-            <th scope="col">Meter</th>
-            <th scope="col">Source</th>
-            <th scope="col">Channels</th>
-          </tr>
-        </thead>
-        <tbody>
+    <Paper variant="outlined">
+      <Table aria-label="Meters">
+        <TableHead>
+          <TableRow>
+            <TableCell>Meter</TableCell>
+            <TableCell>Source</TableCell>
+            <TableCell align="right">Channels</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           <TableEmptyRow {...args} />
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Paper>
   ),
 };

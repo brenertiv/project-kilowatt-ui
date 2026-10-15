@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Box from '@mui/material/Box';
+import { visuallyHidden } from '@mui/utils';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Link from '@mui/material/Link';
 import Skeleton from '@mui/material/Skeleton';
@@ -78,7 +79,7 @@ export function PageHeader({ title, eyebrow, description, breadcrumbs, actions, 
             {loading ? (
               <>
                 {/* The heading keeps a name while the skeleton stands in for the title. */}
-                <span className="ui-sr-only">{t('data.loading')}</span>
+                <Box component="span" sx={visuallyHidden}>{t('data.loading')}</Box>
                 <Skeleton width="40%" aria-hidden="true" />
               </>
             ) : (

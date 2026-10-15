@@ -1,4 +1,3 @@
-import './dataTable.css';
 import {
   Fragment,
   useEffect,
@@ -12,13 +11,32 @@ import {
   type ReactNode,
   type TouchEvent,
 } from 'react';
-import { Button } from '@base-ui/react/button';
-import { Checkbox } from '@base-ui/react/checkbox';
-import { Input } from '@base-ui/react/input';
-import { Menu } from '@base-ui/react/menu';
-import { Select } from '@base-ui/react/select';
-import { Toggle } from '@base-ui/react/toggle';
-import { ToggleGroup } from '@base-ui/react/toggle-group';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import type { SxProps, Theme } from '@mui/material/styles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow, { tableRowClasses } from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import TextField from '@mui/material/TextField';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
@@ -63,11 +81,9 @@ import {
 } from '@tanstack/react-table';
 import {
   ArrowDownIcon,
-  ArrowUpIcon,
   CheckIcon,
-  ChevronLeftIcon,
+  ChevronDownIcon,
   ChevronRightIcon,
-  ChevronUpDownIcon,
   ColumnsIcon,
   DensityComfortableIcon,
   DensityCompactIcon,
@@ -128,7 +144,7 @@ export type DataTableColumn<TData extends RowData> = ColumnDef<DataTableFeatures
 export type DataTableFilter = {
   /** Id of the column this filter narrows. The column needs `filterFn: 'equalsString'`. */
   columnId: string;
-  /** Accessible name for the select, e.g. "Source". */
+  /** Visible label and accessible name for the select, e.g. "Source". */
   label: string;
   /** Text for the option that clears the filter, e.g. "All sources". */
   allLabel: string;
@@ -146,7 +162,7 @@ export type DataTableDensity = 'comfortable' | 'compact';
 export type DataTableVirtualizeOptions = {
   /** Switch to virtual rows once the visible row count exceeds this. Defaults to 200. */
   threshold?: number;
-  /** Estimated row height in pixels. Defaults to 37 (comfortable) or 29 (compact). */
+  /** Estimated row height in pixels. Defaults to 53 (comfortable) or 37 (compact). Rows are measured once rendered. */
   rowHeight?: number;
   /** Height of the scroll container in pixels. Defaults to 520. */
   maxHeight?: number;
@@ -249,9 +265,7 @@ const minColumnSize = 64;
 const resizeStep = 16;
 const defaultVirtualThreshold = 200;
 const defaultVirtualMaxHeight = 520;
-const rowHeightByDensity: Record<DataTableDensity, number> = { comfortable: 37, compact: 29 };
-
-type Option = { label: string; value: string };
+const rowHeightByDensity: Record<DataTableDensity, number> = { comfortable: 53, compact: 37 };
 
 type PersistedLayout = {
   columnVisibility?: ColumnVisibilityState;
@@ -293,44 +307,69 @@ function clearLayout(tableId: string) {
   }
 }
 
-function TableSelect({
-  label,
-  items,
-  value,
-  onValueChange,
-}: {
-  label: string;
-  items: Option[];
-  value: string;
-  onValueChange: (value: string) => void;
-}) {
-  return (
-    <Select.Root items={items} value={value} onValueChange={(next) => onValueChange(next ?? items[0].value)}>
-      <Select.Trigger className="ui-select ui-table-select" aria-label={label}>
-        <Select.Value />
-        <Select.Icon className="ui-select-icon">
-          <ChevronUpDownIcon />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Positioner className="ui-positioner" sideOffset={4}>
-          <Select.Popup className="ui-popup">
-            <Select.List>
-              {items.map((item) => (
-                <Select.Item key={item.value} value={item.value} className="ui-item">
-                  <Select.ItemIndicator className="ui-item-indicator">
-                    <CheckIcon />
-                  </Select.ItemIndicator>
-                  <Select.ItemText>{item.label}</Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
-  );
+/** Hidden from sight, still read by assistive technology. */
+const visuallyHidden = {
+  border: 0,
+  clip: 'rect(0 0 0 0)',
+  height: '1px',
+  margin: '-1px',
+  overflow: 'hidden',
+  padding: 0,
+  position: 'absolute',
+  whiteSpace: 'nowrap',
+  width: '1px',
+} as const;
+
+const tint = (color: string) => `linear-gradient(${color}, ${color})`;
+
+/**
+ * A pinned cell is sticky and opaque, so scrolled cells pass under it. It repaints the row's hover and selected
+ * tints (MUI's own TableRow values) as a background image over the paper, since an opaque cell hides the row's.
+ */
+function pinnedSx(edge: 'start' | 'end' | null, head: boolean): SxProps<Theme> {
+  return (theme) => {
+    const palette = (theme.vars ?? theme).palette;
+    return {
+      position: 'sticky',
+      zIndex: head ? 3 : 1,
+      bgcolor: 'background.paper',
+      ...(edge === 'start' ? { borderRight: 1, borderRightColor: 'divider' } : {}),
+      ...(edge === 'end' ? { borderLeft: 1, borderLeftColor: 'divider' } : {}),
+      [`tr.${tableRowClasses.hover}:hover > &`]: { backgroundImage: tint(palette.action.hover) },
+      [`tr.${tableRowClasses.selected} > &`]: { backgroundImage: tint(theme.alpha(palette.primary.main, palette.action.selectedOpacity)) },
+    };
+  };
 }
+
+/** The column resize handle: a transparent button on the header cell's trailing edge, showing a divider line on hover and focus. */
+const resizerSx: SxProps<Theme> = {
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  right: 0,
+  width: 9,
+  m: 0,
+  p: 0,
+  border: 0,
+  bgcolor: 'transparent',
+  cursor: 'col-resize',
+  touchAction: 'none',
+  userSelect: 'none',
+  zIndex: 1,
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: 8,
+    bottom: 8,
+    right: 4,
+    width: '1px',
+    bgcolor: 'divider',
+    opacity: 0,
+  },
+  'th:hover > &::after': { opacity: 1 },
+  '&:focus-visible': { outline: 'none' },
+  '&:focus-visible::after, &[data-resizing]::after': { opacity: 1, width: '2px', bgcolor: 'primary.main' },
+};
 
 function isEmpty(value: unknown) {
   return value === undefined || value === null || value === '';
@@ -364,8 +403,9 @@ function fromTablePagination(pagination: PaginationState): PaginationState {
 /**
  * The table for rows of records: sorting, search, a filter, paging, column controls, selection, expansion,
  * CSV export and virtualization, with loading, error and empty states built in. Use client mode for small sets
- * and server mode with controlled state for portfolio-scale data. For a short list of records with a primary
- * and secondary line, use `EntityList` instead.
+ * and server mode with controlled state for portfolio-scale data. It renders as one outlined MUI `Paper`: the
+ * toolbar, an MUI `Table` and a footer with the row count and `TablePagination`, so place it on the page, not in
+ * a card. For a short list of records with a primary and secondary line, use `EntityList` instead.
  *
  * @summary A sortable, filterable, paged data table with column controls and built-in states.
  * @import import { DataTable } from 'src/components/DataTable';
@@ -464,33 +504,25 @@ function DataTableInner<TData extends RowData>({
       leading.push({
         id: selectColumnId,
         header: ({ table }) => (
-          <Checkbox.Root
-            className="ui-checkbox"
-            aria-label={t('table.selectAll')}
+          <Checkbox
+            size="small"
+            slotProps={{ input: { 'aria-label': t('table.selectAll') } }}
             checked={table.getIsAllPageRowsSelected()}
             indeterminate={!table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected()}
-            onCheckedChange={(checked) => table.toggleAllPageRowsSelected(checked)}
-          >
-            <Checkbox.Indicator className="ui-checkbox-indicator">
-              <CheckIcon />
-            </Checkbox.Indicator>
-          </Checkbox.Root>
+            onChange={(event) => table.toggleAllPageRowsSelected(event.target.checked)}
+          />
         ),
         cell: ({ row }) => (
-          <Checkbox.Root
-            className="ui-checkbox"
-            aria-label={t('table.selectRow')}
+          <Checkbox
+            size="small"
+            slotProps={{ input: { 'aria-label': t('table.selectRow') } }}
             checked={row.getIsSelected()}
             disabled={!row.getCanSelect()}
-            onCheckedChange={(checked) => row.toggleSelected(checked)}
-          >
-            <Checkbox.Indicator className="ui-checkbox-indicator">
-              <CheckIcon />
-            </Checkbox.Indicator>
-          </Checkbox.Root>
+            onChange={(event) => row.toggleSelected(event.target.checked)}
+          />
         ),
-        size: 36,
-        minSize: 36,
+        size: 48,
+        minSize: 48,
         enableSorting: false,
         enableHiding: false,
         enableResizing: false,
@@ -502,19 +534,23 @@ function DataTableInner<TData extends RowData>({
     if (renderExpanded) {
       leading.push({
         id: expandColumnId,
-        header: () => <span className="ui-sr-only">{t('table.expand')}</span>,
+        header: () => (
+          <Box component="span" sx={visuallyHidden}>
+            {t('table.expand')}
+          </Box>
+        ),
         cell: ({ row }) => (
-          <Button
-            className="ui-icon-btn ui-table-expander"
+          <IconButton
+            size="small"
             aria-label={row.getIsExpanded() ? t('table.collapseRow') : t('table.expandRow')}
             aria-expanded={row.getIsExpanded()}
             onClick={row.getToggleExpandedHandler()}
           >
-            <ChevronRightIcon />
-          </Button>
+            {row.getIsExpanded() ? <ChevronDownIcon /> : <ChevronRightIcon />}
+          </IconButton>
         ),
-        size: 36,
-        minSize: 36,
+        size: 48,
+        minSize: 48,
         enableSorting: false,
         enableHiding: false,
         enableResizing: false,
@@ -630,7 +666,7 @@ function DataTableInner<TData extends RowData>({
   const hasSizing = Object.keys(columnSizing).length > 0;
   const startColumns = table.getStartVisibleLeafColumns();
   const endColumns = table.getEndVisibleLeafColumns();
-  const pinnedStyle = (column: Column<DataTableFeatures, TData, unknown>): CSSProperties | undefined => {
+  const pinnedOffset = (column: Column<DataTableFeatures, TData, unknown>): CSSProperties | undefined => {
     const pinned = column.getIsPinned();
     if (!pinned) return undefined;
     const group = pinned === 'start' ? startColumns : [...endColumns].reverse();
@@ -641,17 +677,25 @@ function DataTableInner<TData extends RowData>({
     }
     return pinned === 'start' ? { left: offset } : { right: offset };
   };
-  const cellClass = (column: Column<DataTableFeatures, TData, unknown>) => {
-    const classes: string[] = [];
-    if (numericColumns.includes(column.id) || column.columnDef.meta?.align === 'end') classes.push('is-numeric');
-    if (controlColumnIds.has(column.id)) classes.push('is-control');
+  const isNumeric = (column: Column<DataTableFeatures, TData, unknown>) =>
+    numericColumns.includes(column.id) || column.columnDef.meta?.align === 'end';
+  /** Layout for one header or body cell: pinning, digits, truncation. Colors stay MUI's. */
+  const cellSx = (column: Column<DataTableFeatures, TData, unknown>, head: boolean): SxProps<Theme> => {
     const pinned = column.getIsPinned();
-    if (pinned) {
-      classes.push('is-pinned');
-      if (pinned === 'start' && startColumns[startColumns.length - 1]?.id === column.id) classes.push('is-pinned-edge-left');
-      if (pinned === 'end' && endColumns[0]?.id === column.id) classes.push('is-pinned-edge-right');
-    }
-    return classes.join(' ') || undefined;
+    const edge =
+      pinned === 'start' && startColumns[startColumns.length - 1]?.id === column.id
+        ? 'start'
+        : pinned === 'end' && endColumns[0]?.id === column.id
+          ? 'end'
+          : null;
+    return [
+      { whiteSpace: 'nowrap' },
+      isNumeric(column) && { fontVariantNumeric: 'tabular-nums' },
+      hasSizing && { overflow: 'hidden', textOverflow: 'ellipsis' },
+      // The resize handle is positioned against its header cell; a sticky cell already is a containing block.
+      head && !pinned && !isVirtual && { position: 'relative' },
+      ...(pinned ? [pinnedSx(edge, head)] : []),
+    ] as SxProps<Theme>;
   };
   const sizeStyle = (column: Column<DataTableFeatures, TData, unknown>): CSSProperties | undefined => {
     if (hasSizing) return { width: column.getSize() };
@@ -754,99 +798,138 @@ function DataTableInner<TData extends RowData>({
   const hideableColumns = table.getAllLeafColumns().filter((column) => column.getCanHide());
   const showDensity = densityProp !== undefined;
   const showToolbar = Boolean(searchColumns || filter || exportFileName || columnMenu || showDensity);
+  const columnMenuId = useId();
+  const [columnMenuAnchor, setColumnMenuAnchor] = useState<HTMLElement | null>(null);
+  const columnMenuOpen = columnMenuAnchor !== null;
 
   let toolbar: ReactNode = null;
   if (showToolbar) {
     toolbar = (
-      <div className="ui-table-toolbar">
+      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center', p: 2 }}>
         {searchColumns ? (
-          <label className="search">
-            <span className="ui-sr-only">{searchLabel ?? t('table.search', { noun })}</span>
-            <SearchIcon />
-            <Input
-              className="ui-input"
-              type="search"
-              placeholder={searchPlaceholder}
-              value={current.globalFilter}
-              onValueChange={(value) => table.setGlobalFilter(value)}
-            />
-          </label>
-        ) : null}
-        {filter ? (
-          <TableSelect
-            label={filter.label}
-            items={[
-              { label: filter.allLabel, value: allValue },
-              ...filter.options.map((option) => ({ label: option, value: option })),
-            ]}
-            value={filterValue}
-            onValueChange={(value) => filterColumn?.setFilterValue(value === allValue ? undefined : value)}
+          <TextField
+            size="small"
+            type="search"
+            placeholder={searchPlaceholder}
+            value={current.globalFilter}
+            onChange={(event) => table.setGlobalFilter(event.target.value)}
+            sx={{ minWidth: 240 }}
+            slotProps={{
+              htmlInput: { 'aria-label': searchLabel ?? t('table.search', { noun }) },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
         ) : null}
+        {filter ? (
+          <TextField
+            select
+            size="small"
+            label={filter.label}
+            value={filterValue}
+            onChange={(event) => filterColumn?.setFilterValue(event.target.value === allValue ? undefined : event.target.value)}
+            sx={{ minWidth: 160 }}
+          >
+            <MenuItem value={allValue}>{filter.allLabel}</MenuItem>
+            {filter.options.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
+        ) : null}
         {columnMenu || exportFileName || showDensity ? (
-          <div className="ui-table-toolbar-actions">
+          <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', ml: 'auto' }}>
             {showDensity ? (
-              <ToggleGroup
-                className="ui-toggle-group"
+              <ToggleButtonGroup
+                size="small"
+                exclusive
                 aria-label={t('table.density')}
-                value={[density]}
-                onValueChange={(value) => {
-                  const next = value[0];
+                value={density}
+                onChange={(_, next: unknown) => {
                   if (next === 'comfortable' || next === 'compact') setDensity(next);
                 }}
               >
-                <Toggle value="comfortable" className="ui-toggle" aria-label={t('table.comfortable')}>
-                  <DensityComfortableIcon />
-                </Toggle>
-                <Toggle value="compact" className="ui-toggle" aria-label={t('table.compact')}>
-                  <DensityCompactIcon />
-                </Toggle>
-              </ToggleGroup>
+                <Tooltip title={t('table.comfortable')}>
+                  <ToggleButton value="comfortable" aria-label={t('table.comfortable')}>
+                    <DensityComfortableIcon />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title={t('table.compact')}>
+                  <ToggleButton value="compact" aria-label={t('table.compact')}>
+                    <DensityCompactIcon />
+                  </ToggleButton>
+                </Tooltip>
+              </ToggleButtonGroup>
             ) : null}
             {columnMenu ? (
-              <Menu.Root>
-                <Menu.Trigger className="ui-btn">
-                  <ColumnsIcon />
+              <>
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<ColumnsIcon />}
+                  aria-haspopup="menu"
+                  aria-controls={columnMenuOpen ? `${columnMenuId}-menu` : undefined}
+                  aria-expanded={columnMenuOpen || undefined}
+                  onClick={(event) => setColumnMenuAnchor(event.currentTarget)}
+                >
                   {t('table.columns')}
-                </Menu.Trigger>
-                <Menu.Portal>
-                  <Menu.Positioner className="ui-positioner" sideOffset={4} align="end">
-                    <Menu.Popup className="ui-popup" aria-label={t('table.visibleColumns')}>
-                      {hideableColumns.map((column) => (
-                        <Menu.CheckboxItem
-                          key={column.id}
-                          className="ui-item"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(checked) => column.toggleVisibility(checked)}
-                          closeOnClick={false}
-                        >
-                          <span className="ui-table-menu-check">
-                            <Menu.CheckboxItemIndicator className="ui-item-indicator">
-                              <CheckIcon />
-                            </Menu.CheckboxItemIndicator>
-                          </span>
-                          {columnLabel(column)}
-                        </Menu.CheckboxItem>
-                      ))}
-                      <Menu.Separator className="ui-separator" />
-                      <Menu.Item className="ui-item" onClick={resetLayout}>
-                        <span className="ui-table-menu-check" />
-                        {t('table.reset')}
-                      </Menu.Item>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.Root>
+                </Button>
+                <Menu
+                  id={`${columnMenuId}-menu`}
+                  anchorEl={columnMenuAnchor}
+                  open={columnMenuOpen}
+                  onClose={() => setColumnMenuAnchor(null)}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  slotProps={{ list: { 'aria-label': t('table.visibleColumns') } }}
+                >
+                  {/* MenuList needs direct children, not fragments, for keyboard focus. */}
+                  {[
+                    ...hideableColumns.map((column) => (
+                      <MenuItem
+                        key={column.id}
+                        role="menuitemcheckbox"
+                        aria-checked={column.getIsVisible()}
+                        onClick={() => column.toggleVisibility(!column.getIsVisible())}
+                      >
+                        <ListItemIcon>{column.getIsVisible() ? <CheckIcon /> : null}</ListItemIcon>
+                        <ListItemText>{columnLabel(column)}</ListItemText>
+                      </MenuItem>
+                    )),
+                    <Divider key="__divider" />,
+                    <MenuItem
+                      key="__reset"
+                      onClick={() => {
+                        setColumnMenuAnchor(null);
+                        resetLayout();
+                      }}
+                    >
+                      <ListItemText inset>{t('table.reset')}</ListItemText>
+                    </MenuItem>,
+                  ]}
+                </Menu>
+              </>
             ) : null}
             {exportFileName ? (
-              <Button className="ui-btn" onClick={exportCsv} disabled={isLoading || rows.length === 0}>
-                <DownloadIcon />
+              <Button
+                variant="outlined"
+                color="inherit"
+                startIcon={<DownloadIcon />}
+                onClick={exportCsv}
+                disabled={isLoading || rows.length === 0}
+              >
                 {t('table.export')}
               </Button>
             ) : null}
-          </div>
+          </Stack>
         ) : null}
-      </div>
+      </Stack>
     );
   }
 
@@ -854,115 +937,123 @@ function DataTableInner<TData extends RowData>({
 
   const renderRow = (row: Row<DataTableFeatures, TData>, virtualIndex?: number) => (
     <Fragment key={row.id}>
-      <tr
+      <TableRow
+        hover
+        selected={row.getIsSelected()}
         data-index={virtualIndex}
-        data-selected={row.getIsSelected() ? '' : undefined}
         ref={isVirtual ? virtualizer.measureElement : undefined}
       >
         {row.getVisibleCells().map((cell) => (
-          <td key={cell.id} className={cellClass(cell.column)} style={{ ...sizeStyle(cell.column), ...pinnedStyle(cell.column) }}>
+          <TableCell
+            key={cell.id}
+            align={isNumeric(cell.column) ? 'right' : undefined}
+            padding={controlColumnIds.has(cell.column.id) ? 'checkbox' : undefined}
+            sx={cellSx(cell.column, false)}
+            style={{ ...sizeStyle(cell.column), ...pinnedOffset(cell.column) }}
+          >
             {!cell.column.accessorFn || !isEmpty(cell.getValue()) ? (
               <table.FlexRender cell={cell} />
             ) : (
               <EmptyCell />
             )}
-          </td>
+          </TableCell>
         ))}
-      </tr>
+      </TableRow>
       {renderExpanded && row.getIsExpanded() ? (
-        <tr className="is-expanded-row">
-          <td colSpan={leafCount}>{renderExpanded(row.original)}</td>
-        </tr>
+        <TableRow>
+          <TableCell colSpan={leafCount}>{renderExpanded(row.original)}</TableCell>
+        </TableRow>
       ) : null}
     </Fragment>
+  );
+
+  const spacerRow = (height: number) => (
+    <TableRow aria-hidden="true">
+      <TableCell colSpan={leafCount} sx={{ p: 0, border: 0 }} style={{ height }} />
+    </TableRow>
   );
 
   let body: ReactNode;
   if (isLoading) {
     body = <TableSkeleton columns={leafCount} />;
   } else if (hasError) {
-    body = <TableError message={errorMessage} onRetry={retry} />;
+    body = (
+      <Box sx={{ p: 2 }}>
+        <TableError message={errorMessage} onRetry={retry} />
+      </Box>
+    );
   } else {
     body = (
-      <div
-        ref={scrollRef}
-        className={['table-wrap', isVirtual ? 'is-virtual' : '', server?.isFetching ? 'is-fetching' : ''].filter(Boolean).join(' ')}
-        style={isVirtual ? { maxHeight } : undefined}
-      >
-        <table
-          className={hasSizing ? 'ui-table is-fixed' : 'ui-table'}
+      <TableContainer ref={scrollRef} sx={isVirtual ? { maxHeight, overflow: 'auto' } : undefined}>
+        <Table
+          size={density === 'compact' ? 'small' : 'medium'}
+          stickyHeader={isVirtual}
+          sx={hasSizing ? { tableLayout: 'fixed', minWidth: '100%' } : undefined}
           style={hasSizing ? { width: table.getTotalSize() } : undefined}
           aria-label={label}
           aria-describedby={statusId}
           aria-busy={server?.isFetching || undefined}
           aria-rowcount={isVirtual ? rows.length : undefined}
         >
-          <thead ref={headRef}>
+          <TableHead ref={headRef}>
             {table.getHeaderGroups().map((group) => (
-              <tr key={group.id}>
+              <TableRow key={group.id}>
                 {group.headers.map((header) => {
                   const column = header.column;
                   const sorted = column.getIsSorted();
                   const canResize = column.getCanResize() && !controlColumnIds.has(column.id);
                   return (
-                    <th
+                    <TableCell
                       key={header.id}
                       data-column-id={column.id}
-                      className={cellClass(column)}
-                      style={{ ...sizeStyle(column), ...pinnedStyle(column) }}
-                      aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
+                      align={isNumeric(column) ? 'right' : undefined}
+                      padding={controlColumnIds.has(column.id) ? 'checkbox' : undefined}
+                      sortDirection={sorted || false}
+                      sx={cellSx(column, true)}
+                      style={{ ...sizeStyle(column), ...pinnedOffset(column) }}
                     >
-                      <div className="ui-table-head">
-                        {column.getCanSort() ? (
-                          <button
-                            type="button"
-                            className="ui-table-sort"
-                            data-sorted={sorted || undefined}
-                            onClick={column.getToggleSortingHandler()}
-                          >
-                            <table.FlexRender header={header} />
-                            <span className="ui-table-sort-icon" aria-hidden="true">
-                              <ChevronUpDownIcon data-active={sorted ? undefined : ''} />
-                              <ArrowUpIcon data-active={sorted === 'asc' ? '' : undefined} />
-                              <ArrowDownIcon data-active={sorted === 'desc' ? '' : undefined} />
-                            </span>
-                          </button>
-                        ) : (
+                      {column.getCanSort() ? (
+                        <TableSortLabel
+                          active={Boolean(sorted)}
+                          direction={sorted || 'asc'}
+                          onClick={column.getToggleSortingHandler()}
+                          IconComponent={ArrowDownIcon}
+                        >
                           <table.FlexRender header={header} />
-                        )}
-                        {canResize ? (
-                          <button
-                            type="button"
-                            className="ui-table-resizer"
-                            aria-label={t('table.resize', { column: columnLabel(column) })}
-                            data-resizing={column.getIsResizing() ? '' : undefined}
-                            onPointerDown={startResize(header)}
-                            onTouchStart={startResize(header)}
-                            onKeyDown={keyboardResize(header)}
-                            onDoubleClick={() => column.resetSize()}
-                          />
-                        ) : null}
-                      </div>
-                    </th>
+                        </TableSortLabel>
+                      ) : (
+                        <table.FlexRender header={header} />
+                      )}
+                      {canResize ? (
+                        <Box
+                          component="button"
+                          type="button"
+                          sx={resizerSx}
+                          aria-label={t('table.resize', { column: columnLabel(column) })}
+                          data-resizing={column.getIsResizing() ? '' : undefined}
+                          onPointerDown={startResize(header)}
+                          onTouchStart={startResize(header)}
+                          onKeyDown={keyboardResize(header)}
+                          onDoubleClick={() => column.resetSize()}
+                        />
+                      ) : null}
+                    </TableCell>
                   );
                 })}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody>
+          </TableHead>
+          <TableBody
+            sx={{
+              opacity: server?.isFetching ? 0.55 : 1,
+              '@media (prefers-reduced-motion: no-preference)': { transition: 'opacity 150ms ease-out' },
+            }}
+          >
             {isVirtual ? (
               <>
-                {paddingTop > 0 ? (
-                  <tr className="ui-table-spacer" aria-hidden="true">
-                    <td colSpan={leafCount} style={{ height: paddingTop }} />
-                  </tr>
-                ) : null}
+                {paddingTop > 0 ? spacerRow(paddingTop) : null}
                 {virtualItems.map((item) => renderRow(rows[item.index], item.index))}
-                {paddingBottom > 0 ? (
-                  <tr className="ui-table-spacer" aria-hidden="true">
-                    <td colSpan={leafCount} style={{ height: paddingBottom }} />
-                  </tr>
-                ) : null}
+                {paddingBottom > 0 ? spacerRow(paddingBottom) : null}
               </>
             ) : (
               rows.map((row) => renderRow(row))
@@ -972,68 +1063,71 @@ function DataTableInner<TData extends RowData>({
                 {isFiltered ? t('table.emptyFiltered', { noun }) : t('table.empty', { noun })}
               </TableEmptyRow>
             ) : null}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
     );
   }
 
-  const pageSizeLabel = (size: number) => (size === 0 ? t('table.allRows') : t('table.perPage', { size: formatCount(size) }));
-  const pageSizeItems = pageSizes.map((size) => ({ label: pageSizeLabel(size), value: String(size) }));
-  if (!pageSizes.includes(pageSize)) pageSizeItems.push({ label: pageSizeLabel(pageSize), value: String(pageSize) });
+  // "All rows" is MUI's -1 rows per page; a page size outside `pageSizes` (from state or the URL) is still offered.
+  const pageSizeOption = (size: number) => ({ label: size === 0 ? t('table.allRows') : formatCount(size), value: size === 0 ? -1 : size });
+  const pageSizeOptions = pageSizes.map(pageSizeOption);
+  if (!pageSizes.includes(pageSize)) pageSizeOptions.push(pageSizeOption(pageSize));
 
   return (
-    <div
-      className="ui-data-table"
+    <Paper
+      variant="outlined"
+      sx={{ position: 'relative' }}
       data-density={density}
-      data-resizing={columnResizing.isResizingColumn ? '' : undefined}
+      style={columnResizing.isResizingColumn ? { cursor: 'col-resize', userSelect: 'none' } : undefined}
     >
       {toolbar}
       {selectable && selectedCount > 0 ? (
-        <div className="ui-table-bulk" role="region" aria-label={t('table.bulkActions')}>
-          <span className="ui-table-bulk-count">{t('table.selected', { count: formatCount(selectedCount) })}</span>
+        <Paper
+          variant="outlined"
+          role="region"
+          aria-label={t('table.bulkActions')}
+          sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, px: 2, py: 0.5, m: 2, mt: toolbar ? 0 : 2 }}
+        >
+          <Typography variant="body2" sx={{ fontVariantNumeric: 'tabular-nums', mr: 1 }}>
+            {t('table.selected', { count: formatCount(selectedCount) })}
+          </Typography>
           {bulkActions?.(
             selectedRows.map((row) => row.original),
             clearSelection,
           )}
-        </div>
+        </Paper>
       ) : null}
       {body}
-      <div className="ui-table-footer">
-        <span id={statusId} className="ui-table-status" role="status">
+      <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 2 }}>
+        <Typography
+          id={statusId}
+          role="status"
+          variant="body2"
+          color="text.secondary"
+          sx={{ fontVariantNumeric: 'tabular-nums', px: 2 }}
+        >
           {total === 0
             ? t('table.countNone', { noun })
             : t('table.range', { first: formatCount(first), last: formatCount(last), total: formatCount(total), noun })}
           {selectable && selectedCount > 0 ? t('table.selectedSuffix', { count: formatCount(selectedCount) }) : ''}
-        </span>
-        <div className="ui-table-pager">
-          <TableSelect
-            label={t('table.rowsPerPage')}
-            items={pageSizeItems}
-            value={String(pageSize)}
-            onValueChange={(value) => table.setPageSize(Number(value) === 0 ? allRowsPageSize : Number(value))}
-          />
-          <span className="ui-table-status">
-            {t('table.page', { page: formatCount(pageIndex + 1), pages: formatCount(pageCount) })}
-          </span>
-          <Button
-            className="ui-icon-btn"
-            aria-label={t('table.previousPage')}
-            disabled={!table.getCanPreviousPage()}
-            onClick={() => table.previousPage()}
-          >
-            <ChevronLeftIcon />
-          </Button>
-          <Button
-            className="ui-icon-btn"
-            aria-label={t('table.nextPage')}
-            disabled={!table.getCanNextPage()}
-            onClick={() => table.nextPage()}
-          >
-            <ChevronRightIcon />
-          </Button>
-        </div>
-      </div>
-    </div>
+        </Typography>
+        <TablePagination
+          component="div"
+          count={total}
+          page={Math.min(pageIndex, pageCount - 1)}
+          rowsPerPage={isAllRows ? -1 : pageSize}
+          rowsPerPageOptions={pageSizeOptions}
+          onPageChange={(_, page) => table.setPageIndex(page)}
+          onRowsPerPageChange={(event) => {
+            const size = Number(event.target.value);
+            table.setPageSize(size <= 0 ? allRowsPageSize : size);
+          }}
+          labelRowsPerPage={t('table.rowsPerPage')}
+          labelDisplayedRows={() => t('table.page', { page: formatCount(pageIndex + 1), pages: formatCount(pageCount) })}
+          getItemAriaLabel={(type) => (type === 'next' ? t('table.nextPage') : t('table.previousPage'))}
+        />
+      </Stack>
+    </Paper>
   );
 }

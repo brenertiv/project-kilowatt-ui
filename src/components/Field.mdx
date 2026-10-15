@@ -3,63 +3,63 @@ import * as FieldStories from './Field.stories';
 
 <Meta
   of={FieldStories}
-  summary="Text field recipe: Base UI's Field and Input with ui-field, ui-label, ui-input and ui-description, plus Field.Error for validation. There is no Field component of ours; copy the markup."
+  summary="Text fields are MUI's TextField, used as MUI documents it: label, helperText, error, disabled and required. There is no Field component of ours."
 />
 
 # Field
 
-There is no Kilowatt `Field` component. A text field is Base UI's `Field` (from `@base-ui/react/field`) wrapping its `Input` (from `@base-ui/react/input`), styled with `ui-*` classes. `Field.Root` wires the label, help text and error to the input, so you never write `id` or `htmlFor` by hand.
+There is no Kilowatt `Field` component. A text field is MUI's `TextField` from `@mui/material`, used as MUI documents it and themed as stock MUI. `TextField` wires the label, helper text and error state to the input, so you never write `id` or `htmlFor` by hand.
 
 <Canvas of={FieldStories.Default} />
 
-## Recipe
+## Usage
 
 ```tsx
-import { Field } from '@base-ui/react/field';
-import { Input } from '@base-ui/react/input';
+import TextField from '@mui/material/TextField';
 
-<Field.Root className="ui-field" name="site">
-  <Field.Label className="ui-label">Site name</Field.Label>
-  <Input className="ui-input" placeholder="Enter a site" />
-  <Field.Description className="ui-description">Used on tickets and meter rollups.</Field.Description>
-  <Field.Error className="ui-description ui-field-error" match>
-    Site name is required.
-  </Field.Error>
-</Field.Root>
+<TextField
+  label="Site name"
+  value={site}
+  onChange={(event) => setSite(event.target.value)}
+  required
+  error={!site}
+  helperText={site ? 'Used on tickets and meter rollups.' : 'Site name is required.'}
+/>
 ```
-
-## Parts
-
-- `ui-field` on `Field.Root`: full width; give it a `name`.
-- `ui-label` on `Field.Label`: 12px secondary text above the input.
-- `ui-input` on `Input`: full width, control height (36px), divider border, tertiary placeholder.
-- `ui-input-compact`: a 108px input with tabular numerals, for short numeric values.
-- `ui-description` on `Field.Description`: help text under the input, at most 65 characters wide.
-- `Field.Error` with `match`: the validation message. The story gives it `ui-description ui-field-error`.
 
 ## States
 
-- Invalid: set `invalid` on `Field.Root` and show the reason in `Field.Error` in place of the help text. The input takes an error-colored border (and focus ring), and `ui-field-error` sets the message in the error color.
-- Disabled: set `disabled` on `Field.Root`, and say in the help text who can change the value. The label and input text drop to the disabled text token and the input sits on the page surface, like a disabled button.
-- Empty: a placeholder alone is fine for a short field; it never replaces the label.
+- Helper text: `helperText` under the input, for anything the label alone does not explain.
+- Error: set `error` and put the fix in `helperText` in place of the help text.
+- Disabled: set `disabled`, and say in `helperText` who can change the value.
+- Required: set `required`; MUI adds the asterisk to the label and `required` to the input.
+
+## When to use something else
+
+- A number with limits, a pick from a list, search as you type, a range or a few options: see Primitives/Forms.
+- A long free-text note: `TextField` with `multiline` and `minRows`.
+
+## Kilowatt rules
+
+- Use MUI's default `outlined` variant; don't mix in `filled` or `standard`.
+- Don't pass colors or style the input; use `sx` only for layout, such as width.
+- Labels and messages are sentence case.
 
 ## Do and don't
 
 Do:
 
-- Always render a visible `Field.Label`.
+- Always pass a visible `label`.
 - Write the error as the fix ("Site name is required."), not a code.
 
 Don't:
 
 - Don't use a placeholder as the label.
-- Don't hand-roll a label and input outside `Field.Root`; the wiring is what makes it accessible.
-- Don't use this for numbers with steppers, selects or search-as-you-type: see Primitives/Forms.
+- Don't build a label and input by hand when `TextField` does the wiring.
 
 ## Accessibility
 
-- `Field.Root` links `Field.Label` to the input, and the description and error to it as its description, and marks the input invalid or disabled for assistive technology.
-- `ui-input` shows the 2px secondary-color focus ring on keyboard focus.
+- `TextField` links the label to the input and the helper text to it as its description, and sets `aria-invalid` when `error` is set.
 - The caller supplies the label text and an error message that says how to fix the value.
 
 <Stories includePrimary={false} />

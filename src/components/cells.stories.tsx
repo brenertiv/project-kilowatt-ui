@@ -1,7 +1,22 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableRow from '@mui/material/TableRow';
 import { fn } from 'storybook/test';
 import { sparklines } from 'src/fixtures/sampleData';
-import { ActionsCell, ChipCell, DateCell, DeltaCell, EmptyCell, LinkCell, NumericCell, SparklineCell, StatusCell } from 'src/components/cells';
+import {
+  ActionsCell,
+  ChipCell,
+  DateCell,
+  DeltaCell,
+  EmptyCell,
+  LinkCell,
+  NumericCell,
+  SparklineCell,
+  StatusCell,
+} from 'src/components/cells';
 import { tokenContrast } from 'src/stories/a11y';
 
 const units = ['count', 'kW', 'kWh', 'MWh', 'therms', 'gal', 'USD', 'percent', '°F', 'score'];
@@ -12,18 +27,18 @@ const meta = {
   subcomponents: { ChipCell, NumericCell, DeltaCell, DateCell, LinkCell, ActionsCell, SparklineCell, EmptyCell },
   decorators: [
     (Story) => (
-      // Cells are styled for a table body, so render them inside one.
-      <div className="table-wrap">
-        <table className="ui-table">
-          <tbody>
-            <tr>
-              <td>
+      // Cells sit in a table body on a paper surface, as in DataTable, so render them inside one.
+      <Paper variant="outlined">
+        <Table aria-label="Cell preview">
+          <TableBody>
+            <TableRow>
+              <TableCell>
                 <Story />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Paper>
     ),
   ],
   argTypes: {
@@ -108,7 +123,7 @@ export const Empty: StoryObj<typeof EmptyCell> = {
 /** Missing inputs: numeric, delta and date cells show the dash, and a zero delta stays neutral. */
 export const MissingValues: StoryObj<typeof EmptyCell> = {
   render: () => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-2)' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
       <NumericCell value={null} />
       <DeltaCell value={undefined} />
       <DateCell iso={null} />

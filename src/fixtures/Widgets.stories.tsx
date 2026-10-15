@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 import { ChartDemo, DndDemo, GridDemo, MapDemo, MetricCardDemo, OverviewPanelDemo, TableDemo } from 'src/fixtures/stackDemos';
 import { tokenContrast } from 'src/stories/a11y';
 
@@ -18,11 +21,11 @@ export default meta;
 /** Gives a demo that fills its parent a card with a fixed height. */
 function Sized({ children, height = 320 }: { children: ReactNode; height?: number }) {
   return (
-    <div className="card" style={{ height, display: 'flex', flexDirection: 'column' }}>
-      <div className="card-body" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ height, display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', '&:last-child': { pb: 2 } }}>
         {children}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -45,12 +48,12 @@ export const TicketsTable: StoryObj = {
   render: () => <TableDemo />,
 };
 
-/** An amCharts demand series inside the app's chart frame. */
+/** An amCharts demand series inside the app's chart frame, which is its own card. */
 export const DemandChart: StoryObj = {
   render: () => (
-    <Sized>
+    <Box sx={{ maxWidth: 720 }}>
       <ChartDemo />
-    </Sized>
+    </Box>
   ),
 };
 
@@ -61,11 +64,11 @@ export const OverviewPanel: StoryObj<OverviewArgs> = {
   args: { closedSharePercent: 64 },
   argTypes: { closedSharePercent: { control: { type: 'range', min: 0, max: 100 } } },
   render: ({ closedSharePercent }) => (
-    <div className="card" style={{ width: 420, height: 480, display: 'flex', flexDirection: 'column' }}>
-      <div className="card-body" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ width: 420, height: 480, display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', '&:last-child': { pb: 2 } }}>
         <OverviewPanelDemo closedShare={closedSharePercent / 100} />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   ),
 };
 

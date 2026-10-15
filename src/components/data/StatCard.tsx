@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Box from '@mui/material/Box';
+import { visuallyHidden } from '@mui/utils';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Stack from '@mui/material/Stack';
@@ -90,7 +91,7 @@ export function StatCard({
                   // A paragraph may not carry aria-label, so the spoken "No value" is hidden text beside the dash.
                   <>
                     <span aria-hidden="true">{noValue}</span>
-                    <span className="ui-sr-only">{t('data.noValue')}</span>
+                    <Box component="span" sx={visuallyHidden}>{t('data.noValue')}</Box>
                   </>
                 )}
               </Typography>

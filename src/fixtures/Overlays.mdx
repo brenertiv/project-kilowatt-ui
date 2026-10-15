@@ -3,60 +3,74 @@ import * as OverlaysStories from './Overlays.stories';
 
 <Meta
   of={OverlaysStories}
-  summary="Recipes for content that floats over the page: Base UI Menu, Tooltip, Popover, Dialog, AlertDialog and Toast with ui-positioner, ui-popup, ui-tooltip and ui-dialog classes. No wrapper components; copy the markup from each story."
+  summary="Floating content is MUI's Menu, Tooltip, Popover, Dialog (also as an alert dialog for destructive confirms) and Snackbar, used as MUI documents them."
 />
 
 # Overlays
 
-Floating content built from Base UI parts and `ui-*` classes in `src/styles.css`. There are no wrapper components: copy the markup from the story's code panel. Every overlay renders in its part's `Portal`, and anchored ones put `ui-positioner` on the positioner (it sets the stacking order). In light mode popups, tooltips and toasts carry the md shadow and dialogs the lg shadow (dark mode uses a 1px ring); all fade and scale in over 150ms unless reduced motion is on.
+Floating content is MUI components from `@mui/material`, used as MUI documents them and themed as stock MUI. There are no wrapper components. MUI renders every overlay in a portal with its own stacking order, so there is nothing to wrap or position by hand.
+
+## Which overlay
+
+- Menu: a list of actions behind one button.
+- Tooltip: a short hint on hover or focus that the user can do without.
+- Popover: extra detail the user opens on click and may interact with.
+- Dialog: a focused task that blocks the page until done or cancelled.
+- Alert dialog: confirming a destructive or irreversible action.
+- Snackbar: brief confirmation that something happened in the background.
 
 ## Menu
 
-A list of actions behind one button. `Menu.Trigger` is a `ui-btn`; then `ui-positioner`, `ui-popup` on `Menu.Popup`, `ui-item` on each `Menu.Item`, and `ui-separator` before a destructive or rare action. A `ui-item` with `data-destructive` shows in the error color.
+A `Button` that opens a `Menu` anchored to it, with `aria-controls`, `aria-haspopup` and `aria-expanded` on the button and `aria-labelledby` on the list, as in MUI's docs. Put a `Divider` before a destructive or rare action, and confirm a destructive one in an alert dialog rather than coloring the item.
 
 <Canvas of={OverlaysStories.MenuRecipe} />
 
 ## Tooltip
 
-A short, non-essential hint on hover or focus: `ui-tooltip` on `Tooltip.Popup`. The app's providers already include `Tooltip.Provider`. Never put the only copy of important information in a tooltip.
+Wrap the element in `Tooltip` with a `title`. By default MUI makes the title the child's accessible name, which suits an icon button; when the child already has a visible label, set `describeChild` so the title becomes its description instead. The child must be able to hold a ref and take focus, such as a `Button` or `IconButton`; wrap a disabled button in a `span`. Use it to name an icon button's action or to add a value the page already shows elsewhere.
 
 <Canvas of={OverlaysStories.TooltipRecipe} />
 
 ## Popover
 
-Extra detail the user opens on click and can interact with: `ui-popup ui-popup-padded` on `Popover.Popup`, with `Popover.Arrow` (`ui-arrow`), `Popover.Title` (`ui-popup-title`) and `Popover.Description` (`ui-description`).
+A `Popover` anchored to the button that opened it, with padding, a `Typography` title and secondary text. Use a menu instead when the content is a list of actions.
 
 <Canvas of={OverlaysStories.PopoverRecipe} />
 
 ## Dialog
 
-A focused task that blocks the page until done or cancelled. `Dialog.Backdrop` gets `ui-backdrop`, `Dialog.Viewport` gets `ui-dialog-viewport` (centers the dialog), `Dialog.Popup` gets `ui-dialog` (up to 420px wide), with `ui-dialog-title` and `ui-description`. End with a `ui-dialog-actions` row of `Dialog.Close` buttons: `ui-btn` to cancel, then `ui-btn ui-btn-solid` for the primary action.
+`Dialog` with `DialogTitle`, `DialogContent` and `DialogActions`, and `aria-labelledby` and `aria-describedby` pointing at the title and description. End with a text Cancel button, then a contained button that names the action.
 
 <Canvas of={OverlaysStories.DialogRecipe} />
 
 ## Alert dialog
 
-Confirming a destructive or irreversible action: `AlertDialog` with the same classes as a dialog. It does not close on an outside click, so the user must choose. Name the buttons by outcome ("Keep", "Delete").
+MUI has no separate alert dialog: use `Dialog` with `role="alertdialog"`, ignore the `backdropClick` close reason so the user must choose, and keep Escape as cancel. Put `autoFocus` on the safe button, and give the confirming one `color="error"`. Name the buttons by outcome ("Keep", "Delete").
 
 <Canvas of={OverlaysStories.AlertDialogRecipe} />
 
-## Toast
+## Snackbar
 
-Brief confirmation that something happened in the background. Call `Toast.useToastManager().add()` with a `title`, `description` and `timeout`; the app's `ToastOutlet` (in `src/AppProviders.tsx`) renders it as a `ui-toast` with a dismiss button. Don't render `Toast.Root` yourself.
+`Snackbar` with a `message`, an `autoHideDuration` and a dismiss `IconButton` (with `XIcon` from `src/icons` and an `aria-label`) as its `action`. Ignore the `clickaway` close reason so it is not dismissed by unrelated clicks. Show one at a time.
 
-<Canvas of={OverlaysStories.ToastRecipe} />
+<Canvas of={OverlaysStories.SnackbarRecipe} />
+
+## Kilowatt rules
+
+- Labels and titles are sentence case; icons come from `src/icons`.
+- Don't pass colors to overlays; palette roles such as `color="error"` on a confirming button are fine.
+- Popovers and menus keep MUI's default surface and elevation; don't restyle them.
 
 ## Do and don't
 
 - Do use an alert dialog, not a dialog, for anything that cannot be undone.
 - Do keep tooltip text short and repeat anything essential on the page.
-- Don't put an action the user must take only in a toast; it times out.
-- Don't leave off `ui-positioner` or the `Portal`; the overlay would render under the page.
+- Don't put an action the user must take only in a snackbar; it times out.
 
 ## Accessibility
 
-- Base UI traps focus in dialogs, returns focus to the trigger on close, closes on Escape, and wires the title and description as the dialog's name and description.
-- Menus get arrow-key movement and type-ahead; tooltips open on keyboard focus as well as hover.
-- The caller must give every dialog a `Title`, and name icon-only triggers with `aria-label`.
+- MUI's `Dialog` traps focus, returns it to the trigger on close and closes on Escape; the caller wires the title and description.
+- `Menu` gets arrow-key movement and type-ahead; `Tooltip` opens on keyboard focus as well as hover.
+- MUI gives the snackbar content `role="alert"`, so screen readers announce it; keep it to one sentence.
 
 <Stories includePrimary={false} />

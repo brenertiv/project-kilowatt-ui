@@ -24,7 +24,7 @@ export type ColumnSpec<TData extends RowData> = {
   unit?: Unit;
   /** For `delta` columns: whether an increase is the good direction. Defaults to true. */
   upIsGood?: boolean;
-  /** For `status` columns: maps a cell value to a `.ui-status` tone. */
+  /** For `status` columns: maps a cell value to a `StatusCell` tone (`positive`, `warning`, `negative` or `neutral`). */
   tone?: (value: unknown) => string;
   /** Pin the column to an edge of the table. */
   pin?: 'left' | 'right';

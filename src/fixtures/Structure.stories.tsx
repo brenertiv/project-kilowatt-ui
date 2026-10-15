@@ -1,17 +1,26 @@
-import { Accordion } from '@base-ui/react/accordion';
-import { Avatar } from '@base-ui/react/avatar';
-import { Collapsible } from '@base-ui/react/collapsible';
-import { Meter } from '@base-ui/react/meter';
-import { Progress } from '@base-ui/react/progress';
-import { ScrollArea } from '@base-ui/react/scroll-area';
-import { Separator } from '@base-ui/react/separator';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Collapse from '@mui/material/Collapse';
+import Divider from '@mui/material/Divider';
+import LinearProgress from '@mui/material/LinearProgress';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type ReactNode, useId, useState } from 'react';
 import avatarPhoto from 'src/assets/avatar-photo.svg';
 import { tickets } from 'src/data';
-import { ChevronDownIcon, PlusIcon } from 'src/icons';
+import { ChevronDownIcon } from 'src/icons';
 import { tokenContrast } from 'src/stories/a11y';
 
-/** Recipes for grouping, revealing and measuring content over Base UI. There are no wrapper components: copy the markup and classes. */
+/** Grouping, revealing and measuring content: MUI's Accordion, Collapse, LinearProgress, Avatar, Paper and Divider as themed. */
 const meta = {
   title: 'Primitives/Structure',
   tags: ['!autodocs'],
@@ -28,174 +37,196 @@ const alerts = [
 ] as const;
 
 type AccordionArgs = { itemCount: number; multiple: boolean };
-type ValueArgs = { value: number };
+type ValueArgs = { label: string; value: number };
 type AvatarArgs = { name: string; role: string; initials: string };
-type CollapsibleArgs = { label: string };
-type ScrollAreaArgs = { rowCount: number; height: number };
-type SeparatorArgs = { label: string; text: string };
+type CollapseArgs = { label: string };
+type ScrollArgs = { rowCount: number; height: number };
+type DividerArgs = { label: string; text: string };
 
-/** A stack of titled sections the user expands one at a time: `ui-accordion` items with a plus icon that turns on open. */
+function AccordionDemo({ itemCount, multiple }: AccordionArgs) {
+  const id = useId();
+  const [open, setOpen] = useState<string[]>([]);
+  return (
+    <Box>
+      {alerts.slice(0, Math.max(1, itemCount)).map(([title, body], index) => (
+        <Accordion
+          key={title}
+          disableGutters
+          expanded={open.includes(title)}
+          onChange={(_event, expanded) =>
+            setOpen((current) => (expanded ? (multiple ? [...current, title] : [title]) : current.filter((item) => item !== title)))
+          }
+        >
+          <AccordionSummary expandIcon={<ChevronDownIcon />} id={`${id}-header-${index}`} aria-controls={`${id}-panel-${index}`}>
+            <Typography component="span">{title}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2" color="text.secondary">
+              {body}
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+      ))}
+    </Box>
+  );
+}
+
+/** A stack of titled sections the user expands, one at a time unless `multiple`: controlled `Accordion` items with `expanded`. */
 export const AccordionRecipe: StoryObj<AccordionArgs> = {
   name: 'Accordion',
   args: { itemCount: 3, multiple: false },
   argTypes: { itemCount: { control: { type: 'range', min: 1, max: alerts.length } } },
-  render: ({ itemCount, multiple }) => (
-    <Accordion.Root className="ui-accordion" multiple={multiple}>
-      {alerts.slice(0, Math.max(1, itemCount)).map(([title, body]) => (
-        <Accordion.Item key={title} value={title} className="ui-accordion-item">
-          <Accordion.Header>
-            <Accordion.Trigger className="ui-accordion-trigger">
-              {title}
-              <PlusIcon className="ui-icon-plus" />
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Panel className="ui-accordion-panel">
-            <div className="ui-accordion-body">{body}</div>
-          </Accordion.Panel>
-        </Accordion.Item>
-      ))}
-    </Accordion.Root>
-  ),
+  render: (args) => <AccordionDemo key={String(args.multiple)} {...args} />,
 };
 
-/** How far a running task has got: `ui-progress` with a `ui-track`. Pass `value={null}` when the end is unknown. */
+function CollapseDemo({ label }: CollapseArgs) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  return (
+    <Box>
+      <Button
+        aria-expanded={open}
+        aria-controls={id}
+        endIcon={<ChevronDownIcon style={{ transform: open ? 'rotate(180deg)' : undefined }} />}
+        onClick={() => setOpen(!open)}
+      >
+        {label}
+      </Button>
+      <Collapse in={open} id={id}>
+        <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+          Chiller-1 is in night setback until 06:00. Do not override unless occupancy exceeds 40%.
+        </Typography>
+      </Collapse>
+    </Box>
+  );
+}
+
+/** One section of secondary detail that can be shown or hidden: a text `Button` with `aria-expanded` toggling a `Collapse`. */
+export const CollapseRecipe: StoryObj<CollapseArgs> = {
+  name: 'Collapse',
+  args: { label: 'Shift notes' },
+  render: (args) => <CollapseDemo {...args} />,
+};
+
+function LabelledBar({ label, value, meter }: { label: string; value: number | null; meter?: boolean }) {
+  const id = useId();
+  return (
+    <Box sx={{ width: 280 }}>
+      <Stack direction="row" sx={{ justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography id={id} variant="body2" color="text.secondary">
+          {label}
+        </Typography>
+        {value === null ? null : <Typography variant="body2">{value}%</Typography>}
+      </Stack>
+      {value === null ? (
+        <LinearProgress aria-labelledby={id} />
+      ) : (
+        <LinearProgress
+          variant="determinate"
+          value={value}
+          aria-labelledby={id}
+          {...(meter ? { role: 'meter', 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuetext': `${value}%` } : {})}
+        />
+      )}
+    </Box>
+  );
+}
+
+/** How far a running task has got: determinate `LinearProgress` with a visible label and percentage. */
 export const ProgressRecipe: StoryObj<ValueArgs> = {
   name: 'Progress',
-  args: { value: 72 },
+  args: { label: 'Interval ingest', value: 72 },
   argTypes: { value: { control: { type: 'range', min: 0, max: 100 } } },
-  render: ({ value }) => (
-    <Progress.Root className="ui-progress" value={value}>
-      <Progress.Label className="ui-label">Interval ingest</Progress.Label>
-      <Progress.Value className="ui-progress-value" />
-      <Progress.Track className="ui-track">
-        <Progress.Indicator className="ui-track-indicator" />
-      </Progress.Track>
-    </Progress.Root>
-  ),
+  render: ({ label, value }) => <LabelledBar label={label} value={value} />,
 };
 
-/** A task with no known end: `value={null}` makes the progress bar indeterminate. */
-export const ProgressIndeterminate: StoryObj = {
+/** A task with no known end: `LinearProgress` without `variant` is indeterminate. Keep the label; drop the percentage. */
+export const ProgressIndeterminate: StoryObj<ValueArgs> = {
   name: 'Progress, indeterminate',
-  render: () => (
-    <Progress.Root className="ui-progress" value={null}>
-      <Progress.Label className="ui-label">Interval ingest</Progress.Label>
-      <Progress.Track className="ui-track">
-        <Progress.Indicator className="ui-track-indicator" />
-      </Progress.Track>
-    </Progress.Root>
-  ),
+  args: { label: 'Interval ingest' },
+  render: ({ label }) => <LabelledBar label={label} value={null} />,
 };
 
-/** A static level within a known range, such as occupancy, not a task's progress: `Meter` with the same `ui-progress` classes. */
+/** A static level within a known range, such as occupancy, not a task's progress: determinate `LinearProgress` with `role="meter"`. */
 export const MeterRecipe: StoryObj<ValueArgs> = {
   name: 'Meter',
-  args: { value: 63 },
+  args: { label: 'Occupancy', value: 63 },
   argTypes: { value: { control: { type: 'range', min: 0, max: 100 } } },
-  render: ({ value }) => (
-    <Meter.Root className="ui-progress" value={value}>
-      <Meter.Label className="ui-label">Occupancy</Meter.Label>
-      <Meter.Value className="ui-progress-value" />
-      <Meter.Track className="ui-track">
-        <Meter.Indicator className="ui-track-indicator" />
-      </Meter.Track>
-    </Meter.Root>
-  ),
+  render: ({ label, value }) => <LabelledBar label={label} value={value} meter />,
 };
 
-/** A person with a photo: `ui-avatar` with an image; the initials fallback shows while it loads or if it fails. */
+function Person({ name, role, children }: { name: string; role: string; children: ReactNode }) {
+  return (
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+      {children}
+      <Box>
+        <Typography variant="subtitle2">{name}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {role}
+        </Typography>
+      </Box>
+    </Stack>
+  );
+}
+
+/** A person with a photo: `Avatar` with `src` and `alt`. Initials show in its place if the image fails. */
 export const AvatarRecipe: StoryObj<AvatarArgs> = {
-  // Contrast off: secondaryMain initials on secondaryTint. See src/stories/a11y.ts.
-  parameters: { a11y: tokenContrast },
   name: 'Avatar',
   args: { name: 'Alex Rivera', role: 'On-call operator', initials: 'AR' },
   render: ({ name, role, initials }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-      <Avatar.Root className="ui-avatar">
-        <Avatar.Image src={avatarPhoto} alt={name} />
-        <Avatar.Fallback>{initials}</Avatar.Fallback>
-      </Avatar.Root>
-      <div>
-        <div className="ui-popup-title">{name}</div>
-        <div className="ui-description">{role}</div>
-      </div>
-    </div>
+    <Person name={name} role={role}>
+      <Avatar src={avatarPhoto} alt={name}>
+        {initials}
+      </Avatar>
+    </Person>
   ),
 };
 
-/** A person with no photo: leave out `Avatar.Image` and the initials show. */
+/** A person with no photo: `Avatar` with the initials as children. */
 export const AvatarInitials: StoryObj<AvatarArgs> = {
-  // Contrast off: secondaryMain initials on secondaryTint. See src/stories/a11y.ts.
-  parameters: { a11y: tokenContrast },
   name: 'Avatar, initials',
+  // Contrast off: MUI's default Avatar is backgroundDefault initials on grey[400], 1.65:1. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: AvatarRecipe.args,
   render: ({ name, role, initials }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-      <Avatar.Root className="ui-avatar">
-        <Avatar.Fallback>{initials}</Avatar.Fallback>
-      </Avatar.Root>
-      <div>
-        <div className="ui-popup-title">{name}</div>
-        <div className="ui-description">{role}</div>
-      </div>
-    </div>
+    <Person name={name} role={role}>
+      <Avatar aria-hidden="true">{initials}</Avatar>
+    </Person>
   ),
 };
 
-/** One section of secondary detail that can be shown or hidden: `Collapsible` with the accordion trigger and panel classes. */
-export const CollapsibleRecipe: StoryObj<CollapsibleArgs> = {
-  name: 'Collapsible',
-  args: { label: 'Shift notes' },
-  render: ({ label }) => (
-    <Collapsible.Root>
-      <Collapsible.Trigger className="ui-accordion-trigger">
-        {label}
-        <ChevronDownIcon className="ui-icon-chevron" />
-      </Collapsible.Trigger>
-      <Collapsible.Panel className="ui-accordion-panel">
-        <div className="ui-accordion-body">Chiller-1 is in night setback until 06:00. Do not override unless occupancy exceeds 40%.</div>
-      </Collapsible.Panel>
-    </Collapsible.Root>
-  ),
-};
-
-/** A fixed-height region that scrolls with the themed scrollbar: `ui-scroll`, `ui-scroll-viewport` and `ui-scrollbar`. */
-export const ScrollAreaRecipe: StoryObj<ScrollAreaArgs> = {
-  // Contrast off: secondaryMain ticket ids on white. See src/stories/a11y.ts.
-  parameters: { a11y: tokenContrast },
-  name: 'Scroll area',
-  args: { rowCount: 12, height: 160 },
+/** A fixed-height list that scrolls inside the page: an outlined `Paper` with a height and `overflow: auto`, focusable and labelled. */
+export const ScrollRecipe: StoryObj<ScrollArgs> = {
+  name: 'Scrolling region',
+  args: { rowCount: 12, height: 200 },
   argTypes: { rowCount: { control: { type: 'range', min: 1, max: 60 } } },
   render: ({ rowCount, height }) => (
-    <ScrollArea.Root className="ui-scroll" style={{ height }}>
-      <ScrollArea.Viewport className="ui-scroll-viewport">
+    <Paper variant="outlined" tabIndex={0} role="region" aria-label="Open tickets" sx={{ height, overflow: 'auto', maxWidth: 480 }}>
+      <List dense disablePadding>
         {Array.from({ length: Math.max(1, rowCount) }, (_, index) => {
           const ticket = tickets[index % tickets.length];
           return (
-            <div key={`${ticket.id}-${index}`} className="ticket-row">
-              <span className="ticket-id">{ticket.id}</span>
-              <span className="ticket-title">{ticket.title}</span>
-              <span className="ui-description">{ticket.status}</span>
-            </div>
+            <ListItem key={`${ticket.id}-${index}`} divider>
+              <ListItemText primary={ticket.title} secondary={`${ticket.id} · ${ticket.status}`} />
+            </ListItem>
           );
         })}
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar className="ui-scrollbar">
-        <ScrollArea.Thumb className="ui-scrollbar-thumb" />
-      </ScrollArea.Scrollbar>
-    </ScrollArea.Root>
+      </List>
+    </Paper>
   ),
 };
 
-/** A rule between two groups of content: `ui-separator`. */
-export const SeparatorRecipe: StoryObj<SeparatorArgs> = {
-  name: 'Separator',
+/** A rule between two groups of content: `Divider`. Use spacing alone when that already separates the groups. */
+export const DividerRecipe: StoryObj<DividerArgs> = {
+  name: 'Divider',
   args: { label: 'Operations', text: 'Tickets, meters, and occupancy in one queue.' },
   render: ({ label, text }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <span className="ui-label">{label}</span>
-      <Separator className="ui-separator" />
-      <span className="ui-description">{text}</span>
-    </div>
+    <Stack spacing={1} sx={{ maxWidth: 480 }}>
+      <Typography variant="subtitle2">{label}</Typography>
+      <Divider />
+      <Typography variant="body2" color="text.secondary">
+        {text}
+      </Typography>
+    </Stack>
   ),
 };

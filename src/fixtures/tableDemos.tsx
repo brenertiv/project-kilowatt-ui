@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { createColumnHelper } from '@tanstack/react-table';
 import { fetchMetersPage, type MetersPageParams } from '../api/operations';
+import { ChipCell, StatusCell } from '../components/cells';
 import { DataTable, type DataTableFeatures } from '../components/DataTable';
 import { defaultTableUrlState, type TableUrlState } from '../components/tableUrlState';
 import { useTableUrlState } from '../components/useTableUrlState';
@@ -22,15 +23,11 @@ const plainMeterColumns = helper.columns([
   helper.accessor('source', {
     header: 'Source',
     filterFn: 'equalsString',
-    cell: (info) => <span className="ui-chip">{info.getValue()}</span>,
+    cell: (info) => <ChipCell>{info.getValue()}</ChipCell>,
   }),
   helper.accessor('energyStarLink', {
     header: 'Energy Star',
-    cell: (info) => (
-      <span className="ui-status" data-tone={linkTone[info.getValue()]}>
-        {info.getValue()}
-      </span>
-    ),
+    cell: (info) => <StatusCell tone={linkTone[info.getValue()]}>{info.getValue()}</StatusCell>,
   }),
   helper.accessor('channels', { header: 'Channels', meta: { align: 'end' } }),
 ]);

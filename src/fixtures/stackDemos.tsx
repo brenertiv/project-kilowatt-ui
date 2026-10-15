@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Button } from '@base-ui/react/button';
+import IconButton from '@mui/material/IconButton';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Typography from '@mui/material/Typography';
 import { useQuery } from '@tanstack/react-query';
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table';
 import { CategoryBarChart } from '../charts/CategoryBarChart';
@@ -56,34 +63,44 @@ export function TableDemo() {
     data,
   });
 
-  if (isPending) return <p className="ui-description">Loading tickets…</p>;
-  if (isError) return <p className="ui-description">Could not load tickets.</p>;
+  if (isPending)
+    return (
+      <Typography variant="body2" color="text.secondary">
+        Loading tickets…
+      </Typography>
+    );
+  if (isError)
+    return (
+      <Typography variant="body2" color="text.secondary">
+        Could not load tickets.
+      </Typography>
+    );
 
   return (
-    <div className="table-wrap">
-      <table className="ui-table">
-        <thead>
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
           {table.getHeaderGroups().map((group) => (
-            <tr key={group.id}>
+            <TableRow key={group.id}>
               {group.headers.map((header) => (
-                <th key={header.id}>{header.isPlaceholder ? null : <table.FlexRender header={header} />}</th>
+                <TableCell key={header.id}>{header.isPlaceholder ? null : <table.FlexRender header={header} />}</TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </thead>
-        <tbody>
+        </TableHead>
+        <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
+            <TableRow key={row.id}>
               {row.getAllCells().map((cell) => (
-                <td key={cell.id}>
+                <TableCell key={cell.id}>
                   <table.FlexRender cell={cell} />
-                </td>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 
@@ -173,8 +190,12 @@ export function MetricCardDemo({ label = 'Total tickets', value = 12853, delta =
   return (
     <div className="metric">
       <header className="panel-head">
-        <span className="ui-label">{label}</span>
-        <span className="ui-description">Last 12 periods</span>
+        <Typography variant="body2" component="span" color="text.secondary">
+          {label}
+        </Typography>
+        <Typography variant="body2" component="span" color="text.secondary">
+          Last 12 periods
+        </Typography>
       </header>
       <div className="panel-value">{formatCount(value)}</div>
       <div className={`panel-meta${delta < 0 ? ' is-negative' : ''}`}>
@@ -253,11 +274,13 @@ export function OverviewPanelDemo({ closedShare = overviewTickets.closedShare }:
             <h4 className="overview-title">AgentOps</h4>
             <p className="overview-kicker">Overview panel</p>
           </div>
-          <Button className="ui-icon-btn overview-expand" aria-label="Open AgentOps overview">
+          <IconButton color="inherit" aria-label="Open AgentOps overview">
             <ArrowOutwardIcon />
-          </Button>
+          </IconButton>
         </div>
-        <p className="ui-description">Get a high-level snapshot of your agents' performance.</p>
+        <Typography variant="body2" sx={{ mt: 1.5 }}>
+          Get a high-level snapshot of your agents' performance.
+        </Typography>
       </header>
 
       <ul className="overview-stats">
@@ -355,7 +378,9 @@ export function GridDemo() {
         >
           <div key="tickets" className="grid-widget">
             <div className="panel-head">
-              <span className="grid-handle ui-label">Tickets</span>
+              <Typography variant="body2" component="span" color="text.secondary" className="grid-handle">
+                Tickets
+              </Typography>
             </div>
             <div className="panel-value">{formatCount(4)} open</div>
             <div className="panel-meta is-warning">
@@ -364,7 +389,9 @@ export function GridDemo() {
           </div>
           <div key="demand" className="grid-widget">
             <div className="panel-head">
-              <span className="grid-handle ui-label">Peak kW</span>
+              <Typography variant="body2" component="span" color="text.secondary" className="grid-handle">
+                Peak kW
+              </Typography>
             </div>
             <div className="panel-value">{formatKilowatts(412)}</div>
             <div className="panel-meta is-negative">
@@ -374,7 +401,9 @@ export function GridDemo() {
           </div>
           <div key="sites" className="grid-widget">
             <div className="panel-head">
-              <span className="grid-handle ui-label">Sites</span>
+              <Typography variant="body2" component="span" color="text.secondary" className="grid-handle">
+                Sites
+              </Typography>
             </div>
             <div className="panel-value">{formatCount(buildings.length)} buildings</div>
           </div>

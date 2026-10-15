@@ -91,7 +91,6 @@
   "table.empty": "No {{noun}} to show.",
   "table.emptyFiltered": "No {{noun}} match these filters.",
   "table.allRows": "All rows",
-  "table.perPage": "{{size}} per page",
   "table.bulkActions": "Bulk actions",
   "table.selected": "{{count}} selected",
   "table.countNone": "0 {{noun}}",

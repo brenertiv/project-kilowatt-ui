@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Box from '@mui/material/Box';
+import { visuallyHidden } from '@mui/utils';
 import { useTranslation } from 'react-i18next';
 import type { AsyncState } from '../../api/state';
 import { FilterOffIcon } from '../../icons';
@@ -56,7 +57,7 @@ export function DataState({ state, skeleton, empty, idle, errorTitle, children }
       return (
         // A generic div may not carry aria-label, so "Updating" is hidden text beside the busy content.
         <Box aria-busy="true" sx={{ opacity: 0.6, transition: 'opacity 150ms' }}>
-          <span className="ui-sr-only">{t('data.updating')}</span>
+          <Box component="span" sx={visuallyHidden}>{t('data.updating')}</Box>
           {children}
         </Box>
       );

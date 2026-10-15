@@ -3,60 +3,90 @@ import * as FormsStories from './Forms.stories';
 
 <Meta
   of={FormsStories}
-  summary="Recipes for choosing values: Base UI Select, Combobox, NumberField, Slider, ToggleGroup and RadioGroup with ui-* classes. Pick by list length and precision. No wrapper components; copy the markup from each story."
+  summary="Value pickers are MUI's Select (TextField select), Autocomplete, number TextField, Slider, ToggleButtonGroup and RadioGroup, used as MUI documents them. Pick by list length and precision."
 />
 
 # Forms
 
-Value pickers built from Base UI parts and `ui-*` classes in `src/styles.css`. There are no wrapper components: copy the markup from the story's code panel. For a plain text input, see Primitives/Field. Selected and pressed states use the secondary color.
+Value pickers are MUI components from `@mui/material`, used as MUI documents them and themed as stock MUI. There are no wrapper components. For a plain text input, see Primitives/Field. Don't pass colors; the default `primary` color is the selected state.
+
+## Which picker
+
+| The user is choosing | Use |
+| --- | --- |
+| One of a short, known list (under about ten) | Select |
+| One of a long list, found by typing | Autocomplete |
+| An exact number within limits | Number field |
+| An approximate value in a range | Slider |
+| One (or several) of a few short options, such as units | Toggle button group |
+| One of a few options that should all stay visible | Radio group |
 
 ## Select
 
-Pick one from a short, known list (under about ten). `Select.Trigger` gets `ui-select` with `Select.Value` and a `ui-select-icon` holding `ChevronUpDownIcon`. In the portal, `Select.Positioner` gets `ui-positioner`, `Select.Popup` gets `ui-popup`, and each `Select.Item` gets `ui-item` with a `ui-item-indicator` holding `CheckIcon`. Pass `items` to `Select.Root` so the trigger shows the label, not the value.
+`TextField` with `select` and a `MenuItem` per option. `TextField` supplies the label and outline, so the select matches the other fields.
+
+```tsx
+<TextField select label="Building" value={building} onChange={(event) => setBuilding(event.target.value)}>
+  {buildings.map((item) => (
+    <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>
+  ))}
+</TextField>
+```
 
 <Canvas of={FormsStories.SelectRecipe} />
 
-## Combobox
+## Autocomplete
 
-Pick one from a long list the user searches by typing. `Combobox.InputGroup` gets `ui-combobox` and holds a `ui-input` plus two `ui-icon-btn` buttons (`Combobox.Clear` with `XIcon`, `Combobox.Trigger` with `ChevronDownIcon`). The popup uses the same `ui-positioner`, `ui-popup`, `ui-item` and `ui-item-indicator` classes as Select, and `Combobox.Empty` gets `ui-empty` for the no-match message.
+A searchable list, in place of a combobox. Pass `options`, render the input as a `TextField` with a `label`, and set `noOptionsText` to say what was not found. When options are objects, set `isOptionEqualToValue`.
 
-<Canvas of={FormsStories.ComboboxRecipe} />
+```tsx
+<Autocomplete
+  options={meters}
+  value={meter}
+  onChange={(_event, next) => setMeter(next)}
+  isOptionEqualToValue={(option, value) => option.value === value.value}
+  noOptionsText="No meters found."
+  renderInput={(params) => <TextField {...params} label="Meter" />}
+/>
+```
+
+<Canvas of={FormsStories.AutocompleteRecipe} />
 
 ## Number field
 
-An exact number within limits, such as a threshold. `NumberField.Root` gets `ui-number`; its label sits in `NumberField.ScrubArea` with `ui-scrub`, so dragging the label scrubs the value. `NumberField.Group` gets `ui-number-group`, holding `ui-stepper` decrement and increment buttons (`MinusIcon`, `PlusIcon`) around a `ui-input ui-number-input`.
+`TextField` with `type="number"`, and `min`, `max` and `step` on the input through `slotProps.htmlInput`. Put the unit in the label and the limits in `helperText`. MUI has no stepper field of its own; the browser's number input supplies arrow-key stepping.
 
 <Canvas of={FormsStories.NumberFieldRecipe} />
 
 ## Slider
 
-An approximate value where feel matters more than the digit, such as a setpoint. `ui-slider-head` holds the `ui-label` and the `ui-slider-value` readout; then `ui-slider-control`, `ui-slider-track`, `ui-slider-indicator` and `ui-slider-thumb`. Format the readout with the unit through `Slider.Value`'s render function.
+`Slider` with `aria-labelledby` pointing at a visible label, and the current value shown beside it. Set `getAriaValueText` and `valueLabelFormat` so the value reads with its unit.
 
 <Canvas of={FormsStories.SliderRecipe} />
 
-## Toggle group
+## Toggle button group
 
-A compact switch between a few short options, such as units. `ToggleGroup` gets `ui-toggle-group` and each `Toggle` gets `ui-toggle`. `defaultValue` is an array; set `multiple` to allow several pressed at once.
+`ToggleButtonGroup` of `ToggleButton` with an `aria-label`. Set `exclusive` for one choice; MUI passes `null` when the selected button is pressed again, so ignore that to keep one selected. Leave `exclusive` off to allow several. Use `size="small"` in toolbars and card headers.
 
 <Canvas of={FormsStories.ToggleGroupRecipe} />
 
 ## Radio group
 
-Pick one of a few options that should all stay visible. Each option is a `label` with `ui-inline-label` around `Radio.Root` (`ui-radio`) and `Radio.Indicator` (`ui-radio-indicator`). Put `ui-radio-group` on `RadioGroup` to stack the options.
+`FormControl` holding a `FormLabel` with an `id`, then a `RadioGroup` with `aria-labelledby` and a `FormControlLabel` per `Radio`. Set `disabled` on the `FormControl` to turn off the whole group.
 
 <Canvas of={FormsStories.RadioGroupRecipe} />
 
 ## Do and don't
 
-- Do choose by the list: radio group for two to a few visible options, select for under about ten, combobox for longer or searchable lists.
-- Do choose by precision: number field for an exact value, slider for an approximate one.
-- Don't use a toggle group for long labels or more than a handful of options.
-- Don't drop the `ui-positioner` class; it sets the stacking order that keeps popups above the page.
+- Do give every picker a visible label.
+- Do write option labels in sentence case, and units as they are written ("kWh", "therms").
+- Don't use a select for more than about ten options; use an autocomplete.
+- Don't use a slider when the exact number matters; use a number field.
 
 ## Accessibility
 
-- Base UI handles the listbox, combobox, spinbutton, slider and radio-group roles, keyboard selection and focus return.
-- The caller must name every control: `aria-label` on a select trigger or radio group with no visible label, `htmlFor` or `Slider.Label` otherwise, and `aria-label` on icon-only buttons (Clear, Open, Decrease, Increase).
-- Every trigger, input, stepper, toggle, radio and slider thumb shows the 2px secondary-color focus ring.
+- `TextField` (also for select and number) and Autocomplete's input wire their label to the control.
+- Autocomplete implements the combobox pattern with arrow keys, Enter and Escape.
+- Slider and radio group take their name from the label they point at with `aria-labelledby`; the toggle group from its `aria-label`.
 
 <Stories includePrimary={false} />

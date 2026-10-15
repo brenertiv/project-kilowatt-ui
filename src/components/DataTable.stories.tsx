@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import { createColumnHelper } from '@tanstack/react-table';
 import { fn } from 'storybook/test';
 import { ServerTableDemo } from 'src/fixtures/tableDemos';
@@ -101,12 +103,10 @@ export const Selection: Story = {
     selectable: true,
     bulkActions: (rows, clear) => (
       <>
-        <button type="button" className="ui-btn">
-          Export {rows.length}
-        </button>
-        <button type="button" className="ui-btn ui-btn-ghost" onClick={clear}>
+        <Button size="small">Export {rows.length}</Button>
+        <Button size="small" color="inherit" onClick={clear}>
           Clear
-        </button>
+        </Button>
       </>
     ),
   },
@@ -115,7 +115,7 @@ export const Selection: Story = {
 /** `renderExpanded` adds an expand toggle per row and shows detail in a full-width row underneath. */
 export const ExpandableRows: Story = {
   args: {
-    renderExpanded: (row) => <p className="ui-description">{row.description ?? 'No description recorded.'}</p>,
+    renderExpanded: (row) => <Typography variant="body2">{row.description ?? 'No description recorded.'}</Typography>,
   },
 };
 

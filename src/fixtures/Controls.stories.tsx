@@ -1,11 +1,14 @@
-import { Checkbox } from '@base-ui/react/checkbox';
-import { Switch } from '@base-ui/react/switch';
-import { Tabs } from '@base-ui/react/tabs';
+import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type ChangeEvent, useId, useState } from 'react';
 import { fn } from 'storybook/test';
-import { CheckIcon } from 'src/icons';
 
-/** Recipes for on/off and pick-one controls over Base UI. There are no wrapper components: copy the markup and classes. */
+/** On/off and pick-a-view controls: MUI's Switch, Checkbox and Tabs as themed. There are no wrapper components. */
 const meta = {
   title: 'Primitives/Controls',
   tags: ['!autodocs'],
@@ -13,94 +16,129 @@ const meta = {
 
 export default meta;
 
-type SwitchArgs = { label: string; disabled: boolean; onCheckedChange: (checked: boolean) => void };
-type CheckboxArgs = { label: string; disabled: boolean; onCheckedChange: (checked: boolean) => void };
-type TabsArgs = { tabCount: number };
+type ToggleArgs = { label: string; disabled: boolean; onChange: (event: ChangeEvent<HTMLInputElement>, checked: boolean) => void };
+type TabsArgs = { tabCount: number; scrollable: boolean };
 
-/** A setting that takes effect at once (no Save button): `ui-switch` with its thumb, inside a `ui-inline-label`. */
-export const SwitchControl: StoryObj<SwitchArgs> = {
+/** A setting that takes effect at once (no Save button): `Switch` as the `control` of a `FormControlLabel`. */
+export const SwitchControl: StoryObj<ToggleArgs> = {
   name: 'Switch',
-  args: { label: 'Real-time alerts', disabled: false, onCheckedChange: fn() },
-  argTypes: { onCheckedChange: { control: false } },
-  render: ({ label, disabled, onCheckedChange }) => (
-    <label className="ui-inline-label">
-      <Switch.Root className="ui-switch" defaultChecked disabled={disabled} onCheckedChange={onCheckedChange}>
-        <Switch.Thumb className="ui-switch-thumb" />
-      </Switch.Root>
-      {label}
-    </label>
+  args: { label: 'Real-time alerts', disabled: false, onChange: fn() },
+  argTypes: { onChange: { control: false } },
+  render: ({ label, disabled, onChange }) => (
+    <FormControlLabel control={<Switch defaultChecked onChange={onChange} />} label={label} disabled={disabled} />
   ),
 };
 
-/** An option that is applied with the rest of a form: `ui-checkbox` with a check icon in its indicator. */
-export const CheckboxControl: StoryObj<CheckboxArgs> = {
+/** An option that is applied with the rest of a form: `Checkbox` as the `control` of a `FormControlLabel`. */
+export const CheckboxControl: StoryObj<ToggleArgs> = {
   name: 'Checkbox',
-  args: { label: 'Include submetered loads', disabled: false, onCheckedChange: fn() },
-  argTypes: { onCheckedChange: { control: false } },
-  render: ({ label, disabled, onCheckedChange }) => (
-    <label className="ui-inline-label">
-      <Checkbox.Root className="ui-checkbox" defaultChecked disabled={disabled} onCheckedChange={onCheckedChange}>
-        <Checkbox.Indicator className="ui-checkbox-indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
-      {label}
-    </label>
+  args: { label: 'Include submetered loads', disabled: false, onChange: fn() },
+  argTypes: { onChange: { control: false } },
+  render: ({ label, disabled, onChange }) => (
+    <FormControlLabel control={<Checkbox defaultChecked onChange={onChange} />} label={label} disabled={disabled} />
   ),
 };
 
-/** A parent checkbox when only some of its children are checked: set `indeterminate` on `Checkbox.Root`. */
-export const CheckboxIndeterminate: StoryObj<CheckboxArgs> = {
-  name: 'Checkbox, indeterminate',
-  args: { label: 'All meters', disabled: false, onCheckedChange: fn() },
-  argTypes: { onCheckedChange: { control: false } },
-  render: ({ label, disabled, onCheckedChange }) => (
-    <label className="ui-inline-label">
-      <Checkbox.Root className="ui-checkbox" indeterminate disabled={disabled} onCheckedChange={onCheckedChange}>
-        <Checkbox.Indicator className="ui-checkbox-indicator">
-          <CheckIcon />
-        </Checkbox.Indicator>
-      </Checkbox.Root>
-      {label}
-    </label>
-  ),
-};
+const childMeters = ['Main electric', 'Chiller plant', 'Steam service'];
 
-function tabLabels(count: number) {
-  return Array.from({ length: Math.min(6, Math.max(1, count)) }, (_, index) => `Tab ${index + 1}`);
+function ParentCheckbox({ label, disabled, onChange }: ToggleArgs) {
+  const [checked, setChecked] = useState([true, false, false]);
+  const all = checked.every(Boolean);
+  const some = checked.some(Boolean);
+  return (
+    <Box>
+      <FormControlLabel
+        label={label}
+        disabled={disabled}
+        control={
+          <Checkbox
+            checked={all}
+            indeterminate={some && !all}
+            onChange={(event, value) => {
+              setChecked(checked.map(() => value));
+              onChange(event, value);
+            }}
+          />
+        }
+      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', ml: 3 }}>
+        {childMeters.map((meter, index) => (
+          <FormControlLabel
+            key={meter}
+            label={meter}
+            disabled={disabled}
+            control={
+              <Checkbox
+                checked={checked[index]}
+                onChange={(_event, value) => setChecked(checked.map((current, at) => (at === index ? value : current)))}
+              />
+            }
+          />
+        ))}
+      </Box>
+    </Box>
+  );
 }
 
-/** Switching between views of the same subject: `ui-tabs`, `ui-tabs-list`, `ui-tab` and the sliding `ui-tab-indicator`. */
-export const TabsControl: StoryObj<TabsArgs> = {
-  name: 'Tabs',
-  args: { tabCount: 3 },
-  argTypes: { tabCount: { control: { type: 'range', min: 1, max: 6 } } },
-  render: ({ tabCount }) => {
-    const tabs = tabLabels(tabCount);
-    return (
-      <Tabs.Root className="ui-tabs" defaultValue={tabs[0]}>
-        <Tabs.List className="ui-tabs-list">
-          {tabs.map((tab) => (
-            <Tabs.Tab key={tab} className="ui-tab" value={tab}>
-              {tab}
-            </Tabs.Tab>
-          ))}
-          <Tabs.Indicator className="ui-tab-indicator" />
-        </Tabs.List>
-        {tabs.map((tab) => (
-          <Tabs.Panel key={tab} className="ui-tab-panel" value={tab}>
-            {tab} content.
-          </Tabs.Panel>
-        ))}
-      </Tabs.Root>
-    );
-  },
+/** A parent checkbox when only some of its children are checked: set `indeterminate` on the parent `Checkbox`. */
+export const CheckboxIndeterminate: StoryObj<ToggleArgs> = {
+  name: 'Checkbox, indeterminate',
+  args: { label: 'All meters', disabled: false, onChange: fn() },
+  argTypes: { onChange: { control: false } },
+  render: (args) => <ParentCheckbox {...args} />,
 };
 
-/** The same tabs at phone width (375px), to review how a full tab list fits a narrow screen. */
+const tabNames = ['Usage', 'Demand', 'Cost', 'Carbon', 'Weather', 'Alerts'];
+
+function TabsDemo({ tabCount, scrollable }: TabsArgs) {
+  const id = useId();
+  const tabs = tabNames.slice(0, Math.min(tabNames.length, Math.max(1, tabCount)));
+  const [value, setValue] = useState(0);
+  const selected = Math.min(value, tabs.length - 1);
+  return (
+    <Box>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs
+          value={selected}
+          onChange={(_event, next: number) => setValue(next)}
+          aria-label="Building views"
+          variant={scrollable ? 'scrollable' : 'standard'}
+          scrollButtons={scrollable ? 'auto' : false}
+          allowScrollButtonsMobile={scrollable}
+        >
+          {tabs.map((tab, index) => (
+            <Tab key={tab} label={tab} id={`${id}-tab-${index}`} aria-controls={`${id}-panel-${index}`} />
+          ))}
+        </Tabs>
+      </Box>
+      {tabs.map((tab, index) => (
+        <Box
+          key={tab}
+          role="tabpanel"
+          hidden={index !== selected}
+          id={`${id}-panel-${index}`}
+          aria-labelledby={`${id}-tab-${index}`}
+          sx={{ py: 2 }}
+        >
+          {index === selected ? `${tab} content.` : null}
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+/** Switching between views of the same subject: `Tabs` of `Tab`, each linked to its `tabpanel` by `id` and `aria-controls`. */
+export const TabsControl: StoryObj<TabsArgs> = {
+  name: 'Tabs',
+  args: { tabCount: 3, scrollable: false },
+  argTypes: { tabCount: { control: { type: 'range', min: 1, max: tabNames.length } } },
+  render: (args) => <TabsDemo {...args} />,
+};
+
+/** A full tab list at phone width (375px): `variant="scrollable"` with scroll buttons so no tab is cut off. */
 export const TabsOnPhone: StoryObj<TabsArgs> = {
   ...TabsControl,
   name: 'Tabs on a phone',
-  args: { tabCount: 6 },
+  args: { tabCount: 6, scrollable: true },
   globals: { viewport: { value: 'phone', isRotated: false } },
 };

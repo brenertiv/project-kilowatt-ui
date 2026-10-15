@@ -7,7 +7,7 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 ## Tokens
 
 - Tokens are the only source of color, type, space, radius and shadow. No component declares a hex value, a pixel radius or a font family of its own.
-- Styling is plain CSS with custom properties. The one exception is Material UI, which is styled only through its theme (stock MUI plus `src/mui/departures.ts`): no `sx` colors, no `styled()` literals, no inline Emotion in components.
+- Components are Material UI, styled only through the theme (stock MUI plus `src/mui/departures.ts`): no `sx` colors, no `styled()` literals, no inline Emotion in components. Plain CSS with the token custom properties is left for the few things that aren't MUI components: the chart canvas, the icon font and the Foundations swatches.
 - Three layers. **Primitives** are the Figma ramps and scales, read from the snapshot by `src/primitives.ts` with exactly the steps Figma has and emitted as `--color-slate-300`, `--spacing-2`, `--radius-md` and so on; they change only when the snapshot changes. **Core** tokens are the identity knobs (page background, primary text, secondary, success, warning, error, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles: the Figma-owned ones (surfaces, divider, text emphasis, action overlays, the six palettes) read both modes from the snapshot under Figma's names; the code-owned ones (tints, utilities, chart slots, track, divider steps) are declared in code as primitive steps.
 - **Derived** variables (type scale steps, space scale, inner radius, shadow steps, scrollbar colors) are computed from the layers above and are never stored. Change the source token to move them.
 - Every color token has a light and a dark value. A new color token is not done until both exist and the Design System contrast list has been checked.
@@ -25,7 +25,7 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 
 ## Material UI
 
-- Kilowatt is moving to Material UI. New work uses MUI components. The Base UI recipes, `DataTable`, `CardMenu` and the charts stay as they are until each is rebuilt on MUI or deliberately kept.
+- Material UI is the only component library. Every control, overlay, table and surface is an MUI component; Base UI has been removed. Build new UI from MUI components as MUI documents them.
 - The theme is stock MUI plus the departures listed on Foundations → MUI departures, and nothing else. Anything not listed is MUI's default, on purpose: spacing (8px unit), radius, shadows, motion, ripples, component styles.
 - To depart from MUI, add an entry to `src/mui/departures.ts` with its reason (and spec ID if there is one). The theme is built only from that list, the departures page is generated from it, and `src/mui/departures.test.ts` fails if the theme differs from MUI anywhere the list doesn't claim. Never set a theme value anywhere else, and never pass a color to a component.
 - The theme runs on MUI's CSS theme variables with light and dark color schemes. MUI owns the scheme and puts the `dark` class on `<html>`; the token stylesheet (`src/theme/tokenStyles.ts`, generated from `src/tokens.ts`) keys on the same class, so MUI and plain CSS switch together. Read the current scheme in code with `useKilowattTheme()`, never by checking classes.

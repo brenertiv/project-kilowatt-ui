@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
-import { Toast } from '@base-ui/react/toast';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../components/Toast';
 import { breakpointRoles, breakpoints, breakpointVarName, type BreakpointName } from '../breakpoints';
 import { iconCatalog } from '../icons';
 import { colorRamps, radiusScale, rampLabel, sizeScale, spacingScale, typographyPrimitives, type RampName } from '../primitives';
@@ -67,13 +67,13 @@ export function ColorSection({
   return (
     <section id="color" className="system-section">
       <h2>{t('system.sections.color')}</h2>
-      <p className="ui-description">{t('system.color.lead')}</p>
+      <p className="system-lead">{t('system.color.lead')}</p>
 
       {colorRoles.map((role) => (
         <div key={role.id} className="system-role">
           <div className="system-role-head">
             <h3>{role.label}</h3>
-            <p className="ui-description">{role.description}</p>
+            <p className="system-lead">{role.description}</p>
           </div>
           <div className="system-swatches">
             {role.tokenIds.map((id) => {
@@ -83,7 +83,7 @@ export function ColorSection({
               const dark = colorOf(id, darkColors);
               const pair = pairForToken(id);
               return (
-                <article key={id} className="card system-swatch">
+                <article key={id} className="system-card system-swatch">
                   <div className="system-swatch-split" aria-hidden="true">
                     <span className="system-swatch-half" style={{ background: light }} />
                     <span className="system-swatch-half" style={{ background: dark }} />
@@ -115,14 +115,14 @@ export function ColorSection({
       <div className="system-role">
         <div className="system-role-head">
           <h3>{t('system.contrast.title')}</h3>
-          <p className="ui-description">{t('system.contrast.lead')}</p>
+          <p className="system-lead">{t('system.contrast.lead')}</p>
         </div>
         <div className="system-contrast-list">
           {contrastPairs.map((pair) => {
             const light = measureContrast(colorOf(pair.fg, lightValues), colorOf(pair.bg, lightValues), pair.kind);
             const dark = measureContrast(colorOf(pair.fg, darkColors), colorOf(pair.bg, darkColors), pair.kind);
             return (
-              <article key={pair.id} className="card system-contrast-row">
+              <article key={pair.id} className="system-card system-contrast-row">
                 <div className="system-contrast-pair" aria-hidden="true">
                   <span
                     className="system-contrast-chip"
@@ -168,7 +168,7 @@ export function TypographySection({ values }: { values: ThemeValues }) {
   return (
     <section id="typography" className="system-section">
       <h2>{t('system.sections.typography')}</h2>
-      <p className="ui-description">{t('system.type.lead')}</p>
+      <p className="system-lead">{t('system.type.lead')}</p>
 
       <div className="system-role">
         <div className="system-role-head">
@@ -184,12 +184,12 @@ export function TypographySection({ values }: { values: ThemeValues }) {
               fontSize: 'var(--font-size-title)',
             };
             return (
-              <article key={role.id} className="card system-type-card">
+              <article key={role.id} className="system-card system-type-card">
                 <p className="system-type-sample" style={sampleStyle}>
                   {role.sample}
                 </p>
                 <h3>{token.label}</h3>
-                <p className="ui-description">{role.usage}</p>
+                <p className="system-lead">{role.usage}</p>
                 <p className="system-meta">
                   <span>{fontLabels[stack] ?? stack}</span>
                 </p>
@@ -203,11 +203,11 @@ export function TypographySection({ values }: { values: ThemeValues }) {
       <div className="system-role">
         <div className="system-role-head">
           <h3>{t('system.type.scale')}</h3>
-          <p className="ui-description">{t('system.type.scaleLead')}</p>
+          <p className="system-lead">{t('system.type.scaleLead')}</p>
         </div>
         <div className="system-type-list">
           {typeScale.map((step) => (
-            <article key={step.id} className="card system-type-card">
+            <article key={step.id} className="system-card system-type-card">
               <p className="system-type-sample" style={{ fontSize: `var(${step.cssVar})`, lineHeight: 1.2 }}>
                 Ag
               </p>
@@ -223,13 +223,13 @@ export function TypographySection({ values }: { values: ThemeValues }) {
       <div className="system-role">
         <div className="system-role-head">
           <h3>{t('system.type.fluid')}</h3>
-          <p className="ui-description">{t('system.type.fluidLead')}</p>
+          <p className="system-lead">{t('system.type.fluidLead')}</p>
         </div>
         <div className="system-type-list">
           {typeScale
             .filter((step) => step.fluid)
             .map((step) => (
-              <article key={step.id} className="card system-type-card">
+              <article key={step.id} className="system-card system-type-card">
                 <p className="system-type-sample" style={{ fontSize: `var(${fluidCssVar(step)})`, lineHeight: 1.2 }}>
                   Ag
                 </p>
@@ -246,7 +246,7 @@ export function TypographySection({ values }: { values: ThemeValues }) {
       <div className="system-role">
         <div className="system-role-head">
           <h3>{t('system.type.roles')}</h3>
-          <p className="ui-description">{t('system.type.rolesLead')}</p>
+          <p className="system-lead">{t('system.type.rolesLead')}</p>
         </div>
         <div className="system-type-list">
           {typeRoles.map((role) => {
@@ -262,12 +262,12 @@ export function TypographySection({ values }: { values: ThemeValues }) {
               fontVariantNumeric: role.tabularNums ? 'tabular-nums' : undefined,
             };
             return (
-              <article key={role.id} className="card system-type-card">
+              <article key={role.id} className="system-card system-type-card">
                 <p className="system-type-sample" style={style}>
                   {role.sample}
                 </p>
                 <h3>{role.label}</h3>
-                <p className="ui-description">{role.usage}</p>
+                <p className="system-lead">{role.usage}</p>
                 <p className="system-meta">
                   <span>{fontSizePx(sizeToken)}</span>
                   <span>{role.weight}</span>
@@ -296,7 +296,7 @@ export function SpaceSection({ values }: { values: ThemeValues }) {
   return (
     <section id="space" className="system-section">
       <h2>{t('system.sections.space')}</h2>
-      <p className="ui-description">{t('system.space.lead')}</p>
+      <p className="system-lead">{t('system.space.lead')}</p>
       <div className="system-space-list">
         {scale.map((token) => {
           const value = derivedValue(token, values, 'light');
@@ -348,9 +348,9 @@ export function ShapeSection({ values }: { values: ThemeValues }) {
   return (
     <section id="shape" className="system-section">
       <h2>{t('system.sections.shape')}</h2>
-      <p className="ui-description">{t('system.shape.lead')}</p>
+      <p className="system-lead">{t('system.shape.lead')}</p>
       <div className="system-shape-grid">
-        <article className="card">
+        <article className="system-card">
           <div className="system-radius-row">
             <div className="system-radius-tile" style={{ borderRadius: radius }}>
               <span>Card</span>
@@ -365,9 +365,9 @@ export function ShapeSection({ values }: { values: ThemeValues }) {
               <code className="system-code">{radiusInner}</code>
             </div>
           </div>
-          <p className="ui-description">{t('system.shape.radiusRule')}</p>
+          <p className="system-lead">{t('system.shape.radiusRule')}</p>
         </article>
-        <article className="card">
+        <article className="system-card">
           <div className="system-shape-samples">
             <div className="system-control-sample" style={{ height: controlHeight }}>
               Control {controlHeight}
@@ -393,11 +393,11 @@ export function LayoutSection() {
   return (
     <section id="layout" className="system-section">
       <h2>{t('system.sections.layout')}</h2>
-      <p className="ui-description">{t('system.layout.lead')}</p>
+      <p className="system-lead">{t('system.layout.lead')}</p>
 
-      <article className="card system-layout-card">
+      <article className="system-card system-layout-card">
         <h3>{t('system.layout.gridTitle')}</h3>
-        <p className="ui-description">
+        <p className="system-lead">
           {t('system.layout.gridMeta', {
             columns: layoutGrid.columns,
             span: layoutGrid.defaultSpan,
@@ -440,11 +440,11 @@ export function LayoutSection() {
 
       <div className="system-breakpoint-list">
         {names.map((name) => (
-          <article key={name} className="card">
+          <article key={name} className="system-card">
             <h3>{name}</h3>
             <code className="system-code">{breakpointVarName(name)}</code>
             <p className="panel-value system-bp-value">{breakpoints[name]}px</p>
-            <p className="ui-description">{breakpointRoles[name]}</p>
+            <p className="system-lead">{breakpointRoles[name]}</p>
           </article>
         ))}
       </div>
@@ -459,12 +459,12 @@ export function PrimitivesSection() {
   return (
     <section id="primitives" className="system-section">
       <h2>{t('system.sections.primitives')}</h2>
-      <p className="ui-description">{t('system.primitives.lead')}</p>
+      <p className="system-lead">{t('system.primitives.lead')}</p>
 
       <div className="system-role">
         <div className="system-role-head">
           <h3>{t('system.primitives.ramps')}</h3>
-          <p className="ui-description">{t('system.primitives.rampsLead')}</p>
+          <p className="system-lead">{t('system.primitives.rampsLead')}</p>
         </div>
         <div className="system-ramps">
           {rampOrder.map((ramp) => (
@@ -493,10 +493,10 @@ export function PrimitivesSection() {
       <div className="system-role">
         <div className="system-role-head">
           <h3>{t('system.primitives.scales')}</h3>
-          <p className="ui-description">{t('system.primitives.scalesLead')}</p>
+          <p className="system-lead">{t('system.primitives.scalesLead')}</p>
         </div>
         <div className="system-swatches">
-          <article className="card system-type-card">
+          <article className="system-card system-type-card">
             <h3>Spacing</h3>
             <p className="system-meta">
               {spacingScale.map(([name, px]) => (
@@ -506,7 +506,7 @@ export function PrimitivesSection() {
               ))}
             </p>
           </article>
-          <article className="card system-type-card">
+          <article className="system-card system-type-card">
             <h3>Radius</h3>
             <p className="system-meta">
               {radiusScale.map(([name, px]) => (
@@ -516,7 +516,7 @@ export function PrimitivesSection() {
               ))}
             </p>
           </article>
-          <article className="card system-type-card">
+          <article className="system-card system-type-card">
             <h3>Font size</h3>
             <p className="system-meta">
               {Object.entries(typographyPrimitives.fontSize).map(([name, px]) => (
@@ -526,7 +526,7 @@ export function PrimitivesSection() {
               ))}
             </p>
           </article>
-          <article className="card system-type-card">
+          <article className="system-card system-type-card">
             <h3>Weight, leading, tracking</h3>
             <p className="system-meta">
               {Object.entries(typographyPrimitives.fontWeight).map(([name, value]) => (
@@ -550,7 +550,7 @@ export function PrimitivesSection() {
               ))}
             </p>
           </article>
-          <article className="card system-type-card">
+          <article className="system-card system-type-card">
             <h3>Size</h3>
             <p className="system-meta">
               {sizeScale.map((px) => (
@@ -568,7 +568,7 @@ export function PrimitivesSection() {
 
 export function IconsSection() {
   const { t } = useTranslation();
-  const toastManager = Toast.useToastManager();
+  const toastManager = useToast();
 
   async function copy(name: string) {
     try {
@@ -582,10 +582,10 @@ export function IconsSection() {
   return (
     <section id="icons" className="system-section">
       <h2>{t('system.sections.icons')}</h2>
-      <p className="ui-description">{t('system.icons.lead')}</p>
+      <p className="system-lead">{t('system.icons.lead')}</p>
       <div className="system-icon-grid">
         {iconCatalog.map(({ name, Icon }) => (
-          <button key={name} type="button" className="card system-icon-card" onClick={() => copy(name)}>
+          <button key={name} type="button" className="system-card system-icon-card" onClick={() => copy(name)}>
             <span className="system-icon-tile" aria-hidden="true">
               <Icon />
             </span>

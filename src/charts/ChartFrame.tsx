@@ -1,8 +1,22 @@
 import { createContext, useContext, useId, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@base-ui/react/button';
-import { Toggle } from '@base-ui/react/toggle';
-import { ToggleGroup } from '@base-ui/react/toggle-group';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Skeleton from '@mui/material/Skeleton';
+import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Typography from '@mui/material/Typography';
 import { formatUnit } from '../lib/format';
 import { format } from 'date-fns';
 import { formatCalendarDate } from '../lib/dates';
@@ -62,7 +76,7 @@ export type ChartFrameProps = {
   legend?: boolean;
   /** A color scale or other key rendered where the legend would go, e.g. `<HeatScale>`. Shown in the chart view only. */
   scale?: ReactNode;
-  /** Extra class on the outer `figure`, for layout from the parent. */
+  /** Extra class on the outer `figure` (an outlined MUI `Card`), for layout from the parent. */
   className?: string;
 };
 
@@ -85,48 +99,56 @@ function ChartTable({ data, xKind, title }: { data: ChartData; xKind: 'date' | '
   const xs = xValues(data);
   return (
     // A focusable, named region so keyboard users can scroll a table wider or taller than the card.
-    <div
-      className="table-wrap chart-table-wrap"
-      role="region"
-      aria-label={t('chart.tableLabel', { title })}
-      tabIndex={0}
-    >
-      <table className="ui-table chart-table">
-        <thead>
-          <tr>
-            <th scope="col">{data.xLabel ?? (xKind === 'date' ? t('chart.date') : t('chart.category'))}</th>
+    <TableContainer role="region" aria-label={t('chart.tableLabel', { title })} tabIndex={0} sx={{ height: '100%' }}>
+      <Table size="small" stickyHeader>
+        <TableHead>
+          <TableRow>
+            <TableCell scope="col">{data.xLabel ?? (xKind === 'date' ? t('chart.date') : t('chart.category'))}</TableCell>
             {data.series.map((series) => (
-              <th key={series.id} scope="col" className="is-numeric">
+              <TableCell key={series.id} scope="col" align="right">
                 {series.label}
                 {series.unit && series.unit !== 'count' ? ` (${series.unit})` : ''}
-              </th>
+              </TableCell>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {xs.map((x) => (
-            <tr key={String(x)}>
-              <th scope="row">{formatX(x, xKind)}</th>
+            <TableRow key={String(x)}>
+              <TableCell component="th" scope="row">
+                {formatX(x, xKind)}
+              </TableCell>
               {data.series.map((series) => {
                 const point = series.points.find((candidate) => candidate.x === x);
                 return (
-                  <td key={series.id} className="is-numeric">
+                  <TableCell key={series.id} align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                     {point && point.y !== null ? formatUnit(point.y, series.unit ?? 'count') : '—'}
-                  </td>
+                  </TableCell>
                 );
               })}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+/** Centers a loading, error or empty state in the fixed-height plot area. */
+function StateSlot({ children, ...props }: { children: ReactNode; role?: string; 'aria-busy'?: boolean }) {
+  return (
+    <Stack spacing={1.5} sx={{ height: '100%', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} {...props}>
+      {children}
+    </Stack>
   );
 }
 
 /**
- * The card chrome every chart shares: title, legend, toolbar, loading, fetching, empty and error
- * states at a fixed height, and a Chart/Table toggle so every value is reachable without hover or
- * color. Chart kinds render as its child and must sit inside it: `TimeSeriesChart`,
+ * The card chrome every chart shares, as an outlined MUI `Card`: a `CardHeader` with the title,
+ * subtitle, toolbar and a Chart/Table `ToggleButtonGroup`, then the legend and the plot area. Loading
+ * (a `Skeleton`), fetching (dimmed), empty and error (an `Alert` with Retry) states keep the plot at a
+ * fixed height, and the table view makes every value reachable without hover or color. Don't nest it
+ * in another `Card`. Chart kinds render as its child and must sit inside it: `TimeSeriesChart`,
  * `CategoryBarChart`, `DonutChart` and `HeatmapChart` throw outside one. The frame assigns series colors from the
  * token palette by series id, so never pass colors. For a single
  * number, use `StatCard` instead of a chart.
@@ -190,27 +212,40 @@ export function ChartFrame({
   let body: ReactNode;
   if (loading) {
     body = (
-      <div className="chart-state" role="status" aria-busy="true">
-        <span className="ui-sr-only">{t('data.loading')}</span>
-        <span className="ui-skeleton chart-skeleton" />
-      </div>
+      <StateSlot role="status" aria-busy>
+        {/* The skeleton is a named progressbar, so the status region reads "Loading". */}
+        <Skeleton
+          variant="rounded"
+          role="progressbar"
+          aria-label={t('data.loading')}
+          sx={{ width: '100%', height: '100%' }}
+        />
+      </StateSlot>
     );
   } else if (error) {
     body = (
-      <div className="chart-state" role="alert">
-        <p className="ui-description">{error}</p>
-        {onRetry ? (
-          <Button className="ui-btn" onClick={onRetry}>
-            {t('data.retry')}
-          </Button>
-        ) : null}
-      </div>
+      <StateSlot>
+        <Alert
+          severity="error"
+          action={
+            onRetry ? (
+              <Button color="inherit" size="small" onClick={onRetry}>
+                {t('data.retry')}
+              </Button>
+            ) : undefined
+          }
+        >
+          {error}
+        </Alert>
+      </StateSlot>
     );
   } else if (empty) {
     body = (
-      <div className="chart-state">
-        <p className="ui-description">{emptyMessage ?? t('chart.empty')}</p>
-      </div>
+      <StateSlot>
+        <Typography variant="body2" color="text.secondary">
+          {emptyMessage ?? t('chart.empty')}
+        </Typography>
+      </StateSlot>
     );
   } else if (view === 'table') {
     body = <ChartTable data={data} xKind={xKind} title={title} />;
@@ -220,42 +255,48 @@ export function ChartFrame({
 
   return (
     <FrameContext.Provider value={frame}>
-      <figure className={['chart-frame', className].filter(Boolean).join(' ')} aria-labelledby={`${id}-title`}>
-        <figcaption className="chart-frame-head">
-          <div className="chart-frame-titles">
-            <h4 id={`${id}-title`} className="chart-frame-title">
-              {title}
-            </h4>
-            {subtitle ? <p className="ui-description">{subtitle}</p> : null}
-          </div>
-          <div className="chart-frame-tools">
-            {toolbar}
-            <ToggleGroup
-              value={[view]}
-              onValueChange={(next) => {
-                const chosen = next[0] as 'chart' | 'table' | undefined;
-                if (chosen) setView(chosen);
-              }}
-              className="ui-toggle-group chart-view-toggle"
-              aria-label={t('chart.viewAs')}
-            >
-              <Toggle value="chart" className="ui-toggle">
-                {t('chart.chart')}
-              </Toggle>
-              <Toggle value="table" className="ui-toggle">
-                {t('chart.table')}
-              </Toggle>
-            </ToggleGroup>
-          </div>
-        </figcaption>
-        {view === 'chart' && legend ? (
-          <ChartLegend items={legendItems} hidden={hidden} onToggle={toggleableLegend ? toggle : undefined} />
-        ) : null}
-        {view === 'chart' && scale ? <div className="chart-scale-slot">{scale}</div> : null}
-        <div className="chart-frame-body" data-fetching={fetching || undefined} style={{ height }}>
-          {body}
-        </div>
-      </figure>
+      <Card
+        component="figure"
+        className={className}
+        aria-labelledby={`${id}-title`}
+        sx={{ m: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+      >
+        <CardHeader
+          component="figcaption"
+          title={title}
+          subheader={subtitle}
+          slotProps={{ title: { id: `${id}-title`, component: 'h4' }, action: { sx: { alignSelf: 'center', my: 0 } } }}
+          action={
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              {toolbar}
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={view}
+                onChange={(_event, next: 'chart' | 'table' | null) => {
+                  if (next) setView(next);
+                }}
+                aria-label={t('chart.viewAs')}
+              >
+                <ToggleButton value="chart">{t('chart.chart')}</ToggleButton>
+                <ToggleButton value="table">{t('chart.table')}</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+          }
+        />
+        <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 0, '&:last-child': { pb: 2 } }}>
+          {view === 'chart' && legend ? (
+            <ChartLegend items={legendItems} hidden={hidden} onToggle={toggleableLegend ? toggle : undefined} />
+          ) : null}
+          {view === 'chart' && scale ? <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>{scale}</Box> : null}
+          <Box
+            aria-busy={fetching || undefined}
+            sx={{ position: 'relative', minHeight: 0, height, opacity: fetching ? 0.6 : 1, transition: 'opacity 150ms' }}
+          >
+            {body}
+          </Box>
+        </CardContent>
+      </Card>
     </FrameContext.Provider>
   );
 }

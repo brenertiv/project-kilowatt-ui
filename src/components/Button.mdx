@@ -3,58 +3,65 @@ import * as ButtonStories from './Button.stories';
 
 <Meta
   of={ButtonStories}
-  summary="Button recipe: Base UI's Button with the ui-btn classes (solid, outlined, ghost) or ui-icon-btn for icon-only actions. There is no Button component of ours; copy the markup."
+  summary="Buttons are MUI's Button (contained, outlined, text) and IconButton, used as MUI documents them, with sentence-case labels and icons from src/icons."
 />
 
 # Button
 
-There is no Kilowatt `Button` component. A button is Base UI's `Button` from `@base-ui/react/button` with a `ui-btn` class from `src/styles.css`. Use it in Base UI surfaces: toolbars, dialogs, menus, filter rows. Inside Material UI surfaces (the data components in `src/components/data`, such as `ErrorState` and `CursorPagination`), use Material's `Button`, which is stock MUI apart from sentence-case labels (Foundations → MUI departures). New work uses Material's `Button` everywhere; this recipe stays for the Base UI surfaces until they move to MUI.
+There is no Kilowatt `Button` component. Use MUI's `Button` and `IconButton` from `@mui/material` as MUI documents them. The theme is stock MUI apart from the departures in `src/mui/departures.ts`; for buttons the one that shows is sentence-case labels (no uppercase).
 
 <Canvas of={ButtonStories.Primary} />
 
-## Recipe
+## Usage
 
 ```tsx
-import { Button } from '@base-ui/react/button';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
 import { MoreIcon, PlusIcon } from 'src/icons';
 
-<Button className="ui-btn ui-btn-solid" onClick={save}>
-  <PlusIcon />
+<Button variant="contained" startIcon={<PlusIcon />} onClick={save}>
   New work order
 </Button>
 
-<Button className="ui-icon-btn" aria-label="More actions">
+<IconButton aria-label="More actions" onClick={openMenu}>
   <MoreIcon />
-</Button>
+</IconButton>
 ```
 
-## Variants
+## Which variant
 
-- `ui-btn ui-btn-solid`: the primary action, filled with the primary color. One per view or dialog.
-- `ui-btn` alone: the outlined secondary action. It rests on the sunken surface, lifts to the raised surface on hover and drops to the page surface on press.
-- `ui-btn ui-btn-ghost`: low emphasis, transparent background and no border until hover, for toolbars, table rows and card headers.
-- `ui-icon-btn`: a square, borderless icon-only button the size of a control (36px). Add `ui-icon-btn-sm` for the 28px card-control size.
-- With an icon: put the icon from `src/icons` first, before the text. A leading icon trims the start padding by 2px.
-- All `ui-btn` variants are 36px tall with the control radius and scale to 0.96 on press (unless reduced motion is on).
+- `variant="contained"`: the primary action. One per view or dialog.
+- `variant="outlined"`: a secondary action beside the primary one, or a standalone action.
+- `variant="text"` (MUI's default): low emphasis, for toolbars, table rows and card headers.
+- `IconButton`: an icon-only action in dense UI, such as a card's overflow menu.
+- `color="error"`: only for the confirming button of a destructive action, inside an alert dialog (see Primitives/Overlays).
+
+## Kilowatt rules
+
+- Write labels in sentence case, as you want them shown ("Export CSV", not "EXPORT CSV"). The theme does not uppercase them.
+- Icons come from `src/icons`, never `@mui/icons-material` (not installed). Pass a leading icon as `startIcon`.
+- Use palette roles (`color="primary"`, `color="error"`) only; don't pass colors, and use `sx` only for layout.
+
+## Loading
+
+Set `loading` while the action runs. MUI disables the button and shows a spinner; with `loadingPosition="start"` the spinner replaces the `startIcon`. Change the label to say what is happening ("Dispatching…").
 
 ## Do and don't
 
 Do:
 
 - Name the action in the label ("Dispatch ticket", "Export CSV"), not "OK" or "Submit".
-- While an action runs, keep `disabled`, add `focusableWhenDisabled` and `aria-busy`, and change the label to say what is happening (see Loading).
 - Explain nearby why a disabled button is unavailable.
 
 Don't:
 
-- Don't put two `ui-btn-solid` buttons side by side.
-- Don't pass colors or inline styles; the variant classes carry every state.
-- Don't run a destructive or irreversible action straight from the button; confirm it in an alert dialog (see Primitives/Overlays).
+- Don't put two contained buttons side by side.
+- Don't run a destructive or irreversible action straight from a button; confirm it in an alert dialog.
 
 ## Accessibility
 
-- Base UI renders a native `button`, handles keyboard activation, sets `data-disabled`, and with `focusableWhenDisabled` keeps the button in the tab order while disabled.
-- Every `ui-btn` and `ui-icon-btn` shows a 2px secondary-color focus ring on keyboard focus.
-- The caller must give an icon-only button an `aria-label`. Icons from `src/icons` are `aria-hidden`, so the label is the only accessible name.
+- MUI renders a native `button` with keyboard activation and a visible focus state.
+- Give every `IconButton` an `aria-label`. Icons from `src/icons` are `aria-hidden`, so the label is the only accessible name.
+- A `loading` button is disabled, so it leaves the tab order; keep the label meaningful and announce the result when the action finishes.
 
 <Stories includePrimary={false} />

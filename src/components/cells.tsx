@@ -1,11 +1,37 @@
-import './dataTable.css';
-import type { ReactNode } from 'react';
-import { Menu } from '@base-ui/react/menu';
+import { useId, useState, type ReactNode } from 'react';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import { MoreIcon } from '../icons';
 import { formatCalendarDate } from '../lib/dates';
 import { formatDelta, formatUnit, type Unit } from '../lib/format';
+
+/** Hidden from sight, still read by assistive technology. */
+const visuallyHidden = {
+  border: 0,
+  clip: 'rect(0 0 0 0)',
+  height: '1px',
+  margin: '-1px',
+  overflow: 'hidden',
+  padding: 0,
+  position: 'absolute',
+  whiteSpace: 'nowrap',
+  width: '1px',
+} as const;
+
+/** Palette color of the dot for each `StatusCell` tone. Unknown tones fall back to neutral. */
+const statusDotColor: Record<string, string> = {
+  positive: 'success.main',
+  warning: 'warning.main',
+  negative: 'error.main',
+  neutral: 'text.disabled',
+};
 
 export type StatusCellProps = {
   /** Semantic tone: `positive`, `warning`, `negative` or `neutral`. Pick it from what the state means, not the color you want. */
@@ -15,18 +41,28 @@ export type StatusCellProps = {
 };
 
 /**
- * A state pill for a table cell: a colored dot plus its label, e.g. linked, offline, overdue. Use it in
- * `DataTable` columns built with `createColumnHelper`. Outside tables, and for API status vocabularies,
- * use `StatusChip` and its wrappers from `src/components/data` instead.
+ * A state pill for a table cell: a small outlined MUI `Chip` with a dot in the tone's palette color and the label
+ * in the text color, e.g. linked, offline, overdue. Use it in `DataTable` columns built with `createColumnHelper`.
+ * Outside tables, and for API status vocabularies, use `StatusChip` and its wrappers from `src/components/data` instead.
  *
  * @summary A table-cell status pill with a semantic tone and a label.
  * @import import { StatusCell } from 'src/components/cells';
  */
 export function StatusCell({ tone, children }: StatusCellProps) {
   return (
-    <span className="ui-status" data-tone={tone}>
-      {children}
-    </span>
+    <Chip
+      size="small"
+      variant="outlined"
+      label={children}
+      data-tone={tone}
+      icon={
+        <Box
+          component="span"
+          aria-hidden="true"
+          sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: statusDotColor[tone] ?? statusDotColor.neutral }}
+        />
+      }
+    />
   );
 }
 
@@ -36,14 +72,14 @@ export type ChipCellProps = {
 };
 
 /**
- * A neutral chip for a categorical value in a table cell, such as a source or a type. It carries no tone;
- * when the value is a state that can be good or bad, use `StatusCell` instead.
+ * A neutral chip (a small outlined MUI `Chip`) for a categorical value in a table cell, such as a source or a type.
+ * It carries no tone; when the value is a state that can be good or bad, use `StatusCell` instead.
  *
  * @summary A table-cell chip for a category label.
  * @import import { ChipCell } from 'src/components/cells';
  */
 export function ChipCell({ children }: ChipCellProps) {
-  return <span className="ui-chip">{children}</span>;
+  return <Chip size="small" variant="outlined" label={children} />;
 }
 
 export type NumericCellProps = {
@@ -65,7 +101,11 @@ export type NumericCellProps = {
  */
 export function NumericCell({ value, unit = 'count', compact }: NumericCellProps) {
   if (value === null || value === undefined || Number.isNaN(value)) return <EmptyCell />;
-  return <span className="ui-table-number">{formatUnit(value, unit, { compact })}</span>;
+  return (
+    <Box component="span" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+      {formatUnit(value, unit, { compact })}
+    </Box>
+  );
 }
 
 export type DeltaCellProps = {
@@ -77,9 +117,12 @@ export type DeltaCellProps = {
   upIsGood?: boolean;
 };
 
+const deltaColor = { positive: 'success.main', negative: 'error.main', neutral: 'text.secondary' } as const;
+
 /**
- * A signed change, colored positive or negative by whether the movement is good. Use it for period-over-period
- * columns in a table. For the absolute value, use `NumericCell`.
+ * A signed change in tabular digits, in the success color when the movement is good, the error color when it is
+ * bad and the secondary text color at zero. Use it for period-over-period columns in a table. For the absolute
+ * value, use `NumericCell`.
  *
  * @summary A table-cell signed change, toned by whether up is good.
  * @import import { DeltaCell } from 'src/components/cells';
@@ -88,9 +131,14 @@ export function DeltaCell({ value, unit = 'percent', upIsGood = true }: DeltaCel
   if (value === null || value === undefined || Number.isNaN(value)) return <EmptyCell />;
   const tone = value === 0 ? 'neutral' : (value > 0) === upIsGood ? 'positive' : 'negative';
   return (
-    <span className="ui-table-delta ui-table-number" data-tone={tone}>
+    <Typography
+      component="span"
+      variant="inherit"
+      data-tone={tone}
+      sx={{ color: deltaColor[tone], fontVariantNumeric: 'tabular-nums' }}
+    >
       {formatDelta(value, unit)}
-    </span>
+    </Typography>
   );
 }
 
@@ -119,15 +167,16 @@ export type LinkCellProps = {
 };
 
 /**
- * An in-app link in a table cell, usually on the name column to open the record. For a relation to another
- * record from API data, use `RelationLink` from `src/components/data`.
+ * An in-app link in a table cell, usually on the name column to open the record: an MUI `Link` rendered through
+ * react-router, underlined on hover. For a relation to another record from API data, use `RelationLink` from
+ * `src/components/data`.
  *
  * @summary A table-cell react-router link to a record.
  * @import import { LinkCell } from 'src/components/cells';
  */
 export function LinkCell({ href, children }: LinkCellProps) {
   return (
-    <Link className="ui-table-link" to={href}>
+    <Link component={RouterLink} to={href} underline="hover">
       {children}
     </Link>
   );
@@ -137,9 +186,9 @@ export function LinkCell({ href, children }: LinkCellProps) {
 export type ActionItem = {
   /** Menu item text. Labels may repeat; items are keyed by position. */
   label: string;
-  /** Called when the item is chosen. */
+  /** Called when the item is chosen. The menu closes first. */
   onSelect: () => void;
-  /** Draws the item in the negative color, through `data-destructive` on its `ui-item`. Use for irreversible actions such as delete. Defaults to false. */
+  /** Draws the item in the error color. Use for irreversible actions such as delete. Defaults to false. */
   destructive?: boolean;
 };
 
@@ -151,38 +200,54 @@ export type ActionsCellProps = {
 };
 
 /**
- * A "more" icon button that opens a menu of per-row actions. Use it in a trailing column, usually pinned
- * right. For a card's top-right menu, use `CardMenu`; for actions on several selected rows, use DataTable's
- * `bulkActions`.
+ * A small "more" `IconButton` that opens an MUI `Menu` of per-row actions, aligned to the button's right edge.
+ * Use it in a trailing column, usually pinned right. For a card's top-right menu, use `CardMenu`; for actions
+ * on several selected rows, use DataTable's `bulkActions`.
  *
  * @summary A table-cell overflow menu of per-row actions.
  * @import import { ActionsCell } from 'src/components/cells';
  */
 export function ActionsCell({ items, label }: ActionsCellProps) {
   const { t } = useTranslation();
+  const id = useId();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const open = anchor !== null;
   return (
-    <Menu.Root>
-      <Menu.Trigger className="ui-icon-btn" aria-label={label ?? t('table.rowActions')}>
+    <>
+      <IconButton
+        size="small"
+        aria-label={label ?? t('table.rowActions')}
+        aria-haspopup="menu"
+        aria-controls={open ? `${id}-menu` : undefined}
+        aria-expanded={open || undefined}
+        onClick={(event) => setAnchor(event.currentTarget)}
+      >
         <MoreIcon />
-      </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Positioner className="ui-positioner" sideOffset={4} align="end">
-          <Menu.Popup className="ui-popup">
-            {/* The menu is rebuilt per open and items never reorder in place, so the index is a stable key. */}
-            {items.map((item, index) => (
-              <Menu.Item
-                key={index}
-                className="ui-item"
-                data-destructive={item.destructive || undefined}
-                onClick={item.onSelect}
-              >
-                {item.label}
-              </Menu.Item>
-            ))}
-          </Menu.Popup>
-        </Menu.Positioner>
-      </Menu.Portal>
-    </Menu.Root>
+      </IconButton>
+      <Menu
+        id={`${id}-menu`}
+        anchorEl={anchor}
+        open={open}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        {/* The menu is rebuilt per open and items never reorder in place, so the index is a stable key. */}
+        {items.map((item, index) => (
+          <MenuItem
+            key={index}
+            data-destructive={item.destructive || undefined}
+            sx={item.destructive ? { color: 'error.main' } : undefined}
+            onClick={() => {
+              setAnchor(null);
+              item.onSelect();
+            }}
+          >
+            {item.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }
 
@@ -198,7 +263,7 @@ export type SparklineCellProps = {
 };
 
 /**
- * A tiny trend line (80 by 20 pixels) in the current text color. Use it to show the shape of a recent series
+ * A tiny trend line (80 by 20 pixels) in the secondary text color. Use it to show the shape of a recent series
  * next to its number in a table. It has no axes or values; for a readable chart, use a chart component.
  *
  * @summary A table-cell sparkline of the last 12 points.
@@ -220,25 +285,27 @@ export function SparklineCell({ points, label }: SparklineCellProps) {
     })
     .join(' ');
   return (
-    <svg
-      className="ui-sparkline"
-      width={sparklineWidth}
-      height={sparklineHeight}
-      viewBox={`0 0 ${sparklineWidth} ${sparklineHeight}`}
-      role={label ? 'img' : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
-      focusable="false"
-    >
-      <polyline fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" points={coordinates} />
-    </svg>
+    <Box component="span" sx={{ display: 'inline-flex', verticalAlign: 'middle', color: 'text.secondary' }}>
+      <svg
+        width={sparklineWidth}
+        height={sparklineHeight}
+        viewBox={`0 0 ${sparklineWidth} ${sparklineHeight}`}
+        role={label ? 'img' : undefined}
+        aria-label={label}
+        aria-hidden={label ? undefined : true}
+        focusable="false"
+        style={{ display: 'block' }}
+      >
+        <polyline fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" points={coordinates} />
+      </svg>
+    </Box>
   );
 }
 
 /**
- * The em dash for a missing value, with the accessible name "None". DataTable already renders the same dash for
- * empty accessor values, and the other cells render it for missing input, so use it directly only in a
- * custom `cell` renderer.
+ * The em dash for a missing value, in the secondary text color, with the accessible name "None". DataTable already
+ * renders the same dash for empty accessor values, and the other cells render it for missing input, so use it
+ * directly only in a custom `cell` renderer.
  *
  * @summary The table's missing-value dash with an accessible name.
  * @import import { EmptyCell } from 'src/components/cells';
@@ -247,9 +314,11 @@ export function EmptyCell() {
   const { t } = useTranslation();
   // A plain span may not carry aria-label, so the name is hidden text and the dash is hidden from assistive tech.
   return (
-    <span className="ui-table-empty">
+    <Box component="span" sx={{ color: 'text.secondary' }}>
       <span aria-hidden="true">—</span>
-      <span className="ui-sr-only">{t('table.none')}</span>
-    </span>
+      <Box component="span" sx={visuallyHidden}>
+        {t('table.none')}
+      </Box>
+    </Box>
   );
 }
