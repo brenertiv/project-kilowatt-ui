@@ -46,9 +46,9 @@ export function PageHeader({ title, eyebrow, description, breadcrumbs, actions, 
   const { t } = useTranslation();
   const loading = state?.status === 'loading';
   return (
-    <Box component="header" sx={{ mb: 6 }}>
+    <Box component="header" sx={{ mb: 3 }}>
       {breadcrumbs && breadcrumbs.length > 0 ? (
-        <Breadcrumbs aria-label={t('data.breadcrumb')} sx={{ mb: 2, fontSize: '0.75rem' }}>
+        <Breadcrumbs aria-label={t('data.breadcrumb')} sx={{ mb: 1, fontSize: '0.75rem' }}>
           {breadcrumbs.map((crumb, index) =>
             crumb.to ? (
               <Link key={index} component={RouterLink} to={crumb.to} color="text.secondary">
@@ -64,7 +64,7 @@ export function PageHeader({ title, eyebrow, description, breadcrumbs, actions, 
       ) : null}
       <Stack
         direction="row"
-        spacing={4}
+        spacing={2}
         useFlexGap
         sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}
       >
@@ -86,18 +86,18 @@ export function PageHeader({ title, eyebrow, description, breadcrumbs, actions, 
             )}
           </Typography>
           {description || loading ? (
-            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 720 }}>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5, maxWidth: 720 }}>
               {loading ? <Skeleton width="60%" /> : description}
             </Typography>
           ) : null}
           {meta && !loading ? (
-            <Stack direction="row" spacing={2} useFlexGap sx={{ mt: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Stack direction="row" spacing={1} useFlexGap sx={{ mt: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
               {meta}
             </Stack>
           ) : null}
         </Box>
         {actions ? (
-          <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap', flexShrink: 0 }}>
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', flexShrink: 0 }}>
             {actions}
           </Stack>
         ) : null}

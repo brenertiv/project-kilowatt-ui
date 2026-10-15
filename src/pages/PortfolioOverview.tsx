@@ -46,7 +46,7 @@ export function PortfolioOverview() {
         state={fromQuery(clients)}
       />
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 4, mb: 6 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 2, mb: 3 }}>
         <StatCard
           label="Buildings"
           value={buildingCount.value}
@@ -81,7 +81,7 @@ export function PortfolioOverview() {
         />
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
         <Card>
           <CardHeader title="Buildings" slotProps={{ title: { variant: 'h6' } }} />
           <EntityList

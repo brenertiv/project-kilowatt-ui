@@ -174,7 +174,7 @@ const preview: Preview = {
           'Guides',
           ['Rules', 'Writing stories', '*'],
           'Foundations',
-          ['Color', 'Typography', 'Space', 'Shape', 'Layout', 'Icons', 'Primitives'],
+          ['MUI departures', 'MUI comparison', 'Color', 'Typography', 'Space', 'Shape', 'Layout', 'Icons', 'Primitives'],
           'Primitives',
           'Data',
           'Table',

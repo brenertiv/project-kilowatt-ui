@@ -40,13 +40,13 @@ export function CursorPagination({ page, noun, onCursor, state }: CursorPaginati
       component="nav"
       aria-label={t('data.pagination')}
       direction="row"
-      spacing={2}
-      sx={{ alignItems: 'center', justifyContent: 'space-between', mt: 4 }}
+      spacing={1}
+      sx={{ alignItems: 'center', justifyContent: 'space-between', mt: 2 }}
     >
       <Typography variant="body2" color="text.secondary" aria-live="polite">
         {count === 0 ? t('data.showingNone', { noun }) : t('data.showing', { count, noun })}
       </Typography>
-      <Stack direction="row" spacing={2}>
+      <Stack direction="row" spacing={1}>
         <Button
           variant="outlined"
           color="inherit"

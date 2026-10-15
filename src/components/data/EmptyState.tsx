@@ -33,15 +33,15 @@ export function EmptyState({ title, description, icon, action, compact }: EmptyS
   return (
     <Stack
       role="status"
-      spacing={2}
-      sx={{ alignItems: 'center', textAlign: 'center', py: compact ? 4 : 8, px: 4, color: 'text.secondary' }}
+      spacing={1}
+      sx={{ alignItems: 'center', textAlign: 'center', py: compact ? 4 : 8, px: 2, color: 'text.secondary' }}
     >
       <Box sx={{ color: 'text.disabled', display: 'flex' }}>{icon ?? <InboxIcon size={32} />}</Box>
       <Typography variant="subtitle1" color="text.primary">
         {title ?? t('data.empty.title')}
       </Typography>
       {shownDescription ? <Typography variant="body2">{shownDescription}</Typography> : null}
-      {action ? <Box sx={{ pt: 1 }}>{action}</Box> : null}
+      {action ? <Box sx={{ pt: 0.5 }}>{action}</Box> : null}
     </Stack>
   );
 }

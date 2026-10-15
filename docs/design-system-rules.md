@@ -7,7 +7,7 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 ## Tokens
 
 - Tokens are the only source of color, type, space, radius and shadow. No component declares a hex value, a pixel radius or a font family of its own.
-- Styling is plain CSS with custom properties. The one exception is Material UI, which is styled through the theme bridge in `src/mui/theme.ts` and nowhere else: no `sx` colors, no `styled()` literals, no inline Emotion in components.
+- Styling is plain CSS with custom properties. The one exception is Material UI, which is styled only through its theme (stock MUI plus `src/mui/departures.ts`): no `sx` colors, no `styled()` literals, no inline Emotion in components.
 - Three layers. **Primitives** are the Figma ramps and scales, read from the snapshot by `src/primitives.ts` with exactly the steps Figma has and emitted as `--color-slate-300`, `--spacing-2`, `--radius-md` and so on; they change only when the snapshot changes. **Core** tokens are the identity knobs (page background, primary text, secondary, success, warning, error, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles: the Figma-owned ones (surfaces, divider, text emphasis, action overlays, the six palettes) read both modes from the snapshot under Figma's names; the code-owned ones (tints, utilities, chart slots, track, divider steps) are declared in code as primitive steps.
 - **Derived** variables (type scale steps, space scale, inner radius, shadow steps, scrollbar colors) are computed from the layers above and are never stored. Change the source token to move them.
 - Every color token has a light and a dark value. A new color token is not done until both exist and the Design System contrast list has been checked.
@@ -25,12 +25,12 @@ The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read
 
 ## Material UI
 
-- Material UI is the component library for data display and page composition: cards, lists, chips, badges, skeletons, alerts, pagination, app bars and drawers. Base UI remains in place for the primitives already built on it. New work reaches for Material first; existing Base UI components migrate when they are next touched, not before.
-- The bridge in `src/mui/theme.ts` is the only place Material learns a value. It reads the same resolved tokens the stylesheet receives, so a token change and the scheme switch reach every Material component with no second source of truth. Add a token mapping there; never pass a color to a component.
-- Material's palette roles are Figma's: `primary`, `secondary`, `success`, `error`, `warning` and `info` each carry main, light, dark and contrast text from the snapshot, `divider` is the divider, `background.default` is the page and `background.paper` the raised surface.
-- Material defaults that contradict the system are switched off in the bridge: ripples, button elevation, uppercase button text, the dark-mode elevation overlay. Cards are outlined. Motion uses the system curve and durations.
-- `sx` is for layout only: spacing, flex, grid, width. Its spacing unit is 4px, so `spacing={4}` is 16px.
-- Icons stay Material Symbols through `src/icons.tsx`. The `@mui/icons-material` package is not installed on purpose.
+- Kilowatt is moving to Material UI. New work uses MUI components. The Base UI recipes, `DataTable`, `CardMenu` and the charts stay as they are until each is rebuilt on MUI or deliberately kept.
+- The theme is stock MUI plus the departures listed on Foundations → MUI departures, and nothing else. Anything not listed is MUI's default, on purpose: spacing (8px unit), radius, shadows, motion, ripples, component styles.
+- To depart from MUI, add an entry to `src/mui/departures.ts` with its reason (and spec ID if there is one). The theme is built only from that list, the departures page is generated from it, and `src/mui/departures.test.ts` fails if the theme differs from MUI anywhere the list doesn't claim. Never set a theme value anywhere else, and never pass a color to a component.
+- Palette roles carry Kilowatt's colors: `primary` is navy, `secondary` the brand blue, `success`, `warning`, `error` and `info` the status ramps, plus the surfaces, text and divider. Values come from the tokens in each scheme.
+- `sx` is for layout only: spacing, flex, grid, width. It uses MUI's default 8px spacing unit, so `spacing={2}` is 16px.
+- Icons stay Material Symbols through `src/icons.tsx` (a listed departure). The `@mui/icons-material` package is not installed on purpose.
 
 ## Data components
 

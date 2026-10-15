@@ -117,7 +117,7 @@ export function WorkOrders() {
               </>
             ),
             trailing: (
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
                 <ActionPriorityChip priority={action.action_priority} lookup={priorities.data} />
                 <ActionStatusChip status={action.action_status} lookup={statuses.data} />
               </Box>

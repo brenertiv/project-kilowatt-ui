@@ -30,8 +30,8 @@ export function ErrorState({ title, message, onRetry, compact }: ErrorStateProps
   return (
     <Stack
       role="alert"
-      spacing={2}
-      sx={{ alignItems: 'center', textAlign: 'center', py: compact ? 4 : 8, px: 4, color: 'text.secondary' }}
+      spacing={1}
+      sx={{ alignItems: 'center', textAlign: 'center', py: compact ? 4 : 8, px: 2, color: 'text.secondary' }}
     >
       <Box sx={{ color: 'error.main', display: 'flex' }}>
         <ErrorIcon size={32} />
@@ -41,7 +41,7 @@ export function ErrorState({ title, message, onRetry, compact }: ErrorStateProps
       </Typography>
       {message ? <Typography variant="body2">{message}</Typography> : null}
       {onRetry ? (
-        <Box sx={{ pt: 1 }}>
+        <Box sx={{ pt: 0.5 }}>
           <Button variant="outlined" color="inherit" startIcon={<RefreshIcon />} onClick={onRetry}>
             {t('data.retry')}
           </Button>

@@ -71,11 +71,11 @@ export function StatCard({
 
   return (
     <Card>
-      <CardContent sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', '&:last-child': { pb: 4 } }}>
-        {icon ? <Box sx={{ color: 'text.secondary', display: 'flex', pt: 0.5 }}>{icon}</Box> : null}
+      <CardContent sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', '&:last-child': { pb: 2 } }}>
+        {icon ? <Box sx={{ color: 'text.secondary', display: 'flex', pt: 0.25 }}>{icon}</Box> : null}
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <DataState state={cardState} skeleton={<StatSkeleton />}>
-            <Stack spacing={1}>
+            <Stack spacing={0.5}>
               <Typography variant="overline" component="p" color="text.secondary">
                 {label}
               </Typography>
@@ -95,14 +95,14 @@ export function StatCard({
                 )}
               </Typography>
               {typeof delta === 'number' || period ? (
-                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', color: 'text.secondary' }}>
+                <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', color: 'text.secondary' }}>
                   {typeof delta === 'number' && hasValue ? (
                     <Box
                       component="span"
                       sx={{
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: 0.5,
+                        gap: 0.25,
                         color: deltaTone(delta, goodDirection),
                       }}
                     >

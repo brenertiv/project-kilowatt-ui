@@ -36,7 +36,7 @@ export function ToastOutlet() {
 }
 
 /**
- * The one provider stack: query client, theme, Material bridge, toasts and
+ * The one provider stack: query client, theme, the Material UI theme, toasts and
  * tooltips. The app shell and Storybook both use it, so a story sees exactly
  * what a page sees. Routing is the caller's: the app mounts a BrowserRouter,
  * Storybook a MemoryRouter. `client`

@@ -43,7 +43,7 @@ export type EntityListProps = {
   'aria-label'?: string;
 };
 
-const rowSx = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 3, rowGap: 1 } as const;
+const rowSx = { display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 1.5, rowGap: 0.5 } as const;
 
 function Row({ item, dense }: { item: EntityListItem; dense?: boolean }) {
   const text = (
@@ -55,7 +55,7 @@ function Row({ item, dense }: { item: EntityListItem; dense?: boolean }) {
     />
   );
   const trailing = item.trailing ? (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexShrink: 0, ml: 'auto' }}>{item.trailing}</Box>
+    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexShrink: 0, ml: 'auto' }}>{item.trailing}</Box>
   ) : null;
   if (item.to) {
     return (

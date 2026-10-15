@@ -8,7 +8,7 @@ import * as ButtonStories from './Button.stories';
 
 # Button
 
-There is no Kilowatt `Button` component. A button is Base UI's `Button` from `@base-ui/react/button` with a `ui-btn` class from `src/styles.css`. Use it in Base UI surfaces: toolbars, dialogs, menus, filter rows. Inside Material UI surfaces (the data components in `src/components/data`, such as `ErrorState` and `CursorPagination`), use Material's `Button`, which the theme bridge in `src/mui/theme.ts` styles with no ripple, no elevation and no uppercase text.
+There is no Kilowatt `Button` component. A button is Base UI's `Button` from `@base-ui/react/button` with a `ui-btn` class from `src/styles.css`. Use it in Base UI surfaces: toolbars, dialogs, menus, filter rows. Inside Material UI surfaces (the data components in `src/components/data`, such as `ErrorState` and `CursorPagination`), use Material's `Button`, which is stock MUI apart from sentence-case labels (Foundations → MUI departures). New work uses Material's `Button` everywhere; this recipe stays for the Base UI surfaces until they move to MUI.
 
 <Canvas of={ButtonStories.Primary} />
 

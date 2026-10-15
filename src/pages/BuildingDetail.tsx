@@ -125,7 +125,7 @@ export function BuildingDetail({ id }: BuildingDetailProps) {
         state={fromQuery(building)}
       />
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 4, mb: 6 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 2, mb: 3 }}>
         <StatCard label="Meters" value={meterCount.value} unit="count" state={assetState(meters)} />
         <StatCard label="Equipment" value={equipmentCount.value} unit="count" state={assetState(equipment)} />
         <StatCard label="Active work orders" value={workOrderCount.value} unit="count" state={fromQuery(workOrders)} />
@@ -142,7 +142,7 @@ export function BuildingDetail({ id }: BuildingDetailProps) {
         />
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
         <Card>
           <CardHeader title="Meters" slotProps={{ title: { variant: 'h6' } }} />
           <EntityList

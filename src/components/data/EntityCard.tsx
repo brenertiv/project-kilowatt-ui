@@ -81,12 +81,12 @@ export function EntityCard({ title, noun, subtitle, status, meta, actions, to, s
         <CardContent>
           <Stack
             direction="row"
-            spacing={2}
+            spacing={1}
             useFlexGap
             sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}
           >
             <Box sx={{ minWidth: 0, flex: '1 1 200px' }}>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                 {heading}
                 {name.placeholder ? (
                   <PlaceholderHint hint={t('data.placeholderHint', { value: name.raw ?? '∅' })} />
@@ -99,7 +99,7 @@ export function EntityCard({ title, noun, subtitle, status, meta, actions, to, s
               ) : null}
             </Box>
             {status ? (
-              <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
                 {status}
               </Stack>
             ) : null}
@@ -110,10 +110,10 @@ export function EntityCard({ title, noun, subtitle, status, meta, actions, to, s
               sx={{
                 display: 'grid',
                 gridTemplateColumns: 'minmax(96px, max-content) 1fr',
-                columnGap: 4,
-                rowGap: 1.5,
+                columnGap: 2,
+                rowGap: 0.75,
                 m: 0,
-                mt: 3,
+                mt: 1.5,
               }}
             >
               {meta.map((item, index) => (
@@ -130,7 +130,7 @@ export function EntityCard({ title, noun, subtitle, status, meta, actions, to, s
           ) : null}
           {children}
         </CardContent>
-        {actions ? <CardActions sx={{ px: 4, pb: 3, pt: 0 }}>{actions}</CardActions> : null}
+        {actions ? <CardActions sx={{ px: 2, pb: 1.5, pt: 0 }}>{actions}</CardActions> : null}
       </DataState>
     </Card>
   );

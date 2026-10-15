@@ -48,7 +48,7 @@ export const Loading: Story = { args: { state: { status: 'loading' } } };
 
 `.storybook/preview.tsx` wraps every story in:
 
-- the app's provider stack: query client, theme, Material bridge, toasts, tooltips;
+- the app's provider stack: query client, theme, the Material UI theme, toasts, tooltips;
 - a `MemoryRouter`;
 - a fresh query client per story;
 - the toast outlet.

@@ -33,7 +33,7 @@ export type CardSkeletonProps = {
 export function CardSkeleton({ lines = 3, title = true }: CardSkeletonProps) {
   const busy = useBusyProps();
   return (
-    <Stack spacing={1.5} sx={{ p: 4 }} {...busy}>
+    <Stack spacing={0.75} sx={{ p: 2 }} {...busy}>
       {title ? <Skeleton variant="text" width="45%" sx={{ fontSize: '1.125rem' }} /> : null}
       {Array.from({ length: lines }, (_, index) => (
         <Skeleton key={index} variant="text" width={lineWidths[index % lineWidths.length]} />
@@ -59,7 +59,7 @@ export type ListSkeletonProps = {
 export function ListSkeleton({ rows = 5, secondary = true }: ListSkeletonProps) {
   const busy = useBusyProps();
   return (
-    <Stack {...busy} sx={{ '& > *': { px: 4, py: 2.5, borderBottom: 1, borderColor: 'divider' } }}>
+    <Stack {...busy} sx={{ '& > *': { px: 2, py: 1.25, borderBottom: 1, borderColor: 'divider' } }}>
       {Array.from({ length: rows }, (_, index) => (
         <Box key={index}>
           <Skeleton variant="text" width={lineWidths[(index * 2) % lineWidths.length]} />
@@ -86,7 +86,7 @@ export function ListSkeleton({ rows = 5, secondary = true }: ListSkeletonProps) 
 export function StatSkeleton() {
   const busy = useBusyProps();
   return (
-    <Stack spacing={1} {...busy}>
+    <Stack spacing={0.5} {...busy}>
       <Skeleton variant="text" width="40%" sx={{ fontSize: '0.75rem' }} />
       <Skeleton variant="text" width="60%" sx={{ fontSize: '1.75rem' }} />
       <Skeleton variant="text" width="50%" sx={{ fontSize: '0.75rem' }} />

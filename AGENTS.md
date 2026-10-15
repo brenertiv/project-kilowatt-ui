@@ -30,6 +30,7 @@ Kilowatt is Enertiv's design system. Its Storybook is the reference for every co
 5. **Copy goes through i18n.** User-facing strings live in `src/i18n/en.json`, read with `useTranslation()`.
 6. **Icons.** Icons come from `src/icons`, by component name. An icon-only control needs an `aria-label`.
 7. **Charts.** Chart kinds render inside `<ChartFrame>`.
+8. **MUI is the default.** Build with Material UI components as MUI documents them. Kilowatt's theme differs from stock MUI only where Foundations → MUI departures says so; don't restyle MUI components to match anything else.
 
 ## When you change the system
 

@@ -398,3 +398,24 @@ The repository now ships only the Storybook.
 **Kept:**
 - `src/figma/variables.json` and its reader, `snapshot.ts`. The primitives and tokens are still built from them, and the Foundations pages and token exports still show the values.
 - The snapshot changes only by hand until Figma sync returns.
+
+## 12. MUI-first theme, phase 1
+
+The theme is now stock Material UI plus a listed set of departures.
+
+- **The ledger.** `src/mui/departures.ts` is the list. Each entry has an id, area, title, reason, optional spec ID, and the theme options it sets. `src/mui/theme.ts` merges the entries onto MUI's defaults and sets nothing itself.
+- **The guard.** `src/mui/departures.test.ts` diffs the theme against stock MUI in both schemes, and fails on any difference no departure claims. It includes spacing, which MUI keeps as a function.
+- **The starting set:**
+  - brand, status and surface colors;
+  - heading weights and sizes, body and caption sizes, the overline, sentence-case buttons;
+  - the Material Symbols icon set.
+
+  - flat, outlined cards (added after the first pass, since shadows had just been removed elsewhere).
+
+  Everything else went back to MUI defaults: the 8px spacing unit, 4px radius, elevation shadows outside cards, motion, ripples, tooltip and link styling.
+- **Font family is not a departure.** Kilowatt uses Roboto through MUI's own font stack. Setting a different font-family string makes MUI drop its default letter spacing on every type variant.
+- **Spacing.** The 49 `sx` and `spacing` values were halved to keep layouts the same under the 8px unit.
+- **In Storybook.** Foundations → MUI departures is generated from the ledger, with each value in light and dark. Foundations → MUI comparison renders the same components under stock MUI and Kilowatt side by side; it replaces `Internal/MaterialBridge`.
+- **Next phases:**
+  - CSS theme variables and color schemes, retiring the custom theme provider and the duplicate token layers;
+  - moving the Base UI recipes, `DataTable`, `CardMenu` and the charts to a Legacy section, then rebuilding or keeping each one.

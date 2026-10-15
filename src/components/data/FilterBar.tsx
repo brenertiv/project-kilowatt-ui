@@ -70,7 +70,7 @@ export function FilterBar({
   }, [search, params, onChange]);
 
   return (
-    <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 4 }}>
+    <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 2 }}>
       <TextField
         size="small"
         type="search"

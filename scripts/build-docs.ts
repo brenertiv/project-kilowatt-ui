@@ -21,7 +21,9 @@ import { fileURLToPath } from 'node:url';
 import { systemToDtcg } from '../src/designSystem/dtcg';
 import { buildSystemSnapshot, systemToJson, systemToMarkdown } from '../src/designSystem/export';
 import { iconCatalog } from '../src/icons';
-import { defaultDarkColors, defaultTheme, themeToCssText } from '../src/tokens';
+import { departures } from '../src/mui/departures';
+import { departureChanges } from '../src/mui/themeDiff';
+import { defaultDarkColors, defaultTheme, resolveTheme, themeToCssText } from '../src/tokens';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'src/docs/generated');
@@ -187,6 +189,58 @@ function writeFoundations() {
   return foundations.length + 1;
 }
 
+/**
+ * Foundations/MUI departures: every way the theme differs from stock Material UI,
+ * from src/mui/departures.ts, with the exact values each departure sets in light
+ * and dark. Anything not on this page is MUI's default.
+ */
+function writeDepartures() {
+  const lead =
+    "Kilowatt's theme is stock Material UI with the departures below, and nothing else. Anything not listed here is MUI's default, on purpose: build with MUI as documented, and expect these differences. Each departure lives in src/mui/departures.ts with its reason, and a test fails if the theme differs from MUI anywhere this page doesn't say.";
+  const light = resolveTheme(defaultTheme, defaultDarkColors, 'light');
+  const dark = resolveTheme(defaultTheme, defaultDarkColors, 'dark');
+  const cell = (text: string) => `\`${text.replace(/\|/g, '\\|')}\``;
+  const sections: string[] = [];
+  for (const area of [...new Set(departures.map((departure) => departure.area))]) {
+    sections.push(`## ${area}`);
+    for (const departure of departures.filter((entry) => entry.area === area)) {
+      sections.push(`### ${departure.title}`, `${departure.why}${departure.spec ? ` (${departure.spec})` : ''}`);
+      if (departure.convention) {
+        const { muiDefault, kilowatt, where } = departure.convention;
+        sections.push(`| MUI default | Kilowatt | Where |\n| --- | --- | --- |\n| ${muiDefault} | ${kilowatt} | ${cell(where)} |`);
+        continue;
+      }
+      const lightChanges = departureChanges(departure, light, 'light');
+      const darkChanges = new Map(departureChanges(departure, dark, 'dark').map((change) => [change.path, change]));
+      const paths = [...new Set([...lightChanges.map((change) => change.path), ...darkChanges.keys()])].sort();
+      const byPath = new Map(lightChanges.map((change) => [change.path, change]));
+      const rows = paths.map((path) => {
+        const l = byPath.get(path);
+        const d = darkChanges.get(path);
+        const muiLight = l?.muiDefault ?? d?.muiDefault ?? '';
+        const muiDark = d?.muiDefault ?? muiLight;
+        const ours = l?.kilowatt ?? muiLight;
+        const oursDark = d?.kilowatt ?? ours;
+        const sameInDark = muiDark === muiLight && oursDark === ours;
+        return sameInDark
+          ? `| ${cell(path)} | ${cell(muiLight)} | ${cell(ours)} | same | same |`
+          : `| ${cell(path)} | ${cell(muiLight)} | ${cell(ours)} | ${cell(muiDark)} | ${cell(oursDark)} |`;
+      });
+      sections.push(
+        `| Theme path | MUI, light | Kilowatt, light | MUI, dark | Kilowatt, dark |\n| --- | --- | --- | --- | --- |\n${rows.join('\n')}`,
+      );
+    }
+  }
+  const body = [
+    '# MUI departures',
+    lead,
+    'See them side by side under Foundations → MUI comparison.',
+    markdownToMdx(sections.join('\n\n')),
+  ].join('\n\n');
+  writeFileSync(join(out, 'foundations', 'MUI departures.mdx'), page({ title: 'Foundations/MUI departures', summary: lead, body }));
+  return 1;
+}
+
 function writeGuides() {
   const dir = join(out, 'guides');
   mkdirSync(dir, { recursive: true });
@@ -219,5 +273,5 @@ function writeStatic() {
 }
 
 rmSync(out, { recursive: true, force: true });
-const counts = { foundations: writeFoundations(), guides: writeGuides(), static: writeStatic() };
+const counts = { foundations: writeFoundations() + writeDepartures(), guides: writeGuides(), static: writeStatic() };
 console.log(`build-docs: ${counts.foundations} foundations pages, ${counts.guides} guides, ${counts.static} token files in src/docs/generated`);

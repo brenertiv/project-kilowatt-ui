@@ -27,7 +27,7 @@ export function EntityName({ name, noun }: EntityNameProps) {
   return (
     <Box
       component="span"
-      sx={{ color: 'text.secondary', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+      sx={{ color: 'text.secondary', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: 0.25 }}
     >
       {shown.text}
       <PlaceholderHint hint={hint} />

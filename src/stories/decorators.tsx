@@ -25,7 +25,7 @@ export const withMockApi: Decorator = (Story, { parameters }) => {
 
 /** Page stories: full-bleed canvas with the page column the app shell gives a route. */
 export const withPageFrame: Decorator = (Story) => (
-  <Container maxWidth="lg" sx={{ py: 5 }}>
+  <Container maxWidth="lg" sx={{ py: 2.5 }}>
     <Story />
   </Container>
 );
