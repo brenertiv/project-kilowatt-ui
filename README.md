@@ -2,7 +2,7 @@
 
 Design system and component library for Kilowatt. Open **Theme** in the header to view and edit every primitive and semantic token; derived variables are listed alongside with their resolved values.
 
-The Storybook (components, foundations and guides, plus `llms.txt` and an MCP endpoint for agents) is deployed on Vercel, behind Deployment Protection. Only Enertiv team members can open it. See `docs/publishing.md`.
+The Storybook (components, foundations and guides, plus `llms.txt` and an MCP endpoint for agents) is deployed publicly on Vercel. See `docs/publishing.md`.
 
 Primitives in `src/primitives.ts` mirror the Figma **Enertiv UI Foundations** primitives collection one to one. Token values follow its semantic collection: the UI gray ramps for light and dark, the brand ramp, feedback colors, spacing, radius, type styles and shadows. Text roles map to Figma `text/primary`, `icon/default` and `text/secondary` so body copy clears AA on the raised surface. The chart series palette and the utility colors are steps from the Figma color ramps, with the series order chosen by search and validated for colorblind separation in both modes.
 

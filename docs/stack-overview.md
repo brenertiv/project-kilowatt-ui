@@ -48,8 +48,8 @@ Scripts: `npm run storybook`, `npm run build-storybook`, `npm run docs:build`, `
 
 ## Deployment
 
-- **Storybook.** Vercel builds Storybook (`npm run build-storybook`, configured in `vercel.json`) on every push and serves `storybook-static/` behind Deployment Protection. That build includes the generated docs, `llms.txt` and the docs coverage check.
-- **Remote MCP.** `api/mcp.ts` is a Vercel Function at `/mcp` that serves the docs tools from the manifests of the same build. Agents get through the protection with the bypass secret; see `docs/publishing.md`.
+- **Storybook.** Vercel builds Storybook (`npm run build-storybook`, configured in `vercel.json`) on every push and serves `storybook-static/` publicly. That build includes the generated docs, `llms.txt` and the docs coverage check.
+- **Remote MCP.** `api/mcp.ts` is a Vercel Function at `/mcp` that serves the docs tools from the manifests of the same build. See `docs/publishing.md`.
 - **CI.** `.github/workflows/ci.yml` runs lint, the type-check, the unit and story tests and both builds on every pull request.
 
 ## Documentation

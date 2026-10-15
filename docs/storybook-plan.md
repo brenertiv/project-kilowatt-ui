@@ -1,6 +1,6 @@
 # Storybook Migration Plan
 
-Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 to 5 are done in the repository. Publishing changed in Phase 5: the system is private, on Vercel behind Deployment Protection. D2–D4 below are superseded; see section 10. Nothing is pushed yet. D4 assumes a public site, like the current GitHub Pages one.
+Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 to 5 are done in the repository. Publishing changed in Phase 5: the system is a public Vercel deployment with an MCP endpoint at `/mcp`. D2 and D3 below are superseded; see section 10. D4 stands: the site is public.
 
 This plan removes React Cosmos and the in-app workbench. It moves every component, fixture and doc into one standalone Storybook, published from this repo. The published Storybook is the place we point coding agents to learn how to build with Kilowatt, so the plan treats agents as primary readers alongside people.
 
@@ -356,17 +356,21 @@ The Phase 3 JSDoc pass covers them.
 
 ## 10. Phase 5 notes
 
-Publishing went to Vercel. It started on GitHub Pages, then briefly on Cloudflare. This replaces D2–D4: only @enertiv.com team members may open the Storybook, and Enertiv already had Vercel Deployment Protection set up, tied to team access.
+Publishing went to Vercel. It started on GitHub Pages, then briefly on Cloudflare. Access control was considered and dropped, as covered under "Access" below.
+
+**Access:**
+- These options were weighed: Vercel Deployment Protection with a bypass secret, Cloudflare Access, and the Enertiv dev-server login used by `enertiv-dev-api`, wrapped in MCP OAuth for a Claude connector.
+- The site holds component docs and tokens, nothing sensitive, so it ships public with no login.
+- If that changes, the dev-server login is the pattern to follow: Vercel routing middleware with a signed session cookie for the site, and MCP OAuth for a Claude connector.
 
 **Hosting:**
 - `vercel.json` builds with `npm run build-storybook`, which includes the generated docs, `llms.txt` and the docs check. It serves `storybook-static/`.
-- The GitHub Pages workflow is gone. The last public Pages deployment of the app still needs unpublishing in the repository settings.
-- The app is no longer deployed.
+- The GitHub Pages workflow is gone. The last Pages deployment of the old app still needs unpublishing in the repository settings.
 
 **MCP:**
 - `api/mcp.ts` is a Vercel Function at `/mcp`, rewritten in `vercel.json`. It runs the docs tools of `@storybook/mcp` over the manifests of the same build, which `includeFiles` bundles in.
-- So every deployment, previews included, has a Storybook and an MCP endpoint that match. The function never fetches through the protection.
-- People sign in through Deployment Protection. Agents, and plain fetches of `llms.txt`, send the Protection Bypass for Automation secret as `x-vercel-protection-bypass`. `docs/publishing.md` has the setup and the `.mcp.json` snippet.
+- Every deployment, previews included, has a Storybook and an MCP endpoint that match.
+- Agents add the URL as a remote MCP server, or as a custom connector in Claude.
 
 **Verified locally:**
 - `vercel build` succeeds and produces a 720 KB function with the three manifest files mapped in.
@@ -374,8 +378,7 @@ Publishing went to Vercel. It started on GitHub Pages, then briefly on Cloudflar
 
 **Not verified until the first deploy:**
 - The Vercel project has to be connected to the repository.
-- Deployment Protection must cover the production domain.
-- The bypass secret has to be created and given to developers.
+- Its Deployment Protection must leave the production domain open.
 
 **Clean import lines:** `scripts/build-llms.ts` rewrites the published `manifests/components.json` with cleaned import lines. Agents using the deployed site or its MCP get import lines that resolve. The local dev-server MCP still shows Storybook's raw lines.
 

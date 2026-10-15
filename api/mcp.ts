@@ -6,12 +6,8 @@ import { createStorybookMcpHandler } from '@storybook/mcp';
  * The remote MCP endpoint for the deployed Storybook, served at `/mcp` (a rewrite in
  * vercel.json). It runs the docs toolset of `@storybook/mcp` (`docs-list`, `docs-show`,
  * `docs-show-story`) over the manifests from the same build, which vercel.json bundles
- * into this function. So the endpoint always matches the Storybook deployed beside it
- * and never fetches through the deployment's own protection.
- *
- * Access is Vercel Deployment Protection, as for the rest of the site. People get in
- * through the team's login; agents send the project's Protection Bypass for Automation
- * secret as `x-vercel-protection-bypass`. See docs/publishing.md.
+ * into this function. So the endpoint always matches the Storybook deployed beside it.
+ * It is public, like the rest of the site. See docs/publishing.md.
  */
 
 /**

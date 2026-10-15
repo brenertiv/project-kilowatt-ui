@@ -1,10 +1,12 @@
 # Publishing
 
-The design system is published as one Vercel project, behind Vercel Deployment Protection, so only people with access to the team can open it. It has three parts:
+The design system is published as one public Vercel project. Anyone with the URL can open it, and there is no login. It has three parts:
 
 - **The Storybook:** components, foundations and guides.
 - **The static files agents read:** `llms.txt`, the per-page Markdown, `/manifests/*.json` and the token files.
 - **The MCP endpoint at `/mcp`.**
+
+Nothing here is sensitive: it's component docs and design tokens, with sample data generated from a fixed seed. If that changes, add access control before publishing anything that needs it.
 
 ## How it builds
 
@@ -14,61 +16,41 @@ The design system is published as one Vercel project, behind Vercel Deployment P
 - **Output:** `storybook-static/`, served as static files.
 - **`/mcp`:** rewritten to the function `api/mcp.ts`.
   - The function runs the docs tools of `@storybook/mcp`: `docs-list`, `docs-show` and `docs-show-story`.
-  - It reads the manifests from the same build. `includeFiles` bundles them into the function, so it never fetches through the deployment's own protection.
+  - It reads the manifests from the same build, which `includeFiles` bundles into the function.
   - Every deployment, previews included, serves a Storybook and an MCP endpoint that match each other.
 
-Connect the repository through Vercel's Git integration. Pushes to `main` deploy to production, and pull requests get preview deployments.
+## Setting up the Vercel project
 
-## Access
-
-- **People** sign in through the project's Deployment Protection, which is set up already. Make sure it covers the production domain as well as previews: Vercel's standard protection leaves production domains open.
-- **Agents** can't complete a browser login. They send the project's **Protection Bypass for Automation** secret instead:
-  - Header: `x-vercel-protection-bypass: <secret>`.
-  - Where: project **Settings → Deployment Protection → Protection Bypass for Automation**.
-  - Treat it like a password. Anyone holding it can read the whole deployment.
-  - Rotate it by generating a new one and updating the variable below.
+1. Import `brenertiv/project-kilowatt-ui` in Vercel. Leave the root directory as the repository root; `vercel.json` sets everything else.
+2. Under **Settings → Deployment Protection**, turn protection off, or check that it leaves the production domain open. Vercel's default protects preview deployments, which is fine; the production URL is the one people and agents use.
+3. Deploy. Pushes to `main` deploy to production, and pull requests get preview deployments.
 
 ## Connecting an agent
 
-Each developer sets two environment variables, for example in their shell profile:
-
-```bash
-export KILOWATT_STORYBOOK_URL="https://<project>.vercel.app"
-export KILOWATT_MCP_BYPASS="<the bypass secret>"
-```
-
-**Claude Code.** Add this to the consuming project's `.mcp.json`. Claude Code expands `${…}` from the environment.
+**Claude Code.** Add this to the consuming project's `.mcp.json`, with the production URL:
 
 ```json
 {
   "mcpServers": {
-    "kilowatt": {
-      "type": "http",
-      "url": "${KILOWATT_STORYBOOK_URL}/mcp",
-      "headers": { "x-vercel-protection-bypass": "${KILOWATT_MCP_BYPASS}" }
-    }
+    "kilowatt": { "type": "http", "url": "https://<project>.vercel.app/mcp" }
   }
 }
 ```
 
-**Cursor and VS Code** take the same URL and header in their MCP settings.
+**Claude, Cursor and VS Code** take the same URL as a remote MCP server. In Claude, add it as a custom connector.
 
-**Agents that only fetch URLs** need the same header on every request, for example for `${KILOWATT_STORYBOOK_URL}/llms.txt`.
+**Agents that only fetch URLs** start at `https://<project>.vercel.app/llms.txt`.
 
 ## Checking a deployment
 
 ```bash
-curl -s -X POST "$KILOWATT_STORYBOOK_URL/mcp" \
-  -H "x-vercel-protection-bypass: $KILOWATT_MCP_BYPASS" \
+curl -s -X POST "https://<project>.vercel.app/mcp" \
   -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"docs-list","arguments":{}}}'
 ```
 
-- **No header:** a 401 or a login redirect means protection is working.
-- **With the header:** an `event: message` reply listing the components means the function works.
-
-Before any deploy, `npx vercel build` runs the same build locally and writes `.vercel/output/`.
+An `event: message` reply listing the components means the function works. Before any deploy, `npx vercel build` runs the same build locally and writes `.vercel/output/`.
 
 ## The old GitHub Pages site
 
-The repository used to publish the app to GitHub Pages at `brenertiv.github.io/project-kilowatt-ui`, and that site is public. The workflow is gone, but GitHub keeps serving the last deployment. Unpublish it under the repository's **Settings → Pages**.
+The repository used to publish the app to GitHub Pages at `brenertiv.github.io/project-kilowatt-ui`. The workflow is gone, but GitHub keeps serving the last deployment, which is the old app. Unpublish it under the repository's **Settings → Pages** so there's one site.

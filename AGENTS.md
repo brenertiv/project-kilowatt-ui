@@ -9,7 +9,7 @@ Kilowatt is Enertiv's design system. Its Storybook is the reference for every co
   - `docs-show` gives one component's description, import line, props, guidance and story snippets.
   - `docs-show-story` gives one story's snippet.
   - `test-run` runs the story tests.
-- **Deployed Storybook:** a private Vercel deployment, open to @enertiv.com team members only. Its MCP endpoint is `/mcp` on the same URL. Agents send the `x-vercel-protection-bypass` header, and so do plain fetches of `llms.txt`. `docs/publishing.md` covers the setup.
+- **Deployed Storybook:** a public Vercel deployment, with no login. Its MCP endpoint is `/mcp` on the same URL, and `llms.txt` is at its root. `docs/publishing.md` covers the setup.
 - **Without MCP**, read the static files from the published site, or from a local build (`npm run build-storybook`, then `storybook-static/`):
   - `llms.txt`, the index.
   - `components/<id>.md` and `guides/<slug>.md`, one page each.
