@@ -1,6 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import type { Decorator, Preview } from '@storybook/react-vite';
+import { DocsContainer, type DocsContainerProps } from '@storybook/addon-docs/blocks';
+import { addons } from 'storybook/preview-api';
+import { schemeOf, systemScheme, themes, type Scheme } from './themes';
 import { AppProviders, ToastOutlet } from '../src/AppProviders';
 import { createQueryClient } from '../src/api/queryClient';
 import { installBreakpointStyles } from '../src/breakpoints';
@@ -19,6 +22,32 @@ try {
   localStorage.removeItem('kilowatt-theme');
 } catch {
   // Storage can be unavailable (private mode, sandboxed iframes); the defaults apply anyway.
+}
+
+/**
+ * The Scheme toolbar's current value, for docs pages: they have no decorator of their
+ * own, so they listen to the channel. setGlobals carries the starting globals (with any
+ * from the URL), globalsUpdated each change.
+ */
+let docsScheme: Scheme = systemScheme();
+const docsSchemeListeners = new Set<() => void>();
+const followGlobals = ({ globals }: { globals?: Record<string, unknown> }) => {
+  docsScheme = schemeOf(globals);
+  docsSchemeListeners.forEach((listener) => listener());
+};
+addons.getChannel().on('setGlobals', followGlobals);
+addons.getChannel().on('globalsUpdated', followGlobals);
+
+/** Docs pages in the Kilowatt theme for the current scheme, so they turn dark with the stories. */
+function SchemeDocsContainer(props: DocsContainerProps & { children?: ReactNode }) {
+  const scheme = useSyncExternalStore(
+    (listener) => {
+      docsSchemeListeners.add(listener);
+      return () => docsSchemeListeners.delete(listener);
+    },
+    () => docsScheme,
+  );
+  return <DocsContainer {...props} theme={themes[scheme]} />;
 }
 
 /** Follows the `scheme` toolbar global. The theme lives on <html>, so one scheme applies to the whole canvas. */
@@ -73,9 +102,11 @@ const preview: Preview = {
       },
     },
   },
-  initialGlobals: { scheme: 'light' },
+  // Start from the viewer's system setting; the toolbar switches from there.
+  initialGlobals: { scheme: systemScheme() },
   parameters: {
     docs: {
+      container: SchemeDocsContainer,
       // react-docgen leaves a component's JSDoc tags in its description: the manifest
       // reads @summary and @import from there, but the docs page shows only the prose.
       extractComponentDescription: (component: unknown) => {

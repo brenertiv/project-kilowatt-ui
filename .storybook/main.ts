@@ -6,7 +6,11 @@ const config: StorybookConfig = {
   // src/docs/generated holds the Foundations and Guides pages written by scripts/build-docs.ts.
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(ts|tsx)'],
   // Token downloads at the site root: kilowatt-tokens.css, tokens.light.json and the rest.
-  staticDirs: [{ from: '../src/docs/generated/static', to: '/' }],
+  staticDirs: [
+    { from: '../src/docs/generated/static', to: '/' },
+    // The logos and favicon for the Storybook interface (.storybook/manager.ts).
+    { from: '../src/assets', to: '/brand' },
+  ],
   addons: [
     {
       name: '@storybook/addon-docs',
