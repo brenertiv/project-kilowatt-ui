@@ -274,7 +274,7 @@ The Phase 3 JSDoc pass covers them.
 
 **Hard-coded English:** the `aria-label`s "Breadcrumb" in `PageHeader` and "Pagination" in `CursorPagination`. Fixed in Phase 3. The 2026-10-15 pass moved ChartFrame, DataTable, the cells, the table states and the WorkOrders status filter to i18n too (section 8).
 
-**Test flake:** a fresh Vitest browser run can fail once while Vite re-optimizes dependencies. The error is "Failed to fetch dynamically imported module", "failed to find the current suite", or a null `useState`. The second run passes. Pin `optimizeDeps.include` before the story tests gate CI.
+**Test flake: fixed (2026-10-15).** A Vitest browser run could fail once while Vite re-optimized dependencies, with "Failed to fetch dynamically imported module", "failed to find the current suite", or a null `useState`. A fully cold cache doesn't trigger it: the scanner reads every story file up front. It came from a warm cache meeting a package or a MUI or Base UI subpath that a new story imported for the first time, or from several Vitest runs sharing one cache. Vite found it mid-run and reloaded the page under the tests. The storybook project now pins every package the stories load in `optimizeDeps.include` (`src/test/storyDeps.ts`). `storyDeps.test.ts` fails, naming the file, when `src` imports a package missing from the list. Two cold `npm test` runs in a row passed (350 tests), as did two cold story runs in parallel. CI runs the tests once, with no retry.
 
 ## 8. Phase 3 notes
 
@@ -345,8 +345,8 @@ The Phase 3 JSDoc pass covers them.
   Recipes with no component pass on their guidance page.
 
 **CI** (`.github/workflows/ci.yml`, on pull requests and `main`):
-- Lint, type-check, unit tests, story tests in Chromium, the Storybook build with the docs check, and the app build. The built Storybook is uploaded as an artifact.
-- The story tests retry once. A cold run passed on the first try (230 tests), and the earlier flake only showed up with several Vitest runs in parallel. The a11y check still reports without failing.
+- Lint, type-check (`tsc -p .storybook`), the Storybook build with the docs check, `npm test` (unit tests, then every story in Chromium), the app build, and the MCP server type-check. The built Storybook is uploaded as an artifact.
+- The story tests run once, with no retry, and any axe violation fails them. Story dependencies are pinned (section 7, "Test flake").
 
 **Evals:**
 - `docs/agent-evals.md` has five prompts, three access modes (MCP, static, repository only) and a 10-point rubric.
