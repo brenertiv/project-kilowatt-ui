@@ -11,3 +11,4 @@ storybook-static
 *storybook.log
 src/docs/generated
 src/evals
+.vercel

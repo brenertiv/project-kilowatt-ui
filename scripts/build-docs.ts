@@ -27,7 +27,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'src/docs/generated');
 
 /** Docs that stay out of Storybook: plans and notes about the repository, not guidance for using the system. */
-const internalDocs = new Set(['storybook-plan.md', 'agent-evals.md']);
+const internalDocs = new Set(['storybook-plan.md', 'agent-evals.md', 'publishing.md']);
 
 /** Sidebar names for the guides; anything not listed uses its first heading. */
 const guideTitles: Record<string, string> = {

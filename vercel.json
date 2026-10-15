@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build-storybook",
+  "outputDirectory": "storybook-static",
+  "functions": {
+    "api/mcp.ts": {
+      "includeFiles": "storybook-static/manifests/**",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [{ "source": "/mcp", "destination": "/api/mcp" }]
+}

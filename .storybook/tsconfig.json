@@ -4,6 +4,7 @@
     "../src",
     "./*.ts",
     "./*.tsx",
-    "../scripts/*.ts"
+    "../scripts/*.ts",
+    "../api/*.ts"
   ]
 }

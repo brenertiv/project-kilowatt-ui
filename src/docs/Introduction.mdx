@@ -30,7 +30,7 @@ Kilowatt is Enertiv's design system: tokens mirrored from the Figma file **Enert
 
 This Storybook is built to be read by agents as well as people.
 
-- **MCP.** While `npm run storybook` runs, the MCP server is at `http://localhost:6006/mcp`, with `docs-list`, `docs-show` and `docs-show-story`, plus story previews and test runs. Add it with `npx mcp-add --type http --url "http://localhost:6006/mcp" --scope project`. For this published site, the remote server in the repository's `mcp/` folder serves the same docs tools.
+- **MCP.** While `npm run storybook` runs, the MCP server is at `http://localhost:6006/mcp`, with `docs-list`, `docs-show` and `docs-show-story`, plus story previews and test runs. Add it with `npx mcp-add --type http --url "http://localhost:6006/mcp" --scope project`. This deployed site serves the same docs tools at `/mcp`. Agents send the project's `x-vercel-protection-bypass` header; see `docs/publishing.md` in the repository.
 - **llms.txt.** [`llms.txt`](./llms.txt) indexes every page as Markdown: `components/<id>.md`, `guides/<slug>.md` and `foundations/<slug>.md`.
 - **Manifests.** Every build serves `/manifests/components.json`, with each component's description, import line, props and story snippets, and `/manifests/docs.json`, with these pages.
 - **Tokens.** `/kilowatt-tokens.css` is the CSS variables. `/tokens.light.json` and `/tokens.dark.json` are DTCG 2025.10 files. `/kilowatt-design-system.json` and `/kilowatt-design-system.md` are the full system.

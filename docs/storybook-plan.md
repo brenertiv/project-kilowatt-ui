@@ -1,6 +1,6 @@
 # Storybook Migration Plan
 
-Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 to 5 are done in the repository. Nothing is pushed yet, and the remote MCP server is not deployed. D4 assumes a public site, like the current GitHub Pages one.
+Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 to 5 are done in the repository. Publishing changed in Phase 5: the system is private, on Vercel behind Deployment Protection. D2–D4 below are superseded; see section 10. Nothing is pushed yet. D4 assumes a public site, like the current GitHub Pages one.
 
 This plan removes React Cosmos and the in-app workbench. It moves every component, fixture and doc into one standalone Storybook, published from this repo. The published Storybook is the place we point coding agents to learn how to build with Kilowatt, so the plan treats agents as primary readers alongside people.
 
@@ -356,19 +356,29 @@ The Phase 3 JSDoc pass covers them.
 
 ## 10. Phase 5 notes
 
-**Pages:**
-- `.github/workflows/pages.yml` now builds and deploys Storybook, with the generated docs, `llms.txt` and the docs check, in place of the app.
-- Storybook's assets are relative, so the site works under `/project-kilowatt-ui/` with no base setting. This was checked by serving the build from that subpath.
+Publishing went to Vercel. It started on GitHub Pages, then briefly on Cloudflare. This replaces D2–D4: only @enertiv.com team members may open the Storybook, and Enertiv already had Vercel Deployment Protection set up, tied to team access.
+
+**Hosting:**
+- `vercel.json` builds with `npm run build-storybook`, which includes the generated docs, `llms.txt` and the docs check. It serves `storybook-static/`.
+- The GitHub Pages workflow is gone. The last public Pages deployment of the app still needs unpublishing in the repository settings.
 - The app is no longer deployed.
 
-**Remote MCP:**
-- `mcp/` holds a Node 24 server (`handler.ts`, `server.ts`) on `@storybook/mcp`. It serves `docs-list`, `docs-show` and `docs-show-story` from the published manifests, which it caches for 5 minutes, or from a local build.
-- It takes an optional bearer token (`MCP_TOKEN`) for when the Storybook goes private.
-- Tested locally: against the build served under the Pages subpath, against a local build directory, and with the token on.
-- It is not deployed yet. Picking a host (Fly.io, Render, Railway or a VM) is the remaining decision. Once it has a URL, add it to `.mcp.json`, `AGENTS.md` and the Introduction page.
+**MCP:**
+- `api/mcp.ts` is a Vercel Function at `/mcp`, rewritten in `vercel.json`. It runs the docs tools of `@storybook/mcp` over the manifests of the same build, which `includeFiles` bundles in.
+- So every deployment, previews included, has a Storybook and an MCP endpoint that match. The function never fetches through the protection.
+- People sign in through Deployment Protection. Agents, and plain fetches of `llms.txt`, send the Protection Bypass for Automation secret as `x-vercel-protection-bypass`. `docs/publishing.md` has the setup and the `.mcp.json` snippet.
 
-**Clean import lines:** `scripts/build-llms.ts` now rewrites the published `manifests/components.json` with cleaned import lines. Agents using the static site or the remote MCP get import lines that resolve. The local dev-server MCP still shows Storybook's raw lines.
+**Verified locally:**
+- `vercel build` succeeds and produces a 720 KB function with the three manifest files mapped in.
+- The compiled function answers `docs-show` and `docs-show-story` when run from the deployed file layout.
+
+**Not verified until the first deploy:**
+- The Vercel project has to be connected to the repository.
+- Deployment Protection must cover the production domain.
+- The bypass secret has to be created and given to developers.
+
+**Clean import lines:** `scripts/build-llms.ts` rewrites the published `manifests/components.json` with cleaned import lines. Agents using the deployed site or its MCP get import lines that resolve. The local dev-server MCP still shows Storybook's raw lines.
 
 **Still open:**
-- Chromatic (visual review and a hosted MCP with OAuth) is optional and not set up.
-- The a11y gate and the bugs from sections 7 and 8 are being fixed in a separate session.
+- Chromatic is optional and not set up.
+- The code-side a11y gate and the bugs from sections 7 and 8 are fixed and merged into `main` (the `claude/practical-mcnulty-9e2890`, `claude/fix-open-jsdoc-bugs` and `claude/storybook-ci-gate` merges). Contrast findings on Figma-owned tokens stay exempted until Figma changes.
