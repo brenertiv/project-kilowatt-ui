@@ -165,7 +165,7 @@ export function MetricCardDemo({ label = 'Total tickets', value = 12853, delta =
     series.columns.template.setAll({ width: am5.percent(55), cornerRadiusTL: 1, cornerRadiusTR: 1, interactive: false });
     series.columns.template.adapters.add('fill', (fill, target) => {
       const context = target.dataItem?.dataContext as { focus?: boolean } | undefined;
-      return context?.focus ? am5.color(values.accent) : fill;
+      return context?.focus ? am5.color(values.secondaryMain) : fill;
     });
 
     const chartData = demandSeries.map((sample, index) => ({ period: String(index + 1), value: sample, focus: index === focusIndex }));
@@ -231,7 +231,7 @@ export function OverviewPanelDemo({ closedShare = overviewTickets.closedShare }:
       strokeOpacity: 0,
       cornerRadius: Number.parseInt(values.radius, 10) * 2 || 20,
       toggleKey: 'none',
-      fill: am5.color(values.onAccent),
+      fill: am5.color(values.secondaryContrastText),
       tooltipText: '{category}: {value}',
     });
     series.labels.template.set('forceHidden', true);

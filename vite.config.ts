@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react';
 import checker from 'vite-plugin-checker';
 import svgr from 'vite-plugin-svgr';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { playwright } from '@vitest/browser-playwright';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { normalizeFigmaLinks, serializeFigmaLinks } from './src/figma/url';
 
 const isVitest = Boolean(process.env.VITEST);
@@ -76,7 +78,30 @@ export default defineConfig({
         ],
   },
   test: {
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'jsdom',
+          setupFiles: './src/test/setup.ts',
+          include: ['src/**/*.test.{ts,tsx}'],
+        },
+      },
+      {
+        // Renders every story in Chromium: a smoke test, any play function, and an axe check.
+        extends: true,
+        plugins: [storybookTest({ configDir: fileURLToPath(new URL('./.storybook', import.meta.url)) })],
+        test: {
+          name: 'storybook',
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+    ],
   },
 });

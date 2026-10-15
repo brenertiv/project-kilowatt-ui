@@ -1,6 +1,6 @@
 # Storybook Migration Plan
 
-Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phase 0 is done. D4 assumes a public site, like the current GitHub Pages one.
+Status: accepted 2026-10-15 with the recommended decisions D1–D6. Phases 0 and 1 are done. D4 assumes a public site, like the current GitHub Pages one.
 
 This plan removes React Cosmos and the in-app workbench. It moves every component, fixture and doc into one standalone Storybook, published from this repo. The published Storybook is the place we point coding agents to learn how to build with Kilowatt, so the plan treats agents as primary readers alongside people.
 
@@ -233,3 +233,44 @@ Done when: every fixture has a story counterpart, `vitest --project storybook` p
 - **amCharts** needs a sized container, shows its logo without a license, and animates. Use a fixed height, set animation duration to 0 in the story decorator, and decide on the license separately.
 - **Vitest 5 and `@storybook/addon-vitest` compatibility** is unverified. Check it in Phase 0.
 - **Figma link editing** moves from a UI field to editing a story file. That is fine for engineers. Designers who used the field would need another path.
+
+## 7. Phase 1 findings
+
+These came out of converting the fixtures. They are not fixed yet.
+
+**Accessibility.** With `parameters.a11y.test: 'error'`, 67 of 223 stories fail. Storybook keeps `a11y.test` on `'todo'` until these are fixed, so violations show in the a11y panel and the test output without failing the run. `label-content-name-mismatch` (29 hits) is turned off in `.storybook/preview.tsx`. It is a false positive: axe reads a Material Symbols ligature ("more_horiz") as the button's visible text. The rest:
+
+- **`color-contrast`, 71 hits, all from tokens rather than components.**
+
+  | Foreground | Background | Ratio | Hits | Probable role |
+  |---|---|---|---|---|
+  | `#869aa9` | white | 2.91 | 17 | Tertiary text at 12px |
+  | white | `#0a8864` | 4.45 | 13 | Text on the success fill, just under 4.5 |
+  | `#0a8864` | white | 4.45 | 6 | Success fill used as text |
+  | white | `#89a0c7` | 2.65 | 6 | |
+  | `#2ea6e1` | white or `#edf1f5` | 2.4–2.7 | 10 | The secondary color used as text |
+  | white | `#6cb8a2` | 2.32 | 4 | |
+
+  These belong to the Figma-owned semantic layer (docs/figma.md), so each fix is a Figma change followed by a re-snapshot.
+- **Markup:**
+  - `EntityName` puts `aria-label` on a plain `span` (`aria-prohibited-attr`).
+  - `PageHeader`'s loading state renders an `h1` that contains only a skeleton (`empty-heading`).
+  - The chart table view's scroll wrapper can't be reached with the keyboard (`scrollable-region-focusable`).
+  - A search `input` in the list stories has no label.
+  - The Widgets demos (leaflet markers, duplicate `header` landmarks) are internal and excluded from the manifest.
+
+**Fixed while converting:**
+- `chartDemos.tsx` and `stackDemos.tsx` still read the `accent`, `onAccent` and `text` tokens, which the Figma token sync renamed. The treemap and two widget demos threw on render, in the app too. They now read `secondaryMain`, `secondaryContrastText` and `textPrimary`. `ThemeValues` is a string record, so TypeScript can't catch a stale token name. A typed token-id union would.
+- The Structure Meter passed a 0–1 value against a 0–100 scale.
+
+**Prop docs are thin on:**
+- `ChartFrame`, `ChartLegend` and `HeatScale`.
+- The charts' `unit`, `ariaLabel`, `annotations`, `steps` and `centerLabel`.
+- `ChipCell`, `LinkCell`, `EmptyCell`, `TableError`, `TableEmptyRow` and `TableSkeleton`.
+- The sibling components in `DateText`, `StatusChip`, `Skeletons` and `EntityName`.
+
+The Phase 3 JSDoc pass covers them.
+
+**Hard-coded English:** the `aria-label`s "Breadcrumb" in `PageHeader` and "Pagination" in `CursorPagination`.
+
+**Test flake:** a fresh Vitest browser run can fail once while Vite re-optimizes dependencies. The error is "Failed to fetch dynamically imported module", "failed to find the current suite", or a null `useState`. The second run passes. Pin `optimizeDeps.include` before the story tests gate CI.

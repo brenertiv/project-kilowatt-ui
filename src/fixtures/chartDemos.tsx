@@ -62,7 +62,7 @@ export function RadarPlot() {
             stroke: color,
             fill: color,
             tooltip: am5.Tooltip.new(root, {
-              labelText: `[${values.text}]{valueY}[/] [${values.textSecondary}]${series.label} · {categoryX}[/]`,
+              labelText: `[${values.textPrimary}]{valueY}[/] [${values.textSecondary}]${series.label} · {categoryX}[/]`,
             }),
           }),
         );
@@ -131,9 +131,9 @@ export function TreemapDemo() {
     container.children.push(am5hierarchy.BreadcrumbBar.new(root, { series, paddingLeft: 0, paddingBottom: 8 }));
     container.children.push(series);
 
-    series.nodes.template.set('tooltipText', `[${values.text}]{sum} MWh[/] [${values.textSecondary}]{category}[/]`);
+    series.nodes.template.set('tooltipText', `[${values.textPrimary}]{sum} MWh[/] [${values.textSecondary}]{category}[/]`);
     series.rectangles.template.adapters.add('fill', (_fill, target) =>
-      am5.color(isFocusNode(target.dataItem as am5.DataItem<am5hierarchy.ITreemapDataItem>) ? values.accent : values.track),
+      am5.color(isFocusNode(target.dataItem as am5.DataItem<am5hierarchy.ITreemapDataItem>) ? values.secondaryMain : values.track),
     );
     series.labels.template.setAll({
       fontSize: 12,
@@ -141,7 +141,7 @@ export function TreemapDemo() {
       textAlign: 'center',
     });
     series.labels.template.adapters.add('fill', (_fill, target) =>
-      am5.color(isFocusNode(target.dataItem as am5.DataItem<am5hierarchy.ITreemapDataItem>) ? values.onAccent : values.text),
+      am5.color(isFocusNode(target.dataItem as am5.DataItem<am5hierarchy.ITreemapDataItem>) ? values.secondaryContrastText : values.textPrimary),
     );
     series.data.setAll([energyBreakdown]);
     series.set('selectedDataItem', series.dataItems[0]);
