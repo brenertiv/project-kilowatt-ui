@@ -20,6 +20,10 @@ Markdown in `docs/` is the source for the **Guides** section of Storybook. `scri
 
 Every component, recipe and page has a `Name.stories.tsx` beside it, one story per state, rendered in Storybook with the app's providers and a light/dark switch. Storybook writes a component manifest (`/manifests/components.json`). With `npm run storybook` it also serves an MCP endpoint at `http://localhost:6006/mcp`, so coding agents can look up components, props and usage before writing UI. `npm run test:stories` renders every story in Chromium with an accessibility check. See `docs/stories.md`, and `docs/storybook-plan.md` for the migration plan.
 
+## For coding agents
+
+`AGENTS.md` (imported by `CLAUDE.md`) tells agents where to look and the rules that matter most. `.mcp.json` registers the Storybook MCP server (`npm run storybook`, then `http://localhost:6006/mcp`). `npm run build-storybook` also writes `llms.txt` and one Markdown page per component, guide and foundations page into `storybook-static/`, for agents that can only fetch URLs. The same build fails if a component lacks its summary, description, import line or prop docs, or if an exported component has no story. `docs/agent-evals.md` has the prompts and rubric for checking that agents build with the system.
+
 ## Figma links and sync
 
 The Figma file owns the primitives and semantic roles; code owns the tints, utilities and chart slots. `src/figma/variables.json` is the committed snapshot the primitives and tokens are built from, `src/figma/links.json` holds the whole-file link (each component's node link is `parameters.design` in its stories), and the **System** tab shows the snapshot date and the code-owned tokens still to push. See `docs/figma.md` for the contract and the commands.
