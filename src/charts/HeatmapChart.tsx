@@ -82,19 +82,19 @@ export function HeatmapChart({ data, unit = 'count', steps = 7, cellLabels = fal
         cornerRadiusBL: 2,
         cornerRadiusBR: 2,
         strokeWidth: 2,
-        stroke: am5.color(values.surface),
+        stroke: am5.color(values.backgroundPaper),
         tooltipText: '',
       });
       series.columns.template.adapters.add('fill', (fill, target) => {
         const value = (target.dataItem?.dataContext as { value?: number } | undefined)?.value;
         return typeof value === 'number' ? am5.color(ramp[rampIndex(value, min, max, steps)]) : fill;
       });
-      series.columns.template.states.create('hover', { strokeWidth: 2, stroke: am5.color(values.text) });
+      series.columns.template.states.create('hover', { strokeWidth: 2, stroke: am5.color(values.textPrimary) });
       series.columns.template.set('tooltip', am5.Tooltip.new(root, { labelText: '' }));
       series.columns.template.get('tooltip')?.label.adapters.add('text', (_text, target) => {
         const context = target.dataItem?.dataContext as { row: string; column: string; value: number } | undefined;
         if (!context) return '';
-        return `[${values.text}]${formatUnit(context.value, unit)}[/] [${values.textSecondary}]${context.row} · ${context.column}[/]`;
+        return `[${values.textPrimary}]${formatUnit(context.value, unit)}[/] [${values.textSecondary}]${context.row} · ${context.column}[/]`;
       });
 
       if (cellLabels) {
@@ -107,7 +107,7 @@ export function HeatmapChart({ data, unit = 'count', steps = 7, cellLabels = fal
               centerX: am5.p50,
               centerY: am5.p50,
               populateText: false,
-              fill: am5.color(inkOn(fill, values.onSolid, values.text)),
+              fill: am5.color(inkOn(fill, values.primaryContrastText, values.textPrimary)),
               fontSize: 10,
             }),
           });

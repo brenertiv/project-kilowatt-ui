@@ -8,26 +8,30 @@ describe('theme state', () => {
     const state = parseStoredTheme(null);
 
     expect(state.colorScheme).toBe('light');
-    expect(state.values.bg).toBe('#F3F6F9');
-    expect(state.values.accent).toBe('#2EA6E1');
-    expect(state.values.onAccent).toBe('#0D212A');
-    expect(state.values.positive).toBe('#086D51');
-    expect(state.values.negative).toBe('#D61A1A');
-    expect(state.values.warning).toBe('#E16A2E');
-    expect(state.darkColors.bg).toBe('#0D212A');
-    expect(state.darkColors.border).toBe('#1B3E4F');
-    expect(state.darkColors.accent).toBe('#51B5E6');
-    expect(state.darkColors.negative).toBe('#FF9F9F');
-    expect(state.darkColors.warning).toBe('#F48E36');
-    expect(measureContrast(state.values.warning, state.values.surface, 'normal')?.level).toBe('fail');
-    expect(measureContrast(state.darkColors.warning, state.darkColors.surface, 'normal')?.level).not.toBe('fail');
-    expect(measureContrast(state.values.negative, state.values.surface, 'normal')?.level).not.toBe('fail');
-    expect(measureContrast(state.darkColors.negative, state.darkColors.surface, 'normal')?.level).not.toBe('fail');
-    expect(measureContrast(state.values.text, state.values.surface, 'normal')?.level).not.toBe('fail');
-    expect(measureContrast(state.values.textSecondary, state.values.surface, 'normal')?.level).not.toBe('fail');
-    expect(measureContrast(state.values.onAccent, state.values.accent, 'ui')?.level).not.toBe('fail');
-    expect(measureContrast(state.darkColors.text, state.darkColors.surface, 'normal')?.level).not.toBe('fail');
-    expect(measureContrast(state.darkColors.onAccent, state.darkColors.accent, 'ui')?.level).not.toBe('fail');
+    expect(state.values.backgroundDefault).toBe('#edf1f5');
+    expect(state.values.secondaryMain).toBe('#2ea6e1');
+    expect(state.values.secondaryContrastText).toBe('#09161c');
+    expect(state.values.successMain).toBe('#0a8864');
+    expect(state.values.errorMain).toBe('#c51f1c');
+    expect(state.values.warningMain).toBe('#fb9c3a');
+    expect(state.darkColors.backgroundDefault).toBe('#09161c');
+    expect(state.darkColors.divider).toBe('#1b3e4f');
+    expect(state.darkColors.secondaryMain).toBe('#51b5e6');
+    expect(state.darkColors.errorMain).toBe('#fb594c');
+    expect(state.darkColors.warningMain).toBe('#ffb44c');
+    expect(measureContrast(state.values.warningMain, state.values.backgroundPaper, 'normal')?.level).toBe('fail');
+    expect(measureContrast(state.values.errorMain, state.values.backgroundPaper, 'normal')?.level).not.toBe('fail');
+    expect(measureContrast(state.values.textPrimary, state.values.backgroundPaper, 'normal')?.level).not.toBe('fail');
+    expect(measureContrast(state.values.textSecondary, state.values.backgroundPaper, 'normal')?.level).not.toBe('fail');
+    expect(measureContrast(state.values.secondaryContrastText, state.values.secondaryMain, 'ui')?.level).not.toBe(
+      'fail',
+    );
+    expect(measureContrast(state.darkColors.textPrimary, state.darkColors.backgroundPaper, 'normal')?.level).not.toBe(
+      'fail',
+    );
+    expect(
+      measureContrast(state.darkColors.secondaryContrastText, state.darkColors.secondaryMain, 'ui')?.level,
+    ).not.toBe('fail');
     expect(isThemeDirty(state)).toBe(false);
   });
 
@@ -35,15 +39,15 @@ describe('theme state', () => {
     const edited = {
       ...parseStoredTheme(null),
       colorScheme: 'dark' as const,
-      values: { ...defaultTheme, accent: '#111111' },
-      darkColors: { ...defaultDarkColors, accent: '#EEEEEE' },
+      values: { ...defaultTheme, secondaryMain: '#111111' },
+      darkColors: { ...defaultDarkColors, secondaryMain: '#EEEEEE' },
     };
 
     const restored = parseStoredTheme(serializeTheme(edited));
 
     expect(restored.colorScheme).toBe('dark');
-    expect(restored.values.accent).toBe('#111111');
-    expect(restored.darkColors.accent).toBe('#EEEEEE');
+    expect(restored.values.secondaryMain).toBe('#111111');
+    expect(restored.darkColors.secondaryMain).toBe('#EEEEEE');
     expect(restored).not.toHaveProperty('activePresetId');
     expect(restored).not.toHaveProperty('customPresets');
     expect(isThemeDirty(restored)).toBe(true);
@@ -55,15 +59,15 @@ describe('theme state', () => {
       colorScheme: 'dark',
       activePresetId: 'teal',
       customPresets: [{ id: 'night', name: 'Night ops', values: defaultTheme, darkColors: defaultDarkColors }],
-      values: { ...defaultTheme, accent: '#FF0000' },
-      darkColors: { ...defaultDarkColors, accent: '#00FF00' },
+      values: { ...defaultTheme, secondaryMain: '#FF0000' },
+      darkColors: { ...defaultDarkColors, secondaryMain: '#00FF00' },
     });
 
     const state = parseStoredTheme(stored);
 
     expect(state.colorScheme).toBe('dark');
-    expect(state.values.accent).toBe('#FF0000');
-    expect(state.darkColors.accent).toBe('#00FF00');
+    expect(state.values.secondaryMain).toBe('#FF0000');
+    expect(state.darkColors.secondaryMain).toBe('#00FF00');
     expect(state).not.toHaveProperty('activePresetId');
     expect(state).not.toHaveProperty('customPresets');
     expect(isThemeDirty(state)).toBe(true);
@@ -73,15 +77,15 @@ describe('theme state', () => {
     const edited = {
       ...parseStoredTheme(null),
       colorScheme: 'dark' as const,
-      values: { ...defaultTheme, radius: '20px', accent: '#111111' },
+      values: { ...defaultTheme, radius: '20px', secondaryMain: '#111111' },
     };
 
     const reset = resetTheme(edited);
 
     expect(reset.colorScheme).toBe('dark');
     expect(reset.values.radius).toBe(defaultTheme.radius);
-    expect(reset.values.accent).toBe('#2EA6E1');
-    expect(reset.darkColors.bg).toBe('#0D212A');
+    expect(reset.values.secondaryMain).toBe('#2ea6e1');
+    expect(reset.darkColors.backgroundDefault).toBe('#09161c');
     expect(isThemeDirty(reset)).toBe(false);
   });
 

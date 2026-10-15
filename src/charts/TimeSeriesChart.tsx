@@ -109,7 +109,7 @@ export function TimeSeriesChart({
               centerX: am5.p50,
               centerY: am5.p100,
               dy: -8,
-              fill: am5.color(values.text),
+              fill: am5.color(values.textPrimary),
               fontWeight: '500',
             }),
           );

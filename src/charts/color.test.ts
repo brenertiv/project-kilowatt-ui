@@ -53,7 +53,7 @@ describe('chart color', () => {
   });
 
   it('builds a diverging ramp with a neutral midpoint and equal arms', () => {
-    const ramp = divergingRamp(defaultTheme.negative, defaultTheme.positive, defaultTheme.track, 3);
+    const ramp = divergingRamp(defaultTheme.errorMain, defaultTheme.successMain, defaultTheme.track, 3);
     expect(ramp).toHaveLength(7);
     expect(ramp[3]).toBe(defaultTheme.track);
     expect(luminance(ramp[0])).toBeLessThan(luminance(ramp[2]));

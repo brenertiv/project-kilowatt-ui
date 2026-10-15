@@ -6,7 +6,7 @@
 
 .ui-data-table .table-wrap {
   position: relative;
-  border-top: var(--border-width) solid var(--color-border);
+  border-top: var(--border-width) solid var(--divider);
 }
 
 .ui-data-table .table-wrap.is-virtual {
@@ -27,7 +27,7 @@
 .ui-data-table .ui-table :is(th, td).is-pinned {
   position: sticky;
   z-index: 1;
-  background: var(--color-surface);
+  background: var(--background-paper);
 }
 
 .ui-data-table .ui-table thead th.is-pinned {
@@ -35,22 +35,22 @@
 }
 
 .ui-data-table .ui-table tbody tr:hover :is(td).is-pinned {
-  background: var(--color-hover);
+  background: var(--action-hover);
 }
 
 .ui-data-table .ui-table tbody tr[data-selected] td {
-  background: var(--color-accent-tint);
+  background: var(--secondary-tint);
 }
 
 .ui-data-table .ui-table :is(th, td).is-pinned-edge-left {
   box-shadow:
-    inset calc(-1 * var(--border-width)) 0 0 var(--color-border),
+    inset calc(-1 * var(--border-width)) 0 0 var(--divider),
     4px 0 6px -4px rgb(13 33 42 / 12%);
 }
 
 .ui-data-table .ui-table :is(th, td).is-pinned-edge-right {
   box-shadow:
-    inset var(--border-width) 0 0 var(--color-border),
+    inset var(--border-width) 0 0 var(--divider),
     -4px 0 6px -4px rgb(13 33 42 / 12%);
 }
 
@@ -120,7 +120,7 @@
   inset-block: var(--space-2);
   inset-inline-start: 4px;
   width: var(--border-width);
-  background: var(--color-border);
+  background: var(--divider);
   opacity: 0;
 }
 
@@ -132,7 +132,7 @@
 
 .ui-table-resizer[data-resizing]::after,
 .ui-table-resizer:focus-visible::after {
-  background: var(--color-accent);
+  background: var(--secondary-main);
   width: 2px;
 }
 
@@ -180,12 +180,12 @@
 }
 
 .ui-item.is-destructive {
-  color: var(--color-negative);
+  color: var(--error-main);
 }
 
 .ui-item.is-destructive[data-highlighted] {
-  background: color-mix(in oklab, var(--color-negative) 12%, var(--color-surface));
-  color: var(--color-negative);
+  background: color-mix(in oklab, var(--error-main) 12%, var(--background-paper));
+  color: var(--error-main);
 }
 
 /* Bulk actions bar */
@@ -199,9 +199,9 @@
   gap: var(--space-2);
   min-height: var(--control-height);
   padding: var(--space-1) var(--space-3);
-  border: var(--border-width) solid var(--color-border);
+  border: var(--border-width) solid var(--divider);
   border-radius: var(--radius-control);
-  background: var(--color-accent-tint);
+  background: var(--secondary-tint);
   font-size: var(--font-size-sm);
 }
 
@@ -234,7 +234,7 @@
 .ui-data-table .ui-table tr.is-expanded-row > td {
   padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6);
   white-space: normal;
-  background: color-mix(in oklab, var(--color-hover) 50%, var(--color-surface));
+  background: color-mix(in oklab, var(--action-hover) 50%, var(--background-paper));
 }
 
 .ui-data-table .ui-table tbody tr.is-expanded-row:hover {
@@ -249,7 +249,7 @@
 }
 
 .ui-table-details dt {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-sm);
 }
 
@@ -285,13 +285,13 @@
   display: block;
   height: 12px;
   border-radius: var(--radius-inner);
-  background: var(--color-hover);
+  background: var(--action-hover);
 }
 
 .ui-table-skeleton {
   display: flex;
   flex-direction: column;
-  border-top: var(--border-width) solid var(--color-border);
+  border-top: var(--border-width) solid var(--divider);
 }
 
 .ui-table-skeleton-row {
@@ -299,7 +299,7 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) 0;
-  border-bottom: var(--border-width) solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--divider);
 }
 
 .ui-table-skeleton-row.is-header .ui-skeleton {
@@ -314,7 +314,7 @@
   gap: var(--space-3);
   min-height: 200px;
   padding: var(--space-5);
-  border: var(--border-width) dashed var(--color-border);
+  border: var(--border-width) dashed var(--divider);
   border-radius: var(--radius);
   text-align: center;
 }
@@ -322,12 +322,12 @@
 .ui-table-state p {
   margin: 0;
   max-width: 48ch;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-sm);
 }
 
 .ui-table-state-icon {
-  color: var(--color-negative);
+  color: var(--error-main);
   font-size: 24px;
 }
 
@@ -337,19 +337,19 @@
 }
 
 .ui-table-delta[data-tone='positive'] {
-  color: var(--color-positive);
+  color: var(--success-main);
 }
 
 .ui-table-delta[data-tone='negative'] {
-  color: var(--color-negative);
+  color: var(--error-main);
 }
 
 .ui-table-delta[data-tone='neutral'] {
-  color: var(--color-text-muted);
+  color: var(--text-tertiary);
 }
 
 .ui-table-link {
-  color: var(--color-accent);
+  color: var(--secondary-main);
   text-decoration: none;
   text-underline-offset: 2px;
 }
@@ -359,14 +359,14 @@
 }
 
 .ui-table-link:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--secondary-main);
   outline-offset: 1px;
   border-radius: 2px;
 }
 
 .ui-sparkline {
   display: block;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .ui-data-table .ui-table td:has(> .ui-sparkline) {
@@ -374,5 +374,5 @@
 }
 
 .ui-status[data-tone='negative']::before {
-  background: var(--color-negative);
+  background: var(--error-main);
 }

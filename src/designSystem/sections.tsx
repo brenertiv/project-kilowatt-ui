@@ -3,7 +3,7 @@ import { Toast } from '@base-ui/react/toast';
 import { useTranslation } from 'react-i18next';
 import { breakpointRoles, breakpoints, breakpointVarName, type BreakpointName } from '../breakpoints';
 import { iconCatalog } from '../icons';
-import { colorRamps, isDerivedStep, radiusScale, rampLabel, sizeScale, spacingScale, typographyPrimitives, type RampName } from '../primitives';
+import { colorRamps, radiusScale, rampLabel, sizeScale, spacingScale, typographyPrimitives, type RampName } from '../primitives';
 import { useTheme } from '../theme/ThemeProvider';
 import {
   colorRoles,
@@ -488,8 +488,7 @@ export function PrimitivesSection() {
                   <div
                     key={step}
                     className="system-ramp-step"
-                    data-derived={isDerivedStep(ramp, step) || undefined}
-                    title={`color/${ramp}/${step} ${hex}${isDerivedStep(ramp, step) ? ' (derived, not yet in Figma)' : ''}`}
+                    title={`color/${ramp}/${step} ${hex}`}
                   >
                     <span className="system-ramp-swatch" style={{ background: hex }} aria-hidden="true" />
                     <span className="system-ramp-label">{step}</span>

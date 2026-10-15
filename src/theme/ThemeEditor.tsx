@@ -44,7 +44,7 @@ const layerFilters: { value: LayerFilter; label: string }[] = [
 
 const layerCopy: Record<TokenLayer, string> = {
   core: 'Identity knobs. Everything else builds on these.',
-  semantic: 'Role tokens with their own stored value, taken from the Figma ramps. Edit to override the role without touching the core token.',
+  semantic: 'Role tokens. Figma-owned roles read from the snapshot; code-owned roles are ramp steps. Edit to override a role locally without touching the core token.',
 };
 
 function toPxValue(raw: string, fallback: string) {
@@ -75,7 +75,7 @@ function ColorControl({ token, value, onChange }: { token: Token; value: string;
         <input
           className="color-swatch"
           type="color"
-          value={value}
+          value={value.slice(0, 7)}
           onChange={(event) => onChange(event.target.value)}
           aria-label={token.label}
         />

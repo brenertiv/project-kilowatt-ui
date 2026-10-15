@@ -41,6 +41,10 @@ function Playground() {
 
 A file named `cosmos.decorator.tsx` exports a component that receives `children`. It wraps every fixture in its directory and below, outermost directory first. The root decorator in `src/cosmos.decorator.tsx` is host-aware: inside the workbench it renders the fixture as is, because the app shell already provides theme, router, query client and toasts; under Cosmos it supplies that provider stack itself. `src/pages/cosmos.decorator.tsx` adds the **fail requests** and **latency ms** switches to every page fixture. Add one next to a component family when its fixtures need a provider.
 
+## Stage
+
+A component renders in the middle of the canvas at its natural size; a page fills the canvas from the top. Charts and tables, which size to their container, stretch across the frame. A fixture whose root needs the full width for another reason can mark it with `data-fill`, or wrap it in an element with the width it wants.
+
 ## Viewport
 
 Wrap a fixture in `<Viewport width={375} height={667}>` to open it at that size. The device dropdown in the toolbar offers Fit, Phone, Tablet and Laptop presets, and the frame reports its dimensions.

@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "cosmos": "COSMOS=1 cosmos",
-    "cosmos:export": "COSMOS=1 cosmos-export"
+    "cosmos:export": "COSMOS=1 cosmos-export",
+    "figma:snapshot": "node scripts/figma-snapshot.mjs"
   },
   "dependencies": {
     "@amcharts/amcharts5": "^5.20.5",

@@ -12,9 +12,15 @@ import {
   DevicesIcon,
   FitScreenIcon,
   LaptopIcon,
+  LeftPanelCloseIcon,
+  LeftPanelOpenIcon,
   PhoneIcon,
+  RefreshIcon,
+  RightPanelCloseIcon,
+  RightPanelOpenIcon,
   SearchIcon,
   TabletIcon,
+  TuneIcon,
   XIcon,
   type IconProps,
 } from '../icons';
@@ -331,6 +337,17 @@ export function Workbench() {
       <section className="workbench-main">
         {!fullscreen ? (
           <div className="workbench-toolbar">
+            {compact ? null : (
+              <Button
+                className="ui-icon-btn"
+                onClick={() => setNavOpen((open) => !open)}
+                aria-pressed={navOpen}
+                aria-label={navOpen ? 'Hide fixtures' : 'Show fixtures'}
+                title={navOpen ? 'Hide fixtures' : 'Show fixtures'}
+              >
+                {navOpen ? <LeftPanelCloseIcon /> : <LeftPanelOpenIcon />}
+              </Button>
+            )}
             <ViewportSelect
               value={presetLabel}
               onChange={(label) => {
@@ -340,35 +357,38 @@ export function Workbench() {
             />
             {compact ? <FixtureSelect current={fixture} /> : null}
             <div className="workbench-tools">
-              {compact ? null : (
-                <Button className="ui-btn ui-btn-ghost" onClick={() => setNavOpen((open) => !open)} aria-pressed={navOpen}>
-                  Fixtures
-                </Button>
-              )}
-              {compact ? (
-                <Button className="ui-btn ui-btn-ghost" onClick={() => setSheetOpen(true)} disabled={!fixture}>
-                  Inputs
-                </Button>
-              ) : (
-                <Button className="ui-btn ui-btn-ghost" onClick={() => setPanelOpen((open) => !open)} aria-pressed={panelOpen}>
-                  Inputs
-                </Button>
-              )}
-              <Button className="ui-btn ui-btn-ghost" onClick={() => setGeneration((n) => n + 1)}>
-                Reload
+              <Button className="ui-icon-btn" onClick={() => setGeneration((n) => n + 1)} aria-label="Reload fixture" title="Reload fixture">
+                <RefreshIcon />
               </Button>
               <Button className="ui-icon-btn" onClick={() => setFullscreen(true)} aria-label="Full screen" title="Full screen">
                 <FullscreenIcon />
               </Button>
+              {compact ? (
+                <Button className="ui-icon-btn" onClick={() => setSheetOpen(true)} disabled={!fixture} aria-label="Inputs" title="Inputs">
+                  <TuneIcon />
+                </Button>
+              ) : (
+                <Button
+                  className="ui-icon-btn"
+                  onClick={() => setPanelOpen((open) => !open)}
+                  aria-pressed={panelOpen}
+                  aria-label={panelOpen ? 'Hide inputs' : 'Show inputs'}
+                  title={panelOpen ? 'Hide inputs' : 'Show inputs'}
+                >
+                  {panelOpen ? <RightPanelCloseIcon /> : <RightPanelOpenIcon />}
+                </Button>
+              )}
             </div>
           </div>
-        ) : (
+        ) : null}
+
+        {fullscreen ? (
           <Button className="ui-icon-btn workbench-exit" onClick={() => setFullscreen(false)} aria-label="Exit full screen" title="Exit full screen">
             <FullscreenExitIcon />
           </Button>
-        )}
+        ) : null}
 
-        <div className="workbench-stage" data-viewport={viewport ? 'fixed' : 'fit'}>
+        <div className="workbench-stage" data-viewport={viewport ? 'fixed' : 'fit'} data-kind={fixture?.kind ?? 'component'}>
           <div
             className="workbench-frame"
             style={viewport ? { width: viewport.width, height: viewport.height } : undefined}

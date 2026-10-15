@@ -19,9 +19,9 @@ Markdown in `docs/` is rendered in the app under **Docs** (`/docs/<file-name>`),
 
 The **Components** tab is the workbench: it renders every `Name.fixture.tsx` in isolation inside the app, with a right-hand drawer for the component switcher, its states and its inputs, viewport presets, and a URL under `/components` that records the fixture and any changed input. Fixtures import `react-cosmos/client`, which the app aliases to the workbench's implementation, so `npm run cosmos` can also open the same fixtures in React Cosmos at `http://localhost:5100`. See `docs/workbench.md` and `docs/cosmos.md`.
 
-## Figma links
+## Figma links and sync
 
-`src/figma/links.json` maps the repository onto the Figma file: a whole-file link, shown on the **System** tab, and one link per component, shown in the workbench drawer. Paste a link from Figma in either place and the dev server writes it to the file for you to commit; a test keeps every key matched to a fixture. See `docs/figma.md`.
+The Figma file owns the primitives and semantic roles; code owns the tints, utilities and chart slots. `src/figma/variables.json` is the committed snapshot the primitives and tokens are built from, `src/figma/links.json` maps fixtures to Figma nodes, and the **System** tab shows the snapshot date and the code-owned tokens still to push. See `docs/figma.md` for the contract and the commands.
 
 ## Data layer and pages
 

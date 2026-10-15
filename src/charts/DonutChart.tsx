@@ -67,7 +67,7 @@ export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ari
         const item = target.dataItem as am5.DataItem<am5percent.IPieSeriesDataItem> | undefined;
         const value = item?.get('value') ?? 0;
         const category = item?.get('category') ?? '';
-        return `[${values.text}]${formatUnit(value, unit)}[/] [${values.textSecondary}]${category} · ${formatPercent(total ? value / total : 0)}[/]`;
+        return `[${values.textPrimary}]${formatUnit(value, unit)}[/] [${values.textSecondary}]${category} · ${formatPercent(total ? value / total : 0)}[/]`;
       });
 
       series.data.setAll(slices);
@@ -85,7 +85,7 @@ export function DonutChart({ data, unit = 'count', centerValue, centerLabel, ari
           text: centerValue ?? formatUnit(total, unit, { compact: true }),
           fontSize: 22,
           fontWeight: '500',
-          fill: am5.color(values.text),
+          fill: am5.color(values.textPrimary),
           centerX: am5.p50,
           textAlign: 'center',
         }),

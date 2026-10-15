@@ -19,21 +19,21 @@ export function createChartTheme(values: ThemeValues) {
       const r = this.rule.bind(this);
 
       r('InterfaceColors').setAll({
-        text: color(values.text),
-        alternativeText: color(values.onSolid),
-        grid: color(values.border),
-        background: color(values.surface),
-        alternativeBackground: color(values.solid),
-        stroke: color(values.border),
-        fill: color(values.hover),
-        positive: color(values.positive),
-        negative: color(values.negative),
+        text: color(values.textPrimary),
+        alternativeText: color(values.primaryContrastText),
+        grid: color(values.divider),
+        background: color(values.backgroundPaper),
+        alternativeBackground: color(values.primaryMain),
+        stroke: color(values.divider),
+        fill: color(values.actionHover),
+        positive: color(values.successMain),
+        negative: color(values.errorMain),
         disabled: color(values.track),
-        primaryButton: color(values.accent),
-        primaryButtonHover: color(values.accent),
-        primaryButtonDown: color(values.accent),
-        primaryButtonActive: color(values.accent),
-        primaryButtonText: color(values.onAccent),
+        primaryButton: color(values.secondaryMain),
+        primaryButtonHover: color(values.secondaryMain),
+        primaryButtonDown: color(values.secondaryMain),
+        primaryButtonActive: color(values.secondaryMain),
+        primaryButtonText: color(values.secondaryContrastText),
       });
 
       r('ColorSet').setAll({
@@ -50,19 +50,19 @@ export function createChartTheme(values: ThemeValues) {
       });
 
       r('AxisLabel').setAll({
-        fill: color(values.textMuted),
+        fill: color(values.textTertiary),
         fontSize: 11,
         paddingTop: 6,
         paddingRight: 6,
       });
 
       r('Grid').setAll({
-        stroke: color(values.border),
+        stroke: color(values.divider),
         strokeOpacity: 1,
         strokeWidth: 1,
         strokeDasharray: [],
       });
-      r('Grid', ['base']).setAll({ stroke: color(values.border), strokeOpacity: 1 });
+      r('Grid', ['base']).setAll({ stroke: color(values.divider), strokeOpacity: 1 });
       r('Grid', ['minor']).setAll({ forceHidden: true });
       r('AxisTick').setAll({ forceHidden: true });
       r('AxisRenderer').setAll({ strokeOpacity: 0 });
@@ -78,22 +78,22 @@ export function createChartTheme(values: ThemeValues) {
         paddingRight: 8,
       });
       r('PointedRectangle', ['tooltip', 'background']).setAll({
-        fill: color(values.surface),
+        fill: color(values.backgroundPaper),
         fillOpacity: 1,
-        stroke: color(values.border),
+        stroke: color(values.divider),
         strokeOpacity: 1,
         strokeWidth: 1,
         cornerRadius: innerRadius,
         shadowOpacity: 0,
       });
       r('Label', ['tooltip']).setAll({
-        fill: color(values.text),
+        fill: color(values.textPrimary),
         fontSize: 12,
       });
 
       r('XYCursor').setAll({ behavior: 'none' });
       r('Grid', ['cursor', 'x']).setAll({
-        stroke: color(values.textMuted),
+        stroke: color(values.textTertiary),
         strokeOpacity: 0.6,
         strokeDasharray: [],
       });
@@ -107,13 +107,13 @@ export function createChartTheme(values: ThemeValues) {
         cornerRadiusTR: 4,
         cornerRadiusBL: 0,
         cornerRadiusBR: 0,
-        stroke: color(values.surface),
+        stroke: color(values.backgroundPaper),
         strokeOpacity: 1,
         strokeWidth: 2,
       });
 
       r('Slice').setAll({
-        stroke: color(values.surface),
+        stroke: color(values.backgroundPaper),
         strokeOpacity: 1,
         strokeWidth: 2,
       });
@@ -121,7 +121,7 @@ export function createChartTheme(values: ThemeValues) {
       r('Bullet').setAll({ locationY: 1 });
       r('Circle').setAll({
         radius: 4,
-        stroke: color(values.surface),
+        stroke: color(values.backgroundPaper),
         strokeWidth: 2,
       });
     }

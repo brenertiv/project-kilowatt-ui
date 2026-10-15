@@ -97,11 +97,11 @@ export function CategoryBarChart({
         if (highlight && data.series.length === 1) {
           item.columns.template.adapters.add('fill', (fill, target) => {
             const context = target.dataItem?.dataContext as { x?: string | number } | undefined;
-            return context?.x === highlight ? am5.color(values.accent) : fill;
+            return context?.x === highlight ? am5.color(values.secondaryMain) : fill;
           });
           item.columns.template.adapters.add('stroke', (stroke, target) => {
             const context = target.dataItem?.dataContext as { x?: string | number } | undefined;
-            return context?.x === highlight ? am5.color(values.accent) : stroke;
+            return context?.x === highlight ? am5.color(values.secondaryMain) : stroke;
           });
         }
         if (valueLabels && data.series.length === 1) {
@@ -135,7 +135,7 @@ export function CategoryBarChart({
           entry.item.set(
             'tooltip',
             am5.Tooltip.new(root, {
-              labelText: `[${values.text}]{valueX.formatNumber("#,###.#")}[/] [${values.textSecondary}]${entry.label}[/]`,
+              labelText: `[${values.textPrimary}]{valueX.formatNumber("#,###.#")}[/] [${values.textSecondary}]${entry.label}[/]`,
             }),
           );
         }

@@ -1,5 +1,6 @@
 import { breakpointCssVars } from './breakpoints';
-import { primitiveCssVars } from './primitives';
+import { figmaColor, figmaString } from './figma/snapshot';
+import { cssName, primitiveCssVars, primitiveValue } from './primitives';
 
 export type TokenGroup = 'Color' | 'Typography' | 'Shape' | 'Space';
 export type TokenType = 'color' | 'length' | 'font';
@@ -18,340 +19,102 @@ export type Token = {
   defaultValue: string;
   darkValue?: string;
   options?: string[];
+  /** Figma variable path that owns this token's default, e.g. `color/text/primary`. Absent for code-owned tokens. */
+  figma?: string;
+  /** For code-owned tokens, the primitive step per mode the default is read from, so it can be pushed to Figma as an alias. */
+  primitive?: { light: string; dark: string };
 };
 
+/** Quotes a family name for a CSS font stack when it has a space. */
+function family(path: string, fallback: string) {
+  const name = figmaString(`primitives/typography/fontFamily/${path}`);
+  return `${name.includes(' ') ? `"${name}"` : name}, ${fallback}`;
+}
+
+/** A semantic color Figma owns: both modes read from the `color` collection in the snapshot. */
+function fromFigma(id: string, path: string, label: string): Token {
+  return {
+    id,
+    cssVar: cssName(path),
+    label,
+    group: 'Color',
+    type: 'color',
+    figma: `color/${path}`,
+    defaultValue: figmaColor(`color/${path}`, 'Light'),
+    darkValue: figmaColor(`color/${path}`, 'Dark'),
+  };
+}
+
+/** A color code owns, expressed as a primitive step per mode so it can be pushed to Figma as an alias. */
+function fromCode(id: string, cssVar: string, label: string, light: string, dark: string): Token {
+  return {
+    id,
+    cssVar,
+    label,
+    group: 'Color',
+    type: 'color',
+    primitive: { light, dark },
+    defaultValue: primitiveValue(light),
+    darkValue: primitiveValue(dark),
+  };
+}
+
+function palette(role: string, label: string): Token[] {
+  return [
+    fromFigma(`${role}Main`, `${role}/main`, `${label}`),
+    fromFigma(`${role}Light`, `${role}/light`, `${label} light`),
+    fromFigma(`${role}Dark`, `${role}/dark`, `${label} dark`),
+    fromFigma(`${role}ContrastText`, `${role}/contrastText`, `On ${label.toLowerCase()}`),
+  ];
+}
+
 export const tokens: Token[] = [
-  {
-    id: 'bg',
-    cssVar: '--color-bg',
-    label: 'App background',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#F3F6F9',
-    darkValue: '#0D212A',
-  },
-  {
-    id: 'surface',
-    cssVar: '--color-surface',
-    label: 'Surface',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#FFFFFF',
-    darkValue: '#1B3E4F',
-  },
-  {
-    id: 'surfaceSunken',
-    cssVar: '--color-surface-sunken',
-    label: 'Sunken surface',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#F9FAFC',
-    darkValue: '#112A36',
-  },
-  {
-    id: 'border',
-    cssVar: '--color-border',
-    label: 'Border',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#E2E8EF',
-    darkValue: '#1B3E4F',
-  },
-  {
-    id: 'text',
-    cssVar: '--color-text',
-    label: 'Primary text',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#0D212A',
-    darkValue: '#F9FAFC',
-  },
-  {
-    id: 'textSecondary',
-    cssVar: '--color-text-secondary',
-    label: 'Secondary text',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#56646A',
-    darkValue: '#B6C2C8',
-  },
-  {
-    id: 'textMuted',
-    cssVar: '--color-text-muted',
-    label: 'Muted text',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#626F75',
-    darkValue: '#A0AFB7',
-  },
-  {
-    id: 'accent',
-    cssVar: '--color-accent',
-    label: 'Accent',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#2EA6E1',
-    darkValue: '#51B5E6',
-  },
-  {
-    id: 'accentTint',
-    cssVar: '--color-accent-tint',
-    label: 'Accent tint',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#DCF0FA',
-    darkValue: '#12425A',
-  },
-  {
-    id: 'onAccent',
-    cssVar: '--color-on-accent',
-    label: 'On accent',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#0D212A',
-    darkValue: '#0D212A',
-  },
-  {
-    id: 'positive',
-    cssVar: '--color-positive',
-    label: 'Positive',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#086D51',
-    darkValue: '#00E5A0',
-  },
-  {
-    id: 'negative',
-    cssVar: '--color-negative',
-    label: 'Negative',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#D61A1A',
-    darkValue: '#FF9F9F',
-  },
-  {
-    id: 'warning',
-    cssVar: '--color-warning',
-    label: 'Warning',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#E16A2E',
-    darkValue: '#F48E36',
-  },
-  {
-    id: 'solid',
-    cssVar: '--color-solid',
-    label: 'Solid action',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#112A36',
-    darkValue: '#F9FAFC',
-  },
-  {
-    id: 'onSolid',
-    cssVar: '--color-on-solid',
-    label: 'On solid',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#FFFFFF',
-    darkValue: '#0D212A',
-  },
-  {
-    id: 'hover',
-    cssVar: '--color-hover',
-    label: 'Hover fill',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#E7ECF2',
-    darkValue: '#1B3E4F',
-  },
-  {
-    id: 'track',
-    cssVar: '--color-track',
-    label: 'Track / fill',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#D6DEE8',
-    darkValue: '#365670',
-  },
-  {
-    id: 'textDisabled',
-    cssVar: '--color-text-disabled',
-    label: 'Disabled text',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#9EA6AA',
-    darkValue: '#748994',
-  },
-  {
-    id: 'link',
-    cssVar: '--color-link',
-    label: 'Link',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#1C6487',
-    darkValue: '#B9E1F5',
-  },
-  {
-    id: 'borderSubtle',
-    cssVar: '--color-border-subtle',
-    label: 'Subtle border',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#EDF1F5',
-    darkValue: '#112A36',
-  },
-  {
-    id: 'borderStrong',
-    cssVar: '--color-border-strong',
-    label: 'Strong border',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#D0DAE5',
-    darkValue: '#365670',
-  },
-  {
-    id: 'positiveTint',
-    cssVar: '--color-positive-tint',
-    label: 'Positive tint',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#E1FFEF',
-    darkValue: '#17595C',
-  },
-  {
-    id: 'negativeTint',
-    cssVar: '--color-negative-tint',
-    label: 'Negative tint',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#FFF1F1',
-    darkValue: '#3F4E5C',
-  },
-  {
-    id: 'warningTint',
-    cssVar: '--color-warning-tint',
-    label: 'Warning tint',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#FFF5E4',
-    darkValue: '#3E4B4B',
-  },
-  {
-    id: 'utilityElectricity',
-    cssVar: '--color-utility-electricity',
-    label: 'Electricity',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#8351E7',
-    darkValue: '#B99CF1',
-  },
-  {
-    id: 'utilityWater',
-    cssVar: '--color-utility-water',
-    label: 'Water',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#2EA6E1',
-    darkValue: '#51B5E6',
-  },
-  {
-    id: 'utilityGas',
-    cssVar: '--color-utility-gas',
-    label: 'Gas',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#00804C',
-    darkValue: '#74C365',
-  },
-  {
-    id: 'utilitySteam',
-    cssVar: '--color-utility-steam',
-    label: 'Steam',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#E34712',
-    darkValue: '#FE9E7F',
-  },
-  {
-    id: 'utilitySanitation',
-    cssVar: '--color-utility-sanitation',
-    label: 'Sanitation',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#8E960A',
-    darkValue: '#C4CF3A',
-  },
-  {
-    id: 'chart1',
-    cssVar: '--chart-1',
-    label: 'Series 1 (brand)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#51B5E6',
-    darkValue: '#2585B4',
-  },
-  {
-    id: 'chart2',
-    cssVar: '--chart-2',
-    label: 'Series 2 (orange)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#952F0C',
-    darkValue: '#BB3B0F',
-  },
-  {
-    id: 'chart3',
-    cssVar: '--chart-3',
-    label: 'Series 3 (green)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#1BC28C',
-    darkValue: '#0FA477',
-  },
-  {
-    id: 'chart4',
-    cssVar: '--chart-4',
-    label: 'Series 4 (violet)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#6A2EE1',
-    darkValue: '#9B72EB',
-  },
-  {
-    id: 'chart5',
-    cssVar: '--chart-5',
-    label: 'Series 5 (spring)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#A8B11B',
-    darkValue: '#8E960A',
-  },
-  {
-    id: 'chart6',
-    cssVar: '--chart-6',
-    label: 'Series 6 (midnight)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#3A60A1',
-    darkValue: '#3A60A1',
-  },
-  {
-    id: 'chart7',
-    cssVar: '--chart-7',
-    label: 'Series 7 (meadow)',
-    group: 'Color',
-    type: 'color',
-    defaultValue: '#74C365',
-    darkValue: '#43A159',
-  },
+  fromFigma('backgroundDefault', 'background/default', 'Page background'),
+  fromFigma('backgroundLevel1', 'background/level1', 'Level 1 surface'),
+  fromFigma('backgroundLevel2', 'background/level2', 'Level 2 surface'),
+  fromFigma('backgroundPaper', 'background/paper', 'Paper'),
+  fromFigma('divider', 'divider', 'Divider'),
+  fromCode('dividerSubtle', '--divider-subtle', 'Subtle divider', 'color/slate/300', 'color/navy/800'),
+  fromCode('dividerStrong', '--divider-strong', 'Strong divider', 'color/slate/800', 'color/navy/600'),
+  fromFigma('textPrimary', 'text/primary', 'Primary text'),
+  fromFigma('textSecondary', 'text/secondary', 'Secondary text'),
+  fromFigma('textTertiary', 'text/tertiary', 'Tertiary text'),
+  fromFigma('textDisabled', 'text/disabled', 'Disabled text'),
+  fromFigma('actionHover', 'action/hover', 'Hover overlay'),
+  fromFigma('actionPressed', 'action/pressed', 'Pressed overlay'),
+  fromFigma('actionFocus', 'action/focus', 'Focus overlay'),
+  fromFigma('actionSelected', 'action/selected', 'Selected overlay'),
+  ...palette('primary', 'Primary'),
+  fromCode('track', '--track', 'Track', 'color/slate/700', 'color/navy/600'),
+  ...palette('secondary', 'Secondary'),
+  fromCode('secondaryTint', '--secondary-tint', 'Secondary tint', 'color/brand/50', 'color/brand/800'),
+  ...palette('success', 'Success'),
+  fromCode('successTint', '--success-tint', 'Success tint', 'color/green/50', 'color/green/900'),
+  ...palette('warning', 'Warning'),
+  fromCode('warningTint', '--warning-tint', 'Warning tint', 'color/yellow/50', 'color/orange/900'),
+  ...palette('error', 'Error'),
+  fromCode('errorTint', '--error-tint', 'Error tint', 'color/red/50', 'color/red/900'),
+  ...palette('info', 'Info'),
+  fromCode('utilityElectricity', '--utility-electricity', 'Electricity', 'color/violet/400', 'color/violet/200'),
+  fromCode('utilityWater', '--utility-water', 'Water', 'color/brand/500', 'color/brand/400'),
+  fromCode('utilityGas', '--utility-gas', 'Gas', 'color/meadow/600', 'color/meadow/400'),
+  fromCode('utilitySteam', '--utility-steam', 'Steam', 'color/orange/500', 'color/orange/300'),
+  fromCode('utilitySanitation', '--utility-sanitation', 'Sanitation', 'color/spring/500', 'color/spring/300'),
+  fromCode('chart1', '--chart-1', 'Series 1 (brand)', 'color/brand/400', 'color/brand/600'),
+  fromCode('chart2', '--chart-2', 'Series 2 (orange)', 'color/orange/700', 'color/orange/600'),
+  fromCode('chart3', '--chart-3', 'Series 3 (green)', 'color/green/400', 'color/green/500'),
+  fromCode('chart4', '--chart-4', 'Series 4 (violet)', 'color/violet/500', 'color/violet/300'),
+  fromCode('chart5', '--chart-5', 'Series 5 (spring)', 'color/spring/400', 'color/spring/500'),
+  fromCode('chart6', '--chart-6', 'Series 6 (midnight)', 'color/midnight/700', 'color/midnight/700'),
+  fromCode('chart7', '--chart-7', 'Series 7 (meadow)', 'color/meadow/400', 'color/meadow/500'),
   {
     id: 'fontSans',
     cssVar: '--font-sans',
     label: 'Font Sans',
     group: 'Typography',
     type: 'font',
-    defaultValue: 'Roboto, system-ui, sans-serif',
+    figma: 'primitives/typography/fontFamily/sans',
+    defaultValue: family('sans', 'system-ui, sans-serif'),
     options: [
       'Inter, "SF Pro Text", system-ui, sans-serif',
       '"IBM Plex Sans", system-ui, sans-serif',
@@ -367,7 +130,8 @@ export const tokens: Token[] = [
     label: 'Font Serif',
     group: 'Typography',
     type: 'font',
-    defaultValue: '"Roboto Serif", Georgia, serif',
+    figma: 'primitives/typography/fontFamily/serif',
+    defaultValue: family('serif', 'Georgia, serif'),
     options: [
       '"Source Serif 4", Georgia, serif',
       '"IBM Plex Serif", Georgia, serif',
@@ -382,7 +146,8 @@ export const tokens: Token[] = [
     label: 'Font Mono',
     group: 'Typography',
     type: 'font',
-    defaultValue: '"Roboto Mono", ui-monospace, monospace',
+    figma: 'primitives/typography/fontFamily/mono',
+    defaultValue: family('mono', 'ui-monospace, monospace'),
     options: [
       'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
       '"JetBrains Mono", ui-monospace, monospace',
@@ -391,14 +156,23 @@ export const tokens: Token[] = [
       '"Roboto Mono", ui-monospace, monospace',
     ],
   },
-  { id: 'radius', cssVar: '--radius', label: 'Radius', group: 'Shape', type: 'length', defaultValue: '8px' },
+  {
+    id: 'radius',
+    cssVar: '--radius',
+    label: 'Radius',
+    group: 'Shape',
+    type: 'length',
+    primitive: { light: 'radius/md', dark: 'radius/md' },
+    defaultValue: primitiveValue('radius/md'),
+  },
   {
     id: 'radiusControl',
     cssVar: '--radius-control',
     label: 'Control radius',
     group: 'Shape',
     type: 'length',
-    defaultValue: '8px',
+    primitive: { light: 'radius/md', dark: 'radius/md' },
+    defaultValue: primitiveValue('radius/md'),
   },
   {
     id: 'controlHeight',
@@ -406,7 +180,8 @@ export const tokens: Token[] = [
     label: 'Control height',
     group: 'Shape',
     type: 'length',
-    defaultValue: '36px',
+    primitive: { light: 'size/36', dark: 'size/36' },
+    defaultValue: primitiveValue('size/36'),
   },
   {
     id: 'borderWidth',
@@ -417,11 +192,34 @@ export const tokens: Token[] = [
     defaultValue: '1px',
   },
   { id: 'shadow', cssVar: '--shadow', label: 'Elevation', group: 'Shape', type: 'length', defaultValue: '0px' },
-  { id: 'space', cssVar: '--space', label: 'Base space', group: 'Space', type: 'length', defaultValue: '8px' },
-  { id: 'cardPad', cssVar: '--card-pad', label: 'Card padding', group: 'Space', type: 'length', defaultValue: '16px' },
-  { id: 'gap', cssVar: '--gap', label: 'Card gap', group: 'Space', type: 'length', defaultValue: '12px' },
+  {
+    id: 'space',
+    cssVar: '--space',
+    label: 'Base space',
+    group: 'Space',
+    type: 'length',
+    primitive: { light: 'spacing/1', dark: 'spacing/1' },
+    defaultValue: primitiveValue('spacing/1'),
+  },
+  {
+    id: 'cardPad',
+    cssVar: '--card-pad',
+    label: 'Card padding',
+    group: 'Space',
+    type: 'length',
+    primitive: { light: 'spacing/2', dark: 'spacing/2' },
+    defaultValue: primitiveValue('spacing/2'),
+  },
+  {
+    id: 'gap',
+    cssVar: '--gap',
+    label: 'Card gap',
+    group: 'Space',
+    type: 'length',
+    primitive: { light: 'spacing/1_5', dark: 'spacing/1_5' },
+    defaultValue: primitiveValue('spacing/1_5'),
+  },
 ];
-
 /**
  * Editable token layers. `core` tokens are the identity knobs the rest of the
  * theme derives from; `semantic` tokens are roles with their own stored value.
@@ -431,12 +229,12 @@ export type TokenLayer = 'core' | 'semantic';
 
 /** Identity knobs. Semantic tokens build on these; both layers are editable in the Theme editor. */
 export const coreTokenIds = [
-  'bg',
-  'text',
-  'accent',
-  'positive',
-  'negative',
-  'warning',
+  'backgroundDefault',
+  'textPrimary',
+  'secondaryMain',
+  'successMain',
+  'warningMain',
+  'errorMain',
   'fontSans',
   'fontSerif',
   'fontMono',
@@ -445,7 +243,6 @@ export const coreTokenIds = [
   'shadow',
   'space',
 ] as const;
-
 export type CoreTokenId = (typeof coreTokenIds)[number];
 
 export function isCoreTokenId(id: string): id is CoreTokenId {
@@ -507,7 +304,7 @@ function scrollbarThumb(values: Record<string, string>) {
 }
 
 function scrollbarThumbHover(values: Record<string, string>) {
-  return `color-mix(in oklab, ${values.track ?? defaultTheme.track} 55%, ${values.textMuted ?? defaultTheme.textMuted})`;
+  return `color-mix(in oklab, ${values.track ?? defaultTheme.track} 55%, ${values.textTertiary ?? defaultTheme.textTertiary})`;
 }
 
 /**
@@ -643,10 +440,34 @@ export const derivedTokens: DerivedToken[] = [
   { cssVar: '--space-6', label: 'Space 6', group: 'Space', value: '32px' },
   { cssVar: '--space-7', label: 'Space 7', group: 'Space', value: '48px' },
   { cssVar: '--space-8', label: 'Space 8', group: 'Space', value: '64px' },
-  { cssVar: '--spacing-component-xs', label: 'Component XS', group: 'Space', value: '4px', note: 'Figma spacing/component-xs' },
-  { cssVar: '--spacing-component-sm', label: 'Component SM', group: 'Space', aliasOf: 'space', note: 'Figma spacing/component-sm' },
-  { cssVar: '--spacing-component-md', label: 'Component MD', group: 'Space', aliasOf: 'gap', note: 'Figma spacing/component-md' },
-  { cssVar: '--spacing-component-lg', label: 'Component LG', group: 'Space', aliasOf: 'cardPad', note: 'Figma spacing/component-lg' },
+  {
+    cssVar: '--spacing-component-xs',
+    label: 'Component XS',
+    group: 'Space',
+    value: '4px',
+    note: 'Figma spacing/component-xs',
+  },
+  {
+    cssVar: '--spacing-component-sm',
+    label: 'Component SM',
+    group: 'Space',
+    aliasOf: 'space',
+    note: 'Figma spacing/component-sm',
+  },
+  {
+    cssVar: '--spacing-component-md',
+    label: 'Component MD',
+    group: 'Space',
+    aliasOf: 'gap',
+    note: 'Figma spacing/component-md',
+  },
+  {
+    cssVar: '--spacing-component-lg',
+    label: 'Component LG',
+    group: 'Space',
+    aliasOf: 'cardPad',
+    note: 'Figma spacing/component-lg',
+  },
   { cssVar: '--spacing-layout-sm', label: 'Layout SM', group: 'Space', value: '16px', note: 'Figma spacing/layout-sm' },
   { cssVar: '--spacing-layout-md', label: 'Layout MD', group: 'Space', value: '24px', note: 'Figma spacing/layout-md' },
   { cssVar: '--spacing-layout-lg', label: 'Layout LG', group: 'Space', value: '32px', note: 'Figma spacing/layout-lg' },
@@ -658,10 +479,28 @@ export const derivedTokens: DerivedToken[] = [
     value: '4px',
     note: 'Chips, badges, nested tiles and clipped viewports (Figma radius/sm)',
   },
-  { cssVar: '--shadow-sm', label: 'Shadow SM', group: 'Shape', value: shadowScale.sm, note: 'Figma Shadow/card, Shadow/tooltip' },
-  { cssVar: '--shadow-md', label: 'Shadow MD', group: 'Shape', value: shadowScale.md, note: 'Figma Shadow/panel, Shadow/popover' },
+  {
+    cssVar: '--shadow-sm',
+    label: 'Shadow SM',
+    group: 'Shape',
+    value: shadowScale.sm,
+    note: 'Figma Shadow/card, Shadow/tooltip',
+  },
+  {
+    cssVar: '--shadow-md',
+    label: 'Shadow MD',
+    group: 'Shape',
+    value: shadowScale.md,
+    note: 'Figma Shadow/panel, Shadow/popover',
+  },
   { cssVar: '--shadow-lg', label: 'Shadow LG', group: 'Shape', value: shadowScale.lg, note: 'Figma Shadow/modal' },
-  { cssVar: '--shadow-xl', label: 'Shadow XL', group: 'Shape', value: shadowScale.xl, note: 'Figma Shadow/Primitive/xl' },
+  {
+    cssVar: '--shadow-xl',
+    label: 'Shadow XL',
+    group: 'Shape',
+    value: shadowScale.xl,
+    note: 'Figma Shadow/Primitive/xl',
+  },
   {
     cssVar: '--shadow-elevation',
     label: 'Elevation shadow',
@@ -674,7 +513,7 @@ export const derivedTokens: DerivedToken[] = [
     label: 'Scrollbar thumb',
     group: 'Color',
     compute: scrollbarThumb,
-    note: 'Alias of --color-track, written per scheme',
+    note: 'Alias of --track, written per scheme',
   },
   {
     cssVar: '--scrollbar-thumb-hover',
@@ -742,51 +581,89 @@ export const colorRoles: ColorRoleGroup[] = [
     id: 'surfaces',
     label: 'Surfaces',
     description:
-      'Three surfaces from the slate and navy ramps: the page, a sunken level for toolbars and inputs, and raised cards. Mirrors Figma surface/0, surface/1 and surface/2.',
-    tokenIds: ['bg', 'surfaceSunken', 'surface', 'border', 'borderSubtle', 'borderStrong', 'hover'],
+      'Four surfaces from the slate and navy ramps, after Figma background/default, level1, level2 and paper: the page, toolbars and inputs, nested wells, and raised cards and popovers. The divider follows Figma; the subtle and strong steps are code-owned.',
+    tokenIds: [
+      'backgroundDefault',
+      'backgroundLevel1',
+      'backgroundLevel2',
+      'backgroundPaper',
+      'divider',
+      'dividerSubtle',
+      'dividerStrong',
+    ],
   },
   {
     id: 'text',
     label: 'Text',
     description:
-      'One text color with emphasis steps. Figma defines secondary, muted and disabled as 70, 60 and 40 percent opacity of text color/100; these are the same steps flattened onto the raised surface and snapped so secondary and muted clear 4.5:1.',
-    tokenIds: ['text', 'textSecondary', 'textMuted', 'textDisabled', 'link'],
+      'Solid navy steps after Figma text/primary, secondary, tertiary and disabled. No opacity: each emphasis is a ramp color in both modes.',
+    tokenIds: ['textPrimary', 'textSecondary', 'textTertiary', 'textDisabled'],
   },
   {
-    id: 'accent',
-    label: 'Accent',
-    description: 'One saturated blue answers "what is active or important?". Never use it decoratively.',
-    tokenIds: ['accent', 'accentTint', 'onAccent'],
+    id: 'action',
+    label: 'Action overlays',
+    description:
+      'Figma action/*: the primary text color at a small opacity, laid over the component fill for hover, pressed, focus and selected. Never applied as layer opacity.',
+    tokenIds: ['actionHover', 'actionPressed', 'actionFocus', 'actionSelected'],
+  },
+  {
+    id: 'primary',
+    label: 'Primary',
+    description:
+      'Figma primary: the solid navy for the single high-commitment action, with its contrast text. Track is the code-owned neutral behind progress.',
+    tokenIds: ['primaryMain', 'primaryLight', 'primaryDark', 'primaryContrastText', 'track'],
+  },
+  {
+    id: 'secondary',
+    label: 'Secondary',
+    description:
+      'Figma secondary: the brand blue that answers "what is active or important?". Never decorative. The tint is code-owned and marks selection and the active nav item.',
+    tokenIds: ['secondaryMain', 'secondaryLight', 'secondaryDark', 'secondaryContrastText', 'secondaryTint'],
   },
   {
     id: 'state',
     label: 'State',
     description:
-      'Positive marks favorable deltas and success. Warning marks caution. Negative marks unfavorable deltas and errors. Always paired with a label or icon.',
-    tokenIds: ['positive', 'positiveTint', 'warning', 'warningTint', 'negative', 'negativeTint'],
+      'Figma success, warning and error. Success marks favorable deltas, warning marks caution, error marks unfavorable deltas and failures. Tints are code-owned steps from the same ramps. Always paired with a label or icon.',
+    tokenIds: [
+      'successMain',
+      'successLight',
+      'successDark',
+      'successContrastText',
+      'successTint',
+      'warningMain',
+      'warningLight',
+      'warningDark',
+      'warningContrastText',
+      'warningTint',
+      'errorMain',
+      'errorLight',
+      'errorDark',
+      'errorContrastText',
+      'errorTint',
+    ],
+  },
+  {
+    id: 'info',
+    label: 'Info',
+    description: 'Figma info on the midnight ramp. Links and informational chips use it.',
+    tokenIds: ['infoMain', 'infoLight', 'infoDark', 'infoContrastText'],
   },
   {
     id: 'utility',
     label: 'Utilities',
     description:
-      'Entity colors for commodity data from the Figma ramps: electricity on violet, water on brand, gas on meadow, steam on orange, sanitation on spring, each stepped lighter in dark mode. A utility keeps its hue everywhere it appears. Not a categorical palette; never rely on them alone to separate series.',
+      'Code-owned entity colors for commodity data from the Figma ramps: electricity on violet, water on brand, gas on meadow, steam on orange, sanitation on spring, each stepped lighter in dark mode. A utility keeps its hue everywhere it appears. Not a categorical palette; never rely on them alone to separate series.',
     tokenIds: ['utilityElectricity', 'utilityWater', 'utilityGas', 'utilitySteam', 'utilitySanitation'],
-  },
-  {
-    id: 'action',
-    label: 'Action',
-    description: 'Solid fills for the single high-commitment action, and neutral tracks behind progress.',
-    tokenIds: ['solid', 'onSolid', 'track'],
   },
   {
     id: 'chart',
     label: 'Chart series',
     description:
-      'Seven categorical slots, one per chromatic Figma ramp not reserved for status, in the order brand, orange, green, violet, spring, midnight, meadow, chosen by search to maximise colorblind separation. Validated with the dataviz checks: worst adjacent CVD ΔE 26.3 light and 12.4 dark against a target of 8. Assigned to series in sequence, never cycled; an eighth series folds into Other.',
+      'Code-owned. Seven categorical slots, one per chromatic Figma ramp not reserved for status, in the order brand, orange, green, violet, spring, midnight, meadow, chosen by search to maximise colorblind separation. Validated with the dataviz checks: worst adjacent CVD ΔE 26.3 light and 12.4 dark against a target of 8. Assigned to series in sequence, never cycled; an eighth series folds into Other.',
     tokenIds: [...chartSeriesIds],
   },
 ];
-
 
 export const fontFamilyIds = ['fontSans', 'fontSerif', 'fontMono'] as const;
 
@@ -929,21 +806,28 @@ export type ContrastPair = {
 };
 
 export const contrastPairs: ContrastPair[] = [
-  { id: 'text-on-surface', label: 'Primary text on surface', fg: 'text', bg: 'surface', kind: 'normal' },
+  { id: 'text-on-paper', label: 'Primary text on paper', fg: 'textPrimary', bg: 'backgroundPaper', kind: 'normal' },
   {
-    id: 'secondary-on-surface',
-    label: 'Secondary text on surface',
+    id: 'secondary-on-paper',
+    label: 'Secondary text on paper',
     fg: 'textSecondary',
-    bg: 'surface',
+    bg: 'backgroundPaper',
     kind: 'normal',
   },
-  { id: 'muted-on-surface', label: 'Muted text on surface', fg: 'textMuted', bg: 'surface', kind: 'normal' },
-  { id: 'on-accent', label: 'On accent', fg: 'onAccent', bg: 'accent', kind: 'ui' },
-  { id: 'on-solid', label: 'On solid', fg: 'onSolid', bg: 'solid', kind: 'ui' },
-  { id: 'warning-on-surface', label: 'Warning on surface', fg: 'warning', bg: 'surface', kind: 'normal' },
-  { id: 'negative-on-surface', label: 'Negative on surface', fg: 'negative', bg: 'surface', kind: 'normal' },
+  {
+    id: 'tertiary-on-paper',
+    label: 'Tertiary text on paper',
+    fg: 'textTertiary',
+    bg: 'backgroundPaper',
+    kind: 'normal',
+  },
+  { id: 'text-on-page', label: 'Primary text on page', fg: 'textPrimary', bg: 'backgroundDefault', kind: 'normal' },
+  { id: 'on-secondary', label: 'On secondary', fg: 'secondaryContrastText', bg: 'secondaryMain', kind: 'ui' },
+  { id: 'on-primary', label: 'On primary', fg: 'primaryContrastText', bg: 'primaryMain', kind: 'ui' },
+  { id: 'warning-on-paper', label: 'Warning on paper', fg: 'warningMain', bg: 'backgroundPaper', kind: 'normal' },
+  { id: 'error-on-paper', label: 'Error on paper', fg: 'errorMain', bg: 'backgroundPaper', kind: 'normal' },
+  { id: 'info-on-paper', label: 'Info on paper', fg: 'infoMain', bg: 'backgroundPaper', kind: 'normal' },
 ];
-
 export const tokenById: Record<string, Token> = Object.fromEntries(tokens.map((token) => [token.id, token]));
 
 export const fontLabels: Record<string, string> = {

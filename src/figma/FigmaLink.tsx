@@ -3,7 +3,6 @@ import { Button } from '@base-ui/react/button';
 import { Input } from '@base-ui/react/input';
 import { useTranslation } from 'react-i18next';
 import { ArrowOutwardIcon } from '../icons';
-import { fixtureGroups } from '../workbench/registry';
 import { figmaLinksEditable, linkFor, setFigmaLink, useFigmaLinks, type FigmaScope } from './links';
 import { parseFigmaUrl } from './url';
 
@@ -18,9 +17,10 @@ function OpenLink({ href, label }: { href: string; label: string }) {
 
 /**
  * The link between one thing in the repository and its place in Figma: the
- * whole file, or a component's node. Shows where it points, opens it, and in
- * the dev server lets you paste a new link, which is written to
- * `src/figma/links.json` so the mapping is committed with the code.
+ * whole file, or a component's node. Linked, it shows the file name in the
+ * field's place with Unlink beside it; unlinked, the dev server offers a field
+ * to paste a link. Links are written to `src/figma/links.json` so the mapping
+ * is committed with the code.
  */
 export function FigmaLinkField({ scope }: { scope: FigmaScope }) {
   const { t } = useTranslation();
@@ -62,21 +62,37 @@ export function FigmaLinkField({ scope }: { scope: FigmaScope }) {
       {link ? (
         <>
           <OpenLink href={link.url} label={t('figma.open')} />
-          <p className="ui-description figma-link-meta">
-            {link.fileName ?? link.fileKey}
-            {link.nodeId ? ` · ${t('figma.node', { id: link.nodeId })}` : ` · ${t('figma.wholeFile')}`}
-          </p>
+          <div className="figma-link-form">
+            <p className="ui-input figma-link-current" aria-label={t('figma.linkedTo')}>
+              <span className="figma-link-name">{link.fileName ?? link.fileKey}</span>
+              <span className="figma-link-meta">
+                {link.nodeId ? t('figma.node', { id: link.nodeId }) : t('figma.wholeFile')}
+              </span>
+            </p>
+            {figmaLinksEditable ? (
+              <div className="figma-link-actions">
+                <Button type="button" className="ui-btn ui-btn-ghost" disabled={busy} onClick={() => void save(null)}>
+                  {t('figma.unlink')}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+          {error ? (
+            <p className="ui-description ui-field-error" role="alert">
+              {error}
+            </p>
+          ) : null}
         </>
       ) : (
         <>
-          <p className="ui-description">{scope.kind === 'file' ? t('figma.file.empty') : t('figma.component.empty')}</p>
+          {scope.kind === 'component' ? <p className="ui-description">{t('figma.component.empty')}</p> : null}
           {file ? (
             <OpenLink href={file.url} label={t('figma.openFile', { name: file.fileName ?? file.fileKey })} />
           ) : null}
         </>
       )}
 
-      {figmaLinksEditable ? (
+      {link ? null : figmaLinksEditable ? (
         <form className="figma-link-form" onSubmit={submit}>
           <Input
             id={inputId}
@@ -93,13 +109,8 @@ export function FigmaLinkField({ scope }: { scope: FigmaScope }) {
           />
           <div className="figma-link-actions">
             <Button type="submit" className="ui-btn" disabled={busy || !draft.trim()}>
-              {link ? t('figma.replace') : t('figma.link')}
+              {t('figma.link')}
             </Button>
-            {link ? (
-              <Button type="button" className="ui-btn ui-btn-ghost" disabled={busy} onClick={() => void save(null)}>
-                {t('figma.unlink')}
-              </Button>
-            ) : null}
           </div>
           {error ? (
             <p className="ui-description ui-field-error" role="alert">
@@ -114,12 +125,3 @@ export function FigmaLinkField({ scope }: { scope: FigmaScope }) {
   );
 }
 
-/** How much of the workbench is mapped: a sync gauge for the design system page. */
-export function FigmaCoverage() {
-  const { t } = useTranslation();
-  const links = useFigmaLinks();
-  const linked = fixtureGroups.filter((group) => group.slug in links.components).length;
-  return (
-    <p className="ui-description figma-coverage">{t('figma.coverage', { linked, total: fixtureGroups.length })}</p>
-  );
-}

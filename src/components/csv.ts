@@ -1,3 +1,5 @@
+import { downloadText } from '../lib/download';
+
 /** Byte-order mark so Excel opens UTF-8 CSVs with the right encoding. */
 export const CSV_BOM = '﻿';
 
@@ -13,17 +15,6 @@ export function toCsv(headers: string[], rows: string[][], options: { bom?: bool
 
 /** Triggers a browser download of `csv` named `fileName` (".csv" is appended when missing). */
 export function downloadCsv(fileName: string, csv: string) {
-  if (typeof document === 'undefined') return;
   const name = fileName.toLowerCase().endsWith('.csv') ? fileName : `${fileName}.csv`;
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = name;
-  anchor.rel = 'noopener';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  // Let the click dispatch before revoking the object URL.
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  downloadText(name, csv, 'text/csv;charset=utf-8');
 }

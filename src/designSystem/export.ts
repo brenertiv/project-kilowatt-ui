@@ -176,8 +176,8 @@ export function systemToMarkdown(values: ThemeValues, darkColors: Record<string,
     '',
   ];
 
-  sections.push('## Primitives', '', 'Mirrored from the Figma primitives collection. Semantic tokens below reference these steps.', '');
-  for (const group of ['color', 'spacing', 'radius', 'typography', 'size'] as const) {
+  sections.push('## Primitives', '', 'Read from the committed snapshot of the Figma primitives collection. Semantic tokens below reference these steps.', '');
+  for (const group of ['color', 'spacing', 'radius', 'typography', 'size', 'opacity'] as const) {
     sections.push(
       mdTable(
         ['Path', 'CSS variable', 'Value'],

@@ -45,22 +45,52 @@ export function themeOptions(values: ThemeValues, scheme: ColorScheme): ThemeOpt
   return {
     palette: {
       mode: scheme,
-      primary: { main: values.accent, contrastText: values.onAccent },
-      secondary: { main: values.solid, contrastText: values.onSolid },
-      success: { main: values.positive },
-      error: { main: values.negative },
-      warning: { main: values.warning },
-      info: { main: values.link },
-      background: { default: values.bg, paper: values.surface },
-      text: { primary: values.text, secondary: values.textSecondary, disabled: values.textDisabled },
-      divider: values.border,
+      primary: {
+        main: values.primaryMain,
+        light: values.primaryLight,
+        dark: values.primaryDark,
+        contrastText: values.primaryContrastText,
+      },
+      secondary: {
+        main: values.secondaryMain,
+        light: values.secondaryLight,
+        dark: values.secondaryDark,
+        contrastText: values.secondaryContrastText,
+      },
+      success: {
+        main: values.successMain,
+        light: values.successLight,
+        dark: values.successDark,
+        contrastText: values.successContrastText,
+      },
+      error: {
+        main: values.errorMain,
+        light: values.errorLight,
+        dark: values.errorDark,
+        contrastText: values.errorContrastText,
+      },
+      warning: {
+        main: values.warningMain,
+        light: values.warningLight,
+        dark: values.warningDark,
+        contrastText: values.warningContrastText,
+      },
+      info: {
+        main: values.infoMain,
+        light: values.infoLight,
+        dark: values.infoDark,
+        contrastText: values.infoContrastText,
+      },
+      background: { default: values.backgroundDefault, paper: values.backgroundPaper },
+      text: { primary: values.textPrimary, secondary: values.textSecondary, disabled: values.textDisabled },
+      divider: values.divider,
       action: {
-        active: values.text,
-        hover: values.hover,
-        selected: values.accentTint,
-        focus: values.accentTint,
+        active: values.textPrimary,
+        hover: values.actionHover,
+        selected: values.secondaryTint,
+        focus: values.secondaryTint,
         disabled: values.textDisabled,
-        disabledBackground: values.surfaceSunken,
+        disabledBackground: values.backgroundLevel1,
       },
     },
     typography: {
@@ -119,34 +149,23 @@ export function themeOptions(values: ThemeValues, scheme: ColorScheme): ThemeOpt
             '@media (prefers-reduced-motion: reduce)': { transition: 'none', '&:active': { transform: 'none' } },
           },
         },
-        /** The system's solid button is the navy `solid` token, not the sky accent. */
-        variants: [
-          {
-            props: { variant: 'contained', color: 'primary' },
-            style: {
-              background: values.solid,
-              color: values.onSolid,
-              '&:hover': { background: `color-mix(in oklab, ${values.solid} 88%, ${values.onSolid})` },
-            },
-          },
-        ],
       },
       MuiIconButton: { styleOverrides: { root: { borderRadius: radiusControl } } },
       MuiPaper: { styleOverrides: { root: { backgroundImage: 'none' } } },
       MuiCard: { defaultProps: { variant: 'outlined' } },
       MuiChip: { styleOverrides: { root: { borderRadius: radiusInner } } },
-      MuiLink: { defaultProps: { underline: 'hover' }, styleOverrides: { root: { color: values.link } } },
+      MuiLink: { defaultProps: { underline: 'hover' }, styleOverrides: { root: { color: values.infoMain } } },
       MuiOutlinedInput: {
         styleOverrides: {
           root: { borderRadius: radiusControl, minHeight: controlHeight },
-          notchedOutline: { borderColor: values.border },
+          notchedOutline: { borderColor: values.divider },
         },
       },
       MuiTooltip: {
         styleOverrides: {
           tooltip: {
-            background: values.solid,
-            color: values.onSolid,
+            background: values.primaryMain,
+            color: values.primaryContrastText,
             fontSize: stepRem('xs'),
             borderRadius: radiusInner,
           },

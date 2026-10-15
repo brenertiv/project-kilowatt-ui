@@ -64,7 +64,7 @@ export function addSharedTooltip(
     pointerOrientation: 'horizontal',
     labelText: '',
   });
-  tooltip.label.setAll({ fill: am5.color(values.text) });
+  tooltip.label.setAll({ fill: am5.color(values.textPrimary) });
   xAxis.set('tooltip', tooltip);
   xAxis.get('tooltip')?.label.adapters.add('text', (text) => {
     const first = series.find((entry) => entry.item.get('visible') !== false);
@@ -78,7 +78,7 @@ export function addSharedTooltip(
         const item = entry.item.get('tooltipDataItem');
         const value = item?.get('valueY' as never) as number | undefined;
         const printed = typeof value === 'number' ? formatUnit(value, entry.unit ?? 'count') : '—';
-        return `[${entry.color}]━[/] [${values.text}]${printed}[/] [${values.textSecondary}]${entry.label}[/]`;
+        return `[${entry.color}]━[/] [${values.textPrimary}]${printed}[/] [${values.textSecondary}]${entry.label}[/]`;
       });
     return [head, ...lines].join('\n');
   });
