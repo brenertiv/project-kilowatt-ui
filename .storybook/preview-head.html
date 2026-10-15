@@ -15,4 +15,9 @@
   #storybook-docs :is(h1, h2, h3, h4, h5, h6):not(.docs-story *) {
     font-weight: 400 !important;
   }
+
+  /* Flat docs blocks: code, story previews and props tables keep their border, no shadow. */
+  #storybook-docs :is(.docblock-source, .sbdocs-preview, .docblock-argstable, .docblock-argstable tbody) {
+    box-shadow: none !important;
+  }
 </style>
