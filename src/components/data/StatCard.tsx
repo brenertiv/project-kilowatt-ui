@@ -84,9 +84,16 @@ export function StatCard({
           variant="h3"
           component="p"
           sx={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1.1 }}
-          aria-label={hasValue ? undefined : t('data.noValue')}
         >
-          {hasValue ? formatUnit(value, unit, { compact }) : noValue}
+          {hasValue ? (
+            formatUnit(value, unit, { compact })
+          ) : (
+            // A paragraph may not carry aria-label, so the spoken "No value" is hidden text beside the dash.
+            <>
+              <span aria-hidden="true">{noValue}</span>
+              <span className="ui-sr-only">{t('data.noValue')}</span>
+            </>
+          )}
         </Typography>
         {typeof delta === 'number' || period ? (
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', color: 'text.secondary' }}>

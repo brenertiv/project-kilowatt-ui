@@ -1,6 +1,7 @@
 import './dataTable.css';
 import type { ReactNode } from 'react';
 import { Menu } from '@base-ui/react/menu';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { MoreIcon } from '../icons';
 import { formatCalendarDate } from '../lib/dates';
@@ -134,7 +135,7 @@ export function LinkCell({ href, children }: LinkCellProps) {
 
 /** One entry in an `ActionsCell` menu. */
 export type ActionItem = {
-  /** Menu item text. Also the React key, so keep labels unique within a row. */
+  /** Menu item text. Labels may repeat; items are keyed by position. */
   label: string;
   /** Called when the item is chosen. */
   onSelect: () => void;
@@ -145,7 +146,7 @@ export type ActionItem = {
 export type ActionsCellProps = {
   /** The row's actions, in menu order. */
   items: ActionItem[];
-  /** Accessible name for the icon-only trigger. Name the row when you can, e.g. "Actions for Main meter". Defaults to "Row actions". */
+  /** Accessible name for the icon-only trigger. Name the row when you can, e.g. "Actions for Main meter". Defaults to "Row actions" (`table.rowActions`). */
   label?: string;
 };
 
@@ -157,18 +158,20 @@ export type ActionsCellProps = {
  * @summary A table-cell overflow menu of per-row actions.
  * @import import { ActionsCell } from 'src/components/cells';
  */
-export function ActionsCell({ items, label = 'Row actions' }: ActionsCellProps) {
+export function ActionsCell({ items, label }: ActionsCellProps) {
+  const { t } = useTranslation();
   return (
     <Menu.Root>
-      <Menu.Trigger className="ui-icon-btn" aria-label={label}>
+      <Menu.Trigger className="ui-icon-btn" aria-label={label ?? t('table.rowActions')}>
         <MoreIcon />
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner className="ui-positioner" sideOffset={4} align="end">
           <Menu.Popup className="ui-popup">
-            {items.map((item) => (
+            {/* The menu is rebuilt per open and items never reorder in place, so the index is a stable key. */}
+            {items.map((item, index) => (
               <Menu.Item
-                key={item.label}
+                key={index}
                 className={item.destructive ? 'ui-item is-destructive' : 'ui-item'}
                 onClick={item.onSelect}
               >
@@ -240,9 +243,12 @@ export function SparklineCell({ points, label }: SparklineCellProps) {
  * @import import { EmptyCell } from 'src/components/cells';
  */
 export function EmptyCell() {
+  const { t } = useTranslation();
+  // A plain span may not carry aria-label, so the name is hidden text and the dash is hidden from assistive tech.
   return (
-    <span className="ui-table-empty" aria-label="None">
-      —
+    <span className="ui-table-empty">
+      <span aria-hidden="true">—</span>
+      <span className="ui-sr-only">{t('table.none')}</span>
     </span>
   );
 }

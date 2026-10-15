@@ -10,6 +10,7 @@ import {
   SpaceSection,
   TypographySection,
 } from 'src/designSystem/sections';
+import { tokenContrast } from 'src/stories/a11y';
 
 /**
  * The System page's live sections, rendered with the current theme. The
@@ -39,6 +40,8 @@ function WithTheme({ children }: { children: (theme: ReturnType<typeof useTheme>
 export const Primitives: Story = { render: () => <PrimitivesSection /> };
 
 export const Color: Story = {
+  // Contrast off: The contrast table renders the failing token pairs themselves, e.g. warningMain on white and dark-mode text on backgroundPaper. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   render: () => (
     <WithTheme>{({ lightValues, darkColors }) => <ColorSection lightValues={lightValues} darkColors={darkColors} />}</WithTheme>
   ),
@@ -52,6 +55,8 @@ export const Space: Story = { render: () => <WithTheme>{({ values }) => <SpaceSe
 
 export const Shape: Story = { render: () => <WithTheme>{({ values }) => <ShapeSection values={values} />}</WithTheme> };
 
-export const Layout: Story = { render: () => <LayoutSection /> };
+export const Layout: Story = {
+  // Contrast off: secondaryMain on secondaryTint in the grid spans. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast }, render: () => <LayoutSection /> };
 
 export const Icons: Story = { render: () => <IconsSection /> };

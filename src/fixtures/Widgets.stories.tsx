@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ChartDemo, DndDemo, GridDemo, MapDemo, MetricCardDemo, OverviewPanelDemo, TableDemo } from 'src/fixtures/stackDemos';
+import { tokenContrast } from 'src/stories/a11y';
 
 /**
  * Smoke tests for the third-party widget stack (amCharts, TanStack Table, Leaflet,
@@ -29,6 +30,8 @@ type MetricCardArgs = { label: string; value: number; delta: number; focusIndex:
 
 /** A KPI card with an amCharts sparkline bar chart; `focusIndex` picks the highlighted bar. */
 export const MetricCard: StoryObj<MetricCardArgs> = {
+  // Contrast off: successMain text on backgroundDefault. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { label: 'Total tickets', value: 12853, delta: 0.056, focusIndex: 4 },
   render: (args) => (
     <div style={{ width: 320 }}>
@@ -77,6 +80,8 @@ export const PortfolioMap: StoryObj = {
 
 /** A react-grid-layout dashboard whose panels are rearranged by dragging their header. */
 export const DashboardGrid: StoryObj = {
+  // Contrast off: warningMain text on white. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   render: () => (
     <Sized height={360}>
       <GridDemo />
@@ -86,5 +91,7 @@ export const DashboardGrid: StoryObj = {
 
 /** A ticket queue reordered by drag and drop (hello-pangea dnd). */
 export const QueueReorder: StoryObj = {
+  // Contrast off: secondaryMain ticket ids on backgroundDefault. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   render: () => <DndDemo />,
 };

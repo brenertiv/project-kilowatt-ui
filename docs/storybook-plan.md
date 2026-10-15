@@ -236,28 +236,29 @@ Done when: every fixture has a story counterpart, `vitest --project storybook` p
 
 ## 7. Phase 1 findings
 
-These came out of converting the fixtures. They are not fixed yet.
+These came out of converting the fixtures. The code-side ones are fixed (2026-10-15); the token contrast pairs stay open until Figma changes.
 
-**Accessibility.** With `parameters.a11y.test: 'error'`, 67 of 223 stories fail. Storybook keeps `a11y.test` on `'todo'` until these are fixed, so violations show in the a11y panel and the test output without failing the run. `label-content-name-mismatch` (29 hits) is turned off in `.storybook/preview.tsx`. It is a false positive: axe reads a Material Symbols ligature ("more_horiz") as the button's visible text. The rest:
+**Accessibility.** `parameters.a11y.test` is now `'error'` in `.storybook/preview.tsx`: any axe violation fails the story test. `label-content-name-mismatch` stays off globally (`src/stories/a11y.ts`). It is a false positive: axe reads a Material Symbols ligature ("more_horiz") as the button's visible text.
 
-- **`color-contrast`, 71 hits, all from tokens rather than components.**
+- **`color-contrast` between Figma-owned tokens: open, needs a Figma change.** Each fix is a Figma change followed by a re-snapshot (docs/figma.md). Until then the stories below set `parameters: { a11y: tokenContrast }`, which turns off only `color-contrast`, with a comment naming the pair. When a pair passes, delete the parameter from its stories.
 
-  | Foreground | Background | Ratio | Hits | Probable role |
+  | Foreground | Background | Ratio | Tokens | Stories |
   |---|---|---|---|---|
-  | `#869aa9` | white | 2.91 | 17 | Tertiary text at 12px |
-  | white | `#0a8864` | 4.45 | 13 | Text on the success fill, just under 4.5 |
-  | `#0a8864` | white | 4.45 | 6 | Success fill used as text |
-  | white | `#89a0c7` | 2.65 | 6 | |
-  | `#2ea6e1` | white or `#edf1f5` | 2.4–2.7 | 10 | The secondary color used as text |
-  | white | `#6cb8a2` | 2.32 | 4 | |
+  | white | `#0a8864` | 4.45 | text on `successMain` (chips) | StatusChip, EntityList, PageHeader, DataState Ready |
+  | `#0a8864` | white or `#edf1f5` | 3.9–4.45 | `successMain` as text | StatCard, cells Delta, MaterialBridge Chips, Widgets Metric Card |
+  | `#2ea6e1` | white, `#edf1f5` or `#dcf0fa` | 2.3–2.7 | `secondaryMain` as text, incl. on `secondaryTint` | cells Row Link, Structure Avatar and Scroll area, Foundations Layout, Widgets Queue Reorder |
+  | `#fb9c3a` | white or `#edf1f5` | 1.9–2.1 | `warningMain` as text | Widgets Dashboard Grid, MaterialBridge Chips, Foundations Color |
+  | `#6598c2` | `#edf1f5` | 2.71 (3:1 needed at 32px) | `textDisabled` on `backgroundDefault`, the EmptyState icon | EmptyState |
+  | `#72abdb`, `#8faad8`, `#fb594c`, `#ffb44c` | `#365670` | 2.4–4.4 | dark-mode text and status colors on dark `backgroundPaper`, as drawn by the contrast table | Foundations Color |
 
-  These belong to the Figma-owned semantic layer (docs/figma.md), so each fix is a Figma change followed by a re-snapshot.
-- **Markup:**
-  - `EntityName` puts `aria-label` on a plain `span` (`aria-prohibited-attr`).
-  - `PageHeader`'s loading state renders an `h1` that contains only a skeleton (`empty-heading`).
-  - The chart table view's scroll wrapper can't be reached with the keyboard (`scrollable-region-focusable`).
-  - A search `input` in the list stories has no label.
-  - The Widgets demos (leaflet markers, duplicate `header` landmarks) are internal and excluded from the manifest.
+  The table first listed here had three more pairs (`#869aa9`, white on `#89a0c7`, white on `#6cb8a2`). They are not tokens: they are `textSecondary`, a chip fill and `successMain` under the refresh dim below.
+- **Refresh dim: open, needs a design decision.** `DataState` and `StatCard` keep stale content on screen at 60% opacity while a refetch runs. That takes passing tokens below 4.5:1 (`textSecondary` `#365670` becomes `#869aa9`, 2.91 on white). It is code, not a token, so it is not covered by `tokenContrast`; the four Refreshing stories (DataState, EntityCard, EntityList, StatCard) set `refreshDimContrast` instead until it is decided. WCAG exempts inactive content, but stale numbers are still read. Options: keep the dim and the exemption; dim to 0.9, which barely reads as a cue; or stop dimming text and mark the refresh with a progress bar or the existing `aria-busy` and a small "Updating" label.
+- **Markup: fixed.**
+  - `EntityName` (and `EntityCard`, which had the same code) put `aria-label` on a plain `span` (`aria-prohibited-attr`). The hint is now a `PlaceholderHint` button named by the hint. It also used `textDisabled` for an active control; it is `textSecondary` now. The same pattern was fixed in `DataState`'s refresh wrapper (a `div`), `StatCard`'s "No value" (a `p`), `EmptyCell` and DataTable's empty value (a `span`), and `HeatScale` (now `role="img"`).
+  - `PageHeader`'s loading state rendered an `h1` holding only a skeleton (`empty-heading`). The `h1` now holds hidden "Loading" text and the skeleton is `aria-hidden`.
+  - The chart table view's scroll wrapper is a focusable region named "{title} as a table" (`scrollable-region-focusable`).
+  - The DataTable search box had no label. It now has hidden label text, "Search {noun}" or `searchLabel`. FilterBar's search field has a visible "Search" label (or `searchLabel`), like Sort and Rows; in both, the placeholder is only a hint.
+  - The Widgets demos: leaflet markers get a `title` (`aria-command-name`), the attribution link is underlined (`link-in-text-block`), and the Dashboard Grid panel heads are `div`s rather than repeated `header` landmarks. The Overview Panel kicker's `color-mix` went from 72% to 78%, like the description beside it, to clear 4.5:1.
 
 **Fixed while converting:**
 - `chartDemos.tsx` and `stackDemos.tsx` still read the `accent`, `onAccent` and `text` tokens, which the Figma token sync renamed. The treemap and two widget demos threw on render, in the app too. They now read `secondaryMain`, `secondaryContrastText` and `textPrimary`. `ThemeValues` is a string record, so TypeScript can't catch a stale token name. A typed token-id union would.
@@ -271,7 +272,7 @@ These came out of converting the fixtures. They are not fixed yet.
 
 The Phase 3 JSDoc pass covers them.
 
-**Hard-coded English:** the `aria-label`s "Breadcrumb" in `PageHeader` and "Pagination" in `CursorPagination`.
+**Hard-coded English:** the `aria-label`s "Breadcrumb" in `PageHeader` and "Pagination" in `CursorPagination`. Fixed in Phase 3. The 2026-10-15 pass moved ChartFrame, DataTable, the cells, the table states and the WorkOrders status filter to i18n too (section 8).
 
 **Test flake:** a fresh Vitest browser run can fail once while Vite re-optimizes dependencies. The error is "Failed to fetch dynamically imported module", "failed to find the current suite", or a null `useState`. The second run passes. Pin `optimizeDeps.include` before the story tests gate CI.
 
@@ -293,33 +294,34 @@ The Phase 3 JSDoc pass covers them.
 - The Primitives have no `meta.component`, so the manifest guesses a component from the title and files their icon imports under the wrong package.
 - The Phase 4 `llms.txt` generator should drop `'project-kilowatt-ui'` lines, and take the Primitives' import from their MDX page.
 
-**Bugs the JSDoc pass found (not fixed):**
+**Bugs the JSDoc pass found.** Fixed 2026-10-15 unless marked open.
 - **Charts:**
-  - HeatmapChart doesn't use the frame context, so it doesn't throw outside `ChartFrame` the way the others do.
-  - `useChartRoot` computes `reduceMotion`, but no chart reads it.
-  - `TimeSeriesChart`'s default `annotations = []` is a fresh array on each render and is listed in the chart deps, so the root rebuilds on any re-render.
-  - The donut's total counts hidden slices.
-  - The heatmap's min and max are infinite when every value is null.
-  - `CategoryBarChart` value labels ignore `unit`.
-  - `ChartFrame`'s strings are hard-coded English.
+  - Fixed: HeatmapChart now calls `useChartFrame()`, so it throws outside `ChartFrame` like the others.
+  - Fixed: reduced motion. `useChartRoot` builds the chart theme with `reduceMotion`, which zeroes state, interpolation and tooltip durations, and each chart passes `motionDuration(reduceMotion)` to its legend `show`/`hide` calls.
+  - Fixed: `TimeSeriesChart`'s `annotations` default is a shared module constant, so re-renders no longer rebuild the root.
+  - Fixed: the donut's total, center figure and tooltip percentages count only visible slices and follow the legend.
+  - Fixed: the heatmap's min and max are 0 when every value is null, not ±Infinity.
+  - Fixed: `CategoryBarChart` value labels, and the horizontal chart's tooltips, format in the series' `unit` (or the chart's).
+  - Fixed: `ChartFrame`'s strings, and HeatScale's label, come from `src/i18n/en.json` under `chart.*`.
 - **Table:**
-  - In server mode, CSV export covers only the current page, though the rules say "every page".
-  - The search input's only accessible name is `searchPlaceholder`. FilterBar has the same problem.
-  - The empty row says "No … match these filters" even when nothing is filtered.
-  - DataTable's, the cells' and the table states' labels are hard-coded English.
-  - `ActionsCell` keys menu items by label, so two items with the same label collide.
-  - Destructive styling is split between `.is-destructive` and `[data-destructive]`.
-  - Server mode needs a row count, which the cursor-paged API never gives.
+  - Open: in server mode, CSV export covers only the current page, though the rules say "every page". Needs an export callback that fetches every page; out of scope for the a11y pass.
+  - Fixed: the search input's name no longer comes from `searchPlaceholder`, in DataTable or FilterBar (see section 7).
+  - Fixed: the empty row says "No {noun} match these filters." only while a search or filter is set, otherwise "No {noun} to show."
+  - Fixed: DataTable's, the cells' and the table states' labels come from `src/i18n/en.json` under `table.*`.
+  - Fixed: `ActionsCell` keys menu items by position, so repeated labels don't collide.
+  - Open: destructive styling is split between `.is-destructive` and `[data-destructive]`.
+  - Open: server mode needs a row count, which the cursor-paged API never gives.
 - **Data:**
-  - StatCard draws its own loading and error states instead of using `DataState`.
-  - EmptyState never uses `data.empty.description`.
-  - `BuildingDetail` with an unknown id shows the error state, not a not-found state.
+  - Open: StatCard draws its own loading and error states instead of using `DataState`.
+  - Fixed: EmptyState shows `data.empty.description` when neither `title` nor `description` is set. A custom title still gets no generic sentence.
+  - Open: `BuildingDetail` with an unknown id shows the error state, not a not-found state.
+  - Fixed: the WorkOrders status filter ("Status", "Active", "All statuses") goes through i18n. The page's title and sort labels are still English literals.
 - **Primitives:**
-  - `ui-field-error` has no CSS rule, and `ui-input` has no invalid style.
-  - Only `.ui-btn` and `.ui-select` look different when disabled. The icon button, input, switch, checkbox, radio, toggle, stepper, slider and tab do not.
-  - `ui-btn-ghost` keeps its border.
-  - The dialog and radio recipes use the demo layout classes `demo-row`, `demo-end` and `demo-stack`.
-  - The rules don't say whether a new button outside both Base UI and Material UI surfaces should be `ui-btn` or MUI `Button`.
-  - The Avatar recipe loads its photo from pravatar.cc.
+  - Fixed: `ui-field-error` sets the error color, and `ui-input` takes an error border and focus ring when `data-invalid` or `aria-invalid`.
+  - Fixed: the icon button, input, stepper, toggle and tab mute their text when disabled and stop responding to hover; the switch, checkbox, radio and slider fade to 50%; a disabled field's label dims too. All key off Base UI's `data-disabled` (and `:disabled` for native inputs).
+  - Open: `ui-btn-ghost` keeps its border.
+  - Open: the dialog and radio recipes use the demo layout classes `demo-row`, `demo-end` and `demo-stack`.
+  - Open: the rules don't say whether a new button outside both Base UI and Material UI surfaces should be `ui-btn` or MUI `Button`.
+  - Open: the Avatar recipe loads its photo from pravatar.cc.
 - **Where guidance pages land:** attached guidance pages are in `/manifests/components.json` under each component's `docs`, not in `/manifests/docs.json`. MCP `docs-show` includes them.
 - **Fixed during the pass:** the `aria-label`s "Breadcrumb" and "Pagination" now go through i18n.

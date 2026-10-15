@@ -76,7 +76,9 @@ parameters: { design: figmaDesign('https://www.figma.com/design/<key>/<file>?nod
 
 ## Tests
 
-`npm run test:stories` renders every story in Chromium. It runs any `play` function and an axe accessibility check. The axe check reports violations without failing the run until the findings in `docs/storybook-plan.md` are fixed. `npm test` runs the unit and story projects together.
+`npm run test:stories` renders every story in Chromium. It runs any `play` function and an axe accessibility check, and any axe violation fails the story. `npm test` runs the unit and story projects together.
+
+The one exception is `color-contrast` between Figma-owned tokens, which code can't fix: a story whose only failures are such pairs sets `parameters: { a11y: tokenContrast }` from `src/stories/a11y.ts`, with a comment naming the pair. Never use it for a pair code produces (an opacity, a `color-mix`, the wrong token for the job); fix those. The open pairs are listed in `docs/storybook-plan.md`.
 
 ## Adding a component
 

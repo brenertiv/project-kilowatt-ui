@@ -8,7 +8,7 @@ import { InboxIcon } from '../../icons';
 export type EmptyStateProps = {
   /** What is missing, e.g. "No alerts". Defaults to "Nothing here yet". */
   title?: ReactNode;
-  /** One sentence on why it is empty or what would fill it. Omitted when not set. */
+  /** One sentence on why it is empty or what would fill it. Without a `title` either, defaults to "There is no data for this view."; with a custom `title`, omitted when not set. */
   description?: ReactNode;
   /** A 32px icon from `src/icons.tsx` that names the subject. Defaults to the inbox icon. */
   icon?: ReactNode;
@@ -28,6 +28,8 @@ export type EmptyStateProps = {
  */
 export function EmptyState({ title, description, icon, action, compact }: EmptyStateProps) {
   const { t } = useTranslation();
+  // The generic description only pairs with the generic title; a specific title shouldn't get a generic sentence under it.
+  const shownDescription = description ?? (title === undefined ? t('data.empty.description') : undefined);
   return (
     <Stack
       role="status"
@@ -38,7 +40,7 @@ export function EmptyState({ title, description, icon, action, compact }: EmptyS
       <Typography variant="subtitle1" color="text.primary">
         {title ?? t('data.empty.title')}
       </Typography>
-      {description ? <Typography variant="body2">{description}</Typography> : null}
+      {shownDescription ? <Typography variant="body2">{shownDescription}</Typography> : null}
       {action ? <Box sx={{ pt: 1 }}>{action}</Box> : null}
     </Stack>
   );

@@ -5,13 +5,12 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router';
 import type { AsyncState } from '../../api/state';
-import { InfoIcon } from '../../icons';
 import { DataState } from './DataState';
+import { PlaceholderHint } from './EntityName';
 import { CardSkeleton } from './Skeletons';
 import { displayName } from './placeholder';
 
@@ -90,16 +89,7 @@ export function EntityCard({ title, noun, subtitle, status, meta, actions, to, s
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                 {heading}
                 {name.placeholder ? (
-                  <Tooltip title={t('data.placeholderHint', { value: name.raw ?? '∅' })}>
-                    <Box
-                      component="span"
-                      sx={{ display: 'inline-flex', color: 'text.disabled' }}
-                      tabIndex={0}
-                      aria-label={t('data.placeholderHint', { value: name.raw ?? '∅' })}
-                    >
-                      <InfoIcon />
-                    </Box>
-                  </Tooltip>
+                  <PlaceholderHint hint={t('data.placeholderHint', { value: name.raw ?? '∅' })} />
                 ) : null}
               </Stack>
               {subtitle ? (

@@ -8,11 +8,19 @@ export type ChartContext = {
   root: am5.Root;
   values: ThemeValues;
   scheme: ColorScheme;
-  /** True when the user prefers reduced motion. Charts skip interpolation and entrance animation. */
+  /**
+   * True when the user prefers reduced motion. The root's theme already makes state changes and
+   * tooltips instant; charts also pass `motionDuration(reduceMotion)` to any `show`/`hide` they call.
+   */
   reduceMotion: boolean;
 };
 
 export type ChartSetup = (context: ChartContext) => void | (() => void);
+
+/** The duration to pass to amCharts `show`/`hide`: 0 under reduced motion, otherwise the theme's default. */
+export function motionDuration(reduceMotion: boolean): number | undefined {
+  return reduceMotion ? 0 : undefined;
+}
 
 /**
  * Owns an amCharts root for a host element: creates it with the token theme,
@@ -37,9 +45,9 @@ export function useChartRoot(setup: ChartSetup, deps: readonly unknown[] = []): 
     const root = am5.Root.new(host);
     // Hiding the logo is only permitted under a commercial amCharts license.
     root._logo?.dispose();
-    root.setThemes([createChartTheme(values).new(root)]);
-    root.numberFormatter.setAll({ numberFormat: '#,###.#' });
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    root.setThemes([createChartTheme(values, { reduceMotion }).new(root)]);
+    root.numberFormatter.setAll({ numberFormat: '#,###.#' });
 
     const cleanup = setupRef.current({ root, values, scheme: colorScheme, reduceMotion });
 

@@ -49,7 +49,7 @@ Don't:
 ## Accessibility
 
 - Loading skeletons are a status region announced as "Loading".
-- Fetching content is marked busy and labelled "Updating".
+- Fetching content stays on screen at 60% opacity, marked `aria-busy`, with the hidden text "Updating" before it.
 - Empty and idle messages are a status region; errors are an alert, so they are announced when they appear.
 - The Retry button is a real button with a visible label.
 - The caller provides empty and error copy that names the subject, so the announcement means something out of context.

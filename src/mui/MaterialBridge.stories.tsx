@@ -14,6 +14,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { tokenContrast } from 'src/stories/a11y';
 
 /**
  * Proves the Material UI theme bridge: design tokens drive every Material part,
@@ -71,6 +72,8 @@ export const Buttons: StoryObj = {
 
 /** Status chips in each semantic color, and a badge count. */
 export const Chips: StoryObj = {
+  // Contrast off: successMain and warningMain chip text on backgroundDefault. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   render: () => (
     <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
       <Chip label="Open" color="warning" variant="outlined" />

@@ -10,6 +10,7 @@ import {
   actionStatusTone,
   type Tone,
 } from 'src/components/data/StatusChip';
+import { tokenContrast } from 'src/stories/a11y';
 
 const tones: Tone[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
@@ -48,6 +49,8 @@ export const Default: Story = {};
 
 /** Every tone side by side. Use a tone only for meaning: success, warning and error are reserved for status. */
 export const Tones: Story = {
+  // Contrast off: white on successMain. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   render: (args) => (
     <>
       {tones.map((tone) => (
@@ -59,6 +62,8 @@ export const Tones: Story = {
 
 /** A leading icon to reinforce the label. The label still carries the meaning; never rely on the icon alone. */
 export const WithIcon: Story = {
+  // Contrast off: white on successMain. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { label: 'Energy Star linked', tone: 'success', icon: <CheckCircleIcon /> },
 };
 
@@ -74,6 +79,8 @@ export const Lookup: Story = {
 
 /** Every work order status from the API lookup, with the tone each one maps to. */
 export const ActionStatuses: Story = {
+  // Contrast off: white on successMain. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   render: () => (
     <>
       {actionStatuses.map((status) => (
@@ -96,6 +103,8 @@ export const ActionPriorities: Story = {
 
 /** The three property alert states, derived from the `fixed` and `acknowledged` flags: open, acknowledged, fixed. */
 export const AlertStates: Story = {
+  // Contrast off: white on successMain. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   render: () => (
     <>
       <AlertStateChip alert={{ fixed: false, acknowledged: false }} />

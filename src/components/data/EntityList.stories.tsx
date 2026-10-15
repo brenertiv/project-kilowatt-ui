@@ -6,6 +6,7 @@ import { propertyAlertSets } from 'src/fixtures/data';
 import { RelativeTime } from 'src/components/data/DateText';
 import { EntityList } from 'src/components/data/EntityList';
 import { AlertStateChip } from 'src/components/data/StatusChip';
+import { refreshDimContrast, tokenContrast } from 'src/stories/a11y';
 
 const now = new Date('2026-10-13T12:00:00-04:00');
 
@@ -54,15 +55,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** A few records, each row linking to its detail page via `to`. The usual list on a page or in a card. */
-export const Default: Story = {};
+export const Default: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
+};
 
 /** Rows without `to` or `onClick`: plain, non-interactive rows for read-only summaries. */
 export const StaticRows: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { items: alertItems(propertyAlertSets.few, false) },
 };
 
 /** Rows that run a handler instead of navigating, such as opening a drawer. Clicks log in the Actions panel. */
 export const ClickableRows: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: {
     items: alertItems(propertyAlertSets.few, false).map((item) => ({ ...item, onClick: fn() })),
   },
@@ -70,6 +78,8 @@ export const ClickableRows: Story = {
 
 /** One row marked `selected`, for a list that drives a detail panel beside it. */
 export const SelectedRow: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: {
     items: alertItems(propertyAlertSets.few).map((item, index) => ({ ...item, selected: index === 1 })),
   },
@@ -77,16 +87,22 @@ export const SelectedRow: Story = {
 
 /** Dense rows, for a list inside a tight card or a side panel. */
 export const Dense: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { dense: true },
 };
 
 /** A single record. The list keeps its row layout rather than collapsing to a card. */
 export const SingleRow: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { items: alertItems(propertyAlertSets.one) },
 };
 
 /** Long names: text wraps under itself and the trailing chip drops below on narrow widths. */
 export const LongContent: Story = {
+  // Contrast off: white on successMain in the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: tokenContrast },
   args: { items: alertItems(propertyAlertSets.long) },
 };
 
@@ -97,6 +113,8 @@ export const Loading: Story = {
 
 /** Rows on screen while the next page loads: they dim and are marked busy. */
 export const Refreshing: Story = {
+  // Contrast off: the 60% dim of textSecondary and the status chips. See src/stories/a11y.ts.
+  parameters: { a11y: refreshDimContrast },
   args: { state: { status: 'fetching' } },
 };
 

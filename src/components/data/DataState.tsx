@@ -54,7 +54,9 @@ export function DataState({ state, skeleton, empty, idle, errorTitle, children }
       );
     case 'fetching':
       return (
-        <Box aria-busy="true" aria-label={t('data.updating')} sx={{ opacity: 0.6, transition: 'opacity 150ms' }}>
+        // A generic div may not carry aria-label, so "Updating" is hidden text beside the busy content.
+        <Box aria-busy="true" sx={{ opacity: 0.6, transition: 'opacity 150ms' }}>
+          <span className="ui-sr-only">{t('data.updating')}</span>
           {children}
         </Box>
       );

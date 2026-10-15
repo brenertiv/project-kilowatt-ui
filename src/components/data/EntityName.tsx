@@ -30,11 +30,36 @@ export function EntityName({ name, noun }: EntityNameProps) {
       sx={{ color: 'text.secondary', fontStyle: 'italic', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
     >
       {shown.text}
-      <Tooltip title={hint}>
-        <Box component="span" sx={{ display: 'inline-flex', color: 'text.disabled' }} tabIndex={0} aria-label={hint}>
-          <InfoIcon />
-        </Box>
-      </Tooltip>
+      <PlaceholderHint hint={hint} />
     </Box>
+  );
+}
+
+/**
+ * The info icon after a placeholder name: focusable, named by the hint, which also shows as a tooltip.
+ * Shared by `EntityName` and `EntityCard`; use those rather than this directly.
+ */
+export function PlaceholderHint({ hint }: { hint: string }) {
+  return (
+    <Tooltip title={hint}>
+      {/* A button, not a span, so the hint has a role that may carry a name and can take focus. */}
+      <Box
+        component="button"
+        type="button"
+        aria-label={hint}
+        sx={{
+          display: 'inline-flex',
+          p: 0,
+          border: 0,
+          background: 'none',
+          // Secondary, not disabled: the hint is an active control and its glyph must meet text contrast.
+          color: 'text.secondary',
+          font: 'inherit',
+          cursor: 'help',
+        }}
+      >
+        <InfoIcon />
+      </Box>
+    </Tooltip>
   );
 }
