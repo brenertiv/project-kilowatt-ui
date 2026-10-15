@@ -105,10 +105,16 @@ html.theme-changing *::after {
 }
 
 html,
-body,
+body {
+  margin: 0;
+}
+
+/* The app shell fills the window and scrolls inside its panes. Scoped to the
+   page that mounts #root, so Storybook's canvas and docs pages scroll normally. */
+html:has(> body > #root),
+body:has(> #root),
 #root {
   height: 100%;
-  margin: 0;
   overflow: hidden;
 }
 

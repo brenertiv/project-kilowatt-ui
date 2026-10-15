@@ -1,9 +1,10 @@
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import storybook from 'eslint-plugin-storybook';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules'] },
+  { ignores: ['dist', 'node_modules', 'storybook-static', '!.storybook'] },
   tseslint.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],
@@ -16,4 +17,5 @@ export default tseslint.config(
       'react-refresh/only-export-components': 'off',
     },
   },
+  storybook.configs['flat/recommended'],
 );

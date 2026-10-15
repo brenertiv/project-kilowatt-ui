@@ -19,6 +19,16 @@
         "COSMOS=1 exec npx cosmos"
       ],
       "port": 5100
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "exec npx storybook dev --port \"${PORT:-6006}\" --no-open --ci"
+      ],
+      "port": 6006,
+      "autoPort": true
     }
   ]
 }

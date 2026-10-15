@@ -13,9 +13,13 @@ import { StatSkeleton } from './Skeletons';
 import { noValue } from './dateFormat';
 
 export type StatCardProps = {
+  /** What the number measures, e.g. "Consumption, last 30 days". Rendered as an overline. */
   label: ReactNode;
+  /** The number. `null` or `undefined` shows the no-value dash, for a metric with no reading yet. */
   value: number | null | undefined;
+  /** How `value` is formatted: energy, demand, money, a percentage, a count or a score. */
   unit: Unit;
+  /** Abbreviates large values (88.2K instead of 88,200.87). Use for money and big totals in tight grids. */
   compact?: boolean;
   /** Change against the comparison period, in `deltaUnit` (a fraction for percent). */
   delta?: number | null;
@@ -24,7 +28,9 @@ export type StatCardProps = {
   goodDirection?: 'up' | 'down' | 'none';
   /** The comparison period, e.g. "vs last 30 days". */
   period?: ReactNode;
+  /** A leading icon from `src/icons.tsx` that names the subject, e.g. `<BuildingIcon />`. */
   icon?: ReactNode;
+  /** The async state of the data behind the card. Loading shows a skeleton, error shows a retry. Defaults to ready. */
   state?: AsyncState;
 };
 
@@ -37,7 +43,14 @@ function deltaTone(
   return (up && goodDirection === 'up') || (!up && goodDirection === 'down') ? 'success.main' : 'error.main';
 }
 
-/** One number that matters, with its unit, its change, and the period the change is measured against. */
+/**
+ * One number that matters, with its unit, its change, and the period the change is measured against.
+ * Use it for the headline metrics at the top of a page or dashboard, in a grid of three to six. For a
+ * number inside a table, use `NumericCell` or `DeltaCell` instead.
+ *
+ * @summary A headline metric card: label, formatted value, colored delta and comparison period.
+ * @import import { StatCard } from 'src/components/data';
+ */
 export function StatCard({
   label,
   value,

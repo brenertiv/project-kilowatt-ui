@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Toast } from '@base-ui/react/toast';
 import { Tooltip } from '@base-ui/react/tooltip';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { queryClient } from './api/queryClient';
 import { MuiProvider } from './mui/MuiProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -37,13 +37,14 @@ export function ToastOutlet() {
 
 /**
  * The one provider stack: query client, theme, Material bridge, toasts and
- * tooltips. The app shell and the Cosmos root decorator both use it, so a
+ * tooltips. The app shell, the Cosmos root decorator and Storybook use it, so a
  * fixture sees exactly what a page sees. Routing is the caller's: the app
- * mounts a BrowserRouter, Cosmos a MemoryRouter.
+ * mounts a BrowserRouter, Cosmos and Storybook a MemoryRouter. `client`
+ * defaults to the app's shared query client.
  */
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({ children, client = queryClient }: { children: ReactNode; client?: QueryClient }) {
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={client}>
       <ThemeProvider>
         <MuiProvider>
           <Toast.Provider>
