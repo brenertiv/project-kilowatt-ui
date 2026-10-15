@@ -4,7 +4,6 @@ import { Tooltip } from '@base-ui/react/tooltip';
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { queryClient } from './api/queryClient';
 import { MuiProvider } from './mui/MuiProvider';
-import { ThemeProvider } from './theme/ThemeProvider';
 import { XIcon } from './icons';
 
 function ToastList() {
@@ -36,7 +35,7 @@ export function ToastOutlet() {
 }
 
 /**
- * The one provider stack: query client, theme, the Material UI theme, toasts and
+ * The one provider stack: query client, the Material UI theme (which owns the color scheme), toasts and
  * tooltips. The app shell and Storybook both use it, so a story sees exactly
  * what a page sees. Routing is the caller's: the app mounts a BrowserRouter,
  * Storybook a MemoryRouter. `client`
@@ -45,13 +44,11 @@ export function ToastOutlet() {
 export function AppProviders({ children, client = queryClient }: { children: ReactNode; client?: QueryClient }) {
   return (
     <QueryClientProvider client={client}>
-      <ThemeProvider>
-        <MuiProvider>
-          <Toast.Provider>
-            <Tooltip.Provider>{children}</Tooltip.Provider>
-          </Toast.Provider>
-        </MuiProvider>
-      </ThemeProvider>
+      <MuiProvider>
+        <Toast.Provider>
+          <Tooltip.Provider>{children}</Tooltip.Provider>
+        </Toast.Provider>
+      </MuiProvider>
     </QueryClientProvider>
   );
 }

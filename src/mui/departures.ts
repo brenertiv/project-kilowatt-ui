@@ -13,7 +13,7 @@ import { typeScale, type ColorScheme, type ThemeValues } from '../tokens';
  * MUI's default, on purpose.
  */
 
-export type DepartureArea = 'Palette' | 'Typography' | 'Components' | 'Icons';
+export type DepartureArea = 'Theme' | 'Palette' | 'Typography' | 'Components' | 'Icons';
 
 export type Departure = {
   id: string;
@@ -39,6 +39,17 @@ const heading = (step: string) => ({ fontWeight: 400, lineHeight: 1.2, letterSpa
 const text = (step: string, lineHeight: number) => ({ fontWeight: 400, lineHeight, fontSize: rem(step) });
 
 export const departures: Departure[] = [
+  {
+    id: 'css-variables',
+    area: 'Theme',
+    title: 'CSS theme variables and color schemes',
+    why: "MUI's opt-in CSS variables mode, with light and dark as built-in color schemes. MUI writes --mui-* variables and switches schemes with a class on <html>, the same `dark` class the token stylesheet keys on, so MUI and the plain CSS components change scheme together.",
+    convention: {
+      muiDefault: 'Theme values in JavaScript, one palette mode per theme',
+      kilowatt: 'cssVariables with colorSchemeSelector: class; light and dark colorSchemes; scheme managed by MUI, not persisted',
+      where: 'src/mui/theme.ts (createKilowattTheme), src/mui/MuiProvider.tsx',
+    },
+  },
   {
     id: 'palette-brand',
     area: 'Palette',

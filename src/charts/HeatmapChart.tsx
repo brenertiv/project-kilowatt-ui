@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import { formatUnit, type Unit } from '../lib/format';
-import { useTheme } from '../theme/ThemeProvider';
+import { useKilowattTheme } from '../theme/useKilowattTheme';
 import { useChartFrame } from './ChartFrame';
 import { inkOn, rampIndex, sequentialRamp } from './color';
 import type { ChartData } from './types';
@@ -155,7 +155,7 @@ export function HeatmapChart({ data, unit = 'count', steps = 7, cellLabels = fal
  */
 export function HeatScale({ min, max, unit = 'count', steps = 7 }: HeatScaleProps) {
   const { t } = useTranslation();
-  const { values, colorScheme } = useTheme();
+  const { values, scheme: colorScheme } = useKilowattTheme();
   const ramp = sequentialRamp(values[rampSlot], steps, colorScheme);
   return (
     <div

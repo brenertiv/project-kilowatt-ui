@@ -7,22 +7,16 @@ import { schemeOf, systemScheme, themes, type Scheme } from './themes';
 import { AppProviders, ToastOutlet } from '../src/AppProviders';
 import { createQueryClient } from '../src/api/queryClient';
 import { installBreakpointStyles } from '../src/breakpoints';
+import { installTokenStyles } from '../src/theme/tokenStyles';
 import { a11yRules } from '../src/stories/a11y';
 import { withMockApi } from '../src/stories/decorators';
-import { useTheme } from '../src/theme/ThemeProvider';
+import { useKilowattTheme } from '../src/theme/useKilowattTheme';
 import type { ColorScheme } from '../src/tokens';
 import '../src/i18n';
 import '../src/styles.css';
 
+installTokenStyles();
 installBreakpointStyles();
-
-// The theme provider persists its state in localStorage. Start every Storybook session
-// from the shipped theme so docs and visual tests show the real defaults.
-try {
-  localStorage.removeItem('kilowatt-theme');
-} catch {
-  // Storage can be unavailable (private mode, sandboxed iframes); the defaults apply anyway.
-}
 
 /**
  * The Scheme toolbar's current value, for docs pages: they have no decorator of their
@@ -52,10 +46,10 @@ function SchemeDocsContainer(props: DocsContainerProps & { children?: ReactNode 
 
 /** Follows the `scheme` toolbar global. The theme lives on <html>, so one scheme applies to the whole canvas. */
 function SchemeSync({ scheme, children }: { scheme: ColorScheme; children: ReactNode }) {
-  const { colorScheme, setColorScheme } = useTheme();
+  const { scheme: current, setScheme } = useKilowattTheme();
   useEffect(() => {
-    if (scheme !== colorScheme) setColorScheme(scheme);
-  }, [scheme, colorScheme, setColorScheme]);
+    if (scheme !== current) setScheme(scheme);
+  }, [scheme, current, setScheme]);
   return children;
 }
 

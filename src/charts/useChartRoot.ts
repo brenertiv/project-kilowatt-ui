@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 import * as am5 from '@amcharts/amcharts5';
-import { useTheme } from '../theme/ThemeProvider';
+import { useKilowattTheme } from '../theme/useKilowattTheme';
 import type { ColorScheme, ThemeValues } from '../tokens';
 import { createChartTheme } from './theme';
 
@@ -36,7 +36,7 @@ export function useChartRoot(setup: ChartSetup, deps: readonly unknown[] = []): 
   useLayoutEffect(() => {
     setupRef.current = setup;
   });
-  const { values, colorScheme } = useTheme();
+  const { values, scheme: colorScheme } = useKilowattTheme();
 
   useEffect(() => {
     const host = hostRef.current;

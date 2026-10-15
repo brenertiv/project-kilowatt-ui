@@ -1,101 +1,16 @@
+/* Stylesheet constants that aren't tokens. Every token arrives as a CSS variable, light on :root
+   and dark on html.dark, from src/tokens.ts (installTokenStyles); nothing here repeats one. */
 :root {
-  color-scheme: light;
-  --background-default: #f3f6f9;
-  --background-level1: #f9fafc;
-  --background-paper: #ffffff;
-  --divider: #e2e8ef;
-  --divider-subtle: #edf1f5;
-  --divider-strong: #d0dae5;
-  --text-primary: #0d212a;
-  --text-secondary: #56646a;
-  --text-tertiary: #626f75;
-  --text-disabled: #9ea6aa;
-  --info-main: #1c6487;
-  --secondary-main: #2ea6e1;
-  --secondary-tint: #dcf0fa;
-  --secondary-contrast-text: #0d212a;
-  --success-main: #086d51;
-  --success-tint: #e1ffef;
-  --error-main: #d61a1a;
-  --error-tint: #fff1f1;
-  --warning-main: #e16a2e;
-  --warning-tint: #fff5e4;
-  --primary-main: #112a36;
-  --primary-contrast-text: #ffffff;
-  --action-hover: #e7ecf2;
-  --track: #d6dee8;
-  --utility-electricity: #8351e7;
-  --utility-water: #2ea6e1;
-  --utility-gas: #00804c;
-  --utility-steam: #e34712;
-  --utility-sanitation: #8e960a;
-  --font-sans: Roboto, system-ui, sans-serif;
-  --font-serif: 'Roboto Serif', Georgia, serif;
-  --font-mono: 'Roboto Mono', ui-monospace, monospace;
-  --text-xxs: 0.625rem;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
-  --text-3xl: 2.125rem;
-  --text-4xl: 2.75rem;
-  --text-xl-fluid: clamp(1.25rem, 1.1rem + 0.5vw, var(--text-xl));
-  --text-2xl-fluid: clamp(1.5rem, 1.25rem + 0.8vw, var(--text-2xl));
-  --text-3xl-fluid: clamp(1.75rem, 1.4rem + 1.2vw, var(--text-3xl));
-  --text-4xl-fluid: clamp(2.25rem, 1.7rem + 1.8vw, var(--text-4xl));
-  --font-size-sm: var(--text-xs);
-  --font-size: var(--text-sm);
-  --font-size-title: var(--text-xl-fluid);
-  --font-size-metric-sm: var(--text-xl);
-  --font-size-metric: var(--text-3xl-fluid);
-  --radius: 8px;
-  --radius-control: 8px;
-  --radius-inner: 4px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-full: 9999px;
-  --control-height: 36px;
-  --border-width: 1px;
-  --shadow: 0px;
-  /* Figma Shadow/Primitive: card = sm, popover = md, modal = lg. Overlays add a 1px ring for definition. */
-  --shadow-sm: 0 1px 3px rgba(43, 61, 79, 0.08), 0 1px 2px rgba(43, 61, 79, 0.06);
-  --shadow-md: 0 2px 8px rgba(43, 61, 79, 0.1), 0 1px 3px rgba(43, 61, 79, 0.08);
-  --shadow-lg: 0 4px 16px rgba(43, 61, 79, 0.12), 0 2px 6px rgba(43, 61, 79, 0.08);
-  --shadow-xl: 0 8px 24px rgba(43, 61, 79, 0.16), 0 4px 10px rgba(43, 61, 79, 0.1);
-  --shadow-elevation: none;
   --shadow-overlay: 0 0 0 1px oklch(0 0 0 / 0.06), var(--shadow-md);
   --shadow-overlay-high: 0 0 0 1px oklch(0 0 0 / 0.06), var(--shadow-lg);
   --image-outline: oklch(0 0 0 / 0.1);
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
-  --space: 8px;
-  --card-pad: 16px;
-  --gap: 12px;
-  --space-1: 4px;
-  --space-2: var(--space);
-  --space-3: var(--gap);
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
-  --content-max: 1440px;
 }
 
 html.dark {
-  color-scheme: dark;
   --shadow-overlay: 0 0 0 1px oklch(1 0 0 / 0.08);
   --shadow-overlay-high: 0 0 0 1px oklch(1 0 0 / 0.08);
   --image-outline: oklch(1 0 0 / 0.1);
-}
-
-html.theme-changing,
-html.theme-changing *,
-html.theme-changing *::before,
-html.theme-changing *::after {
-  transition: none !important;
 }
 
 *,
@@ -130,21 +45,14 @@ body {
 /* Scrollbars: a 6px track-colored thumb on a transparent gutter, in both schemes.
    WebKit pseudo-elements carry Chromium and Safari; scrollbar-color is applied
    only where they do not exist (Firefox), because setting it in Chromium would
-   discard the WebKit styling below. The thumb colors are derived tokens the theme
-   provider writes as concrete values per scheme; these are the stylesheet defaults. */
+   discard the WebKit styling below. The thumb colors are derived tokens
+   (--scrollbar-thumb, --scrollbar-thumb-hover) with values per scheme. */
 :root {
   --scrollbar-size: 12px;
-  --scrollbar-thumb: #d6dee8;
-  --scrollbar-thumb-hover: color-mix(in oklab, #d6dee8 55%, #626f75);
 }
 
-html.dark {
-  --scrollbar-thumb: #365670;
-  --scrollbar-thumb-hover: color-mix(in oklab, #365670 55%, #a0afb7);
-}
-
-/* Re-matching this rule while the scheme flips forces WebKit to restyle scrollbar parts. */
-html.theme-changing ::-webkit-scrollbar-thumb {
+/* A rule that only matches in one scheme forces WebKit to restyle scrollbar parts when the scheme flips. */
+html.dark ::-webkit-scrollbar-thumb {
   border-radius: 98px;
 }
 

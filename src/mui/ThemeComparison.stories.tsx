@@ -15,7 +15,7 @@ import Typography from '@mui/material/Typography';
 import { ThemeProvider } from '@mui/material/styles';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { tokenContrast } from 'src/stories/a11y';
-import { useTheme } from 'src/theme/ThemeProvider';
+import { useKilowattTheme } from 'src/theme/useKilowattTheme';
 import { stockTheme } from './themeDiff';
 
 /**
@@ -46,7 +46,7 @@ function Column({ label, children }: { label: string; children: ReactNode }) {
 
 /** Renders `children` twice: once under stock MUI, once under the Kilowatt theme already in scope. */
 function SideBySide({ children }: { children: ReactNode }) {
-  const { colorScheme } = useTheme();
+  const { scheme: colorScheme } = useKilowattTheme();
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, padding: 24 }}>
       <Column label="Stock MUI">

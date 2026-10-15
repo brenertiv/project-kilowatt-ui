@@ -53,7 +53,7 @@ export const Loading: Story = { args: { state: { status: 'loading' } } };
 - a fresh query client per story;
 - the toast outlet.
 
-The **Scheme** toolbar switches light and dark. The theme is set on `<html>`, so a docs page shows every story in the same scheme. The viewport toolbar offers Phone, Tablet and Laptop. Set `globals: { viewport: { value: 'phone' } }` on a story that is about a small screen.
+The **Scheme** toolbar switches light and dark. MUI owns the scheme: it puts the `dark` class on `<html>`, so a docs page shows every story in the same scheme. Code that needs the current scheme or its token values (canvas charts, token tables) reads them with `useKilowattTheme()`. The viewport toolbar offers Phone, Tablet and Laptop. Set `globals: { viewport: { value: 'phone' } }` on a story that is about a small screen.
 
 ## Data
 

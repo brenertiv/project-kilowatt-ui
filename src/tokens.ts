@@ -291,6 +291,12 @@ function shadowElevation(values: Record<string, string>, scheme: ColorScheme) {
   return `0 1px ${shadow}px rgba(${ink}, ${outer}), 0 1px 2px rgba(${ink}, ${inner})`;
 }
 
+/** The shipped token values, resolved for each scheme. There is no runtime editing: these are the theme. */
+export const schemeValues: Record<ColorScheme, ThemeValues> = {
+  light: resolveTheme(defaultTheme, defaultDarkColors, 'light'),
+  dark: resolveTheme(defaultTheme, defaultDarkColors, 'dark'),
+};
+
 /** Figma Shadow/Primitive steps, light scheme. Overlays pick md (popover) and lg (modal). */
 export const shadowScale = {
   sm: '0 1px 3px rgba(43, 61, 79, 0.08), 0 1px 2px rgba(43, 61, 79, 0.06)',

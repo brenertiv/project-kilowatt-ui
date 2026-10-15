@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactNode } from 'react';
-import { useTheme } from 'src/theme/ThemeProvider';
+import { useKilowattTheme } from 'src/theme/useKilowattTheme';
 import {
   ColorSection,
   IconsSection,
@@ -33,8 +33,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function WithTheme({ children }: { children: (theme: ReturnType<typeof useTheme>) => ReactNode }) {
-  return children(useTheme());
+function WithTheme({ children }: { children: (theme: ReturnType<typeof useKilowattTheme>) => ReactNode }) {
+  return children(useKilowattTheme());
 }
 
 export const Primitives: Story = { render: () => <PrimitivesSection /> };

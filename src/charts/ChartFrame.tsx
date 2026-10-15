@@ -6,7 +6,7 @@ import { ToggleGroup } from '@base-ui/react/toggle-group';
 import { formatUnit } from '../lib/format';
 import { format } from 'date-fns';
 import { formatCalendarDate } from '../lib/dates';
-import { useTheme } from '../theme/ThemeProvider';
+import { useKilowattTheme } from '../theme/useKilowattTheme';
 import { assignSeriesColors } from './color';
 import { ChartLegend, type LegendItem } from './ChartLegend';
 import { xValues, type ChartData } from './types';
@@ -155,7 +155,7 @@ export function ChartFrame({
 }: ChartFrameProps) {
   const { t } = useTranslation();
   const id = useId();
-  const { values } = useTheme();
+  const { values } = useKilowattTheme();
   const [hidden, setHidden] = useState<ReadonlySet<string>>(() => new Set());
   const [view, setView] = useState<'chart' | 'table'>('chart');
 

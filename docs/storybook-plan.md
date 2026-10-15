@@ -419,3 +419,24 @@ The theme is now stock Material UI plus a listed set of departures.
 - **Next phases:**
   - CSS theme variables and color schemes, retiring the custom theme provider and the duplicate token layers;
   - moving the Base UI recipes, `DataTable`, `CardMenu` and the charts to a Legacy section, then rebuilding or keeping each one.
+
+## 13. MUI-first theme, phase 2
+
+The theme now runs on MUI's CSS theme variables, and MUI owns the color scheme.
+
+**What changed:**
+- `createKilowattTheme()` builds one theme with `cssVariables` (class selector) and light and dark `colorSchemes`. Only the palette differs between schemes, and a test checks that.
+- The departures guard and docs still compare each scheme's options against stock MUI, through `createSchemeTheme`. CSS variables are listed as a departure under Theme.
+- `MuiProvider` uses MUI's scheme handling: light by default, not persisted, no transitions while switching. Storybook's Scheme toolbar drives it.
+
+**What was retired:**
+- The custom `ThemeProvider` that wrote tokens onto `<html>` at runtime and kept state in localStorage, plus its presets. It existed for the Theme editor, which was already removed.
+- Code that needs the scheme or concrete values (charts, token tables) uses `useKilowattTheme()`. Values come from `schemeValues` in `src/tokens.ts`.
+
+**One source for token CSS:**
+- `installTokenStyles()` writes the generated token CSS (`:root` light, `html.dark` dark) from `src/tokens.ts`, the same text as `/kilowatt-tokens.css`.
+- The stylesheet's hand-kept copy of 77 token values had drifted from the tokens (the page background was `#f3f6f9` against the token's `#edf1f5`). It's gone, along with the scrollbar color copies and the `.theme-changing` rules. Four non-token constants stay in `styles.css`.
+
+**Found along the way (not fixed):** in dark mode the chart comparison series uses `track` (`#365670`), the same as `backgroundPaper`, so the "Last week" line nearly disappears on chart cards.
+
+**Next phase:** move the Base UI recipes, `DataTable`, `CardMenu` and the charts to a Legacy section, then rebuild or keep each one.

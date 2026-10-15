@@ -1,20 +1,22 @@
-import { useMemo, type ReactNode } from 'react';
-import { StyledEngineProvider, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
-import { useTheme } from '../theme/ThemeProvider';
+import type { ReactNode } from 'react';
+import { StyledEngineProvider, ThemeProvider } from '@mui/material/styles';
 import { createKilowattTheme } from './theme';
 
+const theme = createKilowattTheme();
+
 /**
- * Hands the resolved token values to Material UI. Sits inside the app
- * ThemeProvider so it rebuilds on every token edit and scheme switch.
- * `injectFirst` puts Emotion's styles before the stylesheet so plain CSS
- * class names keep the last word.
+ * Kilowatt's Material UI theme, with MUI managing the color scheme: it writes the
+ * `--mui-*` variables and puts the `dark` class on <html> in dark mode, which the
+ * token stylesheet and the plain CSS components follow too. Light by default and
+ * not persisted; switch with `useKilowattTheme().setScheme`. `injectFirst` puts
+ * Emotion's styles before the stylesheet so plain CSS class names keep the last word.
  */
 export function MuiProvider({ children }: { children: ReactNode }) {
-  const { values, colorScheme } = useTheme();
-  const theme = useMemo(() => createKilowattTheme(values, colorScheme), [values, colorScheme]);
   return (
     <StyledEngineProvider injectFirst>
-      <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
+      <ThemeProvider theme={theme} defaultMode="light" storageManager={null} disableTransitionOnChange noSsr>
+        {children}
+      </ThemeProvider>
     </StyledEngineProvider>
   );
 }

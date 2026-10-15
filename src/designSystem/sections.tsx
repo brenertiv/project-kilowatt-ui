@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { breakpointRoles, breakpoints, breakpointVarName, type BreakpointName } from '../breakpoints';
 import { iconCatalog } from '../icons';
 import { colorRamps, radiusScale, rampLabel, sizeScale, spacingScale, typographyPrimitives, type RampName } from '../primitives';
-import { useTheme } from '../theme/ThemeProvider';
+import { useKilowattTheme } from '../theme/useKilowattTheme';
 import {
   colorRoles,
   contrastPairs,
@@ -329,7 +329,7 @@ export function SpaceSection({ values }: { values: ThemeValues }) {
 
 export function ShapeSection({ values }: { values: ThemeValues }) {
   const { t } = useTranslation();
-  const { colorScheme } = useTheme();
+  const { scheme: colorScheme } = useKilowattTheme();
   const radius = values.radius ?? tokenById.radius.defaultValue;
   const radiusControl = values.radiusControl ?? tokenById.radiusControl.defaultValue;
   const radiusInner = derivedValue(
