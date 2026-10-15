@@ -35,11 +35,20 @@ export function EntityName({ name, noun }: EntityNameProps) {
   );
 }
 
+export type PlaceholderHintProps = {
+  /** What the placeholder was, e.g. from `data.placeholderHint`. The button's accessible name and its tooltip. */
+  hint: string;
+};
+
 /**
- * The info icon after a placeholder name: focusable, named by the hint, which also shows as a tooltip.
- * Shared by `EntityName` and `EntityCard`; use those rather than this directly.
+ * The info icon after a placeholder name: a focusable button named by the hint, which also shows as a tooltip.
+ * `EntityName` and `EntityCard` already add it; render it yourself only after a name you draw some other way,
+ * such as a custom heading built with `displayName`.
+ *
+ * @summary Focusable info icon that explains a replaced placeholder name.
+ * @import import { PlaceholderHint } from 'src/components/data';
  */
-export function PlaceholderHint({ hint }: { hint: string }) {
+export function PlaceholderHint({ hint }: PlaceholderHintProps) {
   return (
     <Tooltip title={hint}>
       {/* A button, not a span, so the hint has a role that may carry a name and can take focus. */}
