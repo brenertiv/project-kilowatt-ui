@@ -90,7 +90,7 @@ export function colorMarkdown() {
       ]),
     ),
     '## Borders',
-    "Three borders by contrast against the surfaces: level0 is the faintest and level2 the strongest, in both schemes, so a border looks the same weight in light and dark. `divider` is level1, so MUI's Divider and outlined components use it. Set one with `sx={{ borderColor: 'border.level2' }}`.",
+    "Four borders by contrast against the surfaces, in both schemes, so a border looks the same weight in light and dark. level0 to level2 separate and frame: level0 is the faintest, and `divider` is level1, so MUI's Divider uses it. level3 is for control outlines (outlined buttons, inputs) and reaches 3:1 on every surface, the contrast WCAG asks of a control's boundary. Set one with `sx={{ borderColor: 'border.level2' }}`.",
     table(
       ['Level', 'Theme path', 'Light', 'Dark', 'Source'],
       (Object.keys(borderSteps.light) as (keyof typeof borderSteps.light)[]).map((level) => [

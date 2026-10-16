@@ -14,11 +14,11 @@ Kilowatt starts from stock Material UI. The theme is `createTheme` with MUI's ow
 
 Tokens come in three tiers, each reading only from the one below it.
 
-| Tier | Where | What it holds | Read by |
-| --- | --- | --- | --- |
-| 1. Primitives | `src/mui/colors.ts` and MUI's `@mui/material/colors` | Raw ramps (slate, navy, blue, red…). The only place a hex value lives. | The semantic tier only |
-| 2. Semantic | `theme.palette`, `theme.typography`, `theme.shadows`, `theme.shape`, `theme.spacing` | Roles: `primary`, `background.level*`, `border.level*`, `text.*`, the `button` type style | The component tier, components, `sx` |
-| 3. Component | `theme.components.Mui*` (`defaultProps`, `styleOverrides`) | How one component uses the roles | Nothing; it's the end of the chain |
+| Tier          | Where                                                                                | What it holds                                                                             | Read by                              |
+| ------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1. Primitives | `src/mui/colors.ts` and MUI's `@mui/material/colors`                                 | Raw ramps (slate, navy, blue, red…). The only place a hex value lives.                    | The semantic tier only               |
+| 2. Semantic   | `theme.palette`, `theme.typography`, `theme.shadows`, `theme.shape`, `theme.spacing` | Roles: `primary`, `background.level*`, `border.level*`, `text.*`, the `button` type style | The component tier, components, `sx` |
+| 3. Component  | `theme.components.Mui*` (`defaultProps`, `styleOverrides`)                           | How one component uses the roles                                                          | Nothing; it's the end of the chain   |
 
 - A palette color is a ramp step. To add a color, add or pick a step in a ramp, then name the role in the palette.
 - A component override refers to the palette through MUI's CSS variables (`var(--mui-palette-background-level3)`), never to a hex value or a ramp step.
@@ -28,7 +28,7 @@ Tokens come in three tiers, each reading only from the one below it.
 ## Surfaces and borders
 
 - Surfaces go by elevation: `background.level0` (the page, darkest) to `background.level4` (the highest surface, lightest), in both schemes. Paper takes its level from its `elevation`, so cards, menus and dialogs need nothing extra. Set a level yourself only on a surface that isn't Paper: `sx={{ bgcolor: 'background.level2' }}`.
-- Borders go by contrast: `border.level0` (faintest) to `border.level2` (strongest), in both schemes. `divider` is `border.level1`. Use `border.level0` for quiet separators and `border.level2` where the edge must read.
+- Borders go by contrast, in both schemes. `border.level0` to `border.level2` separate and frame: `border.level0` for quiet separators, `divider` (`border.level1`) by default, `border.level2` where the edge must read. `border.level3` is only for control outlines (outlined buttons, inputs, selects): it reaches 3:1 on every surface, as WCAG asks of a control's boundary. Don't use it for dividers or containers.
 - Intents (`primary`, `error`, `success` and the rest) pass 4.5:1 as text on every surface level, in both schemes, so any intent can sit on any surface. Use them through `color` props or palette keys, never by hex.
 - Never use a ramp step (`src/mui/colors.ts`) in a component. The levels are the API; the ramps are what they're made of.
 

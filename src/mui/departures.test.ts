@@ -35,7 +35,7 @@ describe('createKilowattTheme', () => {
     expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[400], slate[300], slate[50]]);
     expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[900], navy[800], navy[650]]);
     expect(light.palette.divider).toBe(light.palette.border.level1);
-    expect(dark.palette.border).toEqual({ level0: navy[600], level1: navy[500], level2: navy[400] });
+    expect(dark.palette.border).toEqual({ level0: navy[600], level1: navy[500], level2: navy[400], level3: navy[300] });
   });
 
   it.each(schemes)('gives the %s scheme intents that pass 4.5:1 on every surface, with contrast text that passes on them', (scheme) => {
@@ -62,6 +62,14 @@ describe('createKilowattTheme', () => {
       for (const icon of [palette.action.active, palette.text.secondary]) {
         expect(getContrastRatio(over(icon, surface), surface), `${icon} on ${level}`).toBeGreaterThanOrEqual(3);
       }
+    }
+  });
+
+  it.each(schemes)('gives the %s scheme a control border (border.level3) at 3:1 on every surface, as WCAG asks of control boundaries', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+      const surface = palette.background[level];
+      expect(getContrastRatio(palette.border.level3, surface), `border.level3 on ${level}`).toBeGreaterThanOrEqual(3);
     }
   });
 

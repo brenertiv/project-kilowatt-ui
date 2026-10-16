@@ -4,7 +4,11 @@
  * them except the palette in `departures.ts`, and components read the palette.
  */
 
-/** Cool grays for light-scheme surfaces and borders. 50 is white. */
+/**
+ * Cool grays for light-scheme surfaces and borders. 50 is white. 950 is added past 900,
+ * darker along the ramp's own hue in OKLab, so control outlines reach 3:1 on every
+ * light surface.
+ */
 export const slate = {
   50: '#ffffff',
   100: '#f9fafc',
@@ -16,6 +20,7 @@ export const slate = {
   700: '#d6dee8',
   800: '#d0dae5',
   900: '#cad5e2',
+  950: '#79899c',
 } as const;
 
 /**

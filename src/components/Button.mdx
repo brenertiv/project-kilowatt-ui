@@ -40,7 +40,7 @@ import { Icon } from 'src/icons';
 MUI's emphasis levels, from most to least:
 
 - `variant="contained"`: the main action in a view or dialog. One per view. Contained buttons sit flat, with no shadow.
-- `variant="outlined"`: an important action that isn't the main one, usually beside it. Its outline is the UI's border color, not the intent color; the label carries the intent.
+- `variant="outlined"`: an important action that isn't the main one, usually beside it. Its outline is the control border (`border.level3`), the same as every control's, not the intent color; the label carries the intent.
 - `variant="text"` (MUI's default): low emphasis, for toolbars, table rows, cards and dialog actions.
 
 `color` takes a palette intent (`primary`, Enertiv navy and the default; `secondary`, `error`, `warning`, `info`, `success`, `inherit`) for what the action means. `size` is `small`, `medium` (the default) or `large`; use `small` in dense toolbars and table rows.
@@ -73,7 +73,7 @@ MUI's emphasis levels, from most to least:
 
 - `button-text-case`: labels are shown as written, not uppercased (`typography.button.textTransform` is `none`), and written in Title Case.
 - `flat-buttons`: contained buttons have no shadow; `disableElevation` is on by default.
-- `outlined-button-borders`: an outlined button's outline is `border.level1` (the `divider` color), and `border.level2` on hover, whatever its `color`.
+- `outlined-button-borders`: an outlined button's outline is `border.level3`, the control border (3:1 on every surface), whatever its `color`; hover keeps it and adds MUI's background tint.
 - `icons`: icons are `Icon` from `src/icons` (Material Symbols at weight 300), not `@mui/icons-material`. In `startIcon` and `endIcon` the button sizes them as it would MUI's SVG icons.
 
 Theme-wide departures (CSS variables, surface and border levels, the navy primary and the other intent colors) apply too; see Foundations → MUI departures.

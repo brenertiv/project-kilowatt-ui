@@ -46,10 +46,10 @@ export const surfaceSteps = {
   dark: { level0: 900, level1: 800, level2: 750, level3: 700, level4: 650 },
 } as const satisfies Record<ColorScheme, Record<string, number>>;
 
-/** Borders by contrast, per scheme: level0 the faintest, level2 the strongest. `divider` is level1. */
+/** Borders by contrast, per scheme: level0 the faintest; level3, the strongest, for control outlines at 3:1 on every surface. `divider` is level1. */
 export const borderSteps = {
-  light: { level0: 500, level1: 700, level2: 900 },
-  dark: { level0: 600, level1: 500, level2: 400 },
+  light: { level0: 500, level1: 700, level2: 900, level3: 950 },
+  dark: { level0: 600, level1: 500, level2: 400, level3: 300 },
 } as const satisfies Record<ColorScheme, Record<keyof BorderLevels, number>>;
 
 const ramps = { light: slate, dark: navy } as const;
@@ -180,8 +180,8 @@ export const departures: Departure[] = [
     id: 'outlined-button-borders',
     area: 'Components',
     components: ['Button'],
-    title: 'Outlined buttons use the border color',
-    why: "MUI outlines an outlined button in its intent color at half strength. Kilowatt draws it in the border color every other edge uses (`border.level1`, the same as `divider`), stepping to `border.level2` on hover, so borders read the same across the UI; the label carries the intent. Disabled buttons keep MUI's disabled border.",
+    title: 'Outlined buttons use the control border',
+    why: "MUI outlines an outlined button in its intent color at half strength. Kilowatt draws it in `border.level3`, the border level for control outlines, which reaches 3:1 on every surface, so control edges read the same across the UI and stay visible; the label carries the intent. Hover keeps the outline and shows MUI's background tint. Disabled buttons keep MUI's disabled border.",
     options: () => ({
       components: {
         MuiButton: {
@@ -189,9 +189,9 @@ export const departures: Departure[] = [
             root: {
               // MUI draws the outline from --variant-outlinedBorder (and sets border-color directly for color="inherit").
               '&.MuiButton-outlined:not(.Mui-disabled)': {
-                '--variant-outlinedBorder': 'var(--mui-palette-border-level1)',
+                '--variant-outlinedBorder': 'var(--mui-palette-border-level3)',
                 borderColor: 'var(--variant-outlinedBorder)',
-                '@media (hover: hover)': { '&:hover': { '--variant-outlinedBorder': 'var(--mui-palette-border-level2)' } },
+                '@media (hover: hover)': { '&:hover': { '--variant-outlinedBorder': 'var(--mui-palette-border-level3)' } },
               },
             },
           },

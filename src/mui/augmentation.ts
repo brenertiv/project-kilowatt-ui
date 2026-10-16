@@ -6,8 +6,11 @@
 /** Surfaces by elevation: level0 is the page (darkest), level4 the highest surface (lightest). */
 type SurfaceLevels = { level0: string; level1: string; level2: string; level3: string; level4: string };
 
-/** Borders by contrast against the surfaces: level0 is the faintest, level2 the strongest, in both schemes. */
-export type BorderLevels = { level0: string; level1: string; level2: string };
+/**
+ * Borders by contrast against the surfaces, in both schemes: level0 is the faintest; level3,
+ * the strongest, is for control outlines (outlined buttons, inputs) and reaches 3:1 on every surface.
+ */
+export type BorderLevels = { level0: string; level1: string; level2: string; level3: string };
 
 declare module '@mui/material/styles' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
