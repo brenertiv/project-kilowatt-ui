@@ -1,4 +1,4 @@
-import { getContrastRatio } from '@mui/material/styles';
+import { decomposeColor, getContrastRatio } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
 import { navy, slate } from './colors';
 import { departures, type ColorScheme } from './departures';
@@ -45,6 +45,23 @@ describe('createKilowattTheme', () => {
       const { main, contrastText } = palette[intent];
       for (const surface of surfaces) expect(getContrastRatio(main, surface), `${intent}.main on ${surface}`).toBeGreaterThanOrEqual(4.5);
       expect(getContrastRatio(contrastText, main), `${intent}.contrastText`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each(schemes)('gives %s-scheme icons at least 3:1 on every surface, as WCAG asks of graphics', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    // An rgba icon color shows as its blend over the surface; compare that.
+    const over = (color: string, surface: string) => {
+      const { values: fg } = decomposeColor(color);
+      const { values: bg } = decomposeColor(surface);
+      const alpha = fg[3] ?? 1;
+      return `rgb(${[0, 1, 2].map((i) => Math.round(fg[i] * alpha + bg[i] * (1 - alpha))).join(', ')})`;
+    };
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+      const surface = palette.background[level];
+      for (const icon of [palette.action.active, palette.text.secondary]) {
+        expect(getContrastRatio(over(icon, surface), surface), `${icon} on ${level}`).toBeGreaterThanOrEqual(3);
+      }
     }
   });
 
