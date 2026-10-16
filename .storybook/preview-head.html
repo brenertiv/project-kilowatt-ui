@@ -6,3 +6,17 @@
   href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
   rel="stylesheet"
 />
+<!-- Storybook docs chrome, not the design system. -->
+<style>
+  /* A docs table wider than the page scrolls on its own instead of spilling past it. */
+  .sbdocs-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Flat docs blocks: story previews, code and props tables keep their border, no shadow. */
+  #storybook-docs :is(.sbdocs-preview, .docblock-source, .docblock-argstable, .docblock-argstable tbody) {
+    box-shadow: none !important;
+  }
+</style>

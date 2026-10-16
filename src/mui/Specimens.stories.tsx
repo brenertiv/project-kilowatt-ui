@@ -20,16 +20,19 @@ import { Icon, iconNames } from 'src/icons';
 const meta = {
   title: 'Foundations/Specimens',
   tags: ['!dev', '!autodocs', '!manifest'],
-  parameters: { layout: 'padded' },
+  parameters: { layout: 'fullscreen' },
 } satisfies Meta;
 
 export default meta;
 type Story = StoryObj;
 
-/** A surface in the current scheme, so a specimen shows its own background in dark. */
+/**
+ * A surface in the current scheme, so a specimen shows its own background in dark.
+ * Flat Paper with no border: the docs Canvas around it is the frame.
+ */
 function Surface({ children }: { children: ReactNode }) {
   return (
-    <Paper variant="outlined" sx={{ p: 3 }}>
+    <Paper elevation={0} sx={{ p: 3 }}>
       {children}
     </Paper>
   );
