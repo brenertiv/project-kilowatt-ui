@@ -2,7 +2,7 @@
 
 Rules for building Kilowatt UI. These are decisions, not suggestions: when code and this document disagree, fix one of them in the same change.
 
-Kilowatt starts from stock Material UI. The theme is `createTheme` with light and dark color schemes, plus the departures in `src/mui/departures.ts`: the palette (surfaces, borders, a navy primary, a brand-blue secondary, intent colors), the corner radius, the button style and the icon set. Foundations → MUI departures lists every one of them; anything not listed there is MUI's default, on purpose.
+Kilowatt starts from stock Material UI. The theme is `createTheme` with light and dark color schemes, plus the departures in `src/mui/departures.ts`: the palette (surfaces, borders, a navy primary (light neutral in dark), a brand-blue secondary, a purple info, intent colors), the corner radius, the button style and the icon set. Foundations → MUI departures lists every one of them; anything not listed there is MUI's default, on purpose.
 
 ## Build with MUI as MUI documents it
 

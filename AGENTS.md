@@ -1,6 +1,6 @@
 # Kilowatt UI: instructions for coding agents
 
-Kilowatt is Enertiv's design system. It is Material UI with light and dark color schemes, changed only where a departure says so: the palette (surfaces, borders, a navy primary, a brand-blue secondary, intent colors), the corner radius, the button style and the icon set. Read the Storybook before you write UI.
+Kilowatt is Enertiv's design system. It is Material UI with light and dark color schemes, changed only where a departure says so: the palette (surfaces, borders, a navy primary (light neutral in dark), a brand-blue secondary, a purple info, intent colors), the corner radius, the button style and the icon set. Read the Storybook before you write UI.
 
 ## Look things up before writing UI
 

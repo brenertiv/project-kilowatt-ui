@@ -80,12 +80,15 @@ export function colorMarkdown() {
     'The theme carries MUI\'s light and dark palettes as color schemes. Components read the palette of the active scheme, so a component never picks a color per scheme itself. Switch the scheme with `useColorScheme().setMode`.',
     '## Intents',
     'Each intent has `main`, `light`, `dark` and `contrastText`. Pass the intent to a component (`color="primary"`, `severity="error"`) rather than a color.',
-    "Every `main` passes 4.5:1 as text on all five surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy (the `primary-navy` departure), on the navy ramp; secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. For the other intents, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`) and MUI derives `light` and `dark` from it:",
+    "Every `main` passes 4.5:1 as text on all five surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. For the other intents, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`) and MUI derives `light` and `dark` from it:",
     table(
       ['Intent', 'Light', 'Dark'],
       intents.map((intent) => {
         const cell = (scheme: ColorScheme) => {
-          if (intent === 'primary') return `navy ${primarySteps[scheme].main} ${code(navy[primarySteps[scheme].main])}`;
+          if (intent === 'primary') {
+            const { ramp, main } = primarySteps[scheme];
+            return `${ramp} ${main} ${code((ramp === 'navy' ? navy : slate)[main])}`;
+          }
           if (intent === 'secondary') return `brand ${secondarySteps[scheme].main} ${code(brand[secondarySteps[scheme].main])}`;
           const pick = intentSteps[scheme][intent];
           return pick ? `${pick.ramp} ${pick.step} ${code(pick.main)}` : "MUI's default";
@@ -325,7 +328,7 @@ export function motionMarkdown() {
 export const foundationPages: { name: string; lead: string; specimen?: string; extraSpecimens?: string[]; markdown: () => string }[] = [
   {
     name: 'Color',
-    lead: "The palette in its light and dark schemes: the intents (a navy primary, a brand-blue secondary, and MUI's other intents where they pass on every surface), text, action overlays, greys, the surface and border levels, and the ramps they come from.",
+    lead: "The palette in its light and dark schemes: the intents (a navy primary that turns light neutral in dark, a brand-blue secondary, a purple info, and MUI's other intents where they pass on every surface), text, action overlays, greys, the surface and border levels, and the ramps they come from.",
     specimen: 'Color',
     extraSpecimens: ['IntentsOnSurfaces'],
     markdown: colorMarkdown,

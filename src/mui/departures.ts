@@ -2,7 +2,7 @@ import type { ThemeOptions } from '@mui/material/styles';
 import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
-import { deepOrange, green, lightBlue, red } from '@mui/material/colors';
+import { deepOrange, green, purple, red } from '@mui/material/colors';
 import { brand, navy, slate } from './colors';
 
 /**
@@ -79,12 +79,12 @@ export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: str
   light: {
     error: { ramp: 'red', step: '800', main: red[800] },
     warning: { ramp: 'deepOrange', step: '900', main: deepOrange[900] },
-    info: { ramp: 'lightBlue', step: '900', main: lightBlue[900] },
+    info: { ramp: 'purple', step: '500', main: purple[500] },
     success: { ramp: 'green', step: '900', main: green[900] },
   },
   dark: {
     error: { ramp: 'red', step: '100', main: red[100] },
-    info: { ramp: 'lightBlue', step: '300', main: lightBlue[300] },
+    info: { ramp: 'purple', step: '100', main: purple[100] },
     success: { ramp: 'green', step: '300', main: green[300] },
   },
 };
@@ -92,14 +92,22 @@ export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: str
 /** MUI's contrast text for each scheme: white on light-scheme intents, near-black on dark-scheme ones. */
 const intentContrastText: Record<ColorScheme, string> = { light: '#fff', dark: 'rgba(0, 0, 0, 0.87)' };
 
+type RampName = 'navy' | 'slate';
+const rampByName = { navy, slate } as const;
+type Step = keyof typeof navy & keyof typeof slate;
+
 /**
- * Primary, per scheme, on the navy ramp: `main` and the hover step (`dark`). Light sets
- * `light` too, since MUI's derived shades of a navy this deep barely differ; dark lets
- * MUI derive `light` from `main`.
+ * Primary, per scheme: `main`, `light`, the hover step (`dark`) and, where it isn't MUI's,
+ * the contrast text. Light is Enertiv navy. Dark is a light neutral (slate) with navy
+ * text, so on the navy dark surfaces primary stands apart from the blue secondary and
+ * from info instead of becoming another pale blue.
  */
-export const primarySteps: Record<ColorScheme, { main: keyof typeof navy; light?: keyof typeof navy; dark: keyof typeof navy }> = {
-  light: { main: 700, light: 500, dark: 900 },
-  dark: { main: 50, dark: 100 },
+export const primarySteps: Record<
+  ColorScheme,
+  { ramp: RampName; main: Step; light: Step; dark: Step; contrastText?: { ramp: RampName; step: Step } }
+> = {
+  light: { ramp: 'navy', main: 700, light: 500, dark: 900 },
+  dark: { ramp: 'slate', main: 100, light: 50, dark: 300, contrastText: { ramp: 'navy', step: 950 } },
 };
 
 /**
@@ -155,13 +163,19 @@ export const departures: Departure[] = [
   {
     id: 'primary-navy',
     area: 'Palette',
-    title: 'Navy primary',
-    why: "Primary is Enertiv navy instead of MUI's blue: navy 700 in light, and navy 50 in dark, the light end of the same ramp so it reads on the dark navy surfaces. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) turns navy.",
+    title: 'Navy primary, light neutral in dark',
+    why: "Primary is Enertiv navy instead of MUI's blue in the light scheme (navy 700). In the dark scheme it's a light neutral (slate 100) with navy text: the dark surfaces are navy, so a blue primary there would be another pale blue beside the brand-blue secondary and the info color. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) follows it.",
     options: (scheme) => {
-      const { main, light, dark } = primarySteps[scheme];
+      const { ramp, main, light, dark, contrastText } = primarySteps[scheme];
+      const r = rampByName[ramp];
       return {
         palette: {
-          primary: { main: navy[main], ...(light === undefined ? {} : { light: navy[light] }), dark: navy[dark], contrastText: intentContrastText[scheme] },
+          primary: {
+            main: r[main],
+            light: r[light],
+            dark: r[dark],
+            contrastText: contrastText ? rampByName[contrastText.ramp][contrastText.step] : intentContrastText[scheme],
+          },
         },
       };
     },
