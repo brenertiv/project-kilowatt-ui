@@ -43,13 +43,13 @@ export type Departure = {
 /** Surfaces by elevation, per scheme: the ramp step each level uses. level0 is the page (darkest), level4 the highest (lightest). */
 export const surfaceSteps = {
   light: { level0: 400, level1: 300, level2: 200, level3: 100, level4: 50 },
-  dark: { level0: 900, level1: 800, level2: 750, level3: 700, level4: 650 },
+  dark: { level0: 950, level1: 900, level2: 800, level3: 700, level4: 600 },
 } as const satisfies Record<ColorScheme, Record<string, number>>;
 
 /** Borders by contrast, per scheme: level0 the faintest; level3, the strongest, for control outlines at 3:1 on every surface. `divider` is level1. */
 export const borderSteps = {
   light: { level0: 500, level1: 700, level2: 900, level3: 950 },
-  dark: { level0: 600, level1: 500, level2: 400, level3: 300 },
+  dark: { level0: 500, level1: 400, level2: 300, level3: 200 },
 } as const satisfies Record<ColorScheme, Record<keyof BorderLevels, number>>;
 
 const ramps = { light: slate, dark: navy } as const;
@@ -99,8 +99,8 @@ const intentContrastText: Record<ColorScheme, string> = { light: '#fff', dark: '
  * MUI derive `light` from `main`.
  */
 export const primarySteps: Record<ColorScheme, { main: keyof typeof navy; light?: keyof typeof navy; dark: keyof typeof navy }> = {
-  light: { main: 700, light: 600, dark: 800 },
-  dark: { main: 25, dark: 100 },
+  light: { main: 700, light: 500, dark: 900 },
+  dark: { main: 50, dark: 100 },
 };
 
 /** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
@@ -140,7 +140,7 @@ export const departures: Departure[] = [
     id: 'primary-navy',
     area: 'Palette',
     title: 'Navy primary',
-    why: "Primary is Enertiv navy instead of MUI's blue: navy 700 in light, and navy 25 in dark, the light end of the same ramp so it reads on the dark navy surfaces. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) turns navy.",
+    why: "Primary is Enertiv navy instead of MUI's blue: navy 700 in light, and navy 50 in dark, the light end of the same ramp so it reads on the dark navy surfaces. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) turns navy.",
     options: (scheme) => {
       const { main, light, dark } = primarySteps[scheme];
       return {

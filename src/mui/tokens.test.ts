@@ -22,17 +22,29 @@ function leaves(value: unknown, path = ''): [string, string][] {
 
 /** Tier 1: every step of our ramps and MUI's (`@mui/material/colors`). */
 const primitives = new Set(
-  [...Object.values(ramps), ...Object.values(muiColors)].flatMap((ramp) => Object.values(ramp as Record<string, string>)).map((hex) => hex.toLowerCase()),
+  [...Object.values(ramps), ...Object.values(muiColors)]
+    .flatMap((ramp) => Object.values(ramp as Record<string, string>))
+    .map((hex) => hex.toLowerCase()),
 );
 /** MUI's own contrast-text values, which the palette may use as they are. */
 const muiContrastText = new Set(['#fff', 'rgba(0, 0, 0, 0.87)']);
 
+/** The steps a ramp may have, as in MUI's own ramps: 50, the hundreds 100 to 900, and 950. */
+const standardSteps = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
+
 describe('token tiers', () => {
+  it.each(Object.entries(ramps))('the %s ramp uses only the standard steps, no half steps', (_name, ramp) => {
+    for (const step of Object.keys(ramp)) expect(standardSteps, `step ${step}`).toContain(step);
+  });
+
   it.each(schemes)('the %s palette takes every color it sets from a primitive ramp', (scheme) => {
     for (const departure of departures) {
       for (const [path, value] of leaves(departure.options?.(scheme).palette)) {
         if (!isColor(value) || muiContrastText.has(value)) continue;
-        expect(primitives.has(value.toLowerCase()), `${departure.id}: palette.${path} = ${value} is not a ramp step`).toBe(true);
+        expect(
+          primitives.has(value.toLowerCase()),
+          `${departure.id}: palette.${path} = ${value} is not a ramp step`,
+        ).toBe(true);
       }
     }
   });
@@ -40,7 +52,9 @@ describe('token tiers', () => {
   it.each(schemes)('component overrides in the %s theme use palette values, never raw colors', (scheme) => {
     for (const departure of departures) {
       for (const [path, value] of leaves(departure.options?.(scheme).components)) {
-        expect(rawColor.test(value), `${departure.id}: components.${path} = ${value}; use var(--mui-palette-…)`).toBe(false);
+        expect(rawColor.test(value), `${departure.id}: components.${path} = ${value}; use var(--mui-palette-…)`).toBe(
+          false,
+        );
       }
     }
   });

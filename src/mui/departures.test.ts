@@ -33,9 +33,9 @@ describe('createKilowattTheme', () => {
     // MUI's Theme type leaves out the per-scheme palettes it carries.
     const { light, dark } = (theme as unknown as { colorSchemes: Record<ColorScheme, { palette: typeof theme.palette }> }).colorSchemes;
     expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[400], slate[300], slate[50]]);
-    expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[900], navy[800], navy[650]]);
+    expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[950], navy[900], navy[600]]);
     expect(light.palette.divider).toBe(light.palette.border.level1);
-    expect(dark.palette.border).toEqual({ level0: navy[600], level1: navy[500], level2: navy[400], level3: navy[300] });
+    expect(dark.palette.border).toEqual({ level0: navy[500], level1: navy[400], level2: navy[300], level3: navy[200] });
   });
 
   it.each(schemes)('gives the %s scheme intents that pass 4.5:1 on every surface, with contrast text that passes on them', (scheme) => {

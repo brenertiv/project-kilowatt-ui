@@ -21,9 +21,10 @@ Tokens come in three tiers, each reading only from the one below it.
 | 3. Component  | `theme.components.Mui*` (`defaultProps`, `styleOverrides`)                           | How one component uses the roles                                                          | Nothing; it's the end of the chain   |
 
 - A palette color is a ramp step. To add a color, add or pick a step in a ramp, then name the role in the palette.
+- Ramps use the standard steps only: 50, the hundreds from 100 to 900, and 950. No half steps (350, 650) and nothing past 50 or 950 (25, 1000). When a ramp needs a color between two steps, renumber the ramp so it still fits the standard steps, rather than adding one in between.
 - A component override refers to the palette through MUI's CSS variables (`var(--mui-palette-background-level3)`), never to a hex value or a ramp step.
 - Components and `sx` use the semantic tier only: palette paths, spacing multiples, the type variants.
-- `src/mui/tokens.test.ts` checks the first two rules.
+- `src/mui/tokens.test.ts` checks the ramp steps, that palette colors are ramp steps, and that component overrides use palette variables.
 
 ## Surfaces and borders
 
