@@ -74,6 +74,7 @@ MUI's emphasis levels, from most to least:
 - `button-text-case`: labels are shown as written, not uppercased (`typography.button.textTransform` is `none`), and written in Title Case.
 - `flat-buttons`: contained buttons have no shadow; `disableElevation` is on by default.
 - `outlined-button-borders`: an outlined button's outline is `border.level3`, the control border (3:1 on every surface), whatever its `color`; hover keeps it and adds MUI's background tint.
+- `icon-button-radius`: `IconButton` takes the theme radius (8px) instead of MUI's circle, so its hover and focus shapes match the buttons beside it.
 - `icons`: icons are `Icon` from `src/icons` (Material Symbols at weight 300), not `@mui/icons-material`. In `startIcon` and `endIcon` the button sizes them as it would MUI's SVG icons.
 
 Theme-wide departures (CSS variables, surface and border levels, the navy primary and the other intent colors) apply too; see Foundations → MUI departures.

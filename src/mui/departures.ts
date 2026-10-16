@@ -207,6 +207,14 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'icon-button-radius',
+    area: 'Components',
+    components: ['IconButton'],
+    title: 'Icon buttons take the theme radius',
+    why: "MUI makes icon buttons circles (`border-radius: 50%`), the one button shape that ignores the theme radius. Kilowatt rounds them with `shape.borderRadius` like every other button, so hover, focus and pressed shapes match the buttons beside them.",
+    options: () => ({ components: { MuiIconButton: { styleOverrides: { root: { borderRadius: 'var(--mui-shape-borderRadius)' } } } } }),
+  },
+  {
     id: 'paper-surface-levels',
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
