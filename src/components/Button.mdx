@@ -66,6 +66,8 @@ MUI's emphasis levels, from most to least:
 - Don't run a destructive or irreversible action straight from a button; confirm it in a dialog first.
 - Do pass icons as `startIcon` or `endIcon` with `Icon` from `src/icons`, and let the button size them.
 - Don't place an `Icon` inside the label text or set its size yourself; the button sets 18, 20 or 22px for its size.
+- Do let every button and icon button take the theme radius.
+- Don't give one button, intent or variant its own `borderRadius`, in `sx` or a theme override; the radius changes only through `shape-radius`, for every button at once.
 - Do give every `IconButton` an `aria-label`.
 - Don't leave a disabled button unexplained; say nearby why it's unavailable.
 

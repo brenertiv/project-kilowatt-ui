@@ -69,6 +69,8 @@ Advisory: check for this while building a component or layout, as part of the wo
 
 The theme has one corner radius, `shape.borderRadius` (8px), and every rounded component takes it, buttons and icon buttons included. In `sx`, `borderRadius` counts in theme radii: `1` is 8px, `1.5` is 12px.
 
+All buttons, icon buttons and other rounded components share that one radius, and it changes only in one place: the `shape-radius` departure. Don't give one intent, variant or instance its own radius, in a theme override or in `sx`; `tokens.test.ts` fails any component override that rounds with anything but the theme radius.
+
 When a rounded element sits close inside a rounded container, their corners are concentric: the container's radius is the element's radius plus the gap between them.
 
 - **The gap** is everything between the two edges at the corner: padding plus the container's border.
