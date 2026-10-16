@@ -185,7 +185,7 @@ function main() {
   const order = ['Start here', 'Guides', 'Foundations', ...sections];
   const llms = [
     '# Kilowatt UI',
-    "> Enertiv's design system: stock Material UI with MUI's own light and dark color schemes, plus the short list of departures on Foundations → MUI departures. Build with MUI as MUI documents it.",
+    "> Enertiv's design system: Material UI with light and dark color schemes, changed only where Foundations → MUI departures says so (the palette, corner radius, button style and icons). Build with MUI as MUI documents it.",
     'Read Guides/Rules and Foundations/MUI departures first. Each component page has its import line, props, guidance and example snippets. Agents that speak MCP can query the same content from the Storybook MCP server (`/mcp` on a running Storybook dev server).',
     ...order.filter((group) => pageLinks.has(group)).map((group) => `## ${group}\n\n${pageLinks.get(group)!.sort().join('\n')}`),
     [

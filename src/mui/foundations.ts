@@ -219,7 +219,7 @@ export function shapeMarkdown() {
   const theme = (units: number) => themes.light.spacing(units);
   const radius = themes.light.shape.borderRadius;
   return [
-    `The theme has one radius, ${code(`${radius}px`)}, MUI's single \`shape.borderRadius\`. Buttons, inputs, cards, menus, dialogs, tooltips and toggle buttons use it. Chips and avatars keep their own pill and circle shapes. In \`sx\`, \`borderRadius\` multiplies it: \`sx={{ borderRadius: 2 }}\` is ${code(`${Number(radius) * 2}px`)}.`,
+    `The theme has one radius, ${code(`${radius}px`)}, MUI's single \`shape.borderRadius\`. Buttons, icon buttons, inputs, cards, menus, dialogs, tooltips and toggle buttons use it. Chips and avatars keep their own pill and circle shapes. In \`sx\`, \`borderRadius\` multiplies it: \`sx={{ borderRadius: 2 }}\` is ${code(`${Number(radius) * 2}px`)}.`,
     table(['Theme path', 'Value', 'Source'], [[code('shape.borderRadius'), code(`${radius}px`), sourceOf('shape.borderRadius')]]),
     '## Nested corners',
     "When a rounded element sits close inside a rounded container, the container's radius is the element's radius plus the gap between them, so the corners are concentric. The element keeps the theme radius; the container grows. The radius unit and the spacing unit are both 8px, so in `sx` it's addition. At a gap of 16px or more the corners read as separate shapes and both keep the theme radius. See Rules → Concentric corners.",
@@ -323,14 +323,14 @@ export function motionMarkdown() {
 export const foundationPages: { name: string; lead: string; specimen?: string; extraSpecimens?: string[]; markdown: () => string }[] = [
   {
     name: 'Color',
-    lead: "The palette in its light and dark schemes: MUI's intents, text, action overlays and greys, with Kilowatt's surface and border levels and the ramps they come from.",
+    lead: "The palette in its light and dark schemes: the intents (a navy primary, and MUI's other intents where they pass on every surface), text, action overlays, greys, the surface and border levels, and the ramps they come from.",
     specimen: 'Color',
     extraSpecimens: ['IntentsOnSurfaces'],
     markdown: colorMarkdown,
   },
   {
     name: 'Typography',
-    lead: "MUI's type: Roboto, four weights and thirteen variants, set through Typography's `variant`.",
+    lead: "MUI's type scale: Roboto, four weights and thirteen variants, set through Typography's `variant`. The `button` style departs: regular weight, shown as written.",
     specimen: 'Typography_',
     markdown: typographyMarkdown,
   },

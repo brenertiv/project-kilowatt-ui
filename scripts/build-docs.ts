@@ -157,7 +157,7 @@ function writeIcons() {
  */
 function writeDepartures() {
   const lead =
-    "Kilowatt's theme is stock Material UI, with MUI's own light and dark color schemes, plus the departures below, and nothing else. Anything not listed here is MUI's default, on purpose: build with MUI as documented, and expect these differences. Each departure lives in src/mui/departures.ts with its reason, and a test fails if the theme differs from MUI anywhere this page doesn't say.";
+    "Kilowatt's theme is stock Material UI with light and dark color schemes, plus the departures below, and nothing else. Anything not listed here is MUI's default, on purpose: build with MUI as documented, and expect these differences. Each departure lives in src/mui/departures.ts with its reason, and a test fails if the theme differs from MUI anywhere this page doesn't say.";
   const cell = (text: string) => `\`${text.replace(/\|/g, '\\|')}\``;
   const sections: string[] = [];
   for (const area of [...new Set(departures.map((departure) => departure.area))]) {
