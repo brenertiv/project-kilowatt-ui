@@ -1,0 +1,84 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SelectStories from './Select.stories';
+
+<Meta
+  of={SelectStories}
+  summary="MUI's Select with MenuItem options for choosing one or several values from a short fixed list."
+/>
+
+# Select
+
+A select lets people choose from a short, fixed list of options shown in a menu. Kilowatt uses MUI's `Select` and `MenuItem` from `@mui/material` (Material UI v9) with no wrapper. Props are MUI's: see the [Select API](https://mui.com/material-ui/api/select/) and [MenuItem API](https://mui.com/material-ui/api/menu-item/).
+
+<Canvas of={SelectStories.Basic} />
+
+## When to use
+
+- Use a select for one choice (or a few, with `multiple`) from a fixed list of about 4 to 15 options: status, priority, unit.
+- For a long list, or one people will search, use `Autocomplete`.
+- For two to four options that should all stay visible, use `RadioGroup` or `ToggleButtonGroup`.
+- For an action menu ("Export", "Delete"), use `Menu` from a `Button`; a select holds a value, it doesn't run actions.
+
+## Usage
+
+```tsx
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+
+<FormControl>
+  <InputLabel id="status-label">Status</InputLabel>
+  <Select labelId="status-label" label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>
+    <MenuItem value="open">Open</MenuItem>
+    <MenuItem value="closed">Closed</MenuItem>
+  </Select>
+</FormControl>;
+```
+
+`TextField` with `select` does the same with less code, and adds `helperText`.
+
+## Variants
+
+- Outlined, MUI's default, like `TextField`. `filled` and `standard` exist; don't mix them with outlined fields.
+- `multiple` takes an array value. Use `renderValue` to show the choices as text.
+- `native` renders the browser's own select, which suits touch devices; MUI's `NativeSelect` does the same.
+
+`size` (on the `FormControl` or `TextField`) is `small` or `medium` (the default).
+
+## States
+
+- `error` on the `FormControl`, with `FormHelperText`: the value is missing or invalid. Say what to pick.
+- `disabled` on the `FormControl`: the value can't be changed here. Say why nearby.
+
+## Do and don't
+
+- Do give the `InputLabel` and the `Select` the same text: `InputLabel` shows it, and `label` on `Select` sizes the gap in the outline.
+- Don't leave `label` off the `Select`; the outline then runs through the label.
+- Do list options in a meaningful order: by workflow (Open, In Progress, Closed) or alphabetically.
+- Don't list more options than fit in the menu without scrolling; switch to `Autocomplete`.
+- Do pair `error` with helper text that says what to choose.
+- Don't use a select for actions; use a `Menu` opened from a button.
+- Do let selected menu items fill their icons through the theme.
+- Don't pass `fill` to an icon in a `MenuItem` yourself.
+
+## MUI departures
+
+- `control-outlines`: the resting outline is `palette.control.border`, shared by every input, select, outlined button and toggle button, from the Figma button-border tokens: slate 500 in light, navy 700 in dark, quieter than 3:1 by design. Hover is navy 200 (light) or navy 300 (dark); focus keeps MUI's 2px primary outline. Error and disabled keep MUI's colors.
+- `selected-fills-icons`: an icon inside the selected `MenuItem` renders filled, an unselected one outlined.
+
+Theme-wide departures (CSS variables, the 8px corner radius, surface and border levels, the navy primary and the other intent colors) apply too; the menu sits on `background.level3`, like every menu (`paper-surface-levels`). See Foundations → MUI departures.
+
+## Accessibility
+
+- MUI renders a `combobox` button and a `listbox` of options, with arrow-key navigation and type-ahead.
+- Tie the label to the select with `labelId` on `Select` and a matching `id` on `InputLabel`; `TextField select` does it for you.
+- A select without a visible label needs an `aria-label`; prefer a visible label.
+
+## Related
+
+- `Autocomplete` for long or searchable lists.
+- `RadioGroup` and `ToggleButtonGroup` for a few options shown at once.
+- `TextField` for typed values.
+
+<Stories includePrimary={false} />

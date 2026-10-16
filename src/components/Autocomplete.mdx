@@ -1,0 +1,80 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as AutocompleteStories from './Autocomplete.stories';
+
+<Meta
+  of={AutocompleteStories}
+  summary="MUI's Autocomplete for choosing one or several values from a long list people search by typing."
+/>
+
+# Autocomplete
+
+An autocomplete is a text field that filters a list of options as people type. Kilowatt uses MUI's `Autocomplete` from `@mui/material` (Material UI v9) with no wrapper, and a `TextField` as its input. Props are MUI's: see the [Autocomplete API](https://mui.com/material-ui/api/autocomplete/).
+
+<Canvas of={AutocompleteStories.ComboBox} />
+
+## When to use
+
+- Use an autocomplete to choose from a long list (more than about 15 options) or one people know by name: buildings, equipment, meters, people.
+- For a short fixed list, use `Select`.
+- For free text with no list, use `TextField`.
+
+## Usage
+
+```tsx
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
+
+<Autocomplete
+  options={buildings}
+  getOptionLabel={(building) => building.name}
+  value={building}
+  onChange={(_, next) => setBuilding(next)}
+  renderInput={(params) => <TextField {...params} label="Building" />}
+/>;
+```
+
+## Variants
+
+- One value (the default), or several with `multiple`; each choice shows as a chip, and `limitTags` caps how many show while the field isn't focused.
+- `groupBy` splits the list into sections; sort the options by the same key.
+- `freeSolo` accepts any typed value and offers the options as suggestions.
+
+`size` is `small` or `medium` (the default), as on `TextField`.
+
+## States
+
+- `loading`: options are on their way. The open list shows `loadingText`.
+- No match: the list shows `noOptionsText`. Write it to say what to do ("No buildings match. Check the spelling.").
+- `disabled`: the value can't be changed here. Say why nearby.
+- Errors go on the `TextField` in `renderInput`: `error` and `helperText`.
+
+## Do and don't
+
+- Do spread `params` onto the `TextField` in `renderInput`, then add `label` and `helperText`.
+- Don't build the input yourself; the spread carries the ref, the ARIA attributes and the adornments.
+- Do pass objects with `getOptionLabel`, and `isOptionEqualToValue` when the value isn't the same object as an option.
+- Don't pass display strings as values when the records have IDs; you lose the ID on the way back.
+- Do fetch options from the API with the query hooks and pass `loading` while they load.
+- Don't load a whole table into the browser to filter it there when the API can search.
+- Do let chips and the field take the theme's colors and radius.
+- Don't restyle the chips or the listbox with `sx`.
+
+## MUI departures
+
+- `control-outlines`: the resting outline is `palette.control.border`, shared by every input, select, outlined button and toggle button, from the Figma button-border tokens: slate 500 in light, navy 700 in dark, quieter than 3:1 by design. Hover is navy 200 (light) or navy 300 (dark); focus keeps MUI's 2px primary outline. Error and disabled keep MUI's colors.
+
+Theme-wide departures (CSS variables, the 8px corner radius, surface and border levels, the navy primary and the other intent colors) apply too; the option list sits on a Paper surface. See Foundations → MUI departures.
+
+## Accessibility
+
+- MUI follows the WAI-ARIA combobox pattern: arrow keys move through options, Enter picks one, Escape closes the list.
+- The `TextField` label names the combobox; always give one.
+- With `multiple`, chips are removable with Backspace and Delete as well as their delete icon.
+
+## Related
+
+- `Select` for short fixed lists.
+- `TextField` for the input and its props.
+- Data layer guide for the query hooks that load options.
+
+<Stories includePrimary={false} />

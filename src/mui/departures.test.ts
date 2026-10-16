@@ -41,10 +41,10 @@ describe('createKilowattTheme', () => {
     const theme = createKilowattTheme();
     // MUI's Theme type leaves out the per-scheme palettes it carries.
     const { light, dark } = (theme as unknown as { colorSchemes: Record<ColorScheme, { palette: typeof theme.palette }> }).colorSchemes;
-    expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[400], slate[300], slate[50]]);
+    expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[300], slate[200], slate[50]]);
     expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[950], navy[900], navy[600]]);
     expect(light.palette.divider).toBe(light.palette.border.level1);
-    expect(dark.palette.border).toEqual({ level0: navy[500], level1: navy[400], level2: navy[300], level3: navy[200] });
+    expect(dark.palette.border).toEqual({ level0: navy[800], level1: navy[700], level2: navy[500], level3: navy[200] });
   });
 
   it.each(schemes)('gives the %s scheme intents that pass 4.5:1 on every surface, with contrast text that passes on them', (scheme) => {
@@ -71,6 +71,18 @@ describe('createKilowattTheme', () => {
       for (const icon of [palette.action.active, palette.text.secondary]) {
         expect(getContrastRatio(over(icon, surface), surface), `${icon} on ${level}`).toBeGreaterThanOrEqual(graphic);
       }
+    }
+  });
+
+  it.each(schemes)('gives %s-scheme secondary text 4.5:1 on every surface, for unselected toggle buttons', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    const { values: fg } = decomposeColor(palette.text.secondary);
+    const alpha = fg[3] ?? 1;
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+      const surface = palette.background[level];
+      const { values: bg } = decomposeColor(surface);
+      const blended = `rgb(${[0, 1, 2].map((i) => Math.round(fg[i] * alpha + bg[i] * (1 - alpha))).join(', ')})`;
+      expect(getContrastRatio(blended, surface), `text.secondary on ${level}`).toBeGreaterThanOrEqual(text);
     }
   });
 

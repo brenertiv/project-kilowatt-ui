@@ -42,14 +42,14 @@ export type Departure = {
 
 /** Surfaces by elevation, per scheme: the ramp step each level uses. level0 is the page (darkest), level4 the highest (lightest). */
 export const surfaceSteps = {
-  light: { level0: 400, level1: 300, level2: 200, level3: 100, level4: 50 },
-  dark: { level0: 950, level1: 900, level2: 800, level3: 700, level4: 600 },
+  light: { level0: 300, level1: 200, level2: 100, level3: 50, level4: 50 },
+  dark: { level0: 950, level1: 900, level2: 700, level3: 600, level4: 600 },
 } as const satisfies Record<ColorScheme, Record<string, number>>;
 
 /** Borders by contrast, per scheme: level0 the faintest; level3, the strongest, for control outlines at 3:1 on every surface. `divider` is level1. */
 export const borderSteps = {
-  light: { level0: 500, level1: 700, level2: 900, level3: 950 },
-  dark: { level0: 500, level1: 400, level2: 300, level3: 200 },
+  light: { level0: 400, level1: 500, level2: 700, level3: 950 },
+  dark: { level0: 800, level1: 700, level2: 500, level3: 200 },
 } as const satisfies Record<ColorScheme, Record<keyof BorderLevels, number>>;
 
 const ramps = { light: slate, dark: navy } as const;
@@ -107,8 +107,8 @@ export const primarySteps: Record<
   ColorScheme,
   { ramp: RampName; main: Step; light: Step; dark: Step; contrastText?: { ramp: RampName; step: Step } }
 > = {
-  light: { ramp: 'navy', main: 700, light: 500, dark: 900 },
-  dark: { ramp: 'slate', main: 100, light: 50, dark: 300, contrastText: { ramp: 'navy', step: 950 } },
+  light: { ramp: 'navy', main: 900, light: 700, dark: 950 },
+  dark: { ramp: 'slate', main: 800, light: 100, dark: 900, contrastText: { ramp: 'navy', step: 950 } },
 };
 
 /**
@@ -143,7 +143,7 @@ export const departures: Departure[] = [
     id: 'surfaces-and-borders',
     area: 'Palette',
     title: 'Surface and border levels',
-    why: "Five surfaces by elevation and three borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
+    why: "Five surfaces by elevation and three borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider. The steps follow the Enertiv UI Foundations Figma file: its page, level1, level2 and paper surfaces, and its divider as border level1. The top two levels share a step in both schemes: light runs out of steps above white, and dark stops at navy 600 because Figma's lighter paper (navy 500) would drop the secondary color and border level3 below their contrast. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
     options: (scheme) => {
       const surfaces = levels(scheme, surfaceSteps[scheme]);
       const border = levels(scheme, borderSteps[scheme]);
@@ -162,10 +162,24 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'text-colors',
+    area: 'Palette',
+    title: 'Navy and slate text',
+    why: "MUI sets text in black or white at fixed opacities (87% and 60% in light, 100% and 70% in dark). Kilowatt follows the Enertiv UI Foundations Figma file: solid navy 950 and navy 500 in light, slate 100 and slate 900 in dark, so text takes the palette's hue and reads the same on every surface instead of blending into it.",
+    options: (scheme) => ({
+      palette: {
+        text:
+          scheme === 'dark'
+            ? { primary: slate[100], secondary: slate[900] }
+            : { primary: navy[950], secondary: navy[500] },
+      },
+    }),
+  },
+  {
     id: 'primary-navy',
     area: 'Palette',
     title: 'Navy primary, light neutral in dark',
-    why: "Primary is Enertiv navy instead of MUI's blue in the light scheme (navy 700). In the dark scheme it's a light neutral (slate 100) with navy text: the dark surfaces are navy, so a blue primary there would be another pale blue beside the brand-blue secondary and the info color. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) follows it.",
+    why: "Primary is Enertiv navy instead of MUI's blue in the light scheme (navy 900, the Enertiv UI Foundations Figma file's contained button). In the dark scheme it's a light neutral (slate 800, also from the Figma file) with navy text: the dark surfaces are navy, so a blue primary there would be another pale blue beside the brand-blue secondary and the info color. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) follows it.",
     options: (scheme) => {
       const { ramp, main, light, dark, contrastText } = primarySteps[scheme];
       const r = rampByName[ramp];
@@ -216,25 +230,54 @@ export const departures: Departure[] = [
     }),
   },
   {
-    id: 'outlined-button-borders',
+    id: 'control-outlines',
     area: 'Components',
-    components: ['Button'],
-    title: 'Primary outlined buttons use the control border',
-    why: "MUI outlines an outlined button in its intent color at half strength. A primary outlined button instead draws its outline in `border.level3`, the border level for control outlines (3:1 on every surface), so the most common outlined button reads like every other control edge; hover keeps the outline and shows MUI's background tint. The other intents (secondary, error, warning, info, success) keep MUI's outline on purpose: the intent color carries their meaning, so leave them as MUI ships them. Disabled buttons keep MUI's disabled border.",
-    options: () => ({
+    components: ['Button', 'ButtonGroup', 'ToggleButton', 'TextField', 'Select', 'Autocomplete', 'OutlinedInput'],
+    title: 'One outline color for every control',
+    why: "MUI outlines its controls in three different colors: inputs at 23% black (or white), outlined buttons in their intent color at half strength, toggle buttons in the divider color. Kilowatt gives them one outline, `palette.control.border`, so inputs, selects, outlined buttons and toggle buttons share one edge. Both schemes follow the Enertiv UI Foundations Figma file's button-border tokens: a quiet outline at rest (slate 500 in light, navy 700 in dark; below 3:1, by design decision), a stronger one on hover (navy 200, the nearest ramp step to Figma's #6598c2, and navy 300), the primary text color on keyboard focus and navy 400 or navy 100 when pressed. Inputs show focus with MUI's 2px primary outline. Error and disabled keep MUI's. Outlined buttons in the other intents (secondary, error, warning, info, success) keep MUI's intent-colored outline on purpose: the color carries their meaning.",
+    options: (scheme) => ({
+      palette: {
+        control:
+          scheme === 'dark'
+            ? { border: navy[700], hover: navy[300], focus: slate[100], pressed: navy[100] }
+            : { border: slate[500], hover: navy[200], focus: navy[950], pressed: navy[400] },
+      },
       components: {
-        MuiButton: {
+        MuiOutlinedInput: {
           styleOverrides: {
+            notchedOutline: { borderColor: 'var(--mui-palette-control-border)' },
             root: {
-              // MUI draws the outline from --variant-outlinedBorder. Primary only: the other intents keep MUI's.
-              '&.MuiButton-outlined.MuiButton-colorPrimary:not(.Mui-disabled)': {
-                '--variant-outlinedBorder': 'var(--mui-palette-border-level3)',
-                borderColor: 'var(--variant-outlinedBorder)',
-                '@media (hover: hover)': { '&:hover': { '--variant-outlinedBorder': 'var(--mui-palette-border-level3)' } },
+              '@media (hover: hover)': {
+                '&:hover:not(.Mui-focused):not(.Mui-error):not(.Mui-disabled) .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'var(--mui-palette-control-hover)',
+                },
+              },
+              // On touch screens MUI resets a hovered outline to its 23% default; keep the control border instead.
+              '@media (hover: none)': {
+                '&:hover:not(.Mui-focused):not(.Mui-error):not(.Mui-disabled) .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'var(--mui-palette-control-border)',
+                },
               },
             },
           },
         },
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              // MUI draws the outline from --variant-outlinedBorder. Primary only: the other intents keep MUI's.
+              // Disabled sets its own border.
+              '&.MuiButton-outlined.MuiButton-colorPrimary': {
+                '--variant-outlinedBorder': 'var(--mui-palette-control-border)',
+                '@media (hover: hover)': {
+                  '&:hover': { '--variant-outlinedBorder': 'var(--mui-palette-control-hover)' },
+                },
+                '&.Mui-focusVisible': { '--variant-outlinedBorder': 'var(--mui-palette-control-focus)' },
+                '&:active': { '--variant-outlinedBorder': 'var(--mui-palette-control-pressed)' },
+              },
+            },
+          },
+        },
+        MuiToggleButton: { styleOverrides: { root: { borderColor: 'var(--mui-palette-control-border)' } } },
       },
     }),
   },
@@ -316,6 +359,16 @@ export const departures: Departure[] = [
       components: Object.fromEntries(
         selectableControls.map((control) => [`Mui${control}`, { styleOverrides: { root: { '&.Mui-selected': { '--icon-fill': 1 } } } }]),
       ),
+    }),
+  },
+  {
+    id: 'toggle-button-text',
+    components: ['ToggleButton'],
+    area: 'Components',
+    title: 'Unselected toggle buttons use secondary text',
+    why: "MUI colors an unselected toggle button's label with `action.active`, the icon color, which reaches only 4.4:1 as text on the page surface (level0). Kilowatt uses `text.secondary`, the text role for secondary labels, which passes 4.5:1 on every surface level in both schemes. Selected and disabled buttons keep MUI's colors.",
+    options: () => ({
+      components: { MuiToggleButton: { styleOverrides: { root: { color: 'var(--mui-palette-text-secondary)' } } } },
     }),
   },
 ];

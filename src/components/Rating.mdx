@@ -1,0 +1,63 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as RatingStories from './Rating.stories';
+
+<Meta of={RatingStories} summary="MUI's Rating for giving or showing a score out of five stars." />
+
+# Rating
+
+A rating gives or shows a score on a scale of stars. Kilowatt uses MUI's `Rating` from `@mui/material` (Material UI v9) with no wrapper. Props are MUI's: see the [Rating API](https://mui.com/material-ui/api/rating/).
+
+<Canvas of={RatingStories.Basic} />
+
+## When to use
+
+- Use a rating for a subjective score people give: feedback on a vendor or a closed work order.
+- `readOnly` shows an average score, such as a vendor's.
+- For measured values (an ENERGY STAR score, a percentage), show the number with `Typography` or a chart, not stars.
+- For a choice of named levels (Low, Medium, High), use `Select` or `RadioGroup`.
+
+## Usage
+
+```tsx
+import Rating from '@mui/material/Rating';
+import Typography from '@mui/material/Typography';
+
+<Typography component="legend">Vendor Rating</Typography>
+<Rating name="vendor-rating" value={rating} onChange={(_, value) => setRating(value)} />
+```
+
+## Variants
+
+`size` is `small`, `medium` (the default) or `large`. `precision={0.5}` allows half stars. `max` changes the number of stars from 5; keep it at 5. The stars are MUI's built-in glyphs, in MUI's default star color.
+
+## States
+
+- `readOnly`: shows a score and can't be changed.
+- `disabled`: can't be changed here. Say why nearby.
+- No value (`null`): nothing rated yet; MUI adds an empty choice so people can clear the rating with the keyboard.
+
+## Do and don't
+
+- Do label the rating visibly, with `Typography component="legend"` above it.
+- Don't use stars for measured values; show the number.
+- Do give every interactive rating a unique `name`; it groups its radio inputs.
+- Don't change `max` from 5 or swap the stars for other glyphs; people read five stars without explanation.
+- Do pair a read-only average with the number of ratings behind it.
+
+## MUI departures
+
+No departure changes `Rating` on its own.
+
+Theme-wide departures (CSS variables and the palette) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- An interactive rating is a group of native radio inputs: arrow keys change the score, and each star is named ("4 Stars").
+- A read-only rating is an image whose accessible name is the score, such as "3.5 Stars".
+- Change the star names for translation with `getLabelText`.
+
+## Related
+
+- `RadioGroup` for named levels.
+
+<Stories includePrimary={false} />

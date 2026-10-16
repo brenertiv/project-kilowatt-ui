@@ -1,0 +1,81 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as RadioGroupStories from './RadioGroup.stories';
+
+<Meta
+  of={RadioGroupStories}
+  summary="MUI's RadioGroup and Radio for one choice out of two to five options that should all stay visible."
+/>
+
+# RadioGroup
+
+A radio group lets people choose exactly one of a few options, all shown at once. Kilowatt uses MUI's `RadioGroup` and `Radio` from `@mui/material` (Material UI v9) with no wrapper, each radio labelled with `FormControlLabel`. Props are MUI's: see the [RadioGroup API](https://mui.com/material-ui/api/radio-group/) and [Radio API](https://mui.com/material-ui/api/radio/).
+
+<Canvas of={RadioGroupStories.Basic} />
+
+## When to use
+
+- Use a radio group for one choice from two to five options, when seeing them all helps people choose.
+- For more options, or when space is short, use `Select`.
+- For a view switch in a toolbar (chart or table, day or week), use `ToggleButtonGroup`.
+- For one option that's on or off, use `Checkbox` or `Switch`, not a pair of radios.
+
+## Usage
+
+```tsx
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+
+<FormControl>
+  <FormLabel id="interval-label">Reading Interval</FormLabel>
+  <RadioGroup
+    aria-labelledby="interval-label"
+    name="interval"
+    value={interval}
+    onChange={(event) => setInterval(event.target.value)}
+  >
+    <FormControlLabel value="15" control={<Radio />} label="15 Minutes" />
+    <FormControlLabel value="60" control={<Radio />} label="Hourly" />
+  </RadioGroup>
+</FormControl>;
+```
+
+## Variants
+
+Stacked by default; `row` lays two or three short options on one line. `size` on `Radio` is `small` or `medium` (the default). `color` takes a palette intent; leave it at `primary`.
+
+## States
+
+- `error` on the `FormControl`, with `FormHelperText`: a required choice is missing. Say what to pick.
+- `disabled` on a `FormControlLabel` (or the whole `FormControl`): the option can't be chosen here. Say why nearby.
+
+## Do and don't
+
+- Do give the group a `FormLabel` and tie it to the `RadioGroup` with `aria-labelledby`.
+- Don't leave a group unnamed; each radio's label alone doesn't say what's being chosen.
+- Do preselect the most common or safest option when there is one.
+- Don't preselect an option that commits people to something costly; leave the group empty and mark it `required`.
+- Do order options logically: smallest to largest, or most to least common.
+- Don't use a radio group for more than about five options; use `Select`.
+
+## MUI departures
+
+No departure changes `RadioGroup` or `Radio` on their own.
+
+Theme-wide departures (CSS variables, surface and border levels, the navy primary for the checked radio and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI renders native radio inputs sharing one `name`, so arrow keys move the choice within the group and Tab moves past it.
+- `aria-labelledby` on `RadioGroup` names the group from its `FormLabel`.
+- `FormControlLabel` makes each label part of its radio's name and click target.
+
+## Related
+
+- `Select` for longer lists.
+- `ToggleButtonGroup` for view switches.
+- `Checkbox` for options people can combine.
+
+<Stories includePrimary={false} />

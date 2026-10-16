@@ -1,0 +1,84 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as CheckboxStories from './Checkbox.stories';
+
+<Meta
+  of={CheckboxStories}
+  summary="MUI's Checkbox with FormControlLabel for options that are on or off, alone or in a group, applied when a form is saved."
+/>
+
+# Checkbox
+
+A checkbox turns an option on or off. Kilowatt uses MUI's `Checkbox` from `@mui/material` (Material UI v9) with no wrapper, labelled with `FormControlLabel` and grouped with `FormGroup`. Props are MUI's: see the [Checkbox API](https://mui.com/material-ui/api/checkbox/) and [FormControlLabel API](https://mui.com/material-ui/api/form-control-label/).
+
+<Canvas of={CheckboxStories.Labeled} />
+
+## When to use
+
+- Use checkboxes for options people can combine, and for a single option that takes effect when a form is saved.
+- For a setting that takes effect the moment it's flipped, use `Switch`.
+- For one choice out of several, use `RadioGroup`.
+- To select rows in a table, use a checkbox per row, with an `indeterminate` one in the header.
+
+## Usage
+
+```tsx
+import Checkbox from '@mui/material/Checkbox';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormGroup from '@mui/material/FormGroup';
+import FormLabel from '@mui/material/FormLabel';
+
+<FormControl component="fieldset">
+  <FormLabel component="legend">Alert Channels</FormLabel>
+  <FormGroup>
+    <FormControlLabel
+      control={<Checkbox checked={email} onChange={(event) => setEmail(event.target.checked)} />}
+      label="Email"
+    />
+    <FormControlLabel
+      control={<Checkbox checked={sms} onChange={(event) => setSms(event.target.checked)} />}
+      label="SMS"
+    />
+  </FormGroup>
+</FormControl>;
+```
+
+## Variants
+
+`color` takes a palette intent; leave it at `primary` (the default) unless the option means something an intent says. `size` is `small`, `medium` (the default) or `large`; use `small` in table rows.
+
+## States
+
+- `indeterminate`: a parent whose children are partly checked. Clicking it checks or clears them all.
+- `error` on the `FormControl`, with `FormHelperText`: a required box isn't checked. Say why it's needed.
+- `disabled`: the option can't be changed here. Say why nearby.
+
+## Do and don't
+
+- Do label every checkbox with `FormControlLabel`, and phrase the label as the thing that becomes true: "Notify Building Engineer".
+- Don't write negative labels such as "Don't send email"; people then have to check a box to turn something off.
+- Do group related checkboxes in a `FormControl` fieldset with a `FormLabel` legend.
+- Don't lay a long group out in a row; stack it so the labels line up.
+- Do use a checkbox when the change waits for a Save button.
+- Don't use a checkbox for a setting that applies at once; use `Switch`.
+- Do leave `color` at `primary` unless an intent carries meaning.
+
+## MUI departures
+
+No departure changes `Checkbox` or `FormControlLabel` on their own.
+
+Theme-wide departures (CSS variables, surface and border levels, the navy primary for the checked box and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI renders a native checkbox input, so Space toggles it and its state is announced.
+- `FormControlLabel` makes the label part of the input's name and its click target.
+- A checkbox without a visible label, such as a table row's, needs an `aria-label` through `slotProps.input`.
+- `FormControl component="fieldset"` with `FormLabel component="legend"` names the group.
+
+## Related
+
+- `Switch` for settings that apply at once.
+- `RadioGroup` for one choice of several.
+
+<Stories includePrimary={false} />

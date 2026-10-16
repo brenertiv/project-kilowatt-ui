@@ -1,0 +1,76 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SliderStories from './Slider.stories';
+
+<Meta of={SliderStories} summary="MUI's Slider for choosing a value or a range on a scale, continuous or in steps." />
+
+# Slider
+
+A slider sets a value, or a range of values, by dragging along a track. Kilowatt uses MUI's `Slider` from `@mui/material` (Material UI v9) with no wrapper. Props are MUI's: see the [Slider API](https://mui.com/material-ui/api/slider/).
+
+<Canvas of={SliderStories.Continuous} />
+
+## When to use
+
+- Use a slider when the position on a scale matters more than the exact number: a lighting level, a comfort band, a threshold to preview.
+- When people need an exact number (a setpoint, a meter reading), use a `TextField` with `type="number"`, or put one beside the slider.
+- For a few named choices, use `RadioGroup` or `ToggleButtonGroup`.
+
+## Usage
+
+```tsx
+import Slider from '@mui/material/Slider';
+import Typography from '@mui/material/Typography';
+
+<Typography id="setpoint-label">Cooling Setpoint</Typography>
+<Slider
+  aria-labelledby="setpoint-label"
+  value={setpoint}
+  onChange={(_, value) => setSetpoint(value)}
+  min={62}
+  max={78}
+  marks
+  valueLabelDisplay="auto"
+/>
+```
+
+## Variants
+
+- Continuous (the default `step` of 1 across `min` to `max`), or discrete with a larger `step` and `marks`.
+- `step={null}` with labelled `marks` allows only the marked values.
+- An array `value` makes a range with two thumbs.
+- `orientation="vertical"` needs a height on its container.
+
+`size` is `small` or `medium` (the default). `valueLabelDisplay="auto"` shows the value above the thumb while it's dragged or focused. `color` takes a palette intent; leave it at `primary`.
+
+## States
+
+- `disabled`: the value can't be changed here. Say why nearby.
+
+## Do and don't
+
+- Do label the slider, visibly, and tie the label with `aria-labelledby`.
+- Don't rely on the marks alone to say what the slider sets.
+- Do put units in the mark labels and in `getAriaValueText`: "72°F", "15 min".
+- Don't show bare numbers when the unit isn't obvious from the label.
+- Do commit expensive work (an API call, a chart refetch) in `onChangeCommitted`.
+- Don't fetch on every `onChange`; it fires on every step while dragging.
+- Do offer a number field beside the slider when the exact value matters.
+
+## MUI departures
+
+No departure changes `Slider` on its own.
+
+Theme-wide departures (CSS variables, surface and border levels, the navy primary for the track and thumb and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- Each thumb is a native range input with `role="slider"`: arrow keys step, Page Up and Page Down jump, Home and End go to the ends.
+- Name every thumb: `aria-labelledby` or `aria-label` for one thumb, `getAriaLabel` for a range.
+- `getAriaValueText` gives screen readers the value with its unit.
+
+## Related
+
+- `TextField` for exact numbers.
+- `RadioGroup` and `ToggleButtonGroup` for a few named choices.
+
+<Stories includePrimary={false} />
