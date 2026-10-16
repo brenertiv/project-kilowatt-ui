@@ -32,15 +32,14 @@ const accent: Record<Scheme, string> = { light: light.palette.primary.main, dark
 
 function storybookTheme(scheme: Scheme) {
   const { palette, typography, shape } = scheme === 'light' ? light : dark;
-  const { background, border, text } = palette;
+  const { background, text } = palette;
   const inverse = scheme === 'light' ? dark : light;
   // MUI types the radius as number | string; Kilowatt's is a number of pixels (the shape-radius departure).
   const radius = Number(shape.borderRadius);
   // One border for the whole interface: frames, separators, buttons and inputs alike.
   // Storybook's own controls aren't held to the 3:1 control outline (border level3), so
-  // they take the frame border too. The dark divider (level1) reads too bright here, so
-  // dark steps down to level0; light's level0 would vanish, so light keeps the divider.
-  const frameBorder = scheme === 'dark' ? border.level0 : palette.divider;
+  // they take the frame border too: the divider (level1), as the Figma frames draw it.
+  const frameBorder = palette.divider;
   return create({
     base: scheme,
     ...brand,

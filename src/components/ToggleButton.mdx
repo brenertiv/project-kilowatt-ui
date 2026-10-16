@@ -1,0 +1,81 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ToggleButtonStories from './ToggleButton.stories';
+
+<Meta
+  of={ToggleButtonStories}
+  summary="MUI's ToggleButton and ToggleButtonGroup for switching views or options in place: time ranges, chart types, series."
+/>
+
+# ToggleButton
+
+A toggle button group holds a selection shown as joined buttons: one choice (`exclusive`) or several. Kilowatt uses MUI's `ToggleButton` and `ToggleButtonGroup` from `@mui/material` (Material UI v9) with no wrapper. Props are MUI's: see the [ToggleButton API](https://mui.com/material-ui/api/toggle-button/) and [ToggleButtonGroup API](https://mui.com/material-ui/api/toggle-button-group/).
+
+<Canvas of={ToggleButtonStories.Exclusive} />
+
+## When to use
+
+- Use a toggle button group to switch a view in place: a chart's time range, chart or table, which series show.
+- For one choice in a form, use `RadioGroup` or `Select`.
+- For a setting that applies at once, use `Switch`.
+- To run an action, use `Button` or `ButtonGroup`; a toggle button holds a state.
+
+## Usage
+
+```tsx
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+
+<ToggleButtonGroup exclusive value={range} onChange={(_, next) => next && setRange(next)} aria-label="Time range">
+  <ToggleButton value="day">Day</ToggleButton>
+  <ToggleButton value="week">Week</ToggleButton>
+</ToggleButtonGroup>;
+```
+
+## Variants
+
+- `exclusive`: one value. Ignore a `null` in `onChange` when a choice must always stay selected.
+- Without `exclusive`: an array of values, for options people combine.
+- A standalone `ToggleButton` with `selected` and `onChange`: one option on or off.
+- Icon-only buttons for compact toolbars, each with an `aria-label`.
+
+`size` is `small`, `medium` (the default) or `large`. `orientation="vertical"` stacks the group. `color` is `standard` (MUI's default) or a palette intent.
+
+## States
+
+- `selected`: set by the group from its `value`; the button is tinted and its icon fills.
+- `disabled` on a button or the group: the option isn't available. Say why nearby.
+
+## Do and don't
+
+- Do write labels in Title Case, as they should appear.
+- Don't case labels with `textTransform`; the theme shows them as written.
+- Do keep a choice selected in an exclusive group that switches a view, by ignoring `null` in `onChange`.
+- Don't let a view switch end up with nothing selected.
+- Do let the theme fill the selected button's icon.
+- Don't pass `fill={selected}` to an `Icon` inside a toggle button.
+- Do give the group an `aria-label`, and each icon-only button its own.
+- Don't mix text and icon-only buttons in one group.
+
+## MUI departures
+
+- `button-text-case`: labels are shown as written, not uppercased, and written in Title Case.
+- `button-text-weight`: labels are regular weight (400) instead of MUI's medium (500).
+- `control-outlines`: the outline is `palette.control.border`, shared with inputs, selects and outlined buttons, instead of MUI's divider color (slate 500 in light, navy 700 in dark, from the Figma tokens).
+- `selected-fills-icons`: the selected button's icon renders filled, the others outlined.
+- `toggle-button-text`: an unselected button's label is `text.secondary` instead of MUI's `action.active`, so it passes 4.5:1 on every surface.
+
+Theme-wide departures (CSS variables, the 8px corner radius, surface and border levels, the navy primary and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- Each `ToggleButton` is a native `button` with `aria-pressed`, so screen readers announce whether it's selected.
+- `ToggleButtonGroup` renders `role="group"`; name it with `aria-label`.
+- Icon-only buttons need an `aria-label`; the icon is `aria-hidden`.
+
+## Related
+
+- `ButtonGroup` for joined actions.
+- `RadioGroup` for one choice in a form.
+- `Switch` for a setting on or off.
+
+<Stories includePrimary={false} />

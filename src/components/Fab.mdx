@@ -1,0 +1,72 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as FabStories from './Fab.stories';
+
+<Meta
+  of={FabStories}
+  summary="MUI's Fab, a floating action button for the single most important action on a screen, mostly on phone layouts."
+/>
+
+# Fab
+
+A floating action button holds the one main action on a screen and floats above the content. Kilowatt uses MUI's `Fab` from `@mui/material` (Material UI v9) with no wrapper. Props are MUI's: see the [Fab API](https://mui.com/material-ui/api/fab/).
+
+<Canvas of={FabStories.Circular} />
+
+## When to use
+
+- Use a Fab for the single main action on a screen that scrolls, mostly on phone layouts: New Work Order on a ticket list.
+- On desktop layouts, prefer a contained `Button` in the page header.
+- Don't use a Fab for secondary actions, or for destructive ones.
+
+## Usage
+
+```tsx
+import Fab from '@mui/material/Fab';
+import { Icon } from 'src/icons';
+
+<Fab color="primary" aria-label="New Work Order" onClick={create} sx={{ position: 'fixed', bottom: 16, right: 16 }}>
+  <Icon name="add" />
+</Fab>;
+```
+
+## Variants
+
+- `variant="circular"` (MUI's default): icon only. Needs an `aria-label`.
+- `variant="extended"`: icon and label. Use it when the icon alone isn't clear.
+
+`size` is `small`, `medium` or `large` (MUI's default). `color` takes a palette intent; use `primary`. MUI's `default` color is a neutral grey surface.
+
+Position the Fab with `sx` (`position: 'fixed'` and spacing offsets), clear of other floating layers such as snackbars.
+
+## States
+
+- `disabled`: the action isn't available. Say why nearby, or hide the Fab instead.
+
+## Do and don't
+
+- Do keep one Fab per screen, for the main action.
+- Don't put a Fab beside a contained button for the same action.
+- Do write extended labels in Title Case: "New Work Order".
+- Don't leave a circular Fab without an `aria-label`.
+- Do keep the Fab clear of content people need to reach at the bottom of a list.
+- Don't use a Fab for a destructive action.
+
+## MUI departures
+
+- `button-text-case`: an extended Fab's label is shown as written, not uppercased, and written in Title Case.
+- `button-text-weight`: the label is regular weight (400) instead of MUI's medium (500).
+
+The Fab keeps MUI's circular and pill shapes, and its shadow: it floats above the page. Theme-wide departures (CSS variables, the navy primary and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI renders a native `button`, with keyboard activation and a visible focus state.
+- A circular Fab needs an `aria-label`; the icon is `aria-hidden`.
+- A fixed Fab comes last in the page's DOM by default; place it in the DOM where its action belongs in the tab order.
+
+## Related
+
+- `Button` for actions in the page.
+- Foundations → Icons for the icon names.
+
+<Stories includePrimary={false} />

@@ -1,0 +1,70 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ButtonGroupStories from './ButtonGroup.stories';
+
+<Meta
+  of={ButtonGroupStories}
+  summary="MUI's ButtonGroup for a set of related actions joined into one control, including the split button."
+/>
+
+# ButtonGroup
+
+A button group joins related buttons into one control that shares a variant, color and size. Kilowatt uses MUI's `ButtonGroup` from `@mui/material` (Material UI v9) with no wrapper; the buttons inside are `Button`s and follow the Button page. Props are MUI's: see the [ButtonGroup API](https://mui.com/material-ui/api/button-group/).
+
+<Canvas of={ButtonGroupStories.Outlined} />
+
+## When to use
+
+- Use a button group for two to four related actions of equal weight: Preview, Download, Share.
+- For a main action with alternatives, use a split button: a `Button` beside an icon-only button that opens a `Menu`.
+- For choosing a view or a value (Day, Week, Month), use `ToggleButtonGroup`; a button group runs actions, it doesn't hold a selection.
+- For unrelated actions, use separate buttons with space between them.
+
+## Usage
+
+```tsx
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
+
+<ButtonGroup aria-label="Report actions">
+  <Button onClick={preview}>Preview</Button>
+  <Button onClick={download}>Download</Button>
+</ButtonGroup>;
+```
+
+## Variants
+
+`variant` (`outlined`, MUI's default; `contained`; `text`), `color` and `size` are set once on the group and apply to every button. `orientation="vertical"` stacks the buttons. MUI squares the corners where buttons meet, so the group's outer corners keep the theme radius.
+
+## States
+
+- `disabled` on the group disables every button; on one `Button`, only that one. Say why nearby.
+
+## Do and don't
+
+- Do set `variant`, `color` and `size` on the group.
+- Don't give buttons in one group different variants or colors.
+- Do keep a group to two to four actions with short labels in Title Case.
+- Don't use a button group to show a selected option; use `ToggleButtonGroup`.
+- Do give the group an `aria-label` that names the set.
+- Do give the split button's menu trigger an `aria-label`, `aria-haspopup="menu"` and `aria-expanded`.
+- Don't add a shadow to a contained group; groups sit flat like buttons.
+
+## MUI departures
+
+- `control-outlines`: a primary outlined group's outline is `palette.control.border`, the outline shared with inputs and toggle buttons (slate 500 in light, navy 700 in dark, from the Figma tokens).
+- `flat-buttons`: a contained group has no shadow; `disableElevation` is on by default.
+
+The buttons inside follow every `Button` departure (Title Case labels at regular weight). Theme-wide departures apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI renders the group with `role="group"`; name it with `aria-label`.
+- Each button is a native `button` in the tab order.
+- An icon-only button in the group needs its own `aria-label`.
+
+## Related
+
+- `Button` for the buttons inside.
+- `ToggleButtonGroup` for choosing a view or value.
+
+<Stories includePrimary={false} />

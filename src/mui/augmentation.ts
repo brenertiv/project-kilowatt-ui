@@ -8,17 +8,22 @@ type SurfaceLevels = { level0: string; level1: string; level2: string; level3: s
 
 /**
  * Borders by contrast against the surfaces, in both schemes: level0 is the faintest; level3,
- * the strongest, is for control outlines (outlined buttons, inputs) and reaches 3:1 on every surface.
+ * the strongest, reaches 3:1 on every surface; MUI's controls take their outline from `control` instead.
  */
 export type BorderLevels = { level0: string; level1: string; level2: string; level3: string };
+
+/** Control outlines (inputs, selects, outlined buttons, toggle buttons), by state, from the Figma button-border tokens. */
+export type ControlColors = { border: string; hover: string; focus: string; pressed: string };
 
 declare module '@mui/material/styles' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface TypeBackground extends SurfaceLevels {}
   interface Palette {
     border: BorderLevels;
+    control: ControlColors;
   }
   interface PaletteOptions {
     border?: Partial<BorderLevels>;
+    control?: ControlColors;
   }
 }

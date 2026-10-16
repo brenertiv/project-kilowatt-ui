@@ -40,7 +40,7 @@ import { Icon } from 'src/icons';
 MUI's emphasis levels, from most to least:
 
 - `variant="contained"`: the main action in a view or dialog. One per view. Contained buttons sit flat, with no shadow.
-- `variant="outlined"`: an important action that isn't the main one, usually beside it. A primary outlined button's outline is the control border (`border.level3`); the other intents keep MUI's outline in their own color.
+- `variant="outlined"`: an important action that isn't the main one, usually beside it. A primary outlined button's outline is the control outline (`palette.control.border`), the same as every input's; the other intents keep MUI's outline in their own color.
 - `variant="text"` (MUI's default): low emphasis, for toolbars, table rows, cards and dialog actions.
 
 `color` takes a palette intent (`primary`, Enertiv navy and the default; `secondary`, `error`, `warning`, `info`, `success`, `inherit`) for what the action means. `size` is `small`, `medium` (the default) or `large`; use `small` in dense toolbars and table rows.
@@ -77,8 +77,8 @@ MUI's emphasis levels, from most to least:
 
 - `button-text-case`: labels are shown as written, not uppercased (`typography.button.textTransform` is `none`), and written in Title Case.
 - `button-text-weight`: labels are regular weight (400) instead of MUI's medium (500).
+- `control-outlines`: a primary outlined button's outline is `palette.control.border`, shared with inputs, selects and toggle buttons, from the Figma button-border tokens: slate 500 in light and navy 700 in dark at rest (quieter than 3:1 by design), navy 200 or navy 300 on hover, the primary text color on keyboard focus, navy 400 or navy 100 when pressed. The other intents keep MUI's outline in their own color.
 - `flat-buttons`: contained buttons have no shadow; `disableElevation` is on by default.
-- `outlined-button-borders`: a primary outlined button's outline is `border.level3`, the control border (3:1 on every surface); hover keeps it and adds MUI's background tint. The other intents keep MUI's outline in their own color.
 - `icon-button-radius`: `IconButton` takes the theme radius (8px) instead of MUI's circle, so its hover and focus shapes match the buttons beside it.
 - `icons`: icons are `Icon` from `src/icons` (Material Symbols at weight 300), not `@mui/icons-material`. In `startIcon` and `endIcon` the button sizes them as it would MUI's SVG icons.
 

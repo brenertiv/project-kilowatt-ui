@@ -1,0 +1,65 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SwitchStories from './Switch.stories';
+
+<Meta of={SwitchStories} summary="MUI's Switch for a setting that turns on or off and takes effect immediately." />
+
+# Switch
+
+A switch turns a setting on or off, and the change applies at once. Kilowatt uses MUI's `Switch` from `@mui/material` (Material UI v9) with no wrapper, labelled with `FormControlLabel`. Props are MUI's: see the [Switch API](https://mui.com/material-ui/api/switch/).
+
+<Canvas of={SwitchStories.Labeled} />
+
+## When to use
+
+- Use a switch for a setting that takes effect the moment it's flipped: alerts on or off, an overlay shown or hidden.
+- For an option that waits for a Save button, use `Checkbox`.
+- For a choice between two named views, use `ToggleButtonGroup`.
+
+## Usage
+
+```tsx
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+
+<FormControlLabel
+  control={<Switch checked={alerts} onChange={(event) => setAlerts(event.target.checked)} />}
+  label="Demand Response Alerts"
+/>;
+```
+
+## Variants
+
+`size` is `small` or `medium` (the default). `color` takes a palette intent; leave it at `primary`. `labelPlacement="start"` on `FormControlLabel` puts the label first, for settings lists aligned on the right.
+
+## States
+
+- `disabled`: the setting can't be changed here. Say why nearby.
+- While a change saves to the API, keep the switch in its new position and show an error (and flip it back) only if the save fails.
+
+## Do and don't
+
+- Do label the switch with the setting's name: "Demand Response Alerts".
+- Don't put "On" and "Off" in the label; the switch shows the state.
+- Do apply the change as soon as the switch moves.
+- Don't use a switch in a form that waits for Save; use `Checkbox`.
+- Do leave `color` at `primary` unless an intent carries meaning.
+- Don't restyle the track or thumb with `sx`; the switch takes its colors from the theme.
+
+## MUI departures
+
+No departure changes `Switch` on its own.
+
+Theme-wide departures (CSS variables, surface and border levels, the navy primary for the checked track and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI renders a native checkbox with `role="switch"`, so Space toggles it and screen readers announce on or off.
+- `FormControlLabel` makes the label part of the switch's name and click target.
+- A switch without a visible label needs an `aria-label` through `slotProps.input`.
+
+## Related
+
+- `Checkbox` for options saved with a form.
+- `ToggleButtonGroup` for switching between views.
+
+<Stories includePrimary={false} />
