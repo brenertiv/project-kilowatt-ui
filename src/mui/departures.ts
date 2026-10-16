@@ -2,8 +2,8 @@ import type { ThemeOptions } from '@mui/material/styles';
 import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
-import { deepOrange, green, purple, red } from '@mui/material/colors';
-import { brand, navy, slate } from './colors';
+import { green, purple, red } from '@mui/material/colors';
+import { brand, navy, orange, slate, yellow } from './colors';
 
 /**
  * Every way Kilowatt departs from stock Material UI, and nothing else.
@@ -70,15 +70,15 @@ export const elevationSurfaces: { elevations: [number, number]; level: keyof typ
 type Intent = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
 
 /**
- * The intents Kilowatt moves off MUI's default, per scheme: a step from MUI's own
- * color ramps that passes 4.5:1 as text on every surface level, with its contrast
+ * The intents Kilowatt moves off MUI's default, per scheme: a step from a color ramp (MUI's
+ * own, or Kilowatt's orange and yellow for warning) that passes 4.5:1 as text on every surface level, with its contrast
  * text also at 4.5:1 or better. Intents not listed keep MUI's default, which
  * already passes. MUI derives `light` and `dark` from `main`.
  */
 export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: string; step: string; main: string }>>> = {
   light: {
     error: { ramp: 'red', step: '800', main: red[800] },
-    warning: { ramp: 'deepOrange', step: '900', main: deepOrange[900] },
+    warning: { ramp: 'orange', step: '700', main: orange[700] },
     info: { ramp: 'purple', step: '500', main: purple[500] },
     success: { ramp: 'green', step: '900', main: green[900] },
   },
@@ -86,6 +86,7 @@ export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: str
     error: { ramp: 'red', step: '100', main: red[100] },
     info: { ramp: 'purple', step: '100', main: purple[100] },
     success: { ramp: 'green', step: '300', main: green[300] },
+    warning: { ramp: 'yellow', step: '400', main: yellow[400] },
   },
 };
 
@@ -153,7 +154,7 @@ export const departures: Departure[] = [
     id: 'intents-on-surfaces',
     area: 'Palette',
     title: 'Intent colors that pass on every surface',
-    why: "MUI's intents are tuned for a white or #121212 background, and several fall below 4.5:1 as text on the surface levels. These take a nearby step from MUI's own color ramps that passes on every level in its scheme; the intents that already pass stay as MUI ships them. Light warning moves to deep orange, since no orange step passes on the light surfaces.",
+    why: "MUI's intents are tuned for a white or #121212 background, and several fall below 4.5:1 as text on the surface levels. These take a nearby step from MUI's own color ramps that passes on every level in its scheme; the intents that already pass stay as MUI ships them. Warning uses Kilowatt's own ramps: orange 700 in light (clearly apart from error's red) and yellow 400 in dark.",
     options: (scheme) => ({
       palette: Object.fromEntries(
         Object.entries(intentSteps[scheme]).map(([intent, { main }]) => [intent, { main, contrastText: intentContrastText[scheme] }]),
