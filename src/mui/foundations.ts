@@ -1,24 +1,46 @@
-import type { Theme } from '@mui/material/styles';
+import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
 import { navy, slate } from './colors';
 import { borderSteps, departures, elevationSurfaces, intentSteps, primarySteps, surfaceSteps, type ColorScheme } from './departures';
-import { createSchemeTheme } from './theme';
-import { departureChanges } from './themeDiff';
+import { mergeOptions } from './theme';
+import { diffThemes, stockTheme } from './themeDiff';
 
 /**
  * The Foundations pages as Markdown tables, read from the running theme. Every
  * value carries its source: MUI's default, or the departure that sets it. The
  * pages are generated from this (scripts/build-docs.ts), so they can't drift
  * from the theme and the line between MUI and Kilowatt stays visible.
+ *
+ * The pages document values, so they read the theme without CSS-variable output:
+ * with `cssVariables` on, MUI returns `theme.spacing(1)` as `var(--mui-spacing, 8px)`
+ * rather than `8px`. Sources are worked out the same way, so a value MUI ships
+ * unchanged reads as MUI's default even though the running theme serves it as a
+ * CSS variable.
  */
 
-const themes: Record<ColorScheme, Theme> = { light: createSchemeTheme('light'), dark: createSchemeTheme('dark') };
+/** The theme options for one scheme, without `cssVariables`: values, not their CSS-variable form. */
+function valueOptions(scheme: ColorScheme, upTo = departures.length): ThemeOptions {
+  return departures.slice(0, upTo).reduce<Record<string, unknown>>(
+    (options, departure) => {
+      if (!departure.options) return options;
+      const values = { ...(departure.options(scheme) as Record<string, unknown>) };
+      delete values.cssVariables;
+      return mergeOptions(options, values);
+    },
+    { palette: { mode: scheme } },
+  ) as ThemeOptions;
+}
 
-/** Theme path → the departure that changes it, in either scheme. */
+const themes: Record<ColorScheme, Theme> = { light: createTheme(valueOptions('light')), dark: createTheme(valueOptions('dark')) };
+
+/** Theme path → the departure that changes its value, in either scheme: each departure is charged with what changes when it's added. */
 const claims = new Map<string, string>();
-for (const departure of departures) {
-  for (const scheme of ['light', 'dark'] as const) {
-    for (const change of departureChanges(departure, scheme)) claims.set(change.path, departure.id);
-  }
+for (const scheme of ['light', 'dark'] as const) {
+  let before = stockTheme(scheme);
+  departures.forEach((departure, index) => {
+    const after = createTheme(valueOptions(scheme, index + 1));
+    for (const change of diffThemes(before, after)) claims.set(change.path, departure.id);
+    before = after;
+  });
 }
 
 /** Where a theme value comes from: MUI's default, or a departure (by id). */
