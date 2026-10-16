@@ -128,6 +128,32 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'button-text-case',
+    area: 'Typography',
+    components: ['Button', 'ToggleButton', 'Tab', 'Fab', 'BottomNavigationAction'],
+    title: 'Button labels in Title Case',
+    why: "MUI uppercases every label set in the `button` type style. Kilowatt shows labels as written, and writes them in Title Case. CSS can't do Title Case (`capitalize` also capitalizes minor words such as \"and\"), so it's a writing convention: what's in the code is what people and screen readers get, and it carries through translation.",
+    options: () => ({ typography: { button: { textTransform: 'none' } } }),
+    convention: {
+      muiDefault: 'Labels uppercased by `typography.button.textTransform`',
+      kilowatt: 'Labels shown as written, written in Title Case: "Dispatch Ticket", "Export CSV", "Save and Close"',
+      where: 'Every label of a Button, ToggleButton, Tab, Fab or BottomNavigationAction',
+    },
+  },
+  {
+    id: 'flat-buttons',
+    area: 'Components',
+    components: ['Button', 'ButtonGroup'],
+    title: 'Flat buttons',
+    why: "Contained buttons sit flat, without MUI's elevation (2, rising to 4 on hover and 8 when pressed), so they read as controls on a surface rather than as surfaces of their own. This is MUI's own `disableElevation`, made the default; `theme.shadows` is unchanged, so Paper, menus and dialogs keep theirs.",
+    options: () => ({
+      components: {
+        MuiButton: { defaultProps: { disableElevation: true } },
+        MuiButtonGroup: { defaultProps: { disableElevation: true } },
+      },
+    }),
+  },
+  {
     id: 'paper-surface-levels',
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',

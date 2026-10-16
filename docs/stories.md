@@ -23,7 +23,7 @@ const meta = {
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks the page against them.
   parameters: { muiComponents: ['Button', 'IconButton'] },
-  args: { children: 'Dispatch ticket' },
+  args: { children: 'Dispatch Ticket' },
 } satisfies Meta<typeof Button>;
 
 export default meta;
@@ -33,7 +33,7 @@ type Story = StoryObj<typeof meta>;
 export const Contained: Story = {
   args: { variant: 'contained', onClick: fn() },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Dispatch ticket' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Dispatch Ticket' }));
     await expect(args.onClick).toHaveBeenCalledOnce();
   },
 };

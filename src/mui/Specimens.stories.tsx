@@ -50,6 +50,8 @@ function Swatch({ color, label }: { color: string; label: string }) {
 }
 
 const intents = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const;
+/** Button labels are written in Title Case (the `button-text-case` departure). */
+const intentLabels = { primary: 'Primary', secondary: 'Secondary', error: 'Error', warning: 'Warning', info: 'Info', success: 'Success' };
 
 /** The palette: each intent's four values, the surface levels, the border levels on every surface, and text. */
 export const Color: Story = {
@@ -120,7 +122,7 @@ export const IntentsOnSurfaces: Story = {
           ))}
           {intents.map((intent) => (
             <Button key={intent} size="small" variant="contained" color={intent}>
-              {intent}
+              {intentLabels[intent]}
             </Button>
           ))}
         </Stack>
