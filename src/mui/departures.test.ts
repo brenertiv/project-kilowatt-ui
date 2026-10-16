@@ -7,6 +7,15 @@ import { departureChanges, diffThemes, stockTheme } from './themeDiff';
 
 const schemes: ColorScheme[] = ['light', 'dark'];
 
+/**
+ * Headroom above each WCAG minimum. MUI's getContrastRatio and axe (the story tests) round
+ * the sRGB curve slightly differently, so a pair at exactly 4.5:1 here can measure 4.49 in
+ * axe. Requiring 0.05 more makes such edge cases fail here first.
+ */
+const margin = 0.05;
+const text = 4.5 + margin;
+const graphic = 3 + margin;
+
 describe('departures', () => {
   it.each(schemes)('account for every way the %s theme differs from stock MUI', (scheme) => {
     const claimed = new Set(departures.flatMap((departure) => departureChanges(departure, scheme).map((change) => change.path)));
@@ -43,8 +52,8 @@ describe('createKilowattTheme', () => {
     const surfaces = (['level0', 'level1', 'level2', 'level3', 'level4'] as const).map((level) => palette.background[level]);
     for (const intent of ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const) {
       const { main, contrastText } = palette[intent];
-      for (const surface of surfaces) expect(getContrastRatio(main, surface), `${intent}.main on ${surface}`).toBeGreaterThanOrEqual(4.5);
-      expect(getContrastRatio(contrastText, main), `${intent}.contrastText`).toBeGreaterThanOrEqual(4.5);
+      for (const surface of surfaces) expect(getContrastRatio(main, surface), `${intent}.main on ${surface}`).toBeGreaterThanOrEqual(text);
+      expect(getContrastRatio(contrastText, main), `${intent}.contrastText`).toBeGreaterThanOrEqual(text);
     }
   });
 
@@ -60,7 +69,7 @@ describe('createKilowattTheme', () => {
     for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
       const surface = palette.background[level];
       for (const icon of [palette.action.active, palette.text.secondary]) {
-        expect(getContrastRatio(over(icon, surface), surface), `${icon} on ${level}`).toBeGreaterThanOrEqual(3);
+        expect(getContrastRatio(over(icon, surface), surface), `${icon} on ${level}`).toBeGreaterThanOrEqual(graphic);
       }
     }
   });
@@ -69,7 +78,7 @@ describe('createKilowattTheme', () => {
     const { palette } = createSchemeTheme(scheme);
     for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
       const surface = palette.background[level];
-      expect(getContrastRatio(palette.border.level3, surface), `border.level3 on ${level}`).toBeGreaterThanOrEqual(3);
+      expect(getContrastRatio(palette.border.level3, surface), `border.level3 on ${level}`).toBeGreaterThanOrEqual(graphic);
     }
   });
 
