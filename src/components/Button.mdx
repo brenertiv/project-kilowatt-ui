@@ -40,7 +40,7 @@ import { Icon } from 'src/icons';
 MUI's emphasis levels, from most to least:
 
 - `variant="contained"`: the main action in a view or dialog. One per view. Contained buttons sit flat, with no shadow.
-- `variant="outlined"`: an important action that isn't the main one, usually beside it.
+- `variant="outlined"`: an important action that isn't the main one, usually beside it. Its outline is the UI's border color, not the intent color; the label carries the intent.
 - `variant="text"` (MUI's default): low emphasis, for toolbars, table rows, cards and dialog actions.
 
 `color` takes a palette intent (`primary`, Enertiv navy and the default; `secondary`, `error`, `warning`, `info`, `success`, `inherit`) for what the action means. `size` is `small`, `medium` (the default) or `large`; use `small` in dense toolbars and table rows.
@@ -56,6 +56,8 @@ MUI's emphasis levels, from most to least:
 - Don't use vague labels like "OK" or "Submit"; name what happens instead.
 - Do write the label exactly as it should appear; the theme shows it as written.
 - Don't write labels in capitals or lowercase for the theme to fix, or use `textTransform` or `capitalize` to case them.
+- Do let outlined buttons take the theme's border color.
+- Don't color an outline with `sx` or `borderColor` to match the intent; every border in the UI uses the border levels.
 - Do keep contained buttons flat, as the theme sets them.
 - Don't add a shadow back with `sx` or `elevation`; a raised look means the element is a surface, not a button.
 - Do keep one contained button per view.
@@ -71,6 +73,7 @@ MUI's emphasis levels, from most to least:
 
 - `button-text-case`: labels are shown as written, not uppercased (`typography.button.textTransform` is `none`), and written in Title Case.
 - `flat-buttons`: contained buttons have no shadow; `disableElevation` is on by default.
+- `outlined-button-borders`: an outlined button's outline is `border.level1` (the `divider` color), and `border.level2` on hover, whatever its `color`.
 - `icons`: icons are `Icon` from `src/icons` (Material Symbols at weight 300), not `@mui/icons-material`. In `startIcon` and `endIcon` the button sizes them as it would MUI's SVG icons.
 
 Theme-wide departures (CSS variables, surface and border levels, the navy primary and the other intent colors) apply too; see Foundations → MUI departures.

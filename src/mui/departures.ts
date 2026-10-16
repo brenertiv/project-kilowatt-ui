@@ -177,6 +177,29 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'outlined-button-borders',
+    area: 'Components',
+    components: ['Button'],
+    title: 'Outlined buttons use the border color',
+    why: "MUI outlines an outlined button in its intent color at half strength. Kilowatt draws it in the border color every other edge uses (`border.level1`, the same as `divider`), stepping to `border.level2` on hover, so borders read the same across the UI; the label carries the intent. Disabled buttons keep MUI's disabled border.",
+    options: () => ({
+      components: {
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              // MUI draws the outline from --variant-outlinedBorder (and sets border-color directly for color="inherit").
+              '&.MuiButton-outlined:not(.Mui-disabled)': {
+                '--variant-outlinedBorder': 'var(--mui-palette-border-level1)',
+                borderColor: 'var(--variant-outlinedBorder)',
+                '@media (hover: hover)': { '&:hover': { '--variant-outlinedBorder': 'var(--mui-palette-border-level2)' } },
+              },
+            },
+          },
+        },
+      },
+    }),
+  },
+  {
     id: 'paper-surface-levels',
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
