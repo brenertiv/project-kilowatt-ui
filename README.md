@@ -1,6 +1,6 @@
 # Kilowatt UI
 
-Enertiv's design system. It starts from stock Material UI, with light and dark color schemes, and lists every place it departs from MUI in `src/mui/departures.ts`: the palette (surfaces, borders, a navy primary, intent colors), the corner radius, the button style and the icon set. Anything not listed there is MUI's default.
+Enertiv's design system. It starts from stock Material UI, with light and dark color schemes, and lists every place it departs from MUI in `src/mui/departures.ts`: the palette (surfaces, borders, a navy primary, a brand-blue secondary, intent colors), the corner radius, the button style and the icon set. Anything not listed there is MUI's default.
 
 The Storybook (foundations and guides, plus `llms.txt` and an MCP endpoint for agents) is deployed publicly on Vercel. See `docs/publishing.md`.
 

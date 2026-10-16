@@ -2,8 +2,8 @@ import type { ThemeOptions } from '@mui/material/styles';
 import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
-import { deepOrange, green, lightBlue, purple, red } from '@mui/material/colors';
-import { navy, slate } from './colors';
+import { deepOrange, green, lightBlue, red } from '@mui/material/colors';
+import { brand, navy, slate } from './colors';
 
 /**
  * Every way Kilowatt departs from stock Material UI, and nothing else.
@@ -83,7 +83,6 @@ export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: str
     success: { ramp: 'green', step: '900', main: green[900] },
   },
   dark: {
-    secondary: { ramp: 'purple', step: '100', main: purple[100] },
     error: { ramp: 'red', step: '100', main: red[100] },
     info: { ramp: 'lightBlue', step: '300', main: lightBlue[300] },
     success: { ramp: 'green', step: '300', main: green[300] },
@@ -101,6 +100,16 @@ const intentContrastText: Record<ColorScheme, string> = { light: '#fff', dark: '
 export const primarySteps: Record<ColorScheme, { main: keyof typeof navy; light?: keyof typeof navy; dark: keyof typeof navy }> = {
   light: { main: 700, light: 500, dark: 900 },
   dark: { main: 50, dark: 100 },
+};
+
+/**
+ * Secondary, per scheme, on the brand ramp. The brand blue itself (500) is too light to
+ * pass as text or under white text, so light uses 700 for `main`, with 500 as `light`;
+ * dark uses 300.
+ */
+export const secondarySteps: Record<ColorScheme, { main: keyof typeof brand; light: keyof typeof brand; dark: keyof typeof brand }> = {
+  light: { main: 700, light: 500, dark: 800 },
+  dark: { main: 300, light: 200, dark: 400 },
 };
 
 /** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
@@ -221,6 +230,16 @@ export const departures: Departure[] = [
     title: 'Icon buttons take the theme radius',
     why: "MUI makes icon buttons circles (`border-radius: 50%`), the one button shape that ignores the theme radius. Kilowatt rounds them with `shape.borderRadius` like every other button, so hover, focus and pressed shapes match the buttons beside them.",
     options: () => ({ components: { MuiIconButton: { styleOverrides: { root: { borderRadius: 'var(--mui-shape-borderRadius)' } } } } }),
+  },
+  {
+    id: 'secondary-brand',
+    area: 'Palette',
+    title: 'Brand blue secondary',
+    why: "Secondary is Enertiv's brand blue instead of MUI's purple, on a brand ramp built around #2EA6E1 (step 500). The brand blue itself passes only 2.3:1 as text and 2.7:1 under white text, so secondary uses the brand step that passes in each scheme: 700 in light (with 500, the exact brand blue, as `light`) and 300 in dark. Like the other intents, it passes 4.5:1 as text on every surface, and its contrast text passes on it.",
+    options: (scheme) => {
+      const { main, light, dark } = secondarySteps[scheme];
+      return { palette: { secondary: { main: brand[main], light: brand[light], dark: brand[dark], contrastText: intentContrastText[scheme] } } };
+    },
   },
   {
     id: 'paper-surface-levels',

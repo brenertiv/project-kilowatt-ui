@@ -42,3 +42,22 @@ export const navy = {
   900: '#0d2029',
   950: '#09161c',
 } as const;
+
+/**
+ * Enertiv's brand blue, #2EA6E1, at 500, with the other steps derived from it in OKLab
+ * (lightness spaced evenly, chroma tapering toward the ends). The secondary intent
+ * reads from it.
+ */
+export const brand = {
+  50: '#dff8ff',
+  100: '#c5edff',
+  200: '#9fdcff',
+  300: '#6fc9fd',
+  400: '#4db7ef',
+  500: '#2ea6e1',
+  600: '#008cc6',
+  700: '#006fa4',
+  800: '#005a88',
+  900: '#004468',
+  950: '#00324d',
+} as const;
