@@ -216,10 +216,21 @@ export function spacingMarkdown() {
 }
 
 export function shapeMarkdown() {
+  const theme = (units: number) => themes.light.spacing(units);
   const radius = themes.light.shape.borderRadius;
   return [
     `The theme has one radius, ${code(`${radius}px`)}, MUI's single \`shape.borderRadius\`. Buttons, inputs, cards, menus, dialogs, tooltips and toggle buttons use it. Chips and avatars keep their own pill and circle shapes. In \`sx\`, \`borderRadius\` multiplies it: \`sx={{ borderRadius: 2 }}\` is ${code(`${Number(radius) * 2}px`)}.`,
     table(['Theme path', 'Value', 'Source'], [[code('shape.borderRadius'), code(`${radius}px`), sourceOf('shape.borderRadius')]]),
+    '## Nested corners',
+    "When a rounded element sits close inside a rounded container, the container's radius is the element's radius plus the gap between them, so the corners are concentric. The element keeps the theme radius; the container grows. The radius unit and the spacing unit are both 8px, so in `sx` it's addition. At a gap of 16px or more the corners read as separate shapes and both keep the theme radius. See Rules → Concentric corners.",
+    table(
+      ['Gap (padding + border)', 'Container radius', 'Container `sx`'],
+      [0.5, 1, 1.5].map((gap) => [
+        `${code(theme(gap))} (\`p: ${gap}\`)`,
+        code(`${Number(radius) + Number.parseFloat(theme(gap))}px`),
+        code(`borderRadius: ${1 + gap}`),
+      ]),
+    ),
   ].join('\n\n');
 }
 

@@ -63,6 +63,23 @@ What the rule doesn't cover:
 
 To check: inspect each bordered element in the browser and compare its border on each side with its parent's and children's on the same side. Look at light and dark, at 200% zoom, and with any scroll container at rest and scrolled to each end. Storybook's docs chrome (Canvas blocks, code blocks, tables) follows the same rule.
 
+## Concentric corners
+
+Advisory: check for this while building a component or layout, as part of the work.
+
+The theme has one corner radius, `shape.borderRadius` (8px), and every rounded component takes it, buttons and icon buttons included. In `sx`, `borderRadius` counts in theme radii: `1` is 8px, `1.5` is 12px.
+
+When a rounded element sits close inside a rounded container, their corners are concentric: the container's radius is the element's radius plus the gap between them.
+
+- **The gap** is everything between the two edges at the corner: padding plus the container's border.
+- **The control keeps the theme radius; the container grows.** A button is 8px wherever it sits, so a container hugging it with 4px of padding is 12px. Don't shrink the inner radius to make the corners fit.
+- **In theme units it's addition.** The radius unit and the spacing unit are both 8px, so container `borderRadius` = inner `borderRadius` + padding: a button (`1`) in a toolbar with `p: 0.5` gives the toolbar `borderRadius: 1.5`. This holds only while both units are 8px; if either changes, convert through pixels.
+- **When it applies:** gaps under 16px. At 16px or more, the corners read as separate shapes, and both keep the theme radius (a button inside a card with `p: 2`).
+- **Flush edges aren't rounded.** An element flush against its container's edge (an image at the top of a card, menu items) has square corners on that side; the container's radius and `overflow: hidden` shape it.
+- **MUI already does this** for `ButtonGroup` and `ToggleButtonGroup`, which square the corners where buttons meet.
+
+To check: wherever a rounded element sits within 16px of a rounded container's corner, compare the container's radius with the element's radius plus the gap.
+
 ## Adding a convention
 
 A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:
