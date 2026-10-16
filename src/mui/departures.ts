@@ -171,6 +171,14 @@ export const departures: Departure[] = [
     },
   },
   {
+    id: 'button-text-weight',
+    area: 'Typography',
+    components: ['Button', 'ToggleButton', 'Tab', 'Fab', 'BottomNavigationAction'],
+    title: 'Button labels at regular weight',
+    why: "MUI sets the `button` type style at medium weight (500). Kilowatt sets it at regular (400, `fontWeightRegular`), so labels sit at the same weight as body text and a button's emphasis comes from its variant and color, not its type. Every component set in the `button` style follows.",
+    options: () => ({ typography: { button: { fontWeight: 400 } } }),
+  },
+  {
     id: 'flat-buttons',
     area: 'Components',
     components: ['Button', 'ButtonGroup'],
