@@ -115,6 +115,13 @@ export const departures: Departure[] = [
     options: () => ({ cssVariables: { colorSchemeSelector: 'class' } }),
   },
   {
+    id: 'shape-radius',
+    area: 'Theme',
+    title: 'Corner radius',
+    why: "One corner radius of 8px instead of MUI's 4px, for a softer look at Kilowatt's density. It's MUI's single `shape.borderRadius`, so every component that rounds with the theme (buttons, inputs, cards, menus, dialogs, tooltips, toggle buttons) follows it, and `sx` multiples scale from it: `borderRadius: 1` is 8px, `2` is 16px.",
+    options: () => ({ shape: { borderRadius: 8 } }),
+  },
+  {
     id: 'surfaces-and-borders',
     area: 'Palette',
     title: 'Surface and border levels',

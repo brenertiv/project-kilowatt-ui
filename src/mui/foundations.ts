@@ -196,7 +196,7 @@ export function spacingMarkdown() {
 export function shapeMarkdown() {
   const radius = themes.light.shape.borderRadius;
   return [
-    `MUI has one radius, ${code(`${radius}px`)}. Buttons, inputs, cards, menus and chips use it. In \`sx\`, \`borderRadius\` multiplies it: \`sx={{ borderRadius: 2 }}\` is ${code(`${Number(radius) * 2}px`)}.`,
+    `The theme has one radius, ${code(`${radius}px`)}, MUI's single \`shape.borderRadius\`. Buttons, inputs, cards, menus, dialogs, tooltips and toggle buttons use it. Chips and avatars keep their own pill and circle shapes. In \`sx\`, \`borderRadius\` multiplies it: \`sx={{ borderRadius: 2 }}\` is ${code(`${Number(radius) * 2}px`)}.`,
     table(['Theme path', 'Value', 'Source'], [[code('shape.borderRadius'), code(`${radius}px`), sourceOf('shape.borderRadius')]]),
   ].join('\n\n');
 }
@@ -302,7 +302,7 @@ export const foundationPages: { name: string; lead: string; specimen?: string; e
     markdown: typographyMarkdown,
   },
   { name: 'Spacing', lead: "MUI's 8px spacing unit and its multiples.", specimen: 'Spacing', markdown: spacingMarkdown },
-  { name: 'Shape', lead: "MUI's border radius.", specimen: 'Shape', markdown: shapeMarkdown },
+  { name: 'Shape', lead: 'The corner radius every rounded component takes from the theme.', specimen: 'Shape', markdown: shapeMarkdown },
   {
     name: 'Elevation',
     lead: "MUI's 25 shadow levels and the elevation each of its surfaces uses.",
