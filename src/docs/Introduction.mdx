@@ -2,12 +2,12 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 <Meta
   title="Introduction"
-  summary="What Kilowatt is, where its parts live, and the rules for building with it: import documented components, use tokens only, check a component's stories and props before using it."
+  summary="What Kilowatt is and how to build with it: stock Material UI, with every departure from it listed on Foundations → MUI departures."
 />
 
 # Kilowatt
 
-Kilowatt is Enertiv's design system: tokens mirrored from the Figma file **Enertiv UI Foundations**, Material UI as the one component library, themed by a short list of departures from stock MUI (Foundations → MUI departures), data components built on the Enertiv API's shapes, amCharts charts, and page views composed from all of them.
+Kilowatt is Enertiv's design system. It is stock Material UI, with MUI's own light and dark color schemes, plus a short list of departures. Foundations → MUI departures lists every one; anything not listed there is MUI's default, on purpose.
 
 This site is public at `https://kilowatt-ui.vercel.app`, with no login. Your coding agent can read it too, through the MCP server at `/mcp`.
 
@@ -45,10 +45,8 @@ It's a remote MCP server over HTTP, with no key or token. Set it up once per pro
 Then tell the agent to use it. A line like this in your project's `AGENTS.md` or `CLAUDE.md` does it:
 
 ```md
-Before writing UI, look up Kilowatt components with the `kilowatt` MCP server (`docs-list`, then `docs-show`). Import documented components; don't rebuild them.
+Before writing UI, read Kilowatt's rules and MUI departures with the `kilowatt` MCP server (`docs-list`, then `docs-show`). Build with Material UI as MUI documents it.
 ```
-
-To check the connection, ask the agent to list Kilowatt's components. It should call `docs-list` and answer with the components in the sidebar.
 
 ### What the server gives an agent
 
@@ -64,24 +62,17 @@ Each deployment serves an MCP server built from the same commit as its Storybook
 
 | Section | What it holds |
 | --- | --- |
-| **Guides** | The rules for using the system, how to write stories, the data layer, typography and the stack. Start with **Rules**. |
-| **Foundations** | Every token with its CSS variable and light and dark values: color, typography, space, shape, layout, icons, and the primitive scales underneath. |
-| **Primitives** | Stock MUI components as Kilowatt uses them: buttons, fields, controls, form inputs, overlays, structure and toasts. |
-| **Data**, **Table**, **Charts**, **Menus** | The components. Each has one story per state and a props table. |
-| **Patterns** and **Pages** | Components composed into real screens, running against the mock API. |
+| **Guides** | The rules for using the system, how to write stories, the data layer and the stack. Start with **Rules**. |
+| **Foundations** | **MUI departures**, every way Kilowatt differs from stock MUI. Then the theme's values, each marked as MUI's default or a departure: color, typography, spacing, shape, elevation, layout, z-index, motion and icons. |
 
 ## Building with Kilowatt
 
-1. **Use what exists.** Before writing UI, find the component and read its stories and props. Import it. Don't re-implement it.
-2. **Use tokens only.** Color, type, space, radius and shadow come from the CSS variables on the Foundations pages, or from the Material UI theme. Never use a hex value, a pixel radius or a font family of your own.
-3. **Cover every state.** Data components take an `AsyncState`: loading, fetching, empty, error and ready. A screen that only handles ready is unfinished.
-4. **Write copy through i18n.** User-facing strings go in `src/i18n/en.json`.
+1. **Use MUI as MUI documents it.** Components, props, variants and palette roles come from MUI's documentation.
+2. **Take values from the theme.** Color, type, spacing, radius, elevation and motion come from the MUI theme, through component props or `sx` theme keys. Never a hex value, a pixel radius or a font family of your own.
+3. **Add conventions as departures.** Anything that differs from MUI's default is an entry in `src/mui/departures.ts`, with its reason, so it shows on Foundations → MUI departures.
 
 ## Other ways agents read Kilowatt
 
-- **Local MCP, for work on Kilowatt itself.** In this repository, `npm run storybook` serves an MCP server at `http://localhost:6006/mcp`, which `.mcp.json` already registers as `kilowatt-storybook`. It has the same docs tools, plus story previews and test runs. Projects that only use Kilowatt don't need it; they use the deployed server above.
-- **llms.txt.** [`llms.txt`](./llms.txt) indexes every page as Markdown: `components/<id>.md`, `guides/<slug>.md` and `foundations/<slug>.md`.
-- **Manifests.** Every build serves `/manifests/components.json`, with each component's description, import line, props and story snippets, and `/manifests/docs.json`, with these pages.
-- **Tokens.** `/kilowatt-tokens.css` is the CSS variables. `/tokens.light.json` and `/tokens.dark.json` are DTCG 2025.10 files. `/kilowatt-design-system.json` and `/kilowatt-design-system.md` are the full system.
-
-The **Internal** section holds demos and live views that are not part of the system's API. Those are left out of the manifest.
+- **Local MCP, for work on Kilowatt itself.** In this repository, `npm run storybook` serves an MCP server at `http://localhost:6006/mcp`, which `.mcp.json` already registers as `kilowatt-storybook`.
+- **llms.txt.** [`llms.txt`](./llms.txt) indexes every page as Markdown: `guides/<slug>.md` and `foundations/<slug>.md`.
+- **Manifests.** Every build serves `/manifests/components.json` and `/manifests/docs.json`.

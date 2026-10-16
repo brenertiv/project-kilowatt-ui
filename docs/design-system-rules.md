@@ -1,112 +1,37 @@
 # Design System Rules
 
-Rules for building Kilowatt UI. These are decisions, not suggestions: when code and this document disagree, fix one of them in the same change. Component code lives in `src/`; this file lives beside it on purpose so rules can change without touching components.
+Rules for building Kilowatt UI. These are decisions, not suggestions: when code and this document disagree, fix one of them in the same change.
 
-The token source of truth is the Figma file **Enertiv UI Foundations 0.0**, read through the committed snapshot `src/figma/variables.json`; `src/primitives.ts` and `src/tokens.ts` are built from it. The Foundations pages in Storybook show the live values; this document explains how to use them. Syncing with Figma is paused: the snapshot changes only by hand for now.
+Kilowatt starts from stock Material UI. The theme is `createTheme` with MUI's own light and dark color schemes, plus the departures in `src/mui/departures.ts`. Foundations → MUI departures lists every one of them; anything not listed there is MUI's default, on purpose.
 
-## Tokens
+## Build with MUI as MUI documents it
 
-- Tokens are the only source of color, type, space, radius and shadow. No component declares a hex value, a pixel radius or a font family of its own.
-- Components are Material UI, styled only through the theme (stock MUI plus `src/mui/departures.ts`): no `sx` colors, no `styled()` literals, no inline Emotion in components. Plain CSS with the token custom properties is left for the few things that aren't MUI components: the chart canvas, the icon font and the Foundations swatches.
-- Three layers. **Primitives** are the Figma ramps and scales, read from the snapshot by `src/primitives.ts` with exactly the steps Figma has and emitted as `--color-slate-300`, `--spacing-2`, `--radius-md` and so on; they change only when the snapshot changes. **Core** tokens are the identity knobs (page background, primary text, secondary, success, warning, error, fonts, radius, control height, elevation, base space). **Semantic** tokens are roles: the Figma-owned ones (surfaces, divider, text emphasis, action overlays, the six palettes) read both modes from the snapshot under Figma's names; the code-owned ones (tints, utilities, chart slots, track, divider steps) are declared in code as primitive steps.
-- **Derived** variables (type scale steps, space scale, inner radius, shadow steps, scrollbar colors) are computed from the layers above and are never stored. Change the source token to move them.
-- Every color token has a light and a dark value. A new color token is not done until both exist and the Design System contrast list has been checked.
-- Adding a token means: add it to `src/tokens.ts`, give it a role group so the Foundations pages and the token exports pick it up, and update the stylesheet `:root` fallback.
+- Use MUI components, props, variants and palette roles as the MUI documentation describes them. Don't restyle a component to make it look like something MUI doesn't document.
+- Style through MUI's documented props first (`color`, `variant`, `size`, `elevation`), then `sx` with theme keys: palette paths (`color: 'text.secondary'`), spacing multiples (`p: 2`), radius multiples (`borderRadius: 1`), elevation levels (`boxShadow: 1`) and breakpoint objects.
+- Never a raw value: no hex colors, pixel radii, font families or shadows of your own, and no parallel set of CSS variables. The Foundations pages list every theme value, each marked as MUI's default or a departure.
 
-## Color
+## Surfaces and borders
 
-- Colors come from the Figma semantic collection, which has Light and Dark modes: three surfaces (page, sunken, raised), one border, one text color and the brand ramp, all built on the slate and navy primitives.
-- Text emphasis: Figma defines primary, secondary, tertiary and disabled as solid navy steps in light and slate or navy steps in dark, and the tokens read them as is. Never use raw alpha text over a colored surface; the action overlays are the only alpha colors.
-- Buttons rest on the sunken surface, lift to the raised surface on hover and drop to the page surface on press, with borders stepping through the text opacity scale, after Figma `button/*`. Navigation marks the selected item with the brand tint and brand text, after Figma `nav color/*`.
-- Status colors are reserved. Positive, warning and negative mean good, caution and bad. They never color a series or a decoration, and they always ship with an icon or a label, never color alone.
-- Warning text on white is below 4.5:1 by design. Pair it with an icon or use it on its tint.
-- Utility colors (electricity, water, gas, steam, sanitation) are entity colors. A commodity keeps its hue everywhere it appears. They are not a categorical palette and fail the adjacent-pair checks together, so never rely on them alone to separate series.
-- Links use the info palette. Focus rings use secondary.
+- Surfaces go by elevation: `background.level0` (the page, darkest) to `background.level4` (the highest surface, lightest), in both schemes. Paper takes its level from its `elevation`, so cards, menus and dialogs need nothing extra. Set a level yourself only on a surface that isn't Paper: `sx={{ bgcolor: 'background.level2' }}`.
+- Borders go by contrast: `border.level0` (faintest) to `border.level2` (strongest), in both schemes. `divider` is `border.level1`. Use `border.level0` for quiet separators and `border.level2` where the edge must read.
+- Intents (`primary`, `error`, `success` and the rest) pass 4.5:1 as text on every surface level, in both schemes, so any intent can sit on any surface. Use them through `color` props or palette keys, never by hex.
+- Never use a ramp step (`src/mui/colors.ts`) in a component. The levels are the API; the ramps are what they're made of.
 
-## Material UI
+## Adding a convention
 
-- Material UI is the only component library. Every control, overlay, table and surface is an MUI component; Base UI has been removed. Build new UI from MUI components as MUI documents them.
-- The theme is stock MUI plus the departures listed on Foundations → MUI departures, and nothing else. Anything not listed is MUI's default, on purpose: spacing (8px unit), radius, shadows, motion, ripples, component styles.
-- To depart from MUI, add an entry to `src/mui/departures.ts` with its reason (and spec ID if there is one). The theme is built only from that list, the departures page is generated from it, and `src/mui/departures.test.ts` fails if the theme differs from MUI anywhere the list doesn't claim. Never set a theme value anywhere else, and never pass a color to a component.
-- The theme runs on MUI's CSS theme variables with light and dark color schemes. MUI owns the scheme and puts the `dark` class on `<html>`; the token stylesheet (`src/theme/tokenStyles.ts`, generated from `src/tokens.ts`) keys on the same class, so MUI and plain CSS switch together. Read the current scheme in code with `useKilowattTheme()`, never by checking classes.
-- Palette roles carry Kilowatt's colors: `primary` is navy, `secondary` the brand blue, `success`, `warning`, `error` and `info` the status ramps, plus the surfaces, text and divider. Values come from the tokens in each scheme.
-- `sx` is for layout only: spacing, flex, grid, width. It uses MUI's default 8px spacing unit, so `spacing={2}` is 16px.
-- Icons stay Material Symbols through `src/icons.tsx` (a listed departure). The `@mui/icons-material` package is not installed on purpose.
+A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:
 
-## Data components
-
-- Components that show API data live in `src/components/data` and are built on Material UI. They are prop-driven: a component takes rows plus an `AsyncState`, never a query result. Pages derive the state with `fromQuery`. Its stories must reach loading, fetching, empty, error and, where names appear, placeholder.
-- `DataState` is the one way to render the async states. No component hand-rolls a spinner, an empty message or an error block.
-- Relations render through `RelationLink`, which accepts the bare id or the expanded record. Never assume the request expanded a relation.
-- Names go through `EntityName` or `EntityCard`, which replace placeholder values such as `???` and `0` with "Unnamed {noun}" and explain why. The raw placeholder is never printed as a name.
-- Status vocabularies render through `StatusChip` and its wrappers (`ActionStatusChip`, `ActionPriorityChip`, `AlertStateChip`). Tones follow meaning: success for done, warning for waiting, error for blocked or overdue, info for in progress, neutral otherwise. A chip always carries its label.
-- Dates render through `DateText`, `RelativeTime` and `DateRangeText`. Calendar dates never shift time zone; timestamps render in the operations zone.
-- The API gives no totals. A count says what is on the page and whether there is more; it never invents a total.
-- Page views live in `src/pages`, compose these components, and run real queries. Their stories cover failing and slow requests through `parameters.mockApi`.
-
-## Charts
-
-- Charts are built in `src/charts`. Every chart renders inside `ChartFrame`, uses `useChartRoot` for its root, and reads colors from the frame. No chart calls the chart library's color APIs with literals.
-- The seven chart slots are a fixed order and are assigned to series in sequence by series id. Color follows the entity: filtering a chart never repaints the survivors. An eighth series is never a generated hue; fold it into Other or facet.
-- The slots are steps from the Figma ramps (brand, orange, green, violet, spring, midnight, meadow), one per chromatic ramp, ordered by a search that maximises colorblind separation and validated with the dataviz checks on both surfaces. Red and yellow are reserved for status and never appear as series. Run the validator again before changing any slot or surface color.
-- One axis per chart. Two measures of different scale get two charts, small multiples, or an index to a common base.
-- Marks: 2px lines, columns capped at 24px with a 4px rounded data end, a 2px surface gap between touching fills, area washes at 10%.
-- Text in charts wears text tokens, never the series color. Identity comes from a colored key beside the text.
-- A legend is present for two or more series and absent for one. Every chart offers the table view so values are reachable without hover or color.
-- Sequential color is one hue, light to dark, anchored to the surface in each scheme. Diverging color is two hues with a neutral midpoint.
-- Heatmaps hide the categorical legend and show the ramp scale instead.
-
-## Typography
-
-- Roboto for interface text, Roboto Serif for long reading, Roboto Mono for code and identifiers.
-- Type sizes come from the eight-step scale. Fixed steps serve dense UI; the fluid variants serve page-level hierarchy only.
-- Titles are regular weight. Hierarchy comes from size, color and position, not from weight.
-- Section eyebrows are small caps with wide tracking. Metrics are bold with tabular numerals so digits never shift.
-- Body text is 14px with a 1.5 line height. Labels and descriptions are 12px.
-
-## Space and shape
-
-- Spacing uses the eight-step scale. The Figma component and layout aliases map onto it; use the alias that names the intent.
-- Cards are 8px radius, controls 8px and 36px tall (Figma `button/radius` and `button/height/md`), chips and nested tiles 4px, avatars full.
-- Nested radii are concentric: outer radius equals inner radius plus padding. Menu items derive their radius from the popup radius for this reason.
-- Shadows are for elevation, borders are for structure. Cards are flat and rely on their border; popovers carry the md shadow, modals lg. Dividers, table cell lines and input outlines stay borders.
-- Images get a 1px outline at 10% black in light and 10% white in dark. Never a tinted outline.
-
-## Motion
-
-- Interactive state changes use CSS transitions so they can be interrupted. Keyframes are for one-shot sequences only.
-- One curve, `cubic-bezier(0.2, 0, 0, 1)`, and 150ms for state changes. Icon cross-fades run 300ms with scale 0.25, opacity 0 and 4px blur.
-- Buttons scale to 0.96 on press. Steppers and segmented toggles stay static.
-- Transition only the properties that change. Never `transition: all`.
-- Theme switches suppress transitions for the swap so the page snaps instead of smearing.
-- Every animated state also has a static cue. Motion is never the only feedback channel, and everything respects reduced motion.
+1. Add an entry to `src/mui/departures.ts` with the reason. Theme changes go in `options`; anything outside the theme goes in `convention`, saying what MUI does, what Kilowatt does instead and where.
+2. Don't set theme values anywhere else. `departures.test.ts` fails when the theme differs from stock MUI anywhere a departure doesn't claim.
+3. Check that the new convention doesn't overlap an existing one. If two entries touch the same thing, merge them.
 
 ## Icons
 
-- One icon set per surface: Material Symbols Outlined, Google's variable icon font, wrapped once in `src/icons.tsx`. Nothing else references the font or its ligature names. Icons use `currentColor` and take hover, selected and disabled states from CSS.
-- The font's axes are tokens: weight 300 (`--icon-weight`, a step lighter than text), optical size 20 at 16px, grade 0. `FILL` is the one axis components may set, and only to mark an active state.
-- Icons render at 16px in controls and 12px inside a checkbox. The icon class, not the surrounding font size, sets the size.
-- Outline is the default variant. Fill marks the active state.
+- Use `<Icon name="…" />` from `src/icons`: Material Symbols Outlined, Google's variable icon font, through MUI's `Icon`. It renders outlined at weight 300. Size and color are MUI's `fontSize` and `color` props. Pass `weight` or `fill` only for a reason, and never write a ligature or an SVG by hand.
+- A selected control fills its icons through the theme (`ToggleButton`, `Tab`, `ListItemButton`, `MenuItem`, `BottomNavigationAction`). Don't pass `fill={selected}` yourself.
+- Icons are decorative (`aria-hidden`). An icon-only control needs an `aria-label`.
 
-## Tables
+## Accessibility
 
-- Tables are built with `DataTable`. Client mode for small sets; server mode with controlled state for portfolio-scale data.
-- Column layout (visibility, order, pinning, sizing, density) persists per table id. Sort, filter and page state can sync to the URL so views are shareable.
-- Numeric columns align end with tabular numerals. Empty values render as an em dash with an accessible name.
-- Export writes the filtered and sorted model, every page, visible columns only.
-- Loading shows a skeleton. Refetching keeps the previous rows at reduced opacity. Errors offer a retry.
-
-## Accessibility baseline
-
-- Every control has a visible focus ring and an accessible name. Icon-only buttons carry an `aria-label`.
-- Contrast: body text 4.5:1, large text and UI parts 3:1. The contrast table on the Foundations Color page measures the token pairs that matter.
-- Charts expose a text description and a table view. Tables expose sort state, row counts and selection counts to assistive technology.
-- Hit targets are at least 24px, and 28px for card controls.
-
-## Changing the system
-
-1. Change tokens in `src/tokens.ts` and the stylesheet fallback together.
-2. Run the test suite. Palette and contrast expectations are tests, so a drift shows up immediately.
-3. For chart colors, run the dataviz palette validator on both surfaces and keep the output with the change.
-4. Check both schemes in Storybook.
-5. Update this document in the same change.
+- Every control has a visible focus state and an accessible name.
+- Every story runs an axe check in the story tests, and a violation fails it.

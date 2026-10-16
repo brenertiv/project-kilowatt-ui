@@ -1,23 +1,8 @@
-<!-- Fonts and the icon font for the stories. Icons are Material Symbols ligatures, so without this they render as words. -->
+<!-- Roboto, MUI's default font, as MUI's installation guide loads it, and the Material Symbols variable icon font (src/icons.tsx). -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Serif:wght@400;500&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500&family=Roboto:wght@400;500&family=Roboto+Serif:opsz,wght@8..144,400;8..144,500&family=Roboto+Mono:wght@400;500&family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap"
-  rel="stylesheet"
-/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
 <link
   href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
   rel="stylesheet"
 />
-<!-- Docs headlines at regular weight, as everywhere in Kilowatt: hierarchy comes from size, not bold. -->
-<style>
-  /* Headings written on docs pages, not the ones inside rendered stories (.docs-story). */
-  #storybook-docs :is(h1, h2, h3, h4, h5, h6):not(.docs-story *) {
-    font-weight: 400 !important;
-  }
-
-  /* Flat docs blocks: code, story previews and props tables keep their border, no shadow. */
-  #storybook-docs :is(.docblock-source, .sbdocs-preview, .docblock-argstable, .docblock-argstable tbody) {
-    box-shadow: none !important;
-  }
-</style>

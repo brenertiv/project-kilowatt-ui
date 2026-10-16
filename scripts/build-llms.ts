@@ -185,15 +185,12 @@ function main() {
   const order = ['Start here', 'Guides', 'Foundations', ...sections];
   const llms = [
     '# Kilowatt UI',
-    "> Enertiv's design system: tokens mirrored from Figma, Material UI as the one component library (stock MUI plus a short list of departures), data components on the Enertiv API's shapes, amCharts charts and page views. Import documented components rather than rebuilding them, use tokens only, and cover every async state.",
-    'Each component page has its import line, props, guidance and example snippets. Read Guides/Rules first. Agents that speak MCP can query the same content from the Storybook MCP server (`/mcp` on a running Storybook dev server).',
+    "> Enertiv's design system: stock Material UI with MUI's own light and dark color schemes, plus the short list of departures on Foundations → MUI departures. Build with MUI as MUI documents it.",
+    'Read Guides/Rules and Foundations/MUI departures first. Each component page has its import line, props, guidance and example snippets. Agents that speak MCP can query the same content from the Storybook MCP server (`/mcp` on a running Storybook dev server).',
     ...order.filter((group) => pageLinks.has(group)).map((group) => `## ${group}\n\n${pageLinks.get(group)!.sort().join('\n')}`),
     [
       '## Optional',
       '',
-      '- [Design tokens, light (DTCG)](tokens.light.json): every primitive and semantic color for the light scheme, in DTCG 2025.10 format.',
-      '- [Design tokens, dark (DTCG)](tokens.dark.json): the same for the dark scheme.',
-      '- [Token CSS](kilowatt-tokens.css): the CSS custom properties, `:root` and `html.dark`.',
       '- [Components manifest](manifests/components.json): the raw Storybook manifest these pages are built from.',
     ].join('\n'),
   ].join('\n\n');

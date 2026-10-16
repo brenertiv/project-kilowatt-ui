@@ -12,7 +12,7 @@
  *
  *   npx tsx scripts/check-docs.ts [storybook-static]
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -41,7 +41,10 @@ function files(dir: string): string[] {
 const problems: string[] = [];
 
 // Every exported component is used by a story file.
-const sources = ['src/components', 'src/charts', 'src/pages'].flatMap((dir) => files(join(root, dir)));
+const sources = ['src/components', 'src/charts', 'src/pages']
+  .map((dir) => join(root, dir))
+  .filter((dir) => existsSync(dir))
+  .flatMap((dir) => files(dir));
 const storyText = sources
   .filter((file) => file.endsWith('.stories.tsx'))
   .map((file) => readFileSync(file, 'utf8'))

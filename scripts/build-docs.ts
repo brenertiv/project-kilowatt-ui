@@ -1,14 +1,12 @@
 /**
  * Writes the Storybook pages that are generated rather than written by hand:
  *
- * - Foundations/*: the token tables from `systemToMarkdown`, as literal MDX.
- *   Agents read docs pages through the docs manifest, which is static analysis
- *   of MDX source, so a table rendered from JS at runtime would be invisible
- *   to them. Each page embeds the live System section below its tables.
+ * - Foundations/*: the theme's values from `src/mui/foundations.ts`, the
+ *   departures and the icons, as literal MDX. Agents
+ *   read docs pages through the docs manifest, which is static analysis of MDX
+ *   source, so a table rendered from JS at runtime would be invisible to them.
  * - Guides/*: `docs/*.md` as MDX, so the guides live in Storybook while the
  *   Markdown stays the source in the repository.
- * - static/: the token downloads (CSS, JSON, Markdown, DTCG) served at the
- *   root of the published Storybook.
  *
  * Output goes to `src/docs/generated/`, which is not committed. `npm run
  * storybook` and `npm run build-storybook` run this first.
@@ -18,18 +16,16 @@
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { systemToDtcg } from '../src/designSystem/dtcg';
-import { buildSystemSnapshot, systemToJson, systemToMarkdown } from '../src/designSystem/export';
-import { iconCatalog } from '../src/icons';
+import { iconNames } from '../src/icons';
 import { departures } from '../src/mui/departures';
+import { foundationPages } from '../src/mui/foundations';
 import { departureChanges } from '../src/mui/themeDiff';
-import { defaultDarkColors, defaultTheme, resolveTheme, themeToCssText } from '../src/tokens';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, 'src/docs/generated');
 
 /** Docs that stay out of Storybook: plans and notes about the repository, not guidance for using the system. */
-const internalDocs = new Set(['storybook-plan.md', 'agent-evals.md', 'publishing.md']);
+const internalDocs = new Set(['publishing.md']);
 
 /** Sidebar names for the guides; anything not listed uses its first heading. */
 const guideTitles: Record<string, string> = {
@@ -37,7 +33,6 @@ const guideTitles: Record<string, string> = {
   'stories.md': 'Writing stories',
   'data-layer.md': 'Data layer',
   'stack-overview.md': 'Stack overview',
-  'typography.md': 'Typography',
 };
 
 /**
@@ -89,104 +84,70 @@ function page({ title, summary, body, imports = [] }: { title: string; summary: 
   ].join('\n');
 }
 
-/** Splits the system Markdown into its level-two sections, keyed by heading. */
-function sectionsOf(markdown: string) {
-  const sections: Record<string, string> = {};
-  for (const chunk of markdown.split(/^## /m).slice(1)) {
-    const [heading, ...rest] = chunk.split('\n');
-    sections[heading.trim()] = rest.join('\n').trim();
-  }
-  return sections;
-}
-
-const foundations: { name: string; story: string; sections: string[]; lead: string }[] = [
-  {
-    name: 'Primitives',
-    story: 'Primitives',
-    sections: ['Primitives'],
-    lead: 'The raw scales from the Figma primitives collection: color ramps, spacing, radius, type and size steps, opacity. Components never use these directly; they use the semantic tokens on the other Foundations pages, which point at these steps.',
-  },
-  {
-    name: 'Color',
-    story: 'Color',
-    sections: ['Color', 'Contrast'],
-    lead: 'Semantic colors by role, with their light and dark values and the primitive step each one resolves to. Use the CSS variable in CSS and the theme palette in Material UI; never a hex value. The contrast table shows which pairs clear WCAG AA.',
-  },
-  {
-    name: 'Typography',
-    story: 'Typography',
-    sections: ['Typography'],
-    lead: 'Font families, the type scale with its fluid variants, and the type roles. Set text through a role or Material UI variant rather than a raw size.',
-  },
-  {
-    name: 'Space',
-    story: 'Space',
-    sections: ['Space'],
-    lead: 'The space scale. Gaps, padding and margins come from these variables, so density changes in one place.',
-  },
-  {
-    name: 'Shape',
-    story: 'Shape',
-    sections: ['Shape'],
-    lead: 'Radius, border width and shadows.',
-  },
-  {
-    name: 'Layout',
-    story: 'Layout',
-    sections: ['Layout'],
-    lead: 'Content width, the column grid and the breakpoints, with the role each breakpoint plays.',
-  },
-];
-
+/** Foundations/<page>: the theme's values as tables, with a live specimen below when there is one. */
 function writeFoundations() {
-  const snapshotMarkdown = systemToMarkdown(defaultTheme, defaultDarkColors);
-  const sections = sectionsOf(snapshotMarkdown);
   const dir = join(out, 'foundations');
   mkdirSync(dir, { recursive: true });
-  const imports = ["import * as Live from '../../../designSystem/Foundations.stories';"];
-
-  for (const foundation of foundations) {
-    const tables = foundation.sections
-      .map((heading) => {
-        const content = sections[heading];
-        if (content === undefined) throw new Error(`systemToMarkdown has no "## ${heading}" section`);
-        // On a page with several sections, the page's own section is headed by what it holds.
-        const label = heading === foundation.name ? 'Roles' : heading;
-        return `${foundation.sections.length > 1 ? `## ${label}\n\n` : ''}${content}`;
-      })
-      .join('\n\n');
+  const imports = ["import * as Specimens from '../../../mui/Specimens.stories';"];
+  for (const foundation of foundationPages) {
     const body = [
       `# ${foundation.name}`,
-      foundation.lead,
-      markdownToMdx(tables),
-      '## Live',
-      'Rendered from the current theme. Switch the scheme in the toolbar to see the dark values.',
-      `<Canvas of={Live.${foundation.story}} sourceState="none" />`,
+      markdownToMdx(foundation.lead),
+      markdownToMdx(foundation.markdown()),
+      ...(foundation.specimen
+        ? [
+            '## Specimen',
+            'Rendered with the running theme. Switch the scheme in the toolbar to see dark.',
+            ...[foundation.specimen, ...(foundation.extraSpecimens ?? [])].map((story) => `<Canvas of={Specimens.${story}} sourceState="none" />`),
+          ]
+        : []),
     ].join('\n\n');
-    writeFileSync(join(dir, `${foundation.name}.mdx`), page({ title: `Foundations/${foundation.name}`, summary: foundation.lead, body, imports }));
+    writeFileSync(
+      join(dir, `${foundation.name}.mdx`),
+      page({ title: `Foundations/${foundation.name}`, summary: foundation.lead.replace(/`/g, ''), body, imports }),
+    );
   }
+  return foundationPages.length;
+}
 
-  const iconRows = iconCatalog.map(({ name }) => `| \`${name}\` | \`<${name} />\` |`).join('\n');
-  const iconsLead =
-    'Icons are Material Symbols Outlined, wrapped once in `src/icons.tsx`. Import the component by name; never write a ligature or an SVG by hand. Icons are decorative (`aria-hidden`) unless they are the only content of a control, which then needs an `aria-label`.';
+/** Foundations/Icons: the Icon component in `src/icons.tsx`, its props and the names it accepts. */
+function writeIcons() {
+  const dir = join(out, 'foundations');
+  mkdirSync(dir, { recursive: true });
+  const lead =
+    "Icons are Material Symbols Outlined, Google's variable icon font, rendered by MUI's `Icon` through one component, `Icon` in `src/icons.tsx`. They render outlined at weight 300 (see Foundations → MUI departures). Never write a ligature or an SVG by hand.";
+  const props = [
+    ['`name`', 'The icon, one of the names below. Required.'],
+    ['`fill`', 'Filled glyph. Unset, the icon is outlined, or filled when its control is selected.'],
+    ['`weight`', 'Weight on the `wght` axis, 100 to 700. Defaults to 300.'],
+    ['`fontSize`', "MUI's size: `small` (20px), `medium` (24px, the default), `large` (35px) or `inherit`."],
+    ['`color`', "MUI's palette intent: `primary`, `secondary`, `action`, `error`, `disabled` and so on. Unset, the icon takes the text color."],
+  ];
+  const names = iconNames.map((name) => `| \`${name}\` | \`<Icon name="${name}" />\` |`).join('\n');
   writeFileSync(
     join(dir, 'Icons.mdx'),
     page({
       title: 'Foundations/Icons',
-      summary: iconsLead.replace(/`/g, ''),
-      imports,
+      summary: lead.replace(/`/g, ''),
+      imports: ["import * as Specimens from '../../../mui/Specimens.stories';"],
       body: [
         '# Icons',
-        markdownToMdx(iconsLead),
-        "```tsx\nimport { BuildingIcon } from 'src/icons';\n\n<BuildingIcon />\n```",
-        `| Component | Usage |\n| --- | --- |\n${markdownToMdx(iconRows)}`,
-        '## Live',
-        'Click an icon to copy its JSX.',
-        '<Canvas of={Live.Icons} sourceState="none" />',
+        markdownToMdx(lead),
+        "```tsx\nimport { Icon } from 'src/icons';\n\n<Icon name=\"search\" />\n<Icon name=\"info\" fontSize=\"small\" color=\"action\" />\n<Icon name=\"check_circle\" fill />\n```",
+        '## Props',
+        `| Prop | What it does |\n| --- | --- |\n${markdownToMdx(props.map(([prop, text]) => `| ${prop} | ${text} |`).join('\n'))}`,
+        '## Selected state',
+        "A selected control fills its icons: `ToggleButton`, `Tab`, `ListItemButton`, `MenuItem` and `BottomNavigationAction` all do it through the theme, so don't pass `fill={selected}` yourself. An icon with an explicit `fill` keeps it. Decorative icons are `aria-hidden`; an icon-only control needs an `aria-label`.",
+        '## Names',
+        'Add a name to `iconNames` in `src/icons.tsx` to use a new icon. The full set is at fonts.google.com/icons.',
+        `| Name | Usage |\n| --- | --- |\n${markdownToMdx(names)}`,
+        '## Specimen',
+        'Every icon at the default weight, then a toggle group whose selected button fills its icon. Switch the scheme in the toolbar to see dark.',
+        '<Canvas of={Specimens.Icons} sourceState="none" />',
       ].join('\n\n'),
     }),
   );
-  return foundations.length + 1;
+  return 1;
 }
 
 /**
@@ -196,22 +157,20 @@ function writeFoundations() {
  */
 function writeDepartures() {
   const lead =
-    "Kilowatt's theme is stock Material UI with the departures below, and nothing else. Anything not listed here is MUI's default, on purpose: build with MUI as documented, and expect these differences. Each departure lives in src/mui/departures.ts with its reason, and a test fails if the theme differs from MUI anywhere this page doesn't say.";
-  const light = resolveTheme(defaultTheme, defaultDarkColors, 'light');
-  const dark = resolveTheme(defaultTheme, defaultDarkColors, 'dark');
+    "Kilowatt's theme is stock Material UI, with MUI's own light and dark color schemes, plus the departures below, and nothing else. Anything not listed here is MUI's default, on purpose: build with MUI as documented, and expect these differences. Each departure lives in src/mui/departures.ts with its reason, and a test fails if the theme differs from MUI anywhere this page doesn't say.";
   const cell = (text: string) => `\`${text.replace(/\|/g, '\\|')}\``;
   const sections: string[] = [];
   for (const area of [...new Set(departures.map((departure) => departure.area))]) {
     sections.push(`## ${area}`);
     for (const departure of departures.filter((entry) => entry.area === area)) {
-      sections.push(`### ${departure.title}`, `${departure.why}${departure.spec ? ` (${departure.spec})` : ''}`);
+      sections.push(`### ${departure.title}`, departure.why);
       if (departure.convention) {
         const { muiDefault, kilowatt, where } = departure.convention;
         sections.push(`| MUI default | Kilowatt | Where |\n| --- | --- | --- |\n| ${muiDefault} | ${kilowatt} | ${cell(where)} |`);
-        continue;
       }
-      const lightChanges = departureChanges(departure, light, 'light');
-      const darkChanges = new Map(departureChanges(departure, dark, 'dark').map((change) => [change.path, change]));
+      if (!departure.options) continue;
+      const lightChanges = departureChanges(departure, 'light');
+      const darkChanges = new Map(departureChanges(departure, 'dark').map((change) => [change.path, change]));
       const paths = [...new Set([...lightChanges.map((change) => change.path), ...darkChanges.keys()])].sort();
       const byPath = new Map(lightChanges.map((change) => [change.path, change]));
       const rows = paths.map((path) => {
@@ -234,9 +193,9 @@ function writeDepartures() {
   const body = [
     '# MUI departures',
     lead,
-    'See them side by side under Foundations → MUI comparison.',
     markdownToMdx(sections.join('\n\n')),
   ].join('\n\n');
+  mkdirSync(join(out, 'foundations'), { recursive: true });
   writeFileSync(join(out, 'foundations', 'MUI departures.mdx'), page({ title: 'Foundations/MUI departures', summary: lead, body }));
   return 1;
 }
@@ -257,21 +216,6 @@ function writeGuides() {
   return count;
 }
 
-function writeStatic() {
-  const dir = join(out, 'static');
-  mkdirSync(dir, { recursive: true });
-  const snapshot = buildSystemSnapshot(defaultTheme, defaultDarkColors);
-  const files: Record<string, string> = {
-    'kilowatt-tokens.css': themeToCssText(defaultTheme, defaultDarkColors),
-    'kilowatt-design-system.json': systemToJson(defaultTheme, defaultDarkColors),
-    'kilowatt-design-system.md': systemToMarkdown(defaultTheme, defaultDarkColors),
-    'tokens.light.json': `${JSON.stringify(systemToDtcg(snapshot, 'light'), null, 2)}\n`,
-    'tokens.dark.json': `${JSON.stringify(systemToDtcg(snapshot, 'dark'), null, 2)}\n`,
-  };
-  for (const [name, text] of Object.entries(files)) writeFileSync(join(dir, name), text);
-  return Object.keys(files).length;
-}
-
 rmSync(out, { recursive: true, force: true });
-const counts = { foundations: writeFoundations() + writeDepartures(), guides: writeGuides(), static: writeStatic() };
-console.log(`build-docs: ${counts.foundations} foundations pages, ${counts.guides} guides, ${counts.static} token files in src/docs/generated`);
+const counts = { foundations: writeDepartures() + writeFoundations() + writeIcons(), guides: writeGuides() };
+console.log(`build-docs: ${counts.foundations} foundations pages, ${counts.guides} guides in src/docs/generated`);

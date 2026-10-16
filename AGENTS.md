@@ -1,6 +1,6 @@
 # Kilowatt UI: instructions for coding agents
 
-Kilowatt is Enertiv's design system. Its Storybook is the reference for every component, token and rule. Read it before you write UI.
+Kilowatt is Enertiv's design system. It is stock Material UI, with MUI's own light and dark color schemes, plus a short list of departures. Read the Storybook before you write UI.
 
 ## Look things up before writing UI
 
@@ -10,51 +10,34 @@ Kilowatt is Enertiv's design system. Its Storybook is the reference for every co
   - `docs-show-story` gives one story's snippet.
   - `test-run` runs the story tests.
 - **Deployed Storybook:** https://kilowatt-ui.vercel.app, public with no login. Its MCP endpoint is `https://kilowatt-ui.vercel.app/mcp`, and `llms.txt` is at its root. `docs/publishing.md` covers the setup.
-- **Without MCP**, read the static files from the published site, or from a local build (`npm run build-storybook`, then `storybook-static/`):
-  - `llms.txt`, the index.
-  - `components/<id>.md` and `guides/<slug>.md`, one page each.
-  - `manifests/components.json`.
+- **Without MCP**, read the static files from the published site, or from a local build (`npm run build-storybook`, then `storybook-static/`): `llms.txt` (the index), `guides/<slug>.md`, `foundations/<slug>.md` and `manifests/components.json`.
 - **Rules** are in `docs/design-system-rules.md`. They are binding.
 
 ## Rules that matter most
 
-1. **Import, don't rebuild.** If a documented component does the job, import it with the line its docs give, e.g. `import { StatCard } from 'src/components/data';`. Don't copy its markup or restyle it.
-2. **Use only documented props.** Check the props table. If a prop you need doesn't exist, say so rather than passing something undocumented.
-3. **Use tokens only.**
-   - Color, type, space, radius and shadow come from the CSS variables on the Foundations pages (`var(--text-secondary)`, `var(--space-3)`) or from the Material UI theme.
-   - Never use a hex value, a pixel radius or a font family of your own.
-   - Never pass colors to charts: series colors come from series ids.
-4. **Cover every state.**
-   - Data components take an `AsyncState`: `loading`, `fetching`, `empty`, `error` or `ready`. Derive it from a query with `fromQuery`.
-   - Render states through `DataState`, `EmptyState` and `ErrorState`, never a hand-rolled spinner.
-5. **Copy goes through i18n.** User-facing strings live in `src/i18n/en.json`, read with `useTranslation()`.
-6. **Icons.** Icons come from `src/icons`, by component name. An icon-only control needs an `aria-label`.
-7. **Charts.** Chart kinds render inside `<ChartFrame>`.
-8. **MUI is the default.** Build with Material UI components as MUI documents them. Kilowatt's theme differs from stock MUI only where Foundations → MUI departures says so; don't restyle MUI components to match anything else.
+1. **MUI is the default.** Build with Material UI components, props and variants as MUI documents them. Kilowatt differs from stock MUI only where Foundations → MUI departures says so.
+2. **No parallel conventions.** Take color, type, spacing, radius, elevation, breakpoints and motion from the MUI theme: through component props, or `sx` with theme keys (`color: 'text.secondary'`, `p: 2`). The Foundations pages list every value. Don't add CSS variables, hex values, pixel radii or font families of your own.
+3. **New conventions are departures.** Anything that differs from MUI's default goes in `src/mui/departures.ts` with its reason, and nowhere else. Check it doesn't overlap an existing entry. `departures.test.ts` fails when the theme differs from MUI without a departure.
+4. **Surfaces and borders.** Backgrounds are `background.level0` (page) to `level4` (highest); Paper picks its level from `elevation`. Borders are `border.level0` (faintest) to `level2` (strongest); `divider` is `level1`. Never use a ramp step from `src/mui/colors.ts` directly.
+5. **Icons.** Use `<Icon name="…" />` from `src/icons` (Material Symbols through MUI's `Icon`), with MUI's `fontSize` and `color` for size and color. Selected controls fill their icons through the theme; don't pass `fill={selected}`. An icon-only control needs an `aria-label`.
+6. **Use only documented props.** If a prop you need doesn't exist, say so rather than passing something undocumented.
 
 ## When you change the system
 
-- **New or changed components.**
-  - Give the component JSDoc: a description, `@summary`, `@import`, and a line for every prop with its default.
-  - Add or update `Name.stories.tsx` beside it, with one story per state and a JSDoc line on each story.
-  - See `docs/stories.md`.
+- **New or changed components.** Give the component JSDoc (a description, `@summary`, `@import`, and a line for every prop with its default), and add `Name.stories.tsx` beside it with one story per state. See `docs/stories.md`.
 - **Story files** import with `src/...` paths, never relative ones.
 - **Checks before you finish:**
   - `npm run lint`
   - `npx tsc --noEmit -p .storybook`
   - `npm test` (unit tests, plus every story rendered in Chromium with an accessibility check)
   - `npm run build-storybook` (builds the site, writes `llms.txt`, and fails if a component is missing docs)
-- **Tokens.** Primitives and semantic colors come from `src/figma/variables.json`, a snapshot of the Figma file. Don't edit it by hand; ask before changing a Figma-owned value.
 
 ## Layout of the repository
 
 | Path | What it holds |
 | --- | --- |
-| `src/components/data` | Data components on Material UI, exported from the barrel. |
-| `src/components` | `DataTable`, table cells, `CardMenu`. |
-| `src/charts` | `ChartFrame` and the chart kinds (amCharts 5). |
-| `src/pages` | Page views composed from the above. |
-| `src/tokens.ts`, `src/primitives.ts` | Tokens, built from the Figma snapshot. |
+| `src/mui` | The theme (`theme.ts`), the departures from stock MUI (`departures.ts`), the color ramps (`colors.ts`), the Foundations tables (`foundations.ts`) and specimens, and their tests. |
+| `src/icons.tsx` | The `Icon` component and the icon names it accepts. |
 | `src/api` | API types, the mock adapter, `AsyncState` and the query hooks. |
-| `src/fixtures` | Sample data for stories and tests. |
+| `src/fixtures/data` | The sample portfolio the mock API serves. |
 | `docs/` | Guides, which also appear in Storybook. |

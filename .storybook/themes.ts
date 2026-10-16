@@ -1,10 +1,8 @@
 import { create } from 'storybook/theming';
 
 /**
- * Kilowatt's themes for the Storybook interface (sidebar, toolbar, panels) and the
- * docs pages: the Enertiv logo, the token surfaces and brand blue, and the system
- * fonts. The Scheme toolbar switches between them (manager.ts, preview.tsx).
- * Values are the token values from src/tokens.ts; the interface can't read CSS variables.
+ * Storybook's own light and dark interface themes, with the Kilowatt logo. The
+ * Scheme toolbar switches between them (manager.ts, preview.tsx).
  */
 
 export type Scheme = 'light' | 'dark';
@@ -14,42 +12,11 @@ const logo = (scheme: Scheme) =>
   // Only the space needs escaping; "=" and "," are valid in a path and static servers match them as is.
   `./brand/${encodeURI(`type=logo, mode=${scheme}.svg`)}`;
 
-const shared = {
-  brandTitle: 'Kilowatt',
-  brandUrl: './?path=/docs/introduction--docs',
-  brandTarget: '_self',
-  // The fonts load from Google Fonts in manager-head.html and preview-head.html.
-  fontBase: 'Roboto, system-ui, sans-serif', // --font-sans
-  fontCode: '"Roboto Mono", ui-monospace, monospace', // --font-mono
-  // color/brand/700: white text on it clears 4.5:1, which brand/500 does not.
-  colorSecondary: '#1c6487',
-};
+const brand = { brandTitle: 'Kilowatt', brandUrl: './?path=/docs/introduction--docs', brandTarget: '_self' };
 
 export const themes = {
-  light: create({
-    base: 'light',
-    ...shared,
-    brandImage: logo('light'),
-    barSelectedColor: '#1c6487',
-    appBg: '#f3f6f9', // backgroundLevel1
-    appContentBg: '#ffffff', // backgroundPaper
-    appPreviewBg: '#ffffff',
-    appBorderColor: '#e2e8ef', // divider
-    textColor: '#09161c', // textPrimary
-    textMutedColor: '#365670', // textSecondary
-  }),
-  dark: create({
-    base: 'dark',
-    ...shared,
-    brandImage: logo('dark'),
-    barSelectedColor: '#51b5e6', // color/brand/400, readable on the dark toolbar
-    appBg: '#0d2029', // backgroundLevel1
-    appContentBg: '#09161c', // backgroundDefault
-    appPreviewBg: '#09161c',
-    appBorderColor: '#1b3e4f', // divider
-    textColor: '#f9fafc', // textPrimary
-    textMutedColor: '#cad5e2', // textSecondary
-  }),
+  light: create({ base: 'light', ...brand, brandImage: logo('light') }),
+  dark: create({ base: 'dark', ...brand, brandImage: logo('dark') }),
 };
 
 /** The viewer's system setting, which the Scheme toolbar starts from. */
