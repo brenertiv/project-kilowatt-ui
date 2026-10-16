@@ -24,20 +24,20 @@ export const slate = {
 } as const;
 
 /**
- * Deep blues for dark-scheme surfaces and borders, and the primary intent. 950 is the
- * darkest. Five dark surfaces (600 to 950) all pass text contrast, and the light end
- * (50) passes 4.5:1 as dark-scheme primary on every dark surface; some steps were
- * derived in OKLab between or beyond the original ramp's to get there.
+ * Enertiv navy. One ramp in two parts: 50 to 500 are saturated brand blues (dark-scheme
+ * borders, primary's lighter steps); 600 to 950 are quiet, evenly spaced dark steps for
+ * the dark-scheme surfaces, with 700 shared as light-scheme primary. The drop in
+ * saturation between 500 and 600 is where the ramp turns from accent to surface.
  */
 export const navy = {
-  50: '#88beec',
-  100: '#72abdb',
-  200: '#6598c2',
-  300: '#4f7da3',
-  400: '#426a8a',
-  500: '#365670',
+  50: '#5cb6ff',
+  100: '#3dacfe',
+  200: '#38a4f1',
+  300: '#349ae2',
+  400: '#1d7ec0',
+  500: '#166ba2',
   600: '#294a5f',
-  700: '#1b3e4f',
+  700: '#023f57',
   800: '#142f3c',
   900: '#0d2029',
   950: '#09161c',
