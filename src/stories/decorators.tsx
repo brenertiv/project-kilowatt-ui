@@ -1,4 +1,3 @@
-import Container from '@mui/material/Container';
 import type { Decorator } from '@storybook/react-vite';
 import { mockControls, resetMockControls, setMockFailure } from '../api/mock';
 
@@ -22,10 +21,3 @@ export const withMockApi: Decorator = (Story, { parameters }) => {
   if (latencyMs !== undefined) mockControls.latencyMs = latencyMs;
   return <Story />;
 };
-
-/** Page stories: full-bleed canvas with the page column the app shell gives a route. */
-export const withPageFrame: Decorator = (Story) => (
-  <Container maxWidth="lg" sx={{ py: 2.5 }}>
-    <Story />
-  </Container>
-);

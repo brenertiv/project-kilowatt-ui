@@ -1,23 +1,22 @@
+import { getContrastRatio } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
-import { defaultDarkColors, defaultTheme, resolveTheme, type ColorScheme } from '../tokens';
-import { departures } from './departures';
-import { createKilowattTheme, createSchemeTheme, themeOptions } from './theme';
+import { navy, slate } from './colors';
+import { departures, type ColorScheme } from './departures';
+import { createKilowattTheme, createSchemeTheme } from './theme';
 import { departureChanges, diffThemes, stockTheme } from './themeDiff';
 
 const schemes: ColorScheme[] = ['light', 'dark'];
-const valuesFor = (scheme: ColorScheme) => resolveTheme(defaultTheme, defaultDarkColors, scheme);
 
 describe('departures', () => {
   it.each(schemes)('account for every way the %s theme differs from stock MUI', (scheme) => {
-    const values = valuesFor(scheme);
-    const claimed = new Set(departures.flatMap((departure) => departureChanges(departure, values, scheme).map((change) => change.path)));
-    const unlisted = diffThemes(stockTheme(scheme), createSchemeTheme(values, scheme)).filter((change) => !claimed.has(change.path));
+    const claimed = new Set(departures.flatMap((departure) => departureChanges(departure, scheme).map((change) => change.path)));
+    const unlisted = diffThemes(stockTheme(scheme), createSchemeTheme(scheme)).filter((change) => !claimed.has(change.path));
     expect(unlisted, 'theme values that differ from MUI without a departure in src/mui/departures.ts').toEqual([]);
   });
 
   it('each change something, or describe a convention outside the theme', () => {
     for (const departure of departures) {
-      const changes = schemes.flatMap((scheme) => departureChanges(departure, valuesFor(scheme), scheme));
+      const changes = schemes.flatMap((scheme) => departureChanges(departure, scheme));
       expect(changes.length > 0 || Boolean(departure.convention), `${departure.id} departs from nothing`).toBe(true);
     }
   });
@@ -28,57 +27,31 @@ describe('departures', () => {
   });
 });
 
-describe('createSchemeTheme', () => {
-  it('maps the brand and surface tokens onto the palette in each scheme', () => {
-    for (const scheme of schemes) {
-      const values = valuesFor(scheme);
-      const theme = createSchemeTheme(values, scheme);
-      expect(theme.palette.mode).toBe(scheme);
-      expect(theme.palette.primary.main.toLowerCase()).toBe(values.primaryMain.toLowerCase());
-      expect(theme.palette.background.default.toLowerCase()).toBe(values.backgroundDefault.toLowerCase());
-      expect(theme.palette.text.primary.toLowerCase()).toBe(values.textPrimary.toLowerCase());
-    }
-  });
-
-  it('keeps MUI defaults where no departure is listed', () => {
-    const theme = createSchemeTheme(defaultTheme, 'light');
-    const stock = stockTheme('light');
-    expect(theme.spacing(2)).toBe('16px');
-    expect(theme.shape.borderRadius).toBe(stock.shape.borderRadius);
-    expect(theme.shadows).toEqual(stock.shadows);
-    expect(theme.transitions.duration).toEqual(stock.transitions.duration);
-  });
-
-  it('applies the type departures', () => {
-    const theme = createSchemeTheme(defaultTheme, 'light');
-    // Roboto through MUI's own stack: changing the string would also drop MUI's letter spacing.
-    expect(theme.typography.fontFamily).toBe(stockTheme('light').typography.fontFamily);
-    expect(theme.typography.h1.fontWeight).toBe(400);
-    expect(theme.typography.button.textTransform).toBe('none');
-  });
-
-  it('makes cards flat and outlined', () => {
-    expect(createSchemeTheme(defaultTheme, 'light').components?.MuiCard?.defaultProps?.variant).toBe('outlined');
-  });
-});
-
 describe('createKilowattTheme', () => {
-  it('uses CSS theme variables with light and dark color schemes from the tokens', () => {
+  it('uses the surface and border levels in each scheme', () => {
     const theme = createKilowattTheme();
-    // A CSS-variables theme carries each scheme's palette; MUI's Theme type leaves that out.
-    const colorSchemes = (theme as unknown as { colorSchemes: Record<ColorScheme, { palette: typeof theme.palette }> }).colorSchemes;
-    expect(theme.vars?.palette.primary.main).toMatch(/^var\(--mui-palette-primary-main/);
-    for (const scheme of schemes) {
-      expect(colorSchemes[scheme].palette.primary.main.toLowerCase()).toBe(valuesFor(scheme).primaryMain.toLowerCase());
-      expect(colorSchemes[scheme].palette.background.default.toLowerCase()).toBe(valuesFor(scheme).backgroundDefault.toLowerCase());
+    // MUI's Theme type leaves out the per-scheme palettes it carries.
+    const { light, dark } = (theme as unknown as { colorSchemes: Record<ColorScheme, { palette: typeof theme.palette }> }).colorSchemes;
+    expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[400], slate[300], slate[50]]);
+    expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[900], navy[800], navy[650]]);
+    expect(light.palette.divider).toBe(light.palette.border.level1);
+    expect(dark.palette.border).toEqual({ level0: navy[600], level1: navy[500], level2: navy[400] });
+  });
+
+  it.each(schemes)('gives the %s scheme intents that pass 4.5:1 on every surface, with contrast text that passes on them', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    const surfaces = (['level0', 'level1', 'level2', 'level3', 'level4'] as const).map((level) => palette.background[level]);
+    for (const intent of ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const) {
+      const { main, contrastText } = palette[intent];
+      for (const surface of surfaces) expect(getContrastRatio(main, surface), `${intent}.main on ${surface}`).toBeGreaterThanOrEqual(4.5);
+      expect(getContrastRatio(contrastText, main), `${intent}.contrastText`).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it('only varies the palette between schemes', () => {
-    const { palette: lightPalette, ...light } = themeOptions(valuesFor('light'), 'light');
-    const { palette: darkPalette, ...dark } = themeOptions(valuesFor('dark'), 'dark');
-    expect(lightPalette).toBeDefined();
-    expect(darkPalette).toBeDefined();
-    expect(dark).toEqual(light);
+  it('puts each Paper elevation on its surface level', () => {
+    const root = createKilowattTheme().components?.MuiPaper?.styleOverrides?.root as Record<string, { backgroundColor: string }>;
+    expect(root['&.MuiPaper-elevation1'].backgroundColor).toBe('var(--mui-palette-background-level1)');
+    expect(root['&.MuiPaper-elevation8'].backgroundColor).toBe('var(--mui-palette-background-level3)');
+    expect(root['&.MuiPaper-elevation24'].backgroundColor).toBe('var(--mui-palette-background-level4)');
   });
 });

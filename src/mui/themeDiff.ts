@@ -1,6 +1,5 @@
 import { createTheme, type Theme } from '@mui/material/styles';
-import type { ColorScheme, ThemeValues } from '../tokens';
-import type { Departure } from './departures';
+import { departures, type ColorScheme, type Departure } from './departures';
 import { mergeOptions } from './theme';
 
 /** One theme value that differs from stock MUI: where, MUI's value, Kilowatt's. */
@@ -40,9 +39,33 @@ export function diffThemes(base: Theme, other: Theme): ThemeChange[] {
 
 export const stockTheme = (scheme: ColorScheme) => createTheme({ palette: { mode: scheme } });
 
-/** What one departure changes on its own, against stock MUI in the same scheme. */
-export function departureChanges(departure: Departure, values: ThemeValues, scheme: ColorScheme): ThemeChange[] {
-  if (!departure.options) return [];
-  const options = mergeOptions({ palette: { mode: scheme } }, departure.options(values, scheme) as Record<string, unknown>);
-  return diffThemes(stockTheme(scheme), createTheme(options));
+/**
+ * What each departure changes, applied in order: a departure is charged with what
+ * changes when it is added on top of the ones before it. Paths that only appear
+ * when two departures combine (a palette key turned into a CSS variable) go to the
+ * later one, so every difference from stock MUI belongs to exactly one departure.
+ */
+export function attributedChanges(scheme: ColorScheme): Map<string, ThemeChange[]> {
+  const out = new Map<string, ThemeChange[]>();
+  let options: Record<string, unknown> = { palette: { mode: scheme } };
+  let before = stockTheme(scheme);
+  for (const departure of departures) {
+    if (!departure.options) {
+      out.set(departure.id, []);
+      continue;
+    }
+    options = mergeOptions(options, departure.options(scheme) as Record<string, unknown>);
+    const after = createTheme(options);
+    out.set(departure.id, diffThemes(before, after));
+    before = after;
+  }
+  return out;
+}
+
+const cache = new Map<ColorScheme, Map<string, ThemeChange[]>>();
+
+/** What one departure changes, against stock MUI plus the departures listed before it. */
+export function departureChanges(departure: Departure, scheme: ColorScheme): ThemeChange[] {
+  if (!cache.has(scheme)) cache.set(scheme, attributedChanges(scheme));
+  return cache.get(scheme)!.get(departure.id) ?? [];
 }

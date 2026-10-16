@@ -2,11 +2,11 @@
 
 The design system is published as one public Vercel project. Anyone with the URL can open it, and there is no login. It has three parts:
 
-- **The Storybook:** components, foundations and guides.
-- **The static files agents read:** `llms.txt`, the per-page Markdown, `/manifests/*.json` and the token files.
+- **The Storybook:** foundations and guides.
+- **The static files agents read:** `llms.txt`, the per-page Markdown, and `/manifests/*.json`.
 - **The MCP endpoint at `/mcp`.**
 
-Nothing here is sensitive: it's component docs and design tokens, with sample data generated from a fixed seed. If that changes, add access control before publishing anything that needs it.
+Nothing here is sensitive: it's design-system docs, with sample data generated from a fixed seed. If that changes, add access control before publishing anything that needs it.
 
 ## How it builds
 

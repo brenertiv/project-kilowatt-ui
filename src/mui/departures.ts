@@ -1,8 +1,12 @@
 import type { ThemeOptions } from '@mui/material/styles';
-import { typeScale, type ColorScheme, type ThemeValues } from '../tokens';
+import { iconWeight } from '../icons';
+import './augmentation';
+import type { BorderLevels } from './augmentation';
+import { blue, deepOrange, green, lightBlue, purple, red } from '@mui/material/colors';
+import { navy, slate } from './colors';
 
 /**
- * Every way Kilowatt's theme departs from stock Material UI, and nothing else.
+ * Every way Kilowatt departs from stock Material UI, and nothing else.
  *
  * The theme (`theme.ts`) is MUI's defaults with these entries merged on top, so
  * this list and the running theme cannot disagree, and `departures.test.ts`
@@ -13,6 +17,8 @@ import { typeScale, type ColorScheme, type ThemeValues } from '../tokens';
  * MUI's default, on purpose.
  */
 
+export type ColorScheme = 'light' | 'dark';
+
 export type DepartureArea = 'Theme' | 'Palette' | 'Typography' | 'Components' | 'Icons';
 
 export type Departure = {
@@ -21,145 +27,156 @@ export type Departure = {
   title: string;
   /** Why Kilowatt differs from MUI here, in one or two sentences. */
   why: string;
-  /** The spec requirement this implements, when there is one (CMP-…). */
-  spec?: string;
   /** The theme options this departure sets. Absent for conventions outside the theme. */
-  options?: (values: ThemeValues, scheme: ColorScheme) => ThemeOptions;
+  options?: (scheme: ColorScheme) => ThemeOptions;
   /** For a convention outside the theme: what MUI does, what Kilowatt does instead, and where. */
   convention?: { muiDefault: string; kilowatt: string; where: string };
 };
 
-function rem(id: string): string {
-  const step = typeScale.find((candidate) => candidate.id === id);
-  if (!step) throw new Error(`Unknown type step ${id}`);
-  return `${step.rem}rem`;
+/** Surfaces by elevation, per scheme: the ramp step each level uses. level0 is the page (darkest), level4 the highest (lightest). */
+export const surfaceSteps = {
+  light: { level0: 400, level1: 300, level2: 200, level3: 100, level4: 50 },
+  dark: { level0: 900, level1: 800, level2: 750, level3: 700, level4: 650 },
+} as const satisfies Record<ColorScheme, Record<string, number>>;
+
+/** Borders by contrast, per scheme: level0 the faintest, level2 the strongest. `divider` is level1. */
+export const borderSteps = {
+  light: { level0: 500, level1: 700, level2: 900 },
+  dark: { level0: 600, level1: 500, level2: 400 },
+} as const satisfies Record<ColorScheme, Record<keyof BorderLevels, number>>;
+
+const ramps = { light: slate, dark: navy } as const;
+
+function levels<T extends Record<string, number>>(scheme: ColorScheme, steps: T): Record<keyof T, string> {
+  const ramp = ramps[scheme] as Record<number, string>;
+  return Object.fromEntries(Object.entries(steps).map(([level, step]) => [level, ramp[step]])) as Record<keyof T, string>;
 }
 
-const heading = (step: string) => ({ fontWeight: 400, lineHeight: 1.2, letterSpacing: '-0.02em', fontSize: rem(step) });
-const text = (step: string, lineHeight: number) => ({ fontWeight: 400, lineHeight, fontSize: rem(step) });
+/** The surface level each Paper elevation sits on: flat and card surfaces, app bars and snackbars, menus, drawers and dialogs. */
+export const elevationSurfaces: { elevations: [number, number]; level: keyof typeof surfaceSteps.light; uses: string }[] = [
+  { elevations: [0, 1], level: 'level1', uses: 'Paper, Card, Accordion' },
+  { elevations: [2, 6], level: 'level2', uses: 'AppBar, Snackbar' },
+  { elevations: [7, 12], level: 'level3', uses: 'Menu, Popover' },
+  { elevations: [13, 24], level: 'level4', uses: 'Drawer, Dialog' },
+];
+
+type Intent = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+
+/**
+ * The intents Kilowatt moves off MUI's default, per scheme: a step from MUI's own
+ * color ramps that passes 4.5:1 as text on every surface level, with its contrast
+ * text also at 4.5:1 or better. Intents not listed keep MUI's default, which
+ * already passes. MUI derives `light` and `dark` from `main`.
+ */
+export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: string; step: string; main: string }>>> = {
+  light: {
+    primary: { ramp: 'blue', step: '800', main: blue[800] },
+    error: { ramp: 'red', step: '800', main: red[800] },
+    warning: { ramp: 'deepOrange', step: '900', main: deepOrange[900] },
+    info: { ramp: 'lightBlue', step: '900', main: lightBlue[900] },
+    success: { ramp: 'green', step: '900', main: green[900] },
+  },
+  dark: {
+    secondary: { ramp: 'purple', step: '100', main: purple[100] },
+    error: { ramp: 'red', step: '100', main: red[100] },
+    info: { ramp: 'lightBlue', step: '300', main: lightBlue[300] },
+    success: { ramp: 'green', step: '300', main: green[300] },
+  },
+};
+
+/** MUI's contrast text for each scheme: white on light-scheme intents, near-black on dark-scheme ones. */
+const intentContrastText: Record<ColorScheme, string> = { light: '#fff', dark: 'rgba(0, 0, 0, 0.87)' };
+
+/** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
+const selectableControls = ['MuiToggleButton', 'MuiTab', 'MuiListItemButton', 'MuiMenuItem', 'MuiBottomNavigationAction'] as const;
 
 export const departures: Departure[] = [
   {
     id: 'css-variables',
     area: 'Theme',
-    title: 'CSS theme variables and color schemes',
-    why: "MUI's opt-in CSS variables mode, with light and dark as built-in color schemes. MUI writes --mui-* variables and switches schemes with a class on <html>, the same `dark` class the token stylesheet keys on, so MUI and the plain CSS components change scheme together.",
-    convention: {
-      muiDefault: 'Theme values in JavaScript, one palette mode per theme',
-      kilowatt: 'cssVariables with colorSchemeSelector: class; light and dark colorSchemes; scheme managed by MUI, not persisted',
-      where: 'src/mui/theme.ts (createKilowattTheme), src/mui/MuiProvider.tsx',
+    title: 'CSS theme variables',
+    why: "MUI's opt-in CSS variables mode, with the color scheme switched by a `dark` class on <html>. Theme styles can then name a palette value once, as `var(--mui-palette-…)`, and get the right color in each scheme, which the elevation-to-surface mapping needs.",
+    options: () => ({ cssVariables: { colorSchemeSelector: 'class' } }),
+  },
+  {
+    id: 'surfaces-and-borders',
+    area: 'Palette',
+    title: 'Surface and border levels',
+    why: "Five surfaces by elevation and three borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
+    options: (scheme) => {
+      const surfaces = levels(scheme, surfaceSteps[scheme]);
+      const border = levels(scheme, borderSteps[scheme]);
+      return { palette: { background: { ...surfaces, default: surfaces.level0, paper: surfaces.level1 }, border, divider: border.level1 } };
     },
   },
   {
-    id: 'palette-brand',
+    id: 'intents-on-surfaces',
     area: 'Palette',
-    title: 'Brand colors',
-    why: "Primary is Enertiv navy and secondary the brand blue, in place of MUI's blue and purple. Values come from the tokens, per scheme.",
-    options: (values) => ({
-      palette: {
-        primary: { main: values.primaryMain, light: values.primaryLight, dark: values.primaryDark, contrastText: values.primaryContrastText },
-        secondary: {
-          main: values.secondaryMain,
-          light: values.secondaryLight,
-          dark: values.secondaryDark,
-          contrastText: values.secondaryContrastText,
+    title: 'Intent colors that pass on every surface',
+    why: "MUI's intents are tuned for a white or #121212 background, and several fall below 4.5:1 as text on the surface levels. These take a nearby step from MUI's own color ramps that passes on every level in its scheme; the intents that already pass stay as MUI ships them. Light warning moves to deep orange, since no orange step passes on the light surfaces.",
+    options: (scheme) => ({
+      palette: Object.fromEntries(
+        Object.entries(intentSteps[scheme]).map(([intent, { main }]) => [intent, { main, contrastText: intentContrastText[scheme] }]),
+      ),
+    }),
+  },
+  {
+    id: 'paper-surface-levels',
+    area: 'Components',
+    title: 'Paper takes its surface from its elevation',
+    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Cards sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4.",
+    options: () => ({
+      components: {
+        MuiPaper: {
+          styleOverrides: {
+            root: {
+              backgroundImage: 'none',
+              ...Object.fromEntries(
+                elevationSurfaces.flatMap(({ elevations: [from, to], level }) =>
+                  Array.from({ length: to - from + 1 }, (_, index) => [
+                    `&.MuiPaper-elevation${from + index}`,
+                    { backgroundColor: `var(--mui-palette-background-${level})` },
+                  ]),
+                ),
+              ),
+            },
+          },
         },
       },
     }),
   },
   {
-    id: 'palette-status',
-    area: 'Palette',
-    title: 'Status colors',
-    why: 'Success, warning, error and info use the Kilowatt status ramps, so status reads the same in MUI components and in charts, tables and chips.',
-    options: (values) => ({
-      palette: {
-        success: { main: values.successMain, light: values.successLight, dark: values.successDark, contrastText: values.successContrastText },
-        warning: { main: values.warningMain, light: values.warningLight, dark: values.warningDark, contrastText: values.warningContrastText },
-        error: { main: values.errorMain, light: values.errorLight, dark: values.errorDark, contrastText: values.errorContrastText },
-        info: { main: values.infoMain, light: values.infoLight, dark: values.infoDark, contrastText: values.infoContrastText },
-      },
-    }),
-  },
-  {
-    id: 'palette-surfaces',
-    area: 'Palette',
-    title: 'Surfaces, text and divider',
-    why: "The page, raised surface, text emphasis and divider follow Kilowatt's slate and navy ramps in both schemes, in place of MUI's white and gray.",
-    options: (values) => ({
-      palette: {
-        background: { default: values.backgroundDefault, paper: values.backgroundPaper },
-        text: { primary: values.textPrimary, secondary: values.textSecondary, disabled: values.textDisabled },
-        divider: values.divider,
-      },
-    }),
-  },
-  {
-    id: 'type-headings',
-    area: 'Typography',
-    title: 'Headings',
-    why: "No bold and no light display weights: every heading is 400, sized from Kilowatt's type scale with tight tracking. Hierarchy comes from size.",
-    options: () => ({
-      typography: {
-        h1: heading('4xl'),
-        h2: heading('3xl'),
-        h3: heading('2xl'),
-        h4: heading('xl'),
-        h5: { ...text('lg', 1.3) },
-        h6: { ...text('md', 1.3) },
-      },
-    }),
-  },
-  {
-    id: 'type-text',
-    area: 'Typography',
-    title: 'Body, subtitle and caption sizes',
-    why: "Kilowatt sets body text at 14px and secondary text at 12px, a step smaller than MUI's 16px and 14px, for dense operational screens.",
-    options: () => ({
-      typography: {
-        subtitle1: text('md', 1.3),
-        subtitle2: text('sm', 1.3),
-        body1: text('sm', 1.5),
-        body2: text('xs', 1.4),
-        caption: text('xs', 1.4),
-      },
-    }),
-  },
-  {
-    id: 'type-overline',
-    area: 'Typography',
-    title: 'Overline (section eyebrow)',
-    why: 'The eyebrow above a title or metric is 12px, medium weight and widely tracked, so it reads as a label rather than body text.',
-    options: () => ({
-      typography: {
-        overline: { fontWeight: 500, lineHeight: 1.4, fontSize: rem('xs'), letterSpacing: '0.15em', textTransform: 'uppercase' },
-      },
-    }),
-  },
-  {
-    id: 'type-button-case',
-    area: 'Typography',
-    title: 'Button text case',
-    why: 'Buttons use sentence case, as written. Uppercase labels are harder to read and shout in dense toolbars.',
-    options: () => ({ typography: { button: { textTransform: 'none' } } }),
-  },
-  {
-    id: 'card-outlined',
-    area: 'Components',
-    title: 'Flat, outlined cards',
-    why: 'Cards sit flat on the page with a 1px divider border and no shadow, so dense dashboards stay calm and surfaces separate by border and color rather than elevation.',
-    options: () => ({ components: { MuiCard: { defaultProps: { variant: 'outlined' } } } }),
-  },
-  {
     id: 'icons',
     area: 'Icons',
     title: 'Icon set',
-    why: 'One icon set across the product: Google\'s Material Symbols, a variable font, at weight 300 so icons sit a step lighter than text.',
-    spec: 'CMP-ICON-01',
+    why: `Google's Material Symbols variable font through MUI's Icon, instead of MUI's SVG icon package, so weight and fill are axes rather than separate icons. Icons render at weight ${iconWeight}, a step lighter than the font's 400, so they sit lighter beside text.`,
     convention: {
       muiDefault: 'SVG icons from @mui/icons-material',
-      kilowatt: 'Material Symbols Outlined, weight 300, 16px, through the components in src/icons.tsx',
+      kilowatt: `MUI's Icon with Material Symbols Outlined at weight ${iconWeight}, through the Icon component in src/icons.tsx`,
       where: 'src/icons.tsx; @mui/icons-material is not installed',
     },
+    options: () => ({
+      components: {
+        MuiIcon: {
+          defaultProps: { baseClassName: 'material-symbols-outlined' },
+          styleOverrides: {
+            // The axes read inherited custom properties, so a selected control can fill
+            // the icons inside it and an icon's own fill or weight prop still wins.
+            root: { fontVariationSettings: `'FILL' var(--icon-fill, 0), 'wght' var(--icon-weight, ${iconWeight})` },
+          },
+        },
+      },
+    }),
+  },
+  {
+    id: 'selected-fills-icons',
+    area: 'Components',
+    title: 'Selected controls fill their icons',
+    why: 'A selected control shows its icon filled and an unselected one outlined, so selection reads from the glyph as well as from the control\'s color. Applies to every MUI control with a selected state; an icon with an explicit fill keeps it.',
+    options: () => ({
+      components: Object.fromEntries(
+        selectableControls.map((control) => [control, { styleOverrides: { root: { '&.Mui-selected': { '--icon-fill': 1 } } } }]),
+      ),
+    }),
   },
 ];

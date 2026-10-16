@@ -1,12 +1,11 @@
 import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
-import { schemeValues, type ColorScheme, type ThemeValues } from '../tokens';
-import { departures } from './departures';
+import { departures, type ColorScheme } from './departures';
 
 /**
- * The Material UI theme: stock MUI with Kilowatt's departures merged on top.
- * Nothing is set here directly. Every value that differs from MUI's default is
- * an entry in `departures.ts`, with its reason, so the list of differences is
- * the theme itself.
+ * The Material UI theme: stock MUI with its own light and dark color schemes,
+ * plus Kilowatt's departures merged on top. Nothing is set here directly. Every
+ * value that differs from MUI's default is an entry in `departures.ts`, with its
+ * reason, so the list of differences is the theme itself.
  */
 
 type Plain = Record<string, unknown>;
@@ -24,30 +23,27 @@ export function mergeOptions(target: Plain, source: Plain): Plain {
 }
 
 /** The theme options for one scheme: MUI's defaults plus every departure. */
-export function themeOptions(values: ThemeValues, scheme: ColorScheme): ThemeOptions {
+export function themeOptions(scheme: ColorScheme): ThemeOptions {
   return departures.reduce<Plain>(
-    (options, departure) => (departure.options ? mergeOptions(options, departure.options(values, scheme) as Plain) : options),
+    (options, departure) => (departure.options ? mergeOptions(options, departure.options(scheme) as Plain) : options),
     { palette: { mode: scheme } },
   ) as ThemeOptions;
 }
 
-/** One scheme's theme, without CSS variables. What the departures guard and docs compare against stock MUI. */
-export function createSchemeTheme(values: ThemeValues, scheme: ColorScheme): Theme {
-  return createTheme(themeOptions(values, scheme));
+/** One scheme's theme. What the departures guard and docs compare against stock MUI. */
+export function createSchemeTheme(scheme: ColorScheme): Theme {
+  return createTheme(themeOptions(scheme));
 }
 
 /**
- * The theme Kilowatt runs on: MUI's CSS theme variables, with light and dark as
- * color schemes. MUI writes the `--mui-*` variables and switches schemes with the
- * `dark` class on <html>, the same class the token stylesheet keys on. Only the
- * palette differs between schemes; every other departure is scheme-independent.
+ * The theme Kilowatt runs on: MUI's light and dark color schemes, switched with
+ * `useColorScheme()`. Only the palette differs between schemes.
  */
 export function createKilowattTheme(): Theme {
-  const { palette: lightPalette, ...shared } = themeOptions(schemeValues.light, 'light');
-  const { palette: darkPalette } = themeOptions(schemeValues.dark, 'dark');
+  const { palette: lightPalette, ...shared } = themeOptions('light');
+  const { palette: darkPalette } = themeOptions('dark');
   return createTheme({
     ...shared,
-    cssVariables: { colorSchemeSelector: 'class' },
     colorSchemes: { light: { palette: lightPalette }, dark: { palette: darkPalette } },
   });
 }
