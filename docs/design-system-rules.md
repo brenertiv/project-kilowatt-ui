@@ -10,6 +10,21 @@ Kilowatt starts from stock Material UI. The theme is `createTheme` with MUI's ow
 - Style through MUI's documented props first (`color`, `variant`, `size`, `elevation`), then `sx` with theme keys: palette paths (`color: 'text.secondary'`), spacing multiples (`p: 2`), radius multiples (`borderRadius: 1`), elevation levels (`boxShadow: 1`) and breakpoint objects.
 - Never a raw value: no hex colors, pixel radii, font families or shadows of your own, and no parallel set of CSS variables. The Foundations pages list every theme value, each marked as MUI's default or a departure.
 
+## Token tiers
+
+Tokens come in three tiers, each reading only from the one below it.
+
+| Tier | Where | What it holds | Read by |
+| --- | --- | --- | --- |
+| 1. Primitives | `src/mui/colors.ts` and MUI's `@mui/material/colors` | Raw ramps (slate, navy, blue, red…). The only place a hex value lives. | The semantic tier only |
+| 2. Semantic | `theme.palette`, `theme.typography`, `theme.shadows`, `theme.shape`, `theme.spacing` | Roles: `primary`, `background.level*`, `border.level*`, `text.*`, the `button` type style | The component tier, components, `sx` |
+| 3. Component | `theme.components.Mui*` (`defaultProps`, `styleOverrides`) | How one component uses the roles | Nothing; it's the end of the chain |
+
+- A palette color is a ramp step. To add a color, add or pick a step in a ramp, then name the role in the palette.
+- A component override refers to the palette through MUI's CSS variables (`var(--mui-palette-background-level3)`), never to a hex value or a ramp step.
+- Components and `sx` use the semantic tier only: palette paths, spacing multiples, the type variants.
+- `src/mui/tokens.test.ts` checks the first two rules.
+
 ## Surfaces and borders
 
 - Surfaces go by elevation: `background.level0` (the page, darkest) to `background.level4` (the highest surface, lightest), in both schemes. Paper takes its level from its `elevation`, so cards, menus and dialogs need nothing extra. Set a level yourself only on a surface that isn't Paper: `sx={{ bgcolor: 'background.level2' }}`.
