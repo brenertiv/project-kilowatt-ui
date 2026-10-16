@@ -24,21 +24,21 @@ export const slate = {
 } as const;
 
 /**
- * Enertiv navy. One ramp in two parts: 50 to 500 are saturated brand blues (dark-scheme
- * borders, primary's lighter steps); 600 to 950 are the dark-scheme surfaces, evenly
- * spaced in lightness and growing steadily more saturated from 950 up to 600, with 700
- * shared as light-scheme primary. 600 is the lightest surface and sets the tightest
- * contrast: success text passes on it at about 4.7:1.
+ * Enertiv navy, a subtle ramp: deep, low-saturation blues. 600 to 950 are the
+ * dark-scheme surfaces (evenly spaced, growing steadily more saturated toward 600);
+ * 200 to 500 are the dark-scheme borders; 700 is light-scheme primary. 200, the dark
+ * control border, is lightened a touch from #6598c2 so it clears 3:1 with headroom on
+ * every dark surface.
  */
 export const navy = {
-  50: '#5cb6ff',
-  100: '#3dacfe',
-  200: '#38a4f1',
-  300: '#349ae2',
-  400: '#1d7ec0',
-  500: '#166ba2',
-  600: '#114b65',
-  700: '#023f57',
+  50: '#88beec',
+  100: '#72abdb',
+  200: '#689bc5',
+  300: '#4f7da3',
+  400: '#426a8a',
+  500: '#365670',
+  600: '#294a5f',
+  700: '#1b3e4f',
   800: '#142f3c',
   900: '#0d2029',
   950: '#09161c',
