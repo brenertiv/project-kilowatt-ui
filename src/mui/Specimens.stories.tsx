@@ -14,12 +14,12 @@ import { Icon, iconNames } from 'src/icons';
 /**
  * Live specimens of the theme, built only from MUI components reading the running
  * theme. The Foundations pages embed them under their tables. Hidden from the
- * sidebar (`!dev`) and the manifest: the tables are what agents read, these are
- * what people look at.
+ * sidebar (the `specimen` tag, filtered in .storybook/manager.ts) and from the
+ * manifest: the tables are what agents read, these are what people look at.
  */
 const meta = {
   title: 'Foundations/Specimens',
-  tags: ['!dev', '!autodocs', '!manifest'],
+  tags: ['specimen', '!autodocs', '!manifest'],
   parameters: { layout: 'fullscreen' },
 } satisfies Meta;
 

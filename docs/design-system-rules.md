@@ -17,6 +17,36 @@ Kilowatt starts from stock Material UI. The theme is `createTheme` with MUI's ow
 - Intents (`primary`, `error`, `success` and the rest) pass 4.5:1 as text on every surface level, in both schemes, so any intent can sit on any surface. Use them through `color` props or palette keys, never by hex.
 - Never use a ramp step (`src/mui/colors.ts`) in a component. The levels are the API; the ramps are what they're made of.
 
+## One border per edge
+
+Advisory: check for this while building a component or layout, as part of the work.
+
+Every visible edge is drawn once. When two elements on the same layer would each draw a line along the same edge, or two parallel lines sit within 4px of each other with nothing meaningful between them, only one of them keeps its border.
+
+What counts as a double border:
+
+- **Nested frames.** A bordered container directly inside another, sharing an edge or sitting inside its padding: an outlined Paper inside a Card, a framed specimen inside a Storybook Canvas.
+- **Adjacent full borders.** Items that each draw a full border, so the shared edge is 2px: cells, list rows, stacked cards with no gap, buttons in a row.
+- **A divider on an edge.** A `Divider`, or a top or bottom border, placed first or last inside a bordered container, landing on the container's own edge.
+- **Border plus shadow.** An elevated surface that also has an outline.
+- **Borders inside a scroll container.** Edge borders drawn by the scrolling content, which scroll away or stack against the container's own edge.
+
+Who keeps the line:
+
+1. **Nested:** the outermost element that owns the edge keeps it; the inner one drops its border. With MUI, that usually means `elevation={0}` in place of `variant="outlined"` on the inner Paper.
+2. **Adjacent:** separate items with dividers, never a full border on each. Prefer MUI components that already do this: `List` with `divider` items, `ButtonGroup`, `ToggleButtonGroup`, `Table`. In your own styles, draw the line on one side only.
+3. **Dividers:** never first or last inside a framed container; the frame is already the edge.
+4. **Elevation or outline:** a surface uses one or the other. MUI's outlined Paper is the outlined version; don't add a border to an elevated surface.
+5. **Scrolling:** the scroll container draws the frame; the content inside it draws only inner dividers.
+6. **Color:** a frame and its inner dividers use the same `border.level*`, so they never read as two different lines.
+
+What the rule doesn't cover:
+
+- **Other layers.** The rule applies within one layer. Modals, drawers, menus, popovers, tooltips and snackbars float above the page on their own layer (MUI renders them in a portal and stacks them with `theme.zIndex`; see Foundations → Z-index). Their edge landing next to a line on the layer below is not a double border.
+- **Focus rings.** They are outlines outside the border, not borders.
+
+To check: inspect each bordered element in the browser and compare its border on each side with its parent's and children's on the same side. Look at light and dark, at 200% zoom, and with any scroll container at rest and scrolled to each end. Storybook's docs chrome (Canvas blocks, code blocks, tables) follows the same rule.
+
 ## Adding a convention
 
 A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:
