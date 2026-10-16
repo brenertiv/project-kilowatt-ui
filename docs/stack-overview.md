@@ -8,7 +8,7 @@ Kilowatt UI is Enertiv's design system: a Storybook that documents stock Materia
 | -------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Language             | TypeScript 5.9, strict        | `tsc` runs as part of every build                                                                                                                            |
 | UI                   | React 19                      | Function components and hooks throughout                                                                                                                     |
-| Components           | Material UI (`@mui/material`) | Stock MUI with its own light and dark color schemes, plus the departures in `src/mui/departures.ts`                                                          |
+| Components           | Material UI (`@mui/material`) | Stock MUI with light and dark color schemes, plus the departures in `src/mui/departures.ts`                                                                  |
 | Icons                | Material Symbols Outlined     | Google's variable icon font, through MUI's `Icon` and the `Icon` component in `src/icons.tsx`                                                                |
 | Data fetching        | TanStack Query 5 with Axios   | Entity types and query hooks mirror the Enertiv API in `src/api`, against an in-process mock adapter until the backend is attached. See `docs/data-layer.md` |
 | Internationalization | i18next with react-i18next    | Set up in `src/i18n`, with no strings yet                                                                                                                    |
@@ -22,12 +22,12 @@ The component manifest and `@storybook/addon-mcp` let coding agents query compon
 
 ## Tooling
 
-| Concern              | Tool                                                                                                                                                                                                |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build and dev server | Vite 7 with `@vitejs/plugin-react`                                                                                                                                                                  |
-| Tests                | Vitest 5 in two projects. `unit` runs in jsdom and covers the theme departures, the mock API and the sample data. `storybook` renders every story in Chromium through Playwright, with an axe check |
-| Lint and format      | ESLint 10 with typescript-eslint and the React Hooks plugin, Prettier 3                                                                                                                             |
-| Node                 | 24 or newer                                                                                                                                                                                         |
+| Concern              | Tool                                                                                                                                                                                                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build and dev server | Vite 7 with `@vitejs/plugin-react`                                                                                                                                                                                                                                                  |
+| Tests                | Vitest 5 in two projects. `unit` covers the theme departures and their contrast, the token tiers, the Foundations tables, the component page format, the icons, the mock API and the sample data. `storybook` renders every story in Chromium through Playwright, with an axe check |
+| Lint and format      | ESLint 10 with typescript-eslint and the React Hooks plugin, Prettier 3                                                                                                                                                                                                             |
+| Node                 | 24 or newer                                                                                                                                                                                                                                                                         |
 
 Scripts: `npm run storybook`, `npm run build-storybook`, `npm run docs:build`, `npm test` (with `test:unit` and `test:stories`), `npm run lint`, `npm run format`.
 

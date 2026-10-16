@@ -8,7 +8,8 @@ describe('foundations', () => {
 
   it('label each value with its source', () => {
     expect(sourceOf('typography.fontSize')).toBe('MUI default');
-    expect(sourceOf('palette.primary.main')).toBe('Departure: `intents-on-surfaces`');
-    expect(sourceOf('shape.borderRadius')).toBe('MUI default');
+    expect(sourceOf('palette.primary.main')).toBe('Departure: `primary-navy`');
+    expect(sourceOf('palette.error.main')).toBe('Departure: `intents-on-surfaces`');
+    expect(sourceOf('shape.borderRadius')).toBe('Departure: `shape-radius`');
   });
 });

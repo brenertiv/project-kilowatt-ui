@@ -2,7 +2,7 @@
 
 Rules for building Kilowatt UI. These are decisions, not suggestions: when code and this document disagree, fix one of them in the same change.
 
-Kilowatt starts from stock Material UI. The theme is `createTheme` with MUI's own light and dark color schemes, plus the departures in `src/mui/departures.ts`. Foundations → MUI departures lists every one of them; anything not listed there is MUI's default, on purpose.
+Kilowatt starts from stock Material UI. The theme is `createTheme` with light and dark color schemes, plus the departures in `src/mui/departures.ts`: the palette (surfaces, borders, a navy primary (light neutral in dark), a brand-blue secondary, a purple info, intent colors), the corner radius, the button style and the icon set. Foundations → MUI departures lists every one of them; anything not listed there is MUI's default, on purpose.
 
 ## Build with MUI as MUI documents it
 
@@ -10,10 +10,26 @@ Kilowatt starts from stock Material UI. The theme is `createTheme` with MUI's ow
 - Style through MUI's documented props first (`color`, `variant`, `size`, `elevation`), then `sx` with theme keys: palette paths (`color: 'text.secondary'`), spacing multiples (`p: 2`), radius multiples (`borderRadius: 1`), elevation levels (`boxShadow: 1`) and breakpoint objects.
 - Never a raw value: no hex colors, pixel radii, font families or shadows of your own, and no parallel set of CSS variables. The Foundations pages list every theme value, each marked as MUI's default or a departure.
 
+## Token tiers
+
+Tokens come in three tiers, each reading only from the one below it.
+
+| Tier          | Where                                                                                | What it holds                                                                             | Read by                              |
+| ------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------ |
+| 1. Primitives | `src/mui/colors.ts` and MUI's `@mui/material/colors`                                 | Raw ramps (slate, navy, blue, red…). The only place a hex value lives.                    | The semantic tier only               |
+| 2. Semantic   | `theme.palette`, `theme.typography`, `theme.shadows`, `theme.shape`, `theme.spacing` | Roles: `primary`, `background.level*`, `border.level*`, `text.*`, the `button` type style | The component tier, components, `sx` |
+| 3. Component  | `theme.components.Mui*` (`defaultProps`, `styleOverrides`)                           | How one component uses the roles                                                          | Nothing; it's the end of the chain   |
+
+- A palette color is a ramp step. To add a color, add or pick a step in a ramp, then name the role in the palette.
+- Ramps use the standard steps only: 50, the hundreds from 100 to 900, and 950. No half steps (350, 650) and nothing past 50 or 950 (25, 1000). When a ramp needs a color between two steps, renumber the ramp so it still fits the standard steps, rather than adding one in between.
+- A component override refers to the palette through MUI's CSS variables (`var(--mui-palette-background-level3)`), never to a hex value or a ramp step.
+- Components and `sx` use the semantic tier only: palette paths, spacing multiples, the type variants.
+- `src/mui/tokens.test.ts` checks the ramp steps, that palette colors are ramp steps, and that component overrides use palette variables.
+
 ## Surfaces and borders
 
 - Surfaces go by elevation: `background.level0` (the page, darkest) to `background.level4` (the highest surface, lightest), in both schemes. Paper takes its level from its `elevation`, so cards, menus and dialogs need nothing extra. Set a level yourself only on a surface that isn't Paper: `sx={{ bgcolor: 'background.level2' }}`.
-- Borders go by contrast: `border.level0` (faintest) to `border.level2` (strongest), in both schemes. `divider` is `border.level1`. Use `border.level0` for quiet separators and `border.level2` where the edge must read.
+- Borders go by contrast, in both schemes. `border.level0` to `border.level2` separate and frame: `border.level0` for quiet separators, `divider` (`border.level1`) by default, `border.level2` where the edge must read. `border.level3` is only for control outlines (outlined buttons, inputs, selects): it reaches 3:1 on every surface, as WCAG asks of a control's boundary. Don't use it for dividers or containers.
 - Intents (`primary`, `error`, `success` and the rest) pass 4.5:1 as text on every surface level, in both schemes, so any intent can sit on any surface. Use them through `color` props or palette keys, never by hex.
 - Never use a ramp step (`src/mui/colors.ts`) in a component. The levels are the API; the ramps are what they're made of.
 
@@ -47,11 +63,30 @@ What the rule doesn't cover:
 
 To check: inspect each bordered element in the browser and compare its border on each side with its parent's and children's on the same side. Look at light and dark, at 200% zoom, and with any scroll container at rest and scrolled to each end. Storybook's docs chrome (Canvas blocks, code blocks, tables) follows the same rule.
 
+## Concentric corners
+
+Advisory: check for this while building a component or layout, as part of the work.
+
+The theme has one corner radius, `shape.borderRadius` (8px), and every rounded component takes it, buttons and icon buttons included. In `sx`, `borderRadius` counts in theme radii: `1` is 8px, `1.5` is 12px.
+
+All buttons, icon buttons and other rounded components share that one radius, and it changes only in one place: the `shape-radius` departure. Don't give one intent, variant or instance its own radius, in a theme override or in `sx`; `tokens.test.ts` fails any component override that rounds with anything but the theme radius.
+
+When a rounded element sits close inside a rounded container, their corners are concentric: the container's radius is the element's radius plus the gap between them.
+
+- **The gap** is everything between the two edges at the corner: padding plus the container's border.
+- **The control keeps the theme radius; the container grows.** A button is 8px wherever it sits, so a container hugging it with 4px of padding is 12px. Don't shrink the inner radius to make the corners fit.
+- **In theme units it's addition.** The radius unit and the spacing unit are both 8px, so container `borderRadius` = inner `borderRadius` + padding: a button (`1`) in a toolbar with `p: 0.5` gives the toolbar `borderRadius: 1.5`. This holds only while both units are 8px; if either changes, convert through pixels.
+- **When it applies:** gaps under 16px. At 16px or more, the corners read as separate shapes, and both keep the theme radius (a button inside a card with `p: 2`).
+- **Flush edges aren't rounded.** An element flush against its container's edge (an image at the top of a card, menu items) has square corners on that side; the container's radius and `overflow: hidden` shape it.
+- **MUI already does this** for `ButtonGroup` and `ToggleButtonGroup`, which square the corners where buttons meet.
+
+To check: wherever a rounded element sits within 16px of a rounded container's corner, compare the container's radius with the element's radius plus the gap.
+
 ## Adding a convention
 
 A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:
 
-1. Add an entry to `src/mui/departures.ts` with the reason. Theme changes go in `options`; anything outside the theme goes in `convention`, saying what MUI does, what Kilowatt does instead and where.
+1. Add an entry to `src/mui/departures.ts` with the reason. Theme changes go in `options`; anything outside the theme goes in `convention`, saying what MUI does, what Kilowatt does instead and where. List the MUI components it changes in `components` (leave it out only for a theme-wide change), and add the departure to each of those components' pages under MUI departures.
 2. Don't set theme values anywhere else. `departures.test.ts` fails when the theme differs from stock MUI anywhere a departure doesn't claim.
 3. Check that the new convention doesn't overlap an existing one. If two entries touch the same thing, merge them.
 

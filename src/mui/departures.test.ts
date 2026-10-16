@@ -1,4 +1,4 @@
-import { getContrastRatio } from '@mui/material/styles';
+import { decomposeColor, getContrastRatio } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
 import { navy, slate } from './colors';
 import { departures, type ColorScheme } from './departures';
@@ -6,6 +6,15 @@ import { createKilowattTheme, createSchemeTheme } from './theme';
 import { departureChanges, diffThemes, stockTheme } from './themeDiff';
 
 const schemes: ColorScheme[] = ['light', 'dark'];
+
+/**
+ * Headroom above each WCAG minimum. MUI's getContrastRatio and axe (the story tests) round
+ * the sRGB curve slightly differently, so a pair at exactly 4.5:1 here can measure 4.49 in
+ * axe. Requiring 0.05 more makes such edge cases fail here first.
+ */
+const margin = 0.05;
+const text = 4.5 + margin;
+const graphic = 3 + margin;
 
 describe('departures', () => {
   it.each(schemes)('account for every way the %s theme differs from stock MUI', (scheme) => {
@@ -33,9 +42,9 @@ describe('createKilowattTheme', () => {
     // MUI's Theme type leaves out the per-scheme palettes it carries.
     const { light, dark } = (theme as unknown as { colorSchemes: Record<ColorScheme, { palette: typeof theme.palette }> }).colorSchemes;
     expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[400], slate[300], slate[50]]);
-    expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[900], navy[800], navy[650]]);
+    expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[950], navy[900], navy[600]]);
     expect(light.palette.divider).toBe(light.palette.border.level1);
-    expect(dark.palette.border).toEqual({ level0: navy[600], level1: navy[500], level2: navy[400] });
+    expect(dark.palette.border).toEqual({ level0: navy[500], level1: navy[400], level2: navy[300], level3: navy[200] });
   });
 
   it.each(schemes)('gives the %s scheme intents that pass 4.5:1 on every surface, with contrast text that passes on them', (scheme) => {
@@ -43,8 +52,33 @@ describe('createKilowattTheme', () => {
     const surfaces = (['level0', 'level1', 'level2', 'level3', 'level4'] as const).map((level) => palette.background[level]);
     for (const intent of ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const) {
       const { main, contrastText } = palette[intent];
-      for (const surface of surfaces) expect(getContrastRatio(main, surface), `${intent}.main on ${surface}`).toBeGreaterThanOrEqual(4.5);
-      expect(getContrastRatio(contrastText, main), `${intent}.contrastText`).toBeGreaterThanOrEqual(4.5);
+      for (const surface of surfaces) expect(getContrastRatio(main, surface), `${intent}.main on ${surface}`).toBeGreaterThanOrEqual(text);
+      expect(getContrastRatio(contrastText, main), `${intent}.contrastText`).toBeGreaterThanOrEqual(text);
+    }
+  });
+
+  it.each(schemes)('gives %s-scheme icons at least 3:1 on every surface, as WCAG asks of graphics', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    // An rgba icon color shows as its blend over the surface; compare that.
+    const over = (color: string, surface: string) => {
+      const { values: fg } = decomposeColor(color);
+      const { values: bg } = decomposeColor(surface);
+      const alpha = fg[3] ?? 1;
+      return `rgb(${[0, 1, 2].map((i) => Math.round(fg[i] * alpha + bg[i] * (1 - alpha))).join(', ')})`;
+    };
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+      const surface = palette.background[level];
+      for (const icon of [palette.action.active, palette.text.secondary]) {
+        expect(getContrastRatio(over(icon, surface), surface), `${icon} on ${level}`).toBeGreaterThanOrEqual(graphic);
+      }
+    }
+  });
+
+  it.each(schemes)('gives the %s scheme a control border (border.level3) at 3:1 on every surface, as WCAG asks of control boundaries', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+      const surface = palette.background[level];
+      expect(getContrastRatio(palette.border.level3, surface), `border.level3 on ${level}`).toBeGreaterThanOrEqual(graphic);
     }
   });
 

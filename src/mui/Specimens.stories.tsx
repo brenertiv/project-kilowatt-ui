@@ -50,6 +50,8 @@ function Swatch({ color, label }: { color: string; label: string }) {
 }
 
 const intents = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const;
+/** Button labels are written in Title Case (the `button-text-case` departure). */
+const intentLabels = { primary: 'Primary', secondary: 'Secondary', error: 'Error', warning: 'Warning', info: 'Info', success: 'Success' };
 
 /** The palette: each intent's four values, the surface levels, the border levels on every surface, and text. */
 export const Color: Story = {
@@ -75,14 +77,14 @@ export const Color: Story = {
           </Stack>
         </Stack>
         <Stack spacing={1}>
-          <Typography variant="subtitle2">borders, level0 (faintest) to level2, on each surface</Typography>
+          <Typography variant="subtitle2">borders, level0 (faintest) to level3 (control outlines), on each surface</Typography>
           <Stack spacing={1}>
             {['level0', 'level1', 'level2', 'level3', 'level4'].map((surface) => (
               <Stack key={surface} direction="row" spacing={2} sx={{ bgcolor: `background.${surface}`, p: 1.5, borderRadius: 1, alignItems: 'center' }}>
                 <Typography variant="caption" color="text.secondary" sx={{ width: 56 }}>
                   {surface}
                 </Typography>
-                {['level0', 'level1', 'level2'].map((border) => (
+                {['level0', 'level1', 'level2', 'level3'].map((border) => (
                   <Box key={border} sx={{ width: 96, height: 32, border: 2, borderColor: `border.${border}`, borderRadius: 1 }} />
                 ))}
               </Stack>
@@ -120,7 +122,7 @@ export const IntentsOnSurfaces: Story = {
           ))}
           {intents.map((intent) => (
             <Button key={intent} size="small" variant="contained" color={intent}>
-              {intent}
+              {intentLabels[intent]}
             </Button>
           ))}
         </Stack>

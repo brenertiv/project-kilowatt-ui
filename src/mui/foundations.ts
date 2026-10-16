@@ -1,24 +1,46 @@
-import type { Theme } from '@mui/material/styles';
-import { navy, slate } from './colors';
-import { borderSteps, departures, elevationSurfaces, intentSteps, surfaceSteps, type ColorScheme } from './departures';
-import { createSchemeTheme } from './theme';
-import { departureChanges } from './themeDiff';
+import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
+import { brand, navy, orange, slate, yellow } from './colors';
+import { borderSteps, departures, elevationSurfaces, intentSteps, primarySteps, secondarySteps, surfaceSteps, type ColorScheme } from './departures';
+import { mergeOptions } from './theme';
+import { diffThemes, stockTheme } from './themeDiff';
 
 /**
  * The Foundations pages as Markdown tables, read from the running theme. Every
  * value carries its source: MUI's default, or the departure that sets it. The
  * pages are generated from this (scripts/build-docs.ts), so they can't drift
  * from the theme and the line between MUI and Kilowatt stays visible.
+ *
+ * The pages document values, so they read the theme without CSS-variable output:
+ * with `cssVariables` on, MUI returns `theme.spacing(1)` as `var(--mui-spacing, 8px)`
+ * rather than `8px`. Sources are worked out the same way, so a value MUI ships
+ * unchanged reads as MUI's default even though the running theme serves it as a
+ * CSS variable.
  */
 
-const themes: Record<ColorScheme, Theme> = { light: createSchemeTheme('light'), dark: createSchemeTheme('dark') };
+/** The theme options for one scheme, without `cssVariables`: values, not their CSS-variable form. */
+function valueOptions(scheme: ColorScheme, upTo = departures.length): ThemeOptions {
+  return departures.slice(0, upTo).reduce<Record<string, unknown>>(
+    (options, departure) => {
+      if (!departure.options) return options;
+      const values = { ...(departure.options(scheme) as Record<string, unknown>) };
+      delete values.cssVariables;
+      return mergeOptions(options, values);
+    },
+    { palette: { mode: scheme } },
+  ) as ThemeOptions;
+}
 
-/** Theme path → the departure that changes it, in either scheme. */
+const themes: Record<ColorScheme, Theme> = { light: createTheme(valueOptions('light')), dark: createTheme(valueOptions('dark')) };
+
+/** Theme path → the departure that changes its value, in either scheme: each departure is charged with what changes when it's added. */
 const claims = new Map<string, string>();
-for (const departure of departures) {
-  for (const scheme of ['light', 'dark'] as const) {
-    for (const change of departureChanges(departure, scheme)) claims.set(change.path, departure.id);
-  }
+for (const scheme of ['light', 'dark'] as const) {
+  let before = stockTheme(scheme);
+  departures.forEach((departure, index) => {
+    const after = createTheme(valueOptions(scheme, index + 1));
+    for (const change of diffThemes(before, after)) claims.set(change.path, departure.id);
+    before = after;
+  });
 }
 
 /** Where a theme value comes from: MUI's default, or a departure (by id). */
@@ -58,11 +80,16 @@ export function colorMarkdown() {
     'The theme carries MUI\'s light and dark palettes as color schemes. Components read the palette of the active scheme, so a component never picks a color per scheme itself. Switch the scheme with `useColorScheme().setMode`.',
     '## Intents',
     'Each intent has `main`, `light`, `dark` and `contrastText`. Pass the intent to a component (`color="primary"`, `severity="error"`) rather than a color.',
-    "Every `main` passes 4.5:1 as text on all five surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`) and MUI derives `light` and `dark` from it:",
+    "Every `main` passes 4.5:1 as text on all five surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. Warning uses Kilowatt's orange (light) and yellow (dark) ramps. For error, info and success, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`). MUI derives `light` and `dark` from `main`:",
     table(
       ['Intent', 'Light', 'Dark'],
       intents.map((intent) => {
         const cell = (scheme: ColorScheme) => {
+          if (intent === 'primary') {
+            const { ramp, main } = primarySteps[scheme];
+            return `${ramp} ${main} ${code((ramp === 'navy' ? navy : slate)[main])}`;
+          }
+          if (intent === 'secondary') return `brand ${secondarySteps[scheme].main} ${code(brand[secondarySteps[scheme].main])}`;
           const pick = intentSteps[scheme][intent];
           return pick ? `${pick.ramp} ${pick.step} ${code(pick.main)}` : "MUI's default";
         };
@@ -89,7 +116,7 @@ export function colorMarkdown() {
       ]),
     ),
     '## Borders',
-    "Three borders by contrast against the surfaces: level0 is the faintest and level2 the strongest, in both schemes, so a border looks the same weight in light and dark. `divider` is level1, so MUI's Divider and outlined components use it. Set one with `sx={{ borderColor: 'border.level2' }}`.",
+    "Four borders by contrast against the surfaces, in both schemes, so a border looks the same weight in light and dark. level0 to level2 separate and frame: level0 is the faintest, and `divider` is level1, so MUI's Divider uses it. level3 is for control outlines (outlined buttons, inputs) and reaches 3:1 on every surface, the contrast WCAG asks of a control's boundary. Set one with `sx={{ borderColor: 'border.level2' }}`.",
     table(
       ['Level', 'Theme path', 'Light', 'Dark', 'Source'],
       (Object.keys(borderSteps.light) as (keyof typeof borderSteps.light)[]).map((level) => [
@@ -104,13 +131,12 @@ export function colorMarkdown() {
     '## Ramps',
     "The primitives the surface and border levels are read from, in MUI's color-object shape (`src/mui/colors.ts`). Components never use a ramp step directly; they use a level.",
     table(
-      ['Step', 'Slate (light)', 'Navy (dark)'],
-      [...new Set([...Object.keys(slate), ...Object.keys(navy)].map(Number))]
+      ['Step', 'Slate (light surfaces)', 'Navy (dark surfaces, primary)', 'Brand (secondary)', 'Orange (light warning)', 'Yellow (dark warning)'],
+      [...new Set([slate, navy, brand, orange, yellow].flatMap((ramp) => Object.keys(ramp)).map(Number))]
         .sort((a, b) => a - b)
         .map((step) => [
           code(step),
-          step in slate ? code(slate[step as keyof typeof slate]) : '—',
-          step in navy ? code(navy[step as keyof typeof navy]) : '—',
+          ...[slate, navy, brand, orange, yellow].map((ramp) => (step in ramp ? code((ramp as Record<number, string>)[step]) : '—')),
         ]),
     ),
     '## Action',
@@ -193,10 +219,21 @@ export function spacingMarkdown() {
 }
 
 export function shapeMarkdown() {
+  const theme = (units: number) => themes.light.spacing(units);
   const radius = themes.light.shape.borderRadius;
   return [
-    `MUI has one radius, ${code(`${radius}px`)}. Buttons, inputs, cards, menus and chips use it. In \`sx\`, \`borderRadius\` multiplies it: \`sx={{ borderRadius: 2 }}\` is ${code(`${Number(radius) * 2}px`)}.`,
+    `The theme has one radius, ${code(`${radius}px`)}, MUI's single \`shape.borderRadius\`. Buttons, icon buttons, inputs, cards, menus, dialogs, tooltips and toggle buttons use it. Chips and avatars keep their own pill and circle shapes. In \`sx\`, \`borderRadius\` multiplies it: \`sx={{ borderRadius: 2 }}\` is ${code(`${Number(radius) * 2}px`)}.`,
     table(['Theme path', 'Value', 'Source'], [[code('shape.borderRadius'), code(`${radius}px`), sourceOf('shape.borderRadius')]]),
+    '## Nested corners',
+    "When a rounded element sits close inside a rounded container, the container's radius is the element's radius plus the gap between them, so the corners are concentric. The element keeps the theme radius; the container grows. The radius unit and the spacing unit are both 8px, so in `sx` it's addition. At a gap of 16px or more the corners read as separate shapes and both keep the theme radius. See Rules → Concentric corners.",
+    table(
+      ['Gap (padding + border)', 'Container radius', 'Container `sx`'],
+      [0.5, 1, 1.5].map((gap) => [
+        `${code(theme(gap))} (\`p: ${gap}\`)`,
+        code(`${Number(radius) + Number.parseFloat(theme(gap))}px`),
+        code(`borderRadius: ${1 + gap}`),
+      ]),
+    ),
   ].join('\n\n');
 }
 
@@ -289,19 +326,19 @@ export function motionMarkdown() {
 export const foundationPages: { name: string; lead: string; specimen?: string; extraSpecimens?: string[]; markdown: () => string }[] = [
   {
     name: 'Color',
-    lead: "The palette in its light and dark schemes: MUI's intents, text, action overlays and greys, with Kilowatt's surface and border levels and the ramps they come from.",
+    lead: "The palette in its light and dark schemes: the intents (a navy primary that turns light neutral in dark, a brand-blue secondary, a purple info, and MUI's other intents where they pass on every surface), text, action overlays, greys, the surface and border levels, and the ramps they come from.",
     specimen: 'Color',
     extraSpecimens: ['IntentsOnSurfaces'],
     markdown: colorMarkdown,
   },
   {
     name: 'Typography',
-    lead: "MUI's type: Roboto, four weights and thirteen variants, set through Typography's `variant`.",
+    lead: "MUI's type scale: Roboto, four weights and thirteen variants, set through Typography's `variant`. The `button` style departs: regular weight, shown as written.",
     specimen: 'Typography_',
     markdown: typographyMarkdown,
   },
   { name: 'Spacing', lead: "MUI's 8px spacing unit and its multiples.", specimen: 'Spacing', markdown: spacingMarkdown },
-  { name: 'Shape', lead: "MUI's border radius.", specimen: 'Shape', markdown: shapeMarkdown },
+  { name: 'Shape', lead: 'The corner radius every rounded component takes from the theme.', specimen: 'Shape', markdown: shapeMarkdown },
   {
     name: 'Elevation',
     lead: "MUI's 25 shadow levels and the elevation each of its surfaces uses.",
