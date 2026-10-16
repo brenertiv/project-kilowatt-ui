@@ -187,15 +187,15 @@ export const departures: Departure[] = [
     id: 'outlined-button-borders',
     area: 'Components',
     components: ['Button'],
-    title: 'Outlined buttons use the control border',
-    why: "MUI outlines an outlined button in its intent color at half strength. Kilowatt draws it in `border.level3`, the border level for control outlines, which reaches 3:1 on every surface, so control edges read the same across the UI and stay visible; the label carries the intent. Hover keeps the outline and shows MUI's background tint. Disabled buttons keep MUI's disabled border.",
+    title: 'Primary outlined buttons use the control border',
+    why: "MUI outlines an outlined button in its intent color at half strength. A primary outlined button instead draws its outline in `border.level3`, the border level for control outlines (3:1 on every surface), so the most common outlined button reads like every other control edge; hover keeps the outline and shows MUI's background tint. The other intents (secondary, error, warning, info, success) keep MUI's outline on purpose: the intent color carries their meaning, so leave them as MUI ships them. Disabled buttons keep MUI's disabled border.",
     options: () => ({
       components: {
         MuiButton: {
           styleOverrides: {
             root: {
-              // MUI draws the outline from --variant-outlinedBorder (and sets border-color directly for color="inherit").
-              '&.MuiButton-outlined:not(.Mui-disabled)': {
+              // MUI draws the outline from --variant-outlinedBorder. Primary only: the other intents keep MUI's.
+              '&.MuiButton-outlined.MuiButton-colorPrimary:not(.Mui-disabled)': {
                 '--variant-outlinedBorder': 'var(--mui-palette-border-level3)',
                 borderColor: 'var(--variant-outlinedBorder)',
                 '@media (hover: hover)': { '&:hover': { '--variant-outlinedBorder': 'var(--mui-palette-border-level3)' } },
