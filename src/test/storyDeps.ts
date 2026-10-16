@@ -27,6 +27,7 @@ export const storyDeps = [
   '@mui/material/colors',
   '@mui/material/CssBaseline',
   '@mui/material/Icon',
+  '@mui/material/IconButton',
   '@mui/material/Paper',
   '@mui/material/Stack',
   '@mui/material/ToggleButton',

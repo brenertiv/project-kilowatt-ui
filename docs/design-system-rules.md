@@ -51,7 +51,7 @@ To check: inspect each bordered element in the browser and compare its border on
 
 A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:
 
-1. Add an entry to `src/mui/departures.ts` with the reason. Theme changes go in `options`; anything outside the theme goes in `convention`, saying what MUI does, what Kilowatt does instead and where.
+1. Add an entry to `src/mui/departures.ts` with the reason. Theme changes go in `options`; anything outside the theme goes in `convention`, saying what MUI does, what Kilowatt does instead and where. List the MUI components it changes in `components` (leave it out only for a theme-wide change), and add the departure to each of those components' pages under MUI departures.
 2. Don't set theme values anywhere else. `departures.test.ts` fails when the theme differs from stock MUI anywhere a departure doesn't claim.
 3. Check that the new convention doesn't overlap an existing one. If two entries touch the same thing, merge them.
 

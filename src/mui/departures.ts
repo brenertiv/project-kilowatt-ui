@@ -31,6 +31,13 @@ export type Departure = {
   options?: (scheme: ColorScheme) => ThemeOptions;
   /** For a convention outside the theme: what MUI does, what Kilowatt does instead, and where. */
   convention?: { muiDefault: string; kilowatt: string; where: string };
+  /**
+   * The MUI components (by import name, as in `@mui/material/Button`) whose look or use this
+   * departure changes. Each one's docs page lists it under "MUI departures", and
+   * `src/components/docs.test.ts` checks that it does. Absent for a theme-wide departure
+   * (the palette, CSS variables), which every component inherits and no page lists.
+   */
+  components?: string[];
 };
 
 /** Surfaces by elevation, per scheme: the ramp step each level uses. level0 is the page (darkest), level4 the highest (lightest). */
@@ -88,7 +95,7 @@ export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: str
 const intentContrastText: Record<ColorScheme, string> = { light: '#fff', dark: 'rgba(0, 0, 0, 0.87)' };
 
 /** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
-const selectableControls = ['MuiToggleButton', 'MuiTab', 'MuiListItemButton', 'MuiMenuItem', 'MuiBottomNavigationAction'] as const;
+const selectableControls = ['ToggleButton', 'Tab', 'ListItemButton', 'MenuItem', 'BottomNavigationAction'] as const;
 
 export const departures: Departure[] = [
   {
@@ -122,6 +129,7 @@ export const departures: Departure[] = [
   },
   {
     id: 'paper-surface-levels',
+    components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
     title: 'Paper takes its surface from its elevation',
     why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Cards sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4.",
@@ -147,6 +155,7 @@ export const departures: Departure[] = [
   },
   {
     id: 'icons',
+    components: ['Icon', 'Button', 'IconButton'],
     area: 'Icons',
     title: 'Icon set',
     why: `Google's Material Symbols variable font through MUI's Icon, instead of MUI's SVG icon package, so weight and fill are axes rather than separate icons. Icons render at weight ${iconWeight}, a step lighter than the font's 400, so they sit lighter beside text.`,
@@ -170,12 +179,13 @@ export const departures: Departure[] = [
   },
   {
     id: 'selected-fills-icons',
+    components: [...selectableControls],
     area: 'Components',
     title: 'Selected controls fill their icons',
     why: 'A selected control shows its icon filled and an unselected one outlined, so selection reads from the glyph as well as from the control\'s color. Applies to every MUI control with a selected state; an icon with an explicit fill keeps it.',
     options: () => ({
       components: Object.fromEntries(
-        selectableControls.map((control) => [control, { styleOverrides: { root: { '&.Mui-selected': { '--icon-fill': 1 } } } }]),
+        selectableControls.map((control) => [`Mui${control}`, { styleOverrides: { root: { '&.Mui-selected': { '--icon-fill': 1 } } } }]),
       ),
     }),
   },

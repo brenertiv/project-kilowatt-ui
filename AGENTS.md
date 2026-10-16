@@ -25,7 +25,7 @@ Kilowatt is Enertiv's design system. It is stock Material UI, with MUI's own lig
 
 ## When you change the system
 
-- **New or changed components.** Give the component JSDoc (a description, `@summary`, `@import`, and a line for every prop with its default), and add `Name.stories.tsx` beside it with one story per state. See `docs/stories.md`.
+- **New or changed components.** Every component gets `Name.stories.tsx` and `Name.mdx` in `src/components`, in the one format in `docs/stories.md` (Button is the reference): `parameters.muiComponents`, args only for non-default values, one story per variant and state with a JSDoc line, and a page with When to use, Usage, Do and don't, MUI departures and Accessibility sections. `src/components/docs.test.ts` enforces it. A component of our own also needs JSDoc (a description, `@summary`, `@import`, and a line for every prop with its default).
 - **Story files** import with `src/...` paths, never relative ones.
 - **Checks before you finish:**
   - `npm run lint`

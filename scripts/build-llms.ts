@@ -45,7 +45,7 @@ const out = resolve(root, process.argv[2] ?? 'storybook-static');
 const read = <T>(file: string): T => JSON.parse(readFileSync(join(out, file), 'utf8')) as T;
 
 /** Section order, matching the Storybook sidebar. */
-const sections = ['Primitives', 'Data', 'Table', 'Charts', 'Menus', 'Patterns', 'Pages'];
+const sections = ['Components'];
 
 /**
  * The import block from the manifest, cut down to what a consumer writes.

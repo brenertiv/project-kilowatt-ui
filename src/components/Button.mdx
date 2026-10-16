@@ -1,0 +1,84 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ButtonStories from './Button.stories';
+
+<Meta
+  of={ButtonStories}
+  summary="MUI's Button and IconButton for actions: contained for the main action, outlined for secondary, text for low emphasis, IconButton for icon-only actions."
+/>
+
+# Button
+
+A button starts an action. Kilowatt uses MUI's `Button` and `IconButton` from `@mui/material` (Material UI v9) with no wrapper; the theme differs from stock MUI only as listed under MUI departures below. Props are MUI's: see the [Button API](https://mui.com/material-ui/api/button/) and [IconButton API](https://mui.com/material-ui/api/icon-button/).
+
+<Canvas of={ButtonStories.Contained} />
+
+## When to use
+
+- Use a button to start an action: save, dispatch, export, open a dialog.
+- For navigation to another page, use MUI's `Link` instead; a button that only changes the URL should be a link.
+- For an option that stays on or off, use `ToggleButton` or `Switch`, not a button that changes its own label.
+- For an icon-only action in dense UI (a card's overflow menu, a table row action), use `IconButton`.
+
+## Usage
+
+```tsx
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import { Icon } from 'src/icons';
+
+<Button variant="contained" startIcon={<Icon name="add" />} onClick={create}>
+  New work order
+</Button>
+
+<IconButton aria-label="More actions" onClick={openMenu}>
+  <Icon name="more_horiz" fontSize="inherit" />
+</IconButton>
+```
+
+## Variants
+
+MUI's emphasis levels, from most to least:
+
+- `variant="contained"`: the main action in a view or dialog. One per view.
+- `variant="outlined"`: an important action that isn't the main one, usually beside it.
+- `variant="text"` (MUI's default): low emphasis, for toolbars, table rows, cards and dialog actions.
+
+`color` takes a palette intent (`primary`, the default, `secondary`, `error`, `warning`, `info`, `success`, `inherit`) for what the action means. `size` is `small`, `medium` (the default) or `large`; use `small` in dense toolbars and table rows.
+
+## States
+
+- `disabled`: the action isn't available. Say why nearby.
+- `loading`: the action is running. MUI disables the button and shows a spinner; with `loadingPosition="start"` the spinner takes the start icon's place. In v9 this is a `Button` prop; there is no `LoadingButton`.
+
+## Do and don't
+
+- Do name the action in the label: "Dispatch ticket", "Export CSV".
+- Don't use vague labels like "OK" or "Submit"; name what happens instead.
+- Do keep one contained button per view.
+- Don't put two contained buttons side by side; make the less important one outlined or text.
+- Do use `color="error"` only on the button that confirms a destructive action, inside a confirmation dialog.
+- Don't run a destructive or irreversible action straight from a button; confirm it in a dialog first.
+- Do pass icons as `startIcon` or `endIcon` with `Icon` from `src/icons`, and let the button size them.
+- Don't place an `Icon` inside the label text or set its size yourself; the button sets 18, 20 or 22px for its size.
+- Do give every `IconButton` an `aria-label`.
+- Don't leave a disabled button unexplained; say nearby why it's unavailable.
+
+## MUI departures
+
+- `icons`: icons are `Icon` from `src/icons` (Material Symbols at weight 300), not `@mui/icons-material`. In `startIcon` and `endIcon` the button sizes them as it would MUI's SVG icons.
+
+Theme-wide departures (CSS variables, surface and border levels, intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI renders a native `button`, with keyboard activation and a visible focus state.
+- Every `IconButton` needs an `aria-label`: icons are `aria-hidden`, so the label is the only accessible name.
+- A `loading` button is disabled and leaves the tab order; announce the result when the action finishes.
+
+## Related
+
+- `ToggleButton` for on/off and single-choice options.
+- `Link` for navigation.
+- Foundations → Icons for the icon names.
+
+<Stories includePrimary={false} />

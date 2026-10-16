@@ -163,7 +163,11 @@ function writeDepartures() {
   for (const area of [...new Set(departures.map((departure) => departure.area))]) {
     sections.push(`## ${area}`);
     for (const departure of departures.filter((entry) => entry.area === area)) {
-      sections.push(`### ${departure.title}`, departure.why);
+      sections.push(
+        `### ${departure.title}`,
+        departure.why,
+        departure.components ? `Applies to: ${departure.components.map((name) => `\`${name}\``).join(', ')}.` : 'Applies to: every component (theme-wide).',
+      );
       if (departure.convention) {
         const { muiDefault, kilowatt, where } = departure.convention;
         sections.push(`| MUI default | Kilowatt | Where |\n| --- | --- | --- |\n| ${muiDefault} | ${kilowatt} | ${cell(where)} |`);

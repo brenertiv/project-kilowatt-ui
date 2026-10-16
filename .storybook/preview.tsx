@@ -104,7 +104,7 @@ const preview: Preview = {
     layout: 'padded',
     options: {
       storySort: {
-        order: ['Introduction', 'Guides', ['Rules', 'Writing stories', '*'], 'Foundations', ['MUI departures', 'Color', 'Typography', 'Spacing', 'Shape', 'Elevation', 'Layout', 'Z-index', 'Motion', 'Icons']],
+        order: ['Introduction', 'Guides', ['Rules', 'Writing stories', '*'], 'Foundations', ['MUI departures', 'Color', 'Typography', 'Spacing', 'Shape', 'Elevation', 'Layout', 'Z-index', 'Motion', 'Icons'], 'Components'],
       },
     },
     controls: { expanded: true, sort: 'requiredFirst' },
