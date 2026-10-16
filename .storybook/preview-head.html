@@ -8,11 +8,38 @@
 />
 <!-- Storybook docs chrome, not the design system. -->
 <style>
-  /* A docs table wider than the page scrolls on its own instead of spilling past it. */
+  /*
+   * A docs table wider than the page scrolls on its own instead of spilling past it.
+   * The scroll box draws the outer frame, sized to the table, so the frame stays put
+   * while the columns scroll; the cells keep only their inner dividers, so no edge is
+   * drawn twice. --docs-border-color is Storybook's border color for the scheme
+   * (set in preview.tsx), the same color as the cell lines.
+   */
   .sbdocs-content table {
     display: block;
+    width: max-content;
     max-width: 100%;
     overflow-x: auto;
+    border: 1px solid var(--docs-border-color);
+    border-radius: 4px;
+  }
+
+  .sbdocs-content table tr > :first-child {
+    border-left: 0;
+  }
+
+  .sbdocs-content table tr > :last-child {
+    border-right: 0;
+  }
+
+  .sbdocs-content table > :first-child > tr:first-child,
+  .sbdocs-content table > :first-child > tr:first-child > * {
+    border-top: 0;
+  }
+
+  .sbdocs-content table > :last-child > tr:last-child,
+  .sbdocs-content table > :last-child > tr:last-child > * {
+    border-bottom: 0;
   }
 
   /* Flat docs blocks: story previews, code and props tables keep their border, no shadow. */

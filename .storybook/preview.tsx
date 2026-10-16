@@ -34,6 +34,11 @@ function SchemeDocsContainer(props: DocsContainerProps & { children?: ReactNode 
     },
     () => docsScheme,
   );
+  // Storybook draws docs-table cell lines in the theme's border color; preview-head.html
+  // draws the table's outer frame in the same color through this variable.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--docs-border-color', themes[scheme].appBorderColor);
+  }, [scheme]);
   return <DocsContainer {...props} theme={themes[scheme]} />;
 }
 
