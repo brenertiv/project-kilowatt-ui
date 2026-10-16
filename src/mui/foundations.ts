@@ -1,6 +1,6 @@
 import type { Theme } from '@mui/material/styles';
 import { navy, slate } from './colors';
-import { borderSteps, departures, elevationSurfaces, intentSteps, surfaceSteps, type ColorScheme } from './departures';
+import { borderSteps, departures, elevationSurfaces, intentSteps, primarySteps, surfaceSteps, type ColorScheme } from './departures';
 import { createSchemeTheme } from './theme';
 import { departureChanges } from './themeDiff';
 
@@ -58,11 +58,12 @@ export function colorMarkdown() {
     'The theme carries MUI\'s light and dark palettes as color schemes. Components read the palette of the active scheme, so a component never picks a color per scheme itself. Switch the scheme with `useColorScheme().setMode`.',
     '## Intents',
     'Each intent has `main`, `light`, `dark` and `contrastText`. Pass the intent to a component (`color="primary"`, `severity="error"`) rather than a color.',
-    "Every `main` passes 4.5:1 as text on all five surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`) and MUI derives `light` and `dark` from it:",
+    "Every `main` passes 4.5:1 as text on all five surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy (the `primary-navy` departure), on the navy ramp. For the other intents, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`) and MUI derives `light` and `dark` from it:",
     table(
       ['Intent', 'Light', 'Dark'],
       intents.map((intent) => {
         const cell = (scheme: ColorScheme) => {
+          if (intent === 'primary') return `navy ${primarySteps[scheme].main} ${code(navy[primarySteps[scheme].main])}`;
           const pick = intentSteps[scheme][intent];
           return pick ? `${pick.ramp} ${pick.step} ${code(pick.main)}` : "MUI's default";
         };

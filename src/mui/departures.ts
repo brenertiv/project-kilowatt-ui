@@ -2,7 +2,7 @@ import type { ThemeOptions } from '@mui/material/styles';
 import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
-import { blue, deepOrange, green, lightBlue, purple, red } from '@mui/material/colors';
+import { deepOrange, green, lightBlue, purple, red } from '@mui/material/colors';
 import { navy, slate } from './colors';
 
 /**
@@ -77,7 +77,6 @@ type Intent = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
  */
 export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: string; step: string; main: string }>>> = {
   light: {
-    primary: { ramp: 'blue', step: '800', main: blue[800] },
     error: { ramp: 'red', step: '800', main: red[800] },
     warning: { ramp: 'deepOrange', step: '900', main: deepOrange[900] },
     info: { ramp: 'lightBlue', step: '900', main: lightBlue[900] },
@@ -93,6 +92,16 @@ export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: str
 
 /** MUI's contrast text for each scheme: white on light-scheme intents, near-black on dark-scheme ones. */
 const intentContrastText: Record<ColorScheme, string> = { light: '#fff', dark: 'rgba(0, 0, 0, 0.87)' };
+
+/**
+ * Primary, per scheme, on the navy ramp: `main` and the hover step (`dark`). Light sets
+ * `light` too, since MUI's derived shades of a navy this deep barely differ; dark lets
+ * MUI derive `light` from `main`.
+ */
+export const primarySteps: Record<ColorScheme, { main: keyof typeof navy; light?: keyof typeof navy; dark: keyof typeof navy }> = {
+  light: { main: 700, light: 600, dark: 800 },
+  dark: { main: 25, dark: 100 },
+};
 
 /** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
 const selectableControls = ['ToggleButton', 'Tab', 'ListItemButton', 'MenuItem', 'BottomNavigationAction'] as const;
@@ -126,6 +135,20 @@ export const departures: Departure[] = [
         Object.entries(intentSteps[scheme]).map(([intent, { main }]) => [intent, { main, contrastText: intentContrastText[scheme] }]),
       ),
     }),
+  },
+  {
+    id: 'primary-navy',
+    area: 'Palette',
+    title: 'Navy primary',
+    why: "Primary is Enertiv navy instead of MUI's blue: navy 700 in light, and navy 25 in dark, the light end of the same ramp so it reads on the dark navy surfaces. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) turns navy.",
+    options: (scheme) => {
+      const { main, light, dark } = primarySteps[scheme];
+      return {
+        palette: {
+          primary: { main: navy[main], ...(light === undefined ? {} : { light: navy[light] }), dark: navy[dark], contrastText: intentContrastText[scheme] },
+        },
+      };
+    },
   },
   {
     id: 'button-text-case',

@@ -19,11 +19,14 @@ export const slate = {
 } as const;
 
 /**
- * Deep blues for dark-scheme surfaces and borders. 900 is the darkest. 750 and 650
- * are added between the ramp's steps, as the OKLab midpoints of their neighbours,
- * so the dark scheme has five surfaces that all pass text contrast.
+ * Deep blues for dark-scheme surfaces and borders, and the primary intent. 900 is the
+ * darkest. 750 and 650 are added between the ramp's steps, as the OKLab midpoints of
+ * their neighbours, so the dark scheme has five surfaces that all pass text contrast.
+ * 25 is added past 50, a step lighter in OKLab, so dark-scheme primary passes 4.5:1
+ * on every dark surface.
  */
 export const navy = {
+  25: '#88beec',
   50: '#79b5e8',
   100: '#72abdb',
   200: '#6ca2cf',
