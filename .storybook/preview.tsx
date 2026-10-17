@@ -1,5 +1,5 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { useColorScheme } from '@mui/material/styles';
+import { createTheme, useColorScheme } from '@mui/material/styles';
 import type { Decorator, Preview } from '@storybook/react-vite';
 import { DocsContainer, type DocsContainerProps } from '@storybook/addon-docs/blocks';
 import { addons } from 'storybook/preview-api';
@@ -9,6 +9,7 @@ import { createQueryClient } from '../src/api/queryClient';
 import { a11yRules } from '../src/stories/a11y';
 import { withMockApi } from '../src/stories/decorators';
 import type { ColorScheme } from '../src/mui/departures';
+import { themeOptions } from '../src/mui/theme';
 import '../src/i18n';
 
 /**
@@ -73,6 +74,13 @@ const withProviders: Decorator = (Story, context) => (
   </StoryProviders>
 );
 
+/**
+ * The spacing unit in pixels (MUI's 8px), which the canvas grid's cells follow. Read
+ * without CSS variables, as the Foundations pages do (src/mui/foundations.ts): with them
+ * on, `spacing(1)` is `var(--mui-spacing, 8px)` rather than `8px`.
+ */
+const spacingUnit = parseFloat(createTheme({ ...themeOptions('light'), cssVariables: false }).spacing(1));
+
 const preview: Preview = {
   // Listed innermost first: the mock switches apply inside the providers.
   decorators: [withMockApi, withProviders],
@@ -104,6 +112,9 @@ const preview: Preview = {
       },
     },
     layout: 'padded',
+    // The canvas grid (toolbar → Show grid) on the spacing scale: a cell per spacing
+    // unit, a major line every 8 units (64px). Its colors are in preview-head.html.
+    backgrounds: { grid: { cellSize: spacingUnit, cellAmount: 8 } },
     options: {
       storySort: {
         order: ['Introduction', 'Guides', ['Rules', 'Writing stories', '*'], 'Foundations', ['MUI departures', 'Color', 'Typography', 'Spacing', 'Shape', 'Elevation', 'Layout', 'Z-index', 'Motion', 'Icons'], 'Components'],
