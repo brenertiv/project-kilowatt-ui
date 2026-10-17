@@ -43,6 +43,34 @@
     border-bottom: 0;
   }
 
+  /*
+   * The canvas grid (toolbar → Show grid) in faint blue instead of Storybook's gray.
+   * Storybook only lets you set its opacity, so this redraws its lines while its grid
+   * style (#addon-backgrounds-grid) is present. Light uses the brand blue
+   * (secondary light), a lighter blue than the navy primary; dark uses border level0,
+   * which is navy there.
+   * Minor lines are half the major lines' strength, as in Storybook's grid, and
+   * there's no blend mode, so the color stays true on the page surface.
+   */
+  :root {
+    --grid-line: rgb(var(--mui-palette-secondary-lightChannel) / 0.24);
+    --grid-line-minor: rgb(var(--mui-palette-secondary-lightChannel) / 0.12);
+  }
+
+  :root.dark {
+    --grid-line: color-mix(in srgb, var(--mui-palette-border-level0) 70%, transparent);
+    --grid-line-minor: color-mix(in srgb, var(--mui-palette-border-level0) 35%, transparent);
+  }
+
+  html:has(style#addon-backgrounds-grid) body.sb-show-main {
+    background-blend-mode: normal !important;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(var(--grid-line-minor) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line-minor) 1px, transparent 1px) !important;
+  }
+
   /* Flat docs blocks: story previews, code and props tables keep their border, no shadow. */
   #storybook-docs :is(.sbdocs-preview, .docblock-source, .docblock-argstable, .docblock-argstable tbody) {
     box-shadow: none !important;
