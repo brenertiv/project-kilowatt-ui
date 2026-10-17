@@ -28,7 +28,7 @@ import Typography from '@mui/material/Typography';
 
 ## Variants
 
-`size` is `small`, `medium` (the default) or `large`. `precision={0.5}` allows half stars. `max` changes the number of stars from 5; keep it at 5. The stars are MUI's built-in glyphs, in MUI's default star color.
+`size` is `small`, `medium` (the default) or `large`; keep `medium` and set another size only for a one-off instance (Rules → Component size). `precision={0.5}` allows half stars. `max` changes the number of stars from 5; keep it at 5. The stars are MUI's built-in glyphs, in MUI's default star color.
 
 ## States
 
@@ -46,7 +46,7 @@ import Typography from '@mui/material/Typography';
 
 ## MUI departures
 
-No departure changes `Rating` on its own.
+- `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
 
 Theme-wide departures (CSS variables and the palette) apply too; see Foundations → MUI departures.
 

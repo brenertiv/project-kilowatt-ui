@@ -86,7 +86,7 @@ export const Disabled: Story = {
   ),
 };
 
-/** MUI's two sizes on `Radio`. `small` suits dense forms and table rows. */
+/** MUI's two sizes on `Radio`. Keep `medium`, the default; `small` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <RadioGroup row aria-label="Sizes" name="sizes" defaultValue="small">

@@ -38,7 +38,7 @@ import TextField from '@mui/material/TextField';
 - `variant="outlined"` (MUI's default): use it everywhere.
 - `variant="filled"` and `variant="standard"`: MUI's alternatives. Don't mix them with outlined fields in one form.
 
-`size` is `small` or `medium` (the default); use `small` in dense toolbars, filters and table rows. `multiline` with `minRows` or `rows` makes a text area. Units and icons go in `InputAdornment`, passed through `slotProps.input`; attributes for the native input (`min`, `max`, `step`, `inputMode`) go in `slotProps.htmlInput`. In v9 the old `InputProps` and `inputProps` props are gone.
+`size` is `small` or `medium` (the default); keep `medium` and set another size only for a one-off instance (Rules → Component size). `multiline` with `minRows` or `rows` makes a text area. Units and icons go in `InputAdornment`, passed through `slotProps.input`; attributes for the native input (`min`, `max`, `step`, `inputMode`) go in `slotProps.htmlInput`. In v9 the old `InputProps` and `inputProps` props are gone.
 
 ## States
 
@@ -61,6 +61,7 @@ import TextField from '@mui/material/TextField';
 
 ## MUI departures
 
+- `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
 - `control-outlines`: the resting outline is `palette.control.border`, shared by every input, select, outlined button and toggle button, from the Figma button-border tokens: slate 500 in light, navy 700 in dark, quieter than 3:1 by design. Hover is navy 200 (light) or navy 300 (dark); focus keeps MUI's 2px primary outline. Error and disabled keep MUI's colors.
 
 Theme-wide departures (CSS variables, the 8px corner radius, surface and border levels, the navy primary for the focus ring and label, and the other intent colors) apply too; see Foundations → MUI departures.

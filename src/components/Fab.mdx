@@ -34,7 +34,7 @@ import { Icon } from 'src/icons';
 - `variant="circular"` (MUI's default): icon only. Needs an `aria-label`.
 - `variant="extended"`: icon and label. Use it when the icon alone isn't clear.
 
-`size` is `small`, `medium` or `large` (MUI's default). `color` takes a palette intent; use `primary`. MUI's `default` color is a neutral grey surface.
+`size` is `small`, `medium` (the default here; MUI's is `large`) or `large`; keep `medium` and set another size only for a one-off instance (Rules → Component size). `color` takes a palette intent; use `primary`. MUI's `default` color is a neutral grey surface.
 
 Position the Fab with `sx` (`position: 'fixed'` and spacing offsets), clear of other floating layers such as snackbars.
 
@@ -53,6 +53,7 @@ Position the Fab with `sx` (`position: 'fixed'` and spacing offsets), clear of o
 
 ## MUI departures
 
+- `medium-size`: a Fab defaults to `medium` instead of MUI's `large`; set `small` or `large` only for a one-off instance.
 - `button-text-case`: an extended Fab's label is shown as written, not uppercased, and written in Title Case.
 - `button-text-weight`: the label is regular weight (400) instead of MUI's medium (500).
 

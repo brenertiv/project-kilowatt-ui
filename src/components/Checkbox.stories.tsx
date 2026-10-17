@@ -118,7 +118,7 @@ export const Disabled: Story = {
   ),
 };
 
-/** MUI's three sizes. `medium` is the default; `small` suits table rows and dense lists. */
+/** MUI's three sizes. Keep `medium`, the default; another size is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>

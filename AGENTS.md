@@ -21,8 +21,9 @@ Kilowatt is Enertiv's design system. It is Material UI with light and dark color
 4. **Surfaces and borders.** Backgrounds are `background.level0` (page) to `level4` (highest); Paper picks its level from `elevation`. Borders are `border.level0` (faintest) to `level2` for separators and frames, with `divider` at `level1`; `border.level3` (3:1) is only for outlines on interactive elements; MUI's controls take theirs from `palette.control.border`. Never use a ramp step from `src/mui/colors.ts` directly.
 5. **One border per edge.** While building UI, look for double borders on the same layer (nested frames, adjacent full borders, a divider on a container's edge, border plus shadow, borders inside a scroll container) and keep one line per edge. Modals, menus, popovers and other floating layers are exempt. See Rules → One border per edge.
 6. **Concentric corners.** Every rounded component uses the theme radius (8px; `sx` `borderRadius: 1`), and it changes only through the `shape-radius` departure, never per intent, variant or instance. When a rounded element sits within 16px of a rounded container's corner, the container's radius is the element's plus the gap; the element keeps the theme radius. See Rules → Concentric corners.
-7. **Icons.** Use `<Icon name="…" />` from `src/icons` (Material Symbols through MUI's `Icon`), with MUI's `fontSize` and `color` for size and color. Selected controls fill their icons through the theme; don't pass `fill={selected}`. An icon-only control needs an `aria-label`.
-8. **Use only documented props.** If a prop you need doesn't exist, say so rather than passing something undocumented.
+7. **Medium size.** Components with a `size` prop stay at `medium`, the default (Fab included, through the `medium-size` departure); leave `size` off. Use `small` or `large` only for a one-off instance, and keep controls that sit together at one size. See Rules → Component size.
+8. **Icons.** Use `<Icon name="…" />` from `src/icons` (Material Symbols through MUI's `Icon`), with MUI's `fontSize` and `color` for size and color. Selected controls fill their icons through the theme; don't pass `fill={selected}`. An icon-only control needs an `aria-label`.
+9. **Use only documented props.** If a prop you need doesn't exist, say so rather than passing something undocumented.
 
 ## When you change the system
 

@@ -70,7 +70,7 @@ export const Intents: Story = {
   ),
 };
 
-/** MUI's three sizes. `medium` is the default; `small` suits dense toolbars and table rows. */
+/** MUI's three sizes. Keep `medium`, the default; another size is for a one-off instance. */
 export const Sizes: Story = {
   args: { variant: 'contained' },
   render: (args) => (

@@ -82,6 +82,14 @@ When a rounded element sits close inside a rounded container, their corners are 
 
 To check: wherever a rounded element sits within 16px of a rounded container's corner, compare the container's radius with the element's radius plus the gap.
 
+## Component size
+
+Every component with a `size` prop uses `medium`: buttons, icon buttons, button and toggle groups, Fabs, text fields, selects, autocompletes, checkboxes, radios, switches, sliders, ratings, chips, tables and pagination. It's MUI's default everywhere (the `medium-size` departure makes it Fab's too), so leave `size` off.
+
+- **One-offs only.** Set `small` or `large` on a single instance that needs it, such as one control squeezed into a table cell, and say why in a comment. Don't make another size the pattern for a screen, a section or a component type.
+- **Don't write the default.** `size="medium"` is noise; leave it out.
+- **One size per group.** Controls that sit together (a toolbar, a form row, a filter bar) share one size, so an override applies to the whole group or not at all.
+
 ## Adding a convention
 
 A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:

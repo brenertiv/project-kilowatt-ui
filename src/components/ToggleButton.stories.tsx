@@ -114,7 +114,7 @@ export const Standalone: Story = {
   },
 };
 
-/** MUI's three sizes, set on the group. `small` suits chart toolbars. */
+/** MUI's three sizes, set on the group. Keep `medium`, the default; another size is for a one-off instance. */
 export const Sizes: Story = {
   render: (args) => (
     <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
