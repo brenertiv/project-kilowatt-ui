@@ -38,7 +38,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 - A standalone `ToggleButton` with `selected` and `onChange`: one option on or off.
 - Icon-only buttons for compact toolbars, each with an `aria-label`.
 
-`size` is `small`, `medium` (the default) or `large`. `orientation="vertical"` stacks the group. `color` is `standard` (MUI's default) or a palette intent.
+`size` (on the group) is `small`, `medium` (the default) or `large`; keep `medium` and set another size only for a one-off instance (Rules → Component size). `orientation="vertical"` stacks the group. `color` is `standard` (MUI's default) or a palette intent.
 
 ## States
 
@@ -58,6 +58,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 ## MUI departures
 
+- `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
 - `button-text-case`: labels are shown as written, not uppercased, and written in Title Case.
 - `button-text-weight`: labels are regular weight (400) instead of MUI's medium (500).
 - `control-outlines`: the outline is `palette.control.border`, shared with inputs, selects and outlined buttons, instead of MUI's divider color (slate 500 in light, navy 700 in dark, from the Figma tokens).

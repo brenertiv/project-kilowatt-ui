@@ -44,7 +44,7 @@ import Select from '@mui/material/Select';
 - `multiple` takes an array value. Use `renderValue` to show the choices as text.
 - `native` renders the browser's own select, which suits touch devices; MUI's `NativeSelect` does the same.
 
-`size` (on the `FormControl` or `TextField`) is `small` or `medium` (the default).
+`size` (on the `FormControl` or `TextField`) is `small` or `medium` (the default); keep `medium` and set another size only for a one-off instance (Rules → Component size).
 
 ## States
 
@@ -64,6 +64,7 @@ import Select from '@mui/material/Select';
 
 ## MUI departures
 
+- `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
 - `control-outlines`: the resting outline is `palette.control.border`, shared by every input, select, outlined button and toggle button, from the Figma button-border tokens: slate 500 in light, navy 700 in dark, quieter than 3:1 by design. Hover is navy 200 (light) or navy 300 (dark); focus keeps MUI's 2px primary outline. Error and disabled keep MUI's colors.
 - `selected-fills-icons`: an icon inside the selected `MenuItem` renders filled, an unselected one outlined.
 

@@ -115,7 +115,7 @@ export const Disabled: Story = {
   args: { 'aria-label': 'Lighting Level', defaultValue: 40, disabled: true },
 };
 
-/** MUI's two sizes. `small` suits filters and dense panels. */
+/** MUI's two sizes. Keep `medium`, the default; `small` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack spacing={2}>

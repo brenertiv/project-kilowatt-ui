@@ -56,7 +56,7 @@ export const Disabled: Story = {
   args: { name: 'disabled-rating', value: 2, disabled: true },
 };
 
-/** MUI's three sizes. `medium` is the default; `small` suits table rows. */
+/** MUI's three sizes. Keep `medium`, the default; another size is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack spacing={1}>

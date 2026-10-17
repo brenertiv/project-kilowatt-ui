@@ -101,7 +101,7 @@ export const Adornments: Story = {
   ),
 };
 
-/** MUI's two sizes. `medium` is the default; `small` suits dense toolbars, filters and table rows. */
+/** MUI's two sizes. Keep `medium`, the default; `small` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>

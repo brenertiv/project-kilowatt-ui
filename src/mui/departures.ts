@@ -290,6 +290,22 @@ export const departures: Departure[] = [
     options: () => ({ components: { MuiIconButton: { styleOverrides: { root: { borderRadius: 'var(--mui-shape-borderRadius)' } } } } }),
   },
   {
+    id: 'medium-size',
+    area: 'Components',
+    components: [
+      'Autocomplete', 'Button', 'ButtonGroup', 'Checkbox', 'Chip', 'Fab', 'FormControl', 'IconButton', 'Pagination',
+      'Radio', 'Rating', 'Select', 'Slider', 'Switch', 'Table', 'TextField', 'ToggleButton', 'ToggleButtonGroup',
+    ],
+    title: 'Medium size by default',
+    why: "MUI offers `small`, `medium` and sometimes `large` and leaves the choice to each screen, so sizes drift from page to page. Kilowatt uses `medium` wherever a component has a `size` prop, and keeps `small` and `large` for one-off instances. Every MUI component already defaults to `medium` except Fab, which defaults to `large`; Fab defaults to `medium` here so the rule holds without passing `size` anywhere.",
+    convention: {
+      muiDefault: 'Components default to `medium` (Fab to `large`); MUI leaves the size to each screen',
+      kilowatt: 'Leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance',
+      where: 'Every component with a `size` prop',
+    },
+    options: () => ({ components: { MuiFab: { defaultProps: { size: 'medium' } } } }),
+  },
+  {
     id: 'secondary-brand',
     area: 'Palette',
     title: 'Brand blue secondary',

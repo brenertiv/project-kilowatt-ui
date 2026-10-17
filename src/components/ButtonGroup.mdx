@@ -33,7 +33,7 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 
 ## Variants
 
-`variant` (`outlined`, MUI's default; `contained`; `text`), `color` and `size` are set once on the group and apply to every button. `orientation="vertical"` stacks the buttons. MUI squares the corners where buttons meet, so the group's outer corners keep the theme radius.
+`variant` (`outlined`, MUI's default; `contained`; `text`), `color` and `size` are set once on the group and apply to every button. `size` stays `medium`, the default, except for a one-off instance (Rules → Component size). `orientation="vertical"` stacks the buttons. MUI squares the corners where buttons meet, so the group's outer corners keep the theme radius.
 
 ## States
 
@@ -51,6 +51,7 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 
 ## MUI departures
 
+- `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
 - `control-outlines`: a primary outlined group's outline is `palette.control.border`, the outline shared with inputs and toggle buttons (slate 500 in light, navy 700 in dark, from the Figma tokens).
 - `flat-buttons`: a contained group has no shadow; `disableElevation` is on by default.
 

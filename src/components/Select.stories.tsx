@@ -126,7 +126,7 @@ export const Disabled: Story = {
   ),
 };
 
-/** MUI's two sizes, set on the `FormControl`. `small` suits filters and toolbars. */
+/** MUI's two sizes, set on the `FormControl`. Keep `medium`, the default; `small` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
