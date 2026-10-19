@@ -1,6 +1,6 @@
 # Kilowatt UI: instructions for coding agents
 
-Kilowatt is Enertiv's design system. It is Material UI with light and dark color schemes, changed only where a departure says so: the palette (surfaces, borders, a navy primary (light neutral in dark), a brand-blue secondary, a purple info, intent colors), the corner radius, the button style and the icon set. Read the Storybook before you write UI.
+Kilowatt is Enertiv's design system. It is Material UI with light and dark color schemes, changed only where a departure says so: the palette (surfaces, borders, a navy primary (light neutral in dark), a brand-blue secondary, a purple info, intent colors), the corner radius, the button style, the icon set, type rendering (tabular numerals, text wrapping, no synthesized styles) and reduced motion. Read the Storybook before you write UI.
 
 ## Look things up before writing UI
 
@@ -23,7 +23,9 @@ Kilowatt is Enertiv's design system. It is Material UI with light and dark color
 6. **Concentric corners.** Every rounded component uses the theme radius (8px; `sx` `borderRadius: 1`), and it changes only through the `shape-radius` departure, never per intent, variant or instance. When a rounded element sits within 16px of a rounded container's corner, the container's radius is the element's plus the gap; the element keeps the theme radius. See Rules → Concentric corners.
 7. **Medium size.** Components with a `size` prop stay at `medium`, the default (Fab included, through the `medium-size` departure); leave `size` off. Use `small` or `large` only for a one-off instance, and keep controls that sit together at one size. See Rules → Component size.
 8. **Icons.** Use `<Icon name="…" />` from `src/icons` (Material Symbols through MUI's `Icon`), with MUI's `fontSize` and `color` for size and color. Selected controls fill their icons through the theme; don't pass `fill={selected}`. An icon-only control needs an `aria-label`.
-9. **Use only documented props.** If a prop you need doesn't exist, say so rather than passing something undocumented.
+9. **Type and content.** Text renders antialiased through CssBaseline; don't override it. Numbers that are data (tables, KPIs, readings) use tabular figures: the theme sets them on numeric components, and `sx={{ fontVariantNumeric: 'tabular-nums' }}` covers the rest. Format numbers, units, currency and dates with `Intl`, use real punctuation (“ ” ’ – — …), cap long-form text at 60–75ch, and give truncated text a way to see the full value. See Rules → Typography and Content and layout.
+10. **Motion and feedback.** CssBaseline stills transitions under `prefers-reduced-motion`; JavaScript animations check it too. Hit areas are 24px at minimum. Color is never the only signal, and results that appear on their own are announced (Snackbar, Alert or `aria-live`). See Rules → Motion and Accessibility.
+11. **Use only documented props.** If a prop you need doesn't exist, say so rather than passing something undocumented.
 
 ## When you change the system
 

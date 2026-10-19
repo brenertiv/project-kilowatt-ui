@@ -94,6 +94,15 @@ describe('createKilowattTheme', () => {
     }
   });
 
+  it('sets tabular digits, wrapping and font synthesis, and stills transitions under reduced motion', () => {
+    const theme = createKilowattTheme();
+    expect(theme.components?.MuiTableCell?.styleOverrides?.root).toMatchObject({ fontVariantNumeric: 'tabular-nums' });
+    expect([theme.typography.h1.textWrap, theme.typography.body1.textWrap]).toEqual(['balance', 'pretty']);
+    const baseline = theme.components?.MuiCssBaseline?.styleOverrides as Record<string, Record<string, Record<string, string>>>;
+    expect(baseline.body.fontSynthesis).toBe('none');
+    expect(baseline['@media (prefers-reduced-motion: reduce)']['*, *::before, *::after'].transitionDuration).toBe('0.01ms !important');
+  });
+
   it('puts each Paper elevation on its surface level', () => {
     const root = createKilowattTheme().components?.MuiPaper?.styleOverrides?.root as Record<string, { backgroundColor: string }>;
     expect(root['&.MuiPaper-elevation1'].backgroundColor).toBe('var(--mui-palette-background-level1)');

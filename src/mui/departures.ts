@@ -387,4 +387,70 @@ export const departures: Departure[] = [
       components: { MuiToggleButton: { styleOverrides: { root: { color: 'var(--mui-palette-text-secondary)' } } } },
     }),
   },
+  {
+    id: 'tabular-numerals',
+    components: ['Table', 'TablePagination', 'Badge', 'Chip', 'Slider', 'Pagination'],
+    area: 'Typography',
+    title: 'Tabular numerals where numbers line up or change',
+    why: "MUI sets every digit proportionally, so columns of figures don't align and a value shifts sideways as it updates. Kilowatt shows readings, totals and counts everywhere, so the components that hold numbers (table cells, pagination, badges, chips, slider labels) use Roboto's tabular digits, each the same width. Running text keeps proportional digits, which sit better in a sentence.",
+    convention: {
+      muiDefault: 'Proportional digits everywhere',
+      kilowatt: "Tabular digits in the components listed; on any other number that changes or lines up (a KPI, a meter reading, a timer, a column of figures in your own layout), set `sx={{ fontVariantNumeric: 'tabular-nums' }}`",
+      where: 'Every number shown as data rather than as part of a sentence',
+    },
+    options: () => {
+      const tabular = { fontVariantNumeric: 'tabular-nums' };
+      return {
+        components: {
+          MuiTableCell: { styleOverrides: { root: tabular } },
+          MuiTablePagination: { styleOverrides: { root: tabular } },
+          MuiBadge: { styleOverrides: { badge: tabular } },
+          MuiChip: { styleOverrides: { label: tabular } },
+          MuiSlider: { styleOverrides: { valueLabel: tabular, markLabel: tabular } },
+          MuiPaginationItem: { styleOverrides: { root: tabular } },
+        },
+      };
+    },
+  },
+  {
+    id: 'text-wrap',
+    area: 'Typography',
+    title: 'Balanced headings, pretty body text',
+    why: "MUI leaves wrapping to the browser's default, which can strand one word on a heading's last line. Kilowatt sets the heading styles (`h1` to `h6`) to `text-wrap: balance`, which evens out their lines, and the body styles to `text-wrap: pretty`, which avoids a lone word on a paragraph's last line. CssBaseline sets the page in `body1`, so everything inherits `pretty`; browsers without support wrap as before.",
+    options: () => ({
+      typography: {
+        ...Object.fromEntries((['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const).map((variant) => [variant, { textWrap: 'balance' }])),
+        body1: { textWrap: 'pretty' },
+        body2: { textWrap: 'pretty' },
+      },
+    }),
+  },
+  {
+    id: 'font-synthesis',
+    area: 'Typography',
+    title: 'No synthesized bold or italic',
+    why: "When a weight or style isn't loaded, browsers fake it by smearing or slanting the nearest one. Kilowatt loads Roboto at 300, 400, 500 and 700 and no italics, so CssBaseline sets `font-synthesis: none` on the page: text renders only in the cuts that exist, and emphasis comes from weight, not a faked slant.",
+    options: () => ({ components: { MuiCssBaseline: { styleOverrides: { body: { fontSynthesis: 'none' } } } } }),
+  },
+  {
+    id: 'reduced-motion',
+    area: 'Theme',
+    title: 'Respect reduced motion',
+    why: "MUI's transitions and ripples play whatever the user's system setting says. When someone asks for reduced motion (`prefers-reduced-motion: reduce`), CssBaseline makes every CSS transition, MUI's included, finish at once, stops smooth scrolling, and lets the touch ripple appear without growing or pulsing. Progress indicators and skeletons keep animating, because the motion is how they show that something is loading.",
+    options: () => ({
+      components: {
+        MuiCssBaseline: {
+          styleOverrides: {
+            '@media (prefers-reduced-motion: reduce)': {
+              '*, *::before, *::after': { transitionDuration: '0.01ms !important', scrollBehavior: 'auto !important' },
+              '.MuiTouchRipple-ripple, .MuiTouchRipple-child': {
+                animationDuration: '0.01ms !important',
+                animationIterationCount: '1 !important',
+              },
+            },
+          },
+        },
+      },
+    }),
+  },
 ];
