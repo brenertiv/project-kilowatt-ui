@@ -15,7 +15,7 @@ import { expect, fn } from 'storybook/test';
  * differences from stock MUI.
  */
 const meta = {
-  title: 'Components/Checkbox',
+  title: 'Inputs/Checkbox',
   component: Checkbox,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.

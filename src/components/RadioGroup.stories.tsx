@@ -13,7 +13,7 @@ import { expect, fn } from 'storybook/test';
  * the only differences from stock MUI.
  */
 const meta = {
-  title: 'Components/RadioGroup',
+  title: 'Inputs/RadioGroup',
   component: RadioGroup,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.

@@ -14,7 +14,7 @@ import { expect, fn, screen } from 'storybook/test';
  * from stock MUI.
  */
 const meta = {
-  title: 'Components/Select',
+  title: 'Inputs/Select',
   component: Select,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.

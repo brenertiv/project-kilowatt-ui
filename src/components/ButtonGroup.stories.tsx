@@ -14,7 +14,7 @@ import { Icon } from 'src/icons';
  * buttons inside are `Button`s and follow the Button page.
  */
 const meta = {
-  title: 'Components/ButtonGroup',
+  title: 'Inputs/ButtonGroup',
   component: ButtonGroup,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.

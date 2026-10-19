@@ -10,7 +10,7 @@ import { expect, fn } from 'storybook/test';
  * departures (Foundations → MUI departures) are the only differences from stock MUI.
  */
 const meta = {
-  title: 'Components/Slider',
+  title: 'Inputs/Slider',
   component: Slider,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.

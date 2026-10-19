@@ -10,7 +10,7 @@ import { Icon } from 'src/icons';
  * departures (Foundations → MUI departures) are the only differences from stock MUI.
  */
 const meta = {
-  title: 'Components/TextField',
+  title: 'Inputs/TextField',
   component: TextField,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
