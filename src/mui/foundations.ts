@@ -116,7 +116,7 @@ export function colorMarkdown() {
       ]),
     ),
     '## Borders',
-    "Four borders by contrast against the surfaces, in both schemes, so a border looks the same weight in light and dark. level0 to level2 separate and frame: level0 is the faintest, and `divider` is level1, so MUI's Divider uses it. level3 reaches 3:1 on every surface, the contrast WCAG asks of a control's boundary. MUI's controls take their outline from `palette.control.border` (`control-outlines`): the Figma file's slate 500 in light and navy 700 in dark, quieter than level3 by design. Set one with `sx={{ borderColor: 'border.level2' }}`.",
+    "Four borders by contrast against the surfaces, in both schemes, so level0 to level2 look the same weight in light and dark. level0 to level2 separate and frame: level0 is the faintest, and `divider` is level1, so MUI's Divider uses it. level3 is the strongest, for outlines on interactive elements: it reaches 3:1 on every dark surface, the contrast WCAG asks of a control's boundary; the light scheme's slate 950 sits below 3:1 for now, by design decision. MUI's controls take their outline from `palette.control.border` (`control-outlines`): the Figma file's slate 500 in light and navy 700 in dark, quieter than level3 by design. Set one with `sx={{ borderColor: 'border.level2' }}`.",
     table(
       ['Level', 'Theme path', 'Light', 'Dark', 'Source'],
       (Object.keys(borderSteps.light) as (keyof typeof borderSteps.light)[]).map((level) => [

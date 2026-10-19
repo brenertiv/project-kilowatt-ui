@@ -46,7 +46,7 @@ export const surfaceSteps = {
   dark: { level0: 950, level1: 900, level2: 700, level3: 600, level4: 600 },
 } as const satisfies Record<ColorScheme, Record<string, number>>;
 
-/** Borders by contrast, per scheme: level0 the faintest; level3, the strongest, for control outlines at 3:1 on every surface. `divider` is level1. */
+/** Borders by contrast, per scheme: level0 the faintest; level3, the strongest, for outlines on interactive elements (3:1 in dark; below it in light for now). `divider` is level1. */
 export const borderSteps = {
   light: { level0: 400, level1: 500, level2: 700, level3: 950 },
   dark: { level0: 800, level1: 700, level2: 500, level3: 200 },
@@ -143,7 +143,7 @@ export const departures: Departure[] = [
     id: 'surfaces-and-borders',
     area: 'Palette',
     title: 'Surface and border levels',
-    why: "Five surfaces by elevation and three borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider. The steps follow the Enertiv UI Foundations Figma file: its page, level1, level2 and paper surfaces, and its divider as border level1. The top two levels share a step in both schemes: light runs out of steps above white, and dark stops at navy 600 because Figma's lighter paper (navy 500) would drop the secondary color and border level3 below their contrast. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
+    why: "Five surfaces by elevation and four borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider. The steps follow the Enertiv UI Foundations Figma file: its page, level1, level2 and paper surfaces, and its divider as border level1. The top two levels share a step in both schemes: light runs out of steps above white, and dark stops at navy 600 because Figma's lighter paper (navy 500) would drop the secondary color and border level3 below their contrast. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
     options: (scheme) => {
       const surfaces = levels(scheme, surfaceSteps[scheme]);
       const border = levels(scheme, borderSteps[scheme]);
