@@ -92,6 +92,7 @@ Every component with a `size` prop uses `medium`: buttons, icon buttons, button 
 
 ## Typography
 
+- **A compact heading scale.** `h1` to `h6` run 32, 28, 24, 20, 18 and 16px (the `type-scale` departure), sized for product screens rather than MUI's marketing-page headings. Body, caption, button and input sizes stay MUI's. Pick a heading by its place in the page, and set the HTML element with `component` when it differs from the variant: `<Typography variant="h5" component="h2">`. Don't set `fontSize` on a heading to resize it; pick another variant.
 - **Antialiased rendering.** MUI's CssBaseline sets `-webkit-font-smoothing: antialiased` and `-moz-osx-font-smoothing: grayscale` on the page, so text renders thinner and crisper on macOS. It's stock MUI, not a departure: render every app under `MuiProvider`, which includes CssBaseline, and never override font smoothing. A surface rendered outside it (an iframe, a portal into another document) needs MUI's `ScopedCssBaseline`.
 - **Tabular numerals.** Digits that line up in a column or change in place use tabular figures, each the same width. Table cells, pagination, badges, chips and slider labels get them from the theme (the `tabular-numerals` departure). Anywhere else a number is data rather than part of a sentence (a KPI, a meter reading, a timer, a column of figures in your own layout), add `sx={{ fontVariantNumeric: 'tabular-nums' }}`. Leave numbers in running text proportional.
 - **Wrapping.** Headings balance their lines and body text avoids a lone last word (the `text-wrap` departure). Don't override `textWrap` per instance.
@@ -108,6 +109,26 @@ Every component with a `size` prop uses `medium`: buttons, icon buttons, button 
 ## Motion
 
 - **Respect reduced motion.** When the user asks for reduced motion, CssBaseline ends every CSS transition at once and stills the touch ripple (the `reduced-motion` departure). An animation in JavaScript (a chart's entrance, a counter running up) checks `useMediaQuery('(prefers-reduced-motion: reduce)')` and jumps to its end state. Progress indicators and skeletons keep moving: the motion is the information.
+
+## Charts
+
+Charts use amCharts 5, the library Enertiv's app is built on, inside MUI's outlined `Card` (`variant="outlined"`): `CardHeader` for the title, period or units and actions, `CardContent` for the chart. amCharts draws on a canvas and doesn't read the MUI theme, so one Kilowatt theme function turns the palette into an amCharts theme, and every chart's root goes through it.
+
+**Where charts live.** Kilowatt holds the reference: the conventions, the theme function and a reference implementation of each chart type, with stories in the Charts section of Storybook. Enertiv's app is where charts ship; its chart components are rebuilt from Kilowatt's references, not imported from Kilowatt. Keeping the two in step is not set up yet.
+
+**In code.** The roles are `palette.chart.series`, `palette.chart.neutral` and `palette.chart.sequential` (the `chart-palette` departure). Run every chart through `useChart` from `src/charts/useChart`: it applies `chartThemes` for the active scheme and hands `build` the colors for a series that takes a slot. Card → Chart is the reference. When an existing chart doesn't fit these rules, redesign the chart rather than adding a color.
+
+- **Color does four jobs, and only these.** Telling categories apart: `chart.series`, six hues in a fixed order. Magnitude: `chart.sequential`, the steps of one ramp, light to dark. Deviation from a midpoint: `success` and `error` either side of a neutral. Status: the intents (`info`, `warning`, `error`, `success`), as everywhere else. Plus `chart.neutral` for whatever isn't the focus: a baseline, the previous period, the other series.
+- **Meaning is an assignment, not a color.** A product meaning (a utility type, occupancy, a work-order type) maps to a `chart.series` slot once, in product code, so it's the same color everywhere. The palette has no `chart.electricity` or `chart.gas`.
+- **Variants don't get colors.** Two versions of one series (supply and delivery, actual and forecast) share its hue and differ by dash pattern, stack position or a direct label.
+- **Six series at most.** Past six, group the smallest into "Other", split the chart, or show a table. Don't extend the palette.
+- **Highlight, don't rainbow.** When one series is the point (this period against a baseline), draw it in a series hue and the rest in `chart.neutral`.
+- **The chart's chrome uses roles that already exist.** Labels and ticks: `text.secondary` in the `caption` style. Gridlines and axes: `border.level1` and `border.level2`. Tooltips: the menu surface (`background.level3`) with `text.primary`. Range bands (weekends, schedules): `action.hover`. Target lines: `text.secondary`, dashed. There are no chart-only tokens for these.
+- **Colors come from the theme, never from the chart.** Chart code doesn't call `am5.color()` with a hex value or a ramp step. Data takes its color from the series order or a slot number; everything else comes from the theme function.
+- **Both schemes.** amCharts applies a theme when it builds a chart, so a chart rebuilds with the other scheme's theme when the color scheme changes.
+- **Motion.** The amCharts animation theme is added only when the user hasn't asked for reduced motion (Motion above).
+- **Not color alone.** Prefer direct labels to a legend. Give every chart a text alternative: a one-line summary of what it shows, or the data as a table.
+- **Contrast.** Every `chart.series` color and `chart.neutral` reach 3:1 on every surface level, and every pair of them stays apart under normal vision and simulated protanopia, deuteranopia and tritanopia; `departures.test.ts` checks both. Series and status colors can't all be kept apart (status takes red, orange, purple and green), so don't mix them in one chart: color a chart either by series or by status.
 
 ## Adding a convention
 

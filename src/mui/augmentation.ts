@@ -16,15 +16,24 @@ export type BorderLevels = { level0: string; level1: string; level2: string; lev
 /** Control outlines (inputs, selects, outlined buttons, toggle buttons), by state, from the Figma button-border tokens. */
 export type ControlColors = { border: string; hover: string; focus: string; pressed: string };
 
+/**
+ * Chart data colors (Rules → Charts): `series` tells up to six categories apart, in a fixed
+ * order; `neutral` is for what isn't the focus (a baseline, the previous period); `sequential`
+ * shows magnitude, from the step nearest the surface to the one furthest from it.
+ */
+export type ChartColors = { series: string[]; neutral: string; sequential: string[] };
+
 declare module '@mui/material/styles' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface TypeBackground extends SurfaceLevels {}
   interface Palette {
     border: BorderLevels;
     control: ControlColors;
+    chart: ChartColors;
   }
   interface PaletteOptions {
     border?: Partial<BorderLevels>;
     control?: ControlColors;
+    chart?: ChartColors;
   }
 }

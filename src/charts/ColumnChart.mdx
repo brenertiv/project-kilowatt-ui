@@ -1,0 +1,82 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ColumnChartStories from './ColumnChart.stories';
+
+<Meta
+  of={ColumnChartStories}
+  summary="Kilowatt's reference column chart for values across categories: amCharts 5 in the chart theme, side by side or stacked, with variants of one series striped in its hue."
+/>
+
+# Column chart
+
+A column chart compares values across categories: buildings, months, utilities. `ColumnChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={ColumnChartStories.Categories} />
+
+## When to use
+
+- Use a column chart to compare a measure across categories, or across periods that read as buckets (months, years).
+- For a continuous measure over time (daily, hourly), use a line chart.
+- For parts of one whole at a single point, with six parts or fewer, use a donut chart; for parts of a total across several categories, stack the columns.
+- For many categories with long names, or values people look up rather than compare, use a table.
+
+## Usage
+
+```tsx
+import { ColumnChart } from 'src/charts/ColumnChart';
+
+const series = [
+  { field: 'supply', name: 'Supply', slot: 0 },
+  { field: 'delivery', name: 'Delivery', slot: 0, striped: true },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Electricity Cost" subheader="2026 by month · USD" />
+  <CardContent sx={{ pt: 0 }}>
+    <ColumnChart data={bills} categoryField="month" series={series} stacked unit="USD" summary="Cost peaked in July; delivery was 31% of the year's electricity cost." />
+  </CardContent>
+</Card>
+```
+
+Each row of `data` is one category: its label in `categoryField` and a number per series. Keep `data` and `series` stable (constants or `useMemo`), since the chart is rebuilt when they change.
+
+## Variants
+
+- **Categories.** One measure across categories. Every column takes one color: the categories are named on the axis, so coloring them apart adds nothing.
+- **Side by side.** Up to six series per category, told apart by `chart.series` color.
+- **Stacked.** `stacked` puts the series in one column per category, for parts that add up to a total.
+- **Striped.** `striped` marks a variant of another series (delivery beside supply, estimated beside actual). Give both the same `slot`: they keep one hue, and the stripes tell them apart.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a `CardHeader` that says what's measured, the period and the unit.
+- Don't put the title or unit inside the chart; the card header carries them.
+- Do keep one color when the categories are on the axis.
+- Don't color each column differently to make the chart livelier; color then suggests a meaning that isn't there.
+- Do stripe a variant in its series' hue, with the same `slot`.
+- Don't give supply and delivery, or actual and estimated, two different hues; they're one meaning.
+- Do stack only parts that add up to a meaningful total.
+- Don't stack values in different units, or values that overlap.
+- Do write `summary` as one sentence with the numbers that matter.
+- Don't show more than six colored series; group the smallest or use a table.
+
+## MUI departures
+
+- `chart-palette`: series take `chart.series` in order or by `slot`, and neutral series take `chart.neutral`.
+- `amcharts-theme`: `useChart` applies the chart theme for the active scheme: labels in `text.secondary`, gridlines in `border.level1`, tooltips on the menu surface, and no animation under reduced motion.
+
+Theme-wide departures (the surface levels the card sits on, the 8px radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The chart draws on a canvas, so the `figure` around it is named by its visible caption, `summary`, through `aria-labelledby`.
+- amCharts adds keyboard focus and screen-reader announcements for the legend and columns.
+- Series are told apart by name in the legend and tooltip as well as color, and a striped variant by pattern too.
+- For detailed values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Line for values over time.
+- Charts → Donut for parts of one whole.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />

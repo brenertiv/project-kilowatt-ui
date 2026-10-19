@@ -111,3 +111,61 @@ describe('createKilowattTheme', () => {
     expect(root['&.MuiPaper-elevation24'].backgroundColor).toBe('var(--mui-palette-background-level4)');
   });
 });
+
+/**
+ * How far apart two colors look, as the smallest OKLab distance under normal vision and
+ * simulated protanopia, deuteranopia and tritanopia (Machado et al. 2009, full severity).
+ */
+const cvd = {
+  normal: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+  protanopia: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+  deuteranopia: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],
+  tritanopia: [[1.255528, -0.076749, -0.178779], [-0.078411, 0.930809, 0.147602], [0.004733, 0.691367, 0.3039]],
+};
+function oklab(hex: string, matrix: number[][]) {
+  const linear = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const [r, g, b] = matrix.map((row) => Math.min(1, Math.max(0, row[0] * linear[0] + row[1] * linear[1] + row[2] * linear[2])));
+  const [l, m, s] = [
+    0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b,
+    0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b,
+    0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b,
+  ].map(Math.cbrt);
+  return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
+}
+const apart = (a: string, b: string) =>
+  Math.min(...Object.values(cvd).map((matrix) => Math.hypot(...oklab(a, matrix).map((value, i) => value - oklab(b, matrix)[i]))));
+
+/** The smallest separation two chart colors keep under every simulation; Rules → Charts. */
+const minSeparation = 0.05;
+
+describe('chart palette', () => {
+  it.each(schemes)('gives the %s scheme six series colors and a neutral at 3:1 on every surface', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    const { series, neutral } = palette.chart;
+    expect(series).toHaveLength(6);
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+      for (const color of [...series, neutral]) {
+        expect(getContrastRatio(color, palette.background[level]), `${color} on ${level}`).toBeGreaterThanOrEqual(graphic);
+      }
+    }
+  });
+
+  it.each(schemes)('keeps every pair of %s-scheme series colors, and the neutral, apart under color-vision deficiencies', (scheme) => {
+    const { series, neutral } = createSchemeTheme(scheme).palette.chart;
+    const colors = [...series, neutral];
+    colors.forEach((a, i) =>
+      colors.slice(i + 1).forEach((b) => expect(apart(a, b), `${a} and ${b}`).toBeGreaterThanOrEqual(minSeparation)),
+    );
+  });
+
+  it.each(schemes)('runs the %s-scheme sequential ramp from the surface outward, ending at 3:1', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    const surface = palette.background.level1;
+    const contrasts = palette.chart.sequential.map((color) => getContrastRatio(color, surface));
+    contrasts.slice(1).forEach((contrast, i) => expect(contrast, `step ${i + 1}`).toBeGreaterThan(contrasts[i]));
+    expect(contrasts.at(-1)).toBeGreaterThanOrEqual(graphic);
+  });
+});

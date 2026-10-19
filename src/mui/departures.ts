@@ -2,7 +2,7 @@ import type { ThemeOptions } from '@mui/material/styles';
 import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
-import { green, purple, red } from '@mui/material/colors';
+import { blueGrey, green, indigo, lime, pink, purple, red, teal } from '@mui/material/colors';
 import { brand, navy, orange, slate, yellow } from './colors';
 
 /**
@@ -121,6 +121,47 @@ export const secondarySteps: Record<ColorScheme, { main: keyof typeof brand; lig
   dark: { main: 300, light: 200, dark: 400 },
 };
 
+/**
+ * Chart colors, per scheme (Rules → Charts). `series` is six hues in a fixed order, each a ramp
+ * step that reaches 3:1 on every surface level, chosen so every pair stays apart under normal
+ * vision and simulated protanopia, deuteranopia and tritanopia (departures.test.ts). Lightness
+ * varies across the six on purpose: it survives color-vision deficiencies best. `neutral` is
+ * blue grey, at 3:1 and apart from the six as well. `sequential` is the brand ramp, from the step nearest the surface to the
+ * one furthest from it, so it runs light to dark in light and dark to light in dark.
+ */
+const chartRamps = { brand, orange, teal, pink, indigo, lime, blueGrey } as const;
+type ChartRamp = keyof typeof chartRamps;
+type ChartStep = { ramp: ChartRamp; step: string };
+
+export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: ChartStep; sequential: ChartStep[] }> = {
+  light: {
+    series: [
+      { ramp: 'brand', step: '600' },
+      { ramp: 'orange', step: '800' },
+      { ramp: 'teal', step: '900' },
+      { ramp: 'pink', step: '500' },
+      { ramp: 'indigo', step: '500' },
+      { ramp: 'lime', step: '900' },
+    ],
+    neutral: { ramp: 'blueGrey', step: '500' },
+    sequential: ['100', '300', '500', '700', '900'].map((step) => ({ ramp: 'brand', step })),
+  },
+  dark: {
+    series: [
+      { ramp: 'brand', step: '100' },
+      { ramp: 'orange', step: '200' },
+      { ramp: 'teal', step: '400' },
+      { ramp: 'pink', step: '300' },
+      { ramp: 'indigo', step: '200' },
+      { ramp: 'lime', step: '100' },
+    ],
+    neutral: { ramp: 'blueGrey', step: '200' },
+    sequential: ['900', '700', '500', '300', '100'].map((step) => ({ ramp: 'brand', step })),
+  },
+};
+
+const chartColor = ({ ramp, step }: ChartStep) => (chartRamps[ramp] as Record<string, string>)[step];
+
 /** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
 const selectableControls = ['ToggleButton', 'Tab', 'ListItemButton', 'MenuItem', 'BottomNavigationAction'] as const;
 
@@ -194,6 +235,31 @@ export const departures: Departure[] = [
         },
       };
     },
+  },
+  {
+    id: 'type-scale',
+    area: 'Typography',
+    components: ['CardHeader'],
+    title: 'A compact heading scale',
+    why: "MUI's headings are sized for marketing pages (`h1` 96px down to `h6` 20px), which is too large for a dense product UI. Kilowatt's step down from 32px to 16px, one step apart, so `h6` meets body size. Only `h1` to `h6` change: body, caption, button and input text keep MUI's sizes, so reading sizes don't shrink. Weights, line heights and letter spacing stay MUI's. `CardHeader` titles use `h5`, so card titles are 18px with no change to the card.",
+    options: () => ({
+      typography: {
+        h1: { fontSize: '2rem' },
+        h2: { fontSize: '1.75rem' },
+        h3: { fontSize: '1.5rem' },
+        h4: { fontSize: '1.25rem' },
+        h5: { fontSize: '1.125rem' },
+        h6: { fontSize: '1rem' },
+      },
+    }),
+  },
+  {
+    id: 'card-header-subheader',
+    area: 'Components',
+    components: ['CardHeader'],
+    title: 'Card subtitles in body2',
+    why: "MUI sets a `CardHeader` subtitle in `body1` (16px), and in `body2` (14px) only when the header has an avatar. With the compact heading scale the title is 18px, so a 16px subtitle sits almost level with it. Kilowatt sets every subtitle in `body2`, the size MUI already uses beside an avatar, so the title leads. The subtitle keeps MUI's `text.secondary` color and still renders as a `span`.",
+    options: () => ({ components: { MuiCardHeader: { defaultProps: { slotProps: { subheader: { variant: 'body2' } } } } } }),
   },
   {
     id: 'button-text-case',
@@ -313,6 +379,28 @@ export const departures: Departure[] = [
     options: (scheme) => {
       const { main, light, dark } = secondarySteps[scheme];
       return { palette: { secondary: { main: brand[main], light: brand[light], dark: brand[dark], contrastText: intentContrastText[scheme] } } };
+    },
+  },
+  {
+    id: 'chart-palette',
+    area: 'Palette',
+    title: 'Chart colors',
+    why: "MUI's palette has no colors for data. Charts get three roles: `chart.series`, six hues in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Deviation and status reuse the intents. Product meanings (a utility type) map to a series slot in product code, not to a palette color.",
+    options: (scheme) => {
+      const { series, neutral, sequential } = chartSteps[scheme];
+      return { palette: { chart: { series: series.map(chartColor), neutral: chartColor(neutral), sequential: sequential.map(chartColor) } } };
+    },
+  },
+  {
+    id: 'amcharts-theme',
+    area: 'Theme',
+    components: ['Card'],
+    title: 'Charts take their theme from the palette',
+    why: "Charts use amCharts 5, which draws on a canvas and doesn't read the MUI theme. One Kilowatt theme function (`src/charts`) turns the palette into an amCharts theme, so chart code never sets a color: series take `chart.series` in order, and labels, gridlines, tooltips and range bands take the roles every component uses. Chart cards are outlined rather than raised, so a dashboard of charts reads as one flat grid of equal panels.",
+    convention: {
+      muiDefault: 'No charts in MUI core; amCharts 5 brings its own colors, fonts and animation',
+      kilowatt: 'Every chart sits in an outlined `Card` (`variant="outlined"`) under a `CardHeader`, and its root goes through `useChart` from `src/charts`, which applies the Kilowatt theme for the active scheme and adds animation only without reduced motion',
+      where: 'Every amCharts 5 chart, and the card around it',
     },
   },
   {

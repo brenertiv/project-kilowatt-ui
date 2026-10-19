@@ -1,0 +1,116 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as CardStories from './Card.stories';
+
+<Meta
+  of={CardStories}
+  summary="MUI's Card for one self-contained subject (a building, a meter, a report, a chart) with its content and actions; CardHeader for a title and actions, outlined for dense grids, CardActionArea when the whole card is one action."
+/>
+
+# Card
+
+A card holds content and actions about one subject. Kilowatt uses MUI's `Card`, `CardHeader`, `CardContent`, `CardActions` and `CardActionArea` from `@mui/material` (Material UI v9) with no wrapper; the theme differs from stock MUI only as listed under MUI departures below. Props are MUI's: see the [Card API](https://mui.com/material-ui/api/card/), [CardHeader API](https://mui.com/material-ui/api/card-header/), [CardContent API](https://mui.com/material-ui/api/card-content/), [CardActions API](https://mui.com/material-ui/api/card-actions/) and [CardActionArea API](https://mui.com/material-ui/api/card-action-area/).
+
+<Canvas of={CardStories.Basic} />
+
+## When to use
+
+- Use a card for one self-contained subject that sits beside others like it: a building in a portfolio, a meter, a saved report.
+- Use an outlined card for every chart: `CardHeader` names what's measured, the period and the units, and the chart fills `CardContent` (Rules → Charts).
+- For a plain raised area with no card structure (a panel, a toolbar backdrop), use `Paper`.
+- For rows of the same fields that people compare or sort, use a table, not a grid of cards.
+- For content that people expand and collapse in place, use `Accordion`.
+
+## Usage
+
+```tsx
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+
+<Card>
+  <CardContent>
+    <Typography variant="overline" sx={{ color: 'text.secondary' }}>
+      Building
+    </Typography>
+    <Typography variant="h5" component="h2">
+      350 Fifth Avenue
+    </Typography>
+  </CardContent>
+  <CardActions>
+    <Button>View Building</Button>
+  </CardActions>
+</Card>
+```
+
+For a chart, use `variant="outlined"`, put the title, period and units in `CardHeader`, with any actions in its `action` slot, and the chart in `CardContent`, run through `useChart` from `src/charts` so it takes Kilowatt's chart theme. Wrap the chart in a `figure` whose `figcaption` is a one-line summary of what it shows:
+
+```tsx
+import CardHeader from '@mui/material/CardHeader';
+import { useChart } from 'src/charts/useChart';
+
+function EnergyUseChart() {
+  const ref = useChart(buildEnergyChart); // a stable function that adds the amCharts chart to the root
+  return <Box ref={ref} sx={{ height: 240 }} />;
+}
+
+<Card variant="outlined">
+  <CardHeader title="Energy Use" subheader="Sep 1–30, 2026 · kWh" action={<IconButton aria-label="Chart options">…</IconButton>} />
+  <CardContent sx={{ pt: 0 }}>
+    <Box component="figure" aria-labelledby="energy-use-summary" sx={{ m: 0 }}>
+      <EnergyUseChart />
+      <Typography id="energy-use-summary" component="figcaption" variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+        This period used 32,914 kWh, 6% less than the previous 30 days.
+      </Typography>
+    </Box>
+  </CardContent>
+</Card>
+```
+
+## Variants
+
+- `variant="elevation"` (MUI's default): the card sits on surface level1 with MUI's elevation 1 shadow. Use it for cards on the page background.
+- `variant="outlined"`: a border (`divider`) instead of a shadow. Use it for cards in a dense grid, on a surface that already has depth, and for every chart card.
+
+`CardHeader` sets a title, a `subheader` and an `action` (an icon button or menu) in one row. `CardContent` pads the content, and `CardActions` lays out text buttons along the bottom. `CardActionArea` turns the whole card into one button, for a card that only opens its subject.
+
+## Do and don't
+
+- Do keep one subject per card, with a heading that names it.
+- Don't pack unrelated content into one card; split it into cards or sections.
+- Do put a card's actions in `CardActions` as text buttons, named for what they do.
+- Don't put a contained button on every card in a grid; the repeated emphasis competes with the view's main action.
+- Do use `CardActionArea` when the whole card is one action, such as opening the building.
+- Don't put buttons or links inside a `CardActionArea`; a button can't contain another control, so use `CardActions` for a card with several actions.
+- Do choose one look per grid: all elevation or all outlined.
+- Don't add a border to an elevation card or a shadow to an outlined one; keep one edge per card.
+- Do make a chart card outlined, with a `CardHeader` that says what's measured, over what period and in what units.
+- Don't set a chart's colors in chart code; `useChart` applies the chart theme, and series take `chart.series` in order.
+- Do let the card take its surface and radius from the theme.
+- Don't set the card's `backgroundColor` or `borderRadius` with `sx`; the surface comes from its elevation and the radius from `shape-radius`.
+
+## MUI departures
+
+- `type-scale`: `CardHeader` titles use `h5`, which is 18px on Kilowatt's compact heading scale instead of MUI's 24px. The title still renders as a `span`, as MUI renders it.
+- `card-header-subheader`: `CardHeader` subtitles use `body2` (14px) instead of MUI's `body1` (16px), so the 18px title leads. It's the size MUI uses when the header has an avatar.
+- `amcharts-theme`: a chart card is outlined (`variant="outlined"`), so dashboards of charts read as one flat grid.
+- `paper-surface-levels`: a card is a Paper at elevation 1, so it sits on surface `background.level1` in both schemes, in place of MUI's white light surface and its dark-scheme white overlay.
+
+Theme-wide departures (CSS variables, the 8px radius, surface and border levels, the text and intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- `Card` renders a plain `div` with no role; give it a heading (`component="h2"` or the right level for the page) so people can find it by heading.
+- `CardActionArea` renders a `button`, with keyboard activation and a visible focus state. Its accessible name is all the text inside it, so keep that text short.
+- Name each button in `CardActions` for its action, so "View Building" makes sense when read out of the card.
+- A chart draws on a canvas that screen readers can't read. Put it in a `figure` with a visible one-line summary as the `figcaption`, linked with `aria-labelledby` so every screen reader names the figure by it; for detailed data, offer it as a table too. Don't give the chart's container `role="img"`: amCharts adds focusable elements for keyboard access, and an image can't contain them.
+
+## Related
+
+- `Paper` for a surface without card structure.
+- `Button` for the card's actions.
+- Foundations → Elevation for the surface each elevation sits on.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />

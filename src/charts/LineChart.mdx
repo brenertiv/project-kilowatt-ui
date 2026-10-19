@@ -1,0 +1,85 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as LineChartStories from './LineChart.stories';
+
+<Meta
+  of={LineChartStories}
+  summary="Kilowatt's reference line chart for values over time: amCharts 5 in the chart theme, one to six colored lines plus neutral baselines, captioned with a one-line summary."
+/>
+
+# Line chart
+
+A line chart shows how values change over time. `LineChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={LineChartStories.Highlight} />
+
+## When to use
+
+- Use a line chart for a measure over time: daily energy use, demand through a day, monthly cost.
+- For values across categories that aren't time (buildings, utilities), use a column chart.
+- For parts of one whole, with six parts or fewer, use a donut chart.
+- For more than six lines, group the smallest into "Other", split the chart, or show a table.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import { LineChart } from 'src/charts/LineChart';
+
+const series = [
+  { field: 'current', name: 'This period' },
+  { field: 'previous', name: 'Previous 30 days', neutral: true, dashed: true },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Energy Use" subheader="Sep 1–30, 2026 against the previous 30 days · kWh" />
+  <CardContent sx={{ pt: 0 }}>
+    <LineChart data={readings} series={series} unit="kWh" summary="This period used 34,024 kWh, 5% less than the previous 30 days." />
+  </CardContent>
+</Card>
+```
+
+`data` is rows of numbers with a UTC timestamp in `date`. Keep `data` and `series` stable (constants or `useMemo`), since the chart is rebuilt when they change.
+
+## Variants
+
+- **Single.** One measure; the line takes the first series color.
+- **Highlight.** The line that matters in a series color, and the context (the previous period, a baseline) with `neutral` and `dashed`.
+- **Comparison.** Up to six lines, told apart by `chart.series` color in order. Give a line a `slot` when it stands for a fixed meaning (a utility type), so it keeps one color on every chart.
+
+`dashed` marks a variant of another line, such as a forecast; it keeps the hue rather than taking a new color.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a `CardHeader` that says what's measured, the period and the unit.
+- Don't put the title or unit inside the chart; the card header carries them.
+- Do write `summary` as one sentence with the numbers that matter.
+- Don't leave the summary generic ("Energy use chart"); it's what screen readers and the caption say.
+- Do draw the context line `neutral` when one line is the point.
+- Don't give a baseline its own series color; two colored lines read as equals.
+- Do give a line a `slot` when it stands for a product meaning, so electricity is the same color on every chart.
+- Don't set a color in chart code or add a palette color for a meaning; map the meaning to a slot.
+- Do group or switch to a table past six lines.
+- Don't show more than six colored lines; the hues stop being told apart.
+
+## MUI departures
+
+- `chart-palette`: lines take `chart.series` in order or by `slot`, and neutral lines take `chart.neutral`.
+- `amcharts-theme`: `useChart` applies the chart theme for the active scheme: labels in `text.secondary`, gridlines in `border.level1`, tooltips on the menu surface, and no animation under reduced motion.
+
+Theme-wide departures (the surface levels the card sits on, the 8px radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The chart draws on a canvas, so the `figure` around it is named by its visible caption, `summary`, through `aria-labelledby`.
+- amCharts adds keyboard focus and screen-reader announcements for the legend and data points.
+- Lines are told apart by color and by name in the legend and tooltip; a dashed line is told apart by pattern too.
+- For detailed values, offer the data as a table beside the chart.
+
+## Related
+
+- Card → Chart for the card around a chart.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />

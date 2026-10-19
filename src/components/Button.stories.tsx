@@ -12,7 +12,7 @@ import { Icon } from 'src/icons';
  * defaults, so each story's snippet shows only the props that matter.
  */
 const meta = {
-  title: 'Components/Button',
+  title: 'Inputs/Button',
   component: Button,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.

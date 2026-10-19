@@ -1,0 +1,72 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as DonutChartStories from './DonutChart.stories';
+
+<Meta
+  of={DonutChartStories}
+  summary="Kilowatt's reference donut chart for parts of one whole: amCharts 5 in the chart theme, up to six slices labeled directly, with the smallest grouped into a neutral Other."
+/>
+
+# Donut chart
+
+A donut chart shows how one whole splits into parts. `DonutChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={DonutChartStories.Parts} />
+
+## When to use
+
+- Use a donut chart for the parts of one whole at one point in time: cost by utility, use by building, when the share matters more than the exact value.
+- For parts that change over time, use a stacked column chart.
+- For comparing values that don't add up to a whole, use a column chart.
+- For more than about ten parts, or values people look up, use a table; the donut groups past six, and that hides detail.
+
+## Usage
+
+```tsx
+import { DonutChart } from 'src/charts/DonutChart';
+
+<Card variant="outlined">
+  <CardHeader title="Utility Cost" subheader="350 Park Avenue · September 2026 · USD" />
+  <CardContent sx={{ pt: 0 }}>
+    <DonutChart data={costs} unit="USD" summary="Electricity was 63% of the building's utility cost." />
+  </CardContent>
+</Card>
+```
+
+`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`), since the chart is rebuilt when it changes.
+
+## Variants
+
+- **Parts.** Up to six slices, largest first, in `chart.series` order, each labeled with its name and share.
+- **Grouped into Other.** With more than six parts, the five largest keep their slices and the rest are summed into one slice in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a `CardHeader` that says what's measured, the period and the unit.
+- Don't put the title or unit inside the chart; the card header carries them.
+- Do use a donut only for parts that add up to a meaningful whole.
+- Don't use a donut for values that overlap or don't sum, such as averages or rates.
+- Do let the chart group the smallest parts into "Other" past six, and name them in the summary.
+- Don't raise the slice count or add colors to fit more parts; use a table instead.
+- Do write `summary` as one sentence with the share that matters.
+- Don't add a legend; each slice is labeled directly.
+
+## MUI departures
+
+- `chart-palette`: slices take `chart.series` in order, largest first, and the grouped slice takes `chart.neutral`.
+- `amcharts-theme`: `useChart` applies the chart theme for the active scheme: labels in `text.secondary`, tooltips on the menu surface, and no animation under reduced motion.
+
+Theme-wide departures (the surface levels the card sits on, the 8px radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The chart draws on a canvas, so the `figure` around it is named by its visible caption, `summary`, through `aria-labelledby`.
+- amCharts adds keyboard focus and screen-reader announcements for the slices.
+- Slices are told apart by their direct labels (name and share) as well as color.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Column for parts of a total across categories, stacked.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />

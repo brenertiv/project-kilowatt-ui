@@ -9,7 +9,7 @@ import { expect, fn, screen } from 'storybook/test';
  * differences from stock MUI.
  */
 const meta = {
-  title: 'Components/Autocomplete',
+  title: 'Inputs/Autocomplete',
   component: Autocomplete,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.

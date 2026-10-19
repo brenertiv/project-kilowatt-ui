@@ -333,7 +333,7 @@ export const foundationPages: { name: string; lead: string; specimen?: string; e
   },
   {
     name: 'Typography',
-    lead: "MUI's type scale: Roboto, four weights and thirteen variants, set through Typography's `variant`. The `button` style departs: regular weight, shown as written.",
+    lead: "MUI's type scale: Roboto, four weights and thirteen variants, set through Typography's `variant`. The headings `h1` to `h6` depart to a compact scale, 32px down to 16px, and the `button` style to regular weight, shown as written.",
     specimen: 'Typography_',
     markdown: typographyMarkdown,
   },

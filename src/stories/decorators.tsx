@@ -1,3 +1,6 @@
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
 import type { Decorator } from '@storybook/react-vite';
 import { mockControls, resetMockControls, setMockFailure } from '../api/mock';
 
@@ -20,4 +23,20 @@ export const withMockApi: Decorator = (Story, { parameters }) => {
   setMockFailure('*', fail);
   if (latencyMs !== undefined) mockControls.latencyMs = latencyMs;
   return <Story />;
+};
+
+/**
+ * Shows a chart story the way charts ship: in an outlined `Card`, under a `CardHeader` with the title
+ * and subheader from the story's `parameters.card`. Set it as `decorators` in a chart story file.
+ */
+export const inCard: Decorator = (Story, { parameters }) => {
+  const { title, subheader } = (parameters.card ?? {}) as { title?: string; subheader?: string };
+  return (
+    <Card variant="outlined" sx={{ maxWidth: 720 }}>
+      <CardHeader title={title} subheader={subheader} />
+      <CardContent sx={{ pt: 0 }}>
+        <Story />
+      </CardContent>
+    </Card>
+  );
 };
