@@ -2,7 +2,7 @@
 
 Rules for building Kilowatt UI. These are decisions, not suggestions: when code and this document disagree, fix one of them in the same change.
 
-Kilowatt starts from stock Material UI. The theme is `createTheme` with light and dark color schemes, plus the departures in `src/mui/departures.ts`: the palette (surfaces, borders, a navy primary (light neutral in dark), a brand-blue secondary, a purple info, intent colors), the corner radius, the button style and the icon set. Foundations → MUI departures lists every one of them; anything not listed there is MUI's default, on purpose.
+Kilowatt starts from stock Material UI. The theme is `createTheme` with light and dark color schemes, plus the departures in `src/mui/departures.ts`: the palette (surfaces, borders, a navy primary (light neutral in dark), a brand-blue secondary, a purple info, intent colors), the corner radius, the button style, the icon set, type rendering (tabular numerals, text wrapping, no synthesized styles) and reduced motion. Foundations → MUI departures lists every one of them; anything not listed there is MUI's default, on purpose.
 
 ## Build with MUI as MUI documents it
 
@@ -90,6 +90,25 @@ Every component with a `size` prop uses `medium`: buttons, icon buttons, button 
 - **Don't write the default.** `size="medium"` is noise; leave it out.
 - **One size per group.** Controls that sit together (a toolbar, a form row, a filter bar) share one size, so an override applies to the whole group or not at all.
 
+## Typography
+
+- **Antialiased rendering.** MUI's CssBaseline sets `-webkit-font-smoothing: antialiased` and `-moz-osx-font-smoothing: grayscale` on the page, so text renders thinner and crisper on macOS. It's stock MUI, not a departure: render every app under `MuiProvider`, which includes CssBaseline, and never override font smoothing. A surface rendered outside it (an iframe, a portal into another document) needs MUI's `ScopedCssBaseline`.
+- **Tabular numerals.** Digits that line up in a column or change in place use tabular figures, each the same width. Table cells, pagination, badges, chips and slider labels get them from the theme (the `tabular-numerals` departure). Anywhere else a number is data rather than part of a sentence (a KPI, a meter reading, a timer, a column of figures in your own layout), add `sx={{ fontVariantNumeric: 'tabular-nums' }}`. Leave numbers in running text proportional.
+- **Wrapping.** Headings balance their lines and body text avoids a lone last word (the `text-wrap` departure). Don't override `textWrap` per instance.
+- **No faux styles.** Roboto is loaded at 300, 400, 500 and 700, with no italics, and the browser doesn't fake the rest (the `font-synthesis` departure). Use only the theme's weights (`fontWeightLight` to `fontWeightBold`). Don't rely on italic for emphasis; use weight or wording.
+- **Inputs stay at 16px.** MUI's inputs use `body1` (16px), which keeps Safari on iOS from zooming the page when a field is focused. Don't set a smaller type style on an input, and never cap zoom with `maximum-scale` in the viewport tag.
+
+## Content and layout
+
+- **Line length.** Cap long-form text (guide pages, long descriptions, empty-state explanations) at 60ch to 75ch: `sx={{ maxWidth: '65ch' }}`. Labels, table cells and other UI text don't need a cap.
+- **Typographic punctuation.** Write copy with the real characters: curly quotes and apostrophes (“ ” ’), an en dash for ranges (9:00–17:00, Jan–Mar), an em dash to set off a thought, and the ellipsis character (…) instead of three periods. Straight quotes belong only in code. Use a non-breaking space between a value and its unit where a break would split them (`12&nbsp;kWh`).
+- **Truncation keeps the full value.** Truncate with MUI's `noWrap` on `Typography`, or clamp to a number of lines, rather than letting text overflow its container. Anything clipped must be readable another way: a `Tooltip` with the full text, an expanded view, or the detail page it links to.
+- **Locale formatting.** Format numbers, units, currency, dates and times with `Intl` (`Intl.NumberFormat`, `Intl.DateTimeFormat`, `Intl.RelativeTimeFormat`) in the user's locale. Never build them by hand (`value.toFixed(2) + ' kWh'`, `'$' + amount`, `month + '/' + day`). A building's local time zone applies to its readings; say which zone a time is in when it isn't the user's.
+
+## Motion
+
+- **Respect reduced motion.** When the user asks for reduced motion, CssBaseline ends every CSS transition at once and stills the touch ripple (the `reduced-motion` departure). An animation in JavaScript (a chart's entrance, a counter running up) checks `useMediaQuery('(prefers-reduced-motion: reduce)')` and jumps to its end state. Progress indicators and skeletons keep moving: the motion is the information.
+
 ## Adding a convention
 
 A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:
@@ -107,4 +126,7 @@ A convention is anything that differs from MUI's default: a theme value, a defau
 ## Accessibility
 
 - Every control has a visible focus state and an accessible name.
+- **Hit areas.** Every pointer target is at least 24×24px (WCAG 2.2); aim for 32×32px on desktop and 44×44px on touch screens. MUI's medium controls meet this; a small one-off control needs a larger hit area around it, not a smaller one. Items in a list or menu touch, with no dead gap between them where a click lands on nothing (MUI's `List` and `Menu` already do this).
+- **Not color alone.** Color never carries meaning by itself. Pair it with text or an icon: an invalid field shows `error` plus `helperText` saying what's wrong, a status chip has a label, a chart series has a legend or direct label.
+- **Announce what changes on its own.** A result that appears without moving focus ("Copied", "Saved", "Export ready") reaches screen readers: show it in MUI's `Snackbar` or `Alert`, or put it in an `aria-live="polite"` region. Use `assertive` only for something that hurts if it arrives late, such as a session about to expire.
 - Every story runs an axe check in the story tests, and a violation fails it.
