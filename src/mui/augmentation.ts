@@ -8,7 +8,8 @@ type SurfaceLevels = { level0: string; level1: string; level2: string; level3: s
 
 /**
  * Borders by contrast against the surfaces, in both schemes: level0 is the faintest; level3,
- * the strongest, reaches 3:1 on every surface; MUI's controls take their outline from `control` instead.
+ * the strongest, for outlines on interactive elements (3:1 in dark; below it in light for now);
+ * MUI's controls take their outline from `control` instead.
  */
 export type BorderLevels = { level0: string; level1: string; level2: string; level3: string };
 

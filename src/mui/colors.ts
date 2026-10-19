@@ -5,9 +5,9 @@
  */
 
 /**
- * Cool grays for light-scheme surfaces and borders. 50 is white. 950 is added past 900,
- * darker along the ramp's own hue in OKLab, so control outlines reach 3:1 on every
- * light surface.
+ * Cool grays for light-scheme surfaces and borders. 50 is white. 950 is one step past 900,
+ * the strongest light-scheme border (border.level3). It is below 3:1 on the light
+ * surfaces for now, by design decision.
  */
 export const slate = {
   50: '#ffffff',
@@ -20,7 +20,7 @@ export const slate = {
   700: '#d6dee8',
   800: '#d0dae5',
   900: '#cad5e2',
-  950: '#768699',
+  950: '#c3cfdd',
 } as const;
 
 /**

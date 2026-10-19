@@ -77,7 +77,7 @@ export const Color: Story = {
           </Stack>
         </Stack>
         <Stack spacing={1}>
-          <Typography variant="subtitle2">borders, level0 (faintest) to level3 (control outlines), on each surface</Typography>
+          <Typography variant="subtitle2">borders, level0 (faintest) to level3 (strongest, for outlines on interactive elements), on each surface</Typography>
           <Stack spacing={1}>
             {['level0', 'level1', 'level2', 'level3', 'level4'].map((surface) => (
               <Stack key={surface} direction="row" spacing={2} sx={{ bgcolor: `background.${surface}`, p: 1.5, borderRadius: 1, alignItems: 'center' }}>
