@@ -58,6 +58,48 @@ Before writing UI, read Kilowatt's rules and MUI departures with the `kilowatt` 
 
 Each deployment serves an MCP server built from the same commit as its Storybook, so the docs an agent reads always match the site.
 
+## Set up MUI in an app
+
+Kilowatt has no package. An app gets it by installing MUI and copying the theme from this repository, then builds with MUI components. Don't recreate the theme with your own CSS, and don't build Kilowatt UI in static HTML.
+
+1. **Install MUI and its peers** (React 19):
+
+   ```bash
+   npm install @mui/material @emotion/react @emotion/styled
+   ```
+
+2. **Load the fonts.** Roboto at MUI's four weights, and the Material Symbols variable icon font, in the page's `<head>`:
+
+   ```html
+   <link rel="preconnect" href="https://fonts.googleapis.com" />
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet" />
+   ```
+
+3. **Copy the theme.** These files, unchanged and in the same folders: `src/mui/theme.ts`, `src/mui/departures.ts`, `src/mui/colors.ts`, `src/mui/augmentation.ts`, `src/mui/MuiProvider.tsx` and `src/icons.tsx`. They import only each other and MUI.
+4. **Wrap the app in `MuiProvider`.** It applies the theme and MUI's `CssBaseline`. Switch light and dark with MUI's `useColorScheme().setMode`.
+
+   ```tsx
+   import { MuiProvider } from './mui/MuiProvider';
+
+   createRoot(document.getElementById('root')!).render(
+     <MuiProvider>
+       <App />
+     </MuiProvider>,
+   );
+   ```
+
+5. **Check it's running.** Render a `<Button variant="contained">` and an `<Icon name="search" />` and confirm in the browser:
+   - The button is the navy primary, flat, with 8px corners and its label as written, not MUI's default blue, shadowed, uppercase button.
+   - The icon draws a magnifying glass, not the word “search”: the icon font loaded.
+   - `document.fonts.check('16px Roboto')` returns `true`.
+   - The page background follows the color scheme when you call `setMode('dark')`.
+
+   If any check fails, fix the setup before building screens.
+
+When the theme changes here, copy the files again. Never edit the copies: a change to the theme is a departure, made in this repository.
+
 ## Where things are
 
 | Section | What it holds |
@@ -71,6 +113,18 @@ Each deployment serves an MCP server built from the same commit as its Storybook
 1. **Use MUI as MUI documents it.** Components, props, variants and palette roles come from MUI's documentation.
 2. **Take values from the theme.** Color, type, spacing, radius, elevation and motion come from the MUI theme, through component props or `sx` theme keys. Never a hex value, a pixel radius or a font family of your own.
 3. **Add conventions as departures.** Anything that differs from MUI's default is an entry in `src/mui/departures.ts`, with its reason, so it shows on Foundations → MUI departures.
+
+## Without MCP
+
+MCP isn't available everywhere: a browser or an agent that only fetches URLs can't call `/mcp`. Read the same content as Markdown instead, in this order:
+
+1. [`llms.txt`](./llms.txt), the index of every page.
+2. `guides/rules.md`, the rules.
+3. `foundations/mui-departures.md`, every way Kilowatt differs from stock MUI.
+4. `foundations/typography.md` and `foundations/color.md`, the type styles and palette roles with their values.
+5. `components/<id>.md` for each component the screen uses, linked from `llms.txt`.
+
+Each deployment builds these files and its MCP server from the same commit, so they never disagree.
 
 ## Other ways agents read Kilowatt
 

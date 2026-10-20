@@ -93,6 +93,8 @@ Every component with a `size` prop uses `medium`: buttons, icon buttons, button 
 
 ## Typography
 
+Foundations → Typography lists every variant's computed size, weight, line height and letter spacing, read from the running theme. Take type from those variants; never set a size, weight or tracking of your own.
+
 - **A compact heading scale.** `h1` to `h6` run 32, 28, 24, 20, 18 and 16px (the `type-scale` departure), sized for product screens rather than MUI's marketing-page headings. Body, caption, button and input sizes stay MUI's. Pick a heading by its place in the page, and set the HTML element with `component` when it differs from the variant: `<Typography variant="h5" component="h2">`. Don't set `fontSize` on a heading to resize it; pick another variant.
 - **Antialiased rendering.** MUI's CssBaseline sets `-webkit-font-smoothing: antialiased` and `-moz-osx-font-smoothing: grayscale` on the page, so text renders thinner and crisper on macOS. It's stock MUI, not a departure: render every app under `MuiProvider`, which includes CssBaseline, and never override font smoothing. A surface rendered outside it (an iframe, a portal into another document) needs MUI's `ScopedCssBaseline`.
 - **Tabular numerals.** Digits that line up in a column or change in place use tabular figures, each the same width. Table cells, pagination, badges, chips and slider labels get them from the theme (the `tabular-numerals` departure). Anywhere else a number is data rather than part of a sentence (a KPI, a meter reading, a timer, a column of figures in your own layout), add `sx={{ fontVariantNumeric: 'tabular-nums' }}`. Leave numbers in running text proportional.
@@ -163,3 +165,16 @@ Charts work the same way against amCharts' defaults, in `src/charts/departures.t
 - **Not color alone.** Color never carries meaning by itself. Pair it with text or an icon: an invalid field shows `error` plus `helperText` saying what's wrong, a status chip has a label, a chart series has a legend or direct label.
 - **Announce what changes on its own.** A result that appears without moving focus ("Copied", "Saved", "Export ready") reaches screen readers: show it in MUI's `Snackbar` or `Alert`, or put it in an `aria-live="polite"` region. Use `assertive` only for something that hurts if it arrives late, such as a session about to expire.
 - Every story runs an axe check in the story tests, and a violation fails it.
+
+## Before a screen is done
+
+Check every screen against this list before review. Each line points back to the rule it summarizes.
+
+- [ ] It renders under `MuiProvider` and builds with MUI components and documented props ([Build with MUI as MUI documents it](#build-with-mui-as-mui-documents-it)).
+- [ ] Color, type, spacing, radius and elevation come from theme roles, with no hex values, pixel radii, font sizes or font families of its own ([Token tiers](#token-tiers)).
+- [ ] Surfaces use `background.level*` and `border.level*`, with one border per edge and concentric corners ([Surfaces and borders](#surfaces-and-borders), [One border per edge](#one-border-per-edge), [Concentric corners](#concentric-corners)).
+- [ ] Text uses Typography variants, and numbers that are data use tabular figures ([Typography](#typography)).
+- [ ] It works in light and dark, and its transitions still under `prefers-reduced-motion` ([Motion](#motion)).
+- [ ] Every control has a visible focus state, an accessible name and a 24px hit area, and no meaning rests on color alone ([Accessibility](#accessibility)).
+- [ ] Its loading, empty, error and partial-data states each show something true, never a blank or misleading view.
+- [ ] Lint, the type-check and the tests pass (in this repository: `npm run lint`, `npx tsc --noEmit -p .storybook` and `npm test`).
