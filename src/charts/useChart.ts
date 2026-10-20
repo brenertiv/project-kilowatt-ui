@@ -4,6 +4,10 @@ import { useColorScheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { chartColors, chartThemes } from './theme';
 
+// The license removes the amCharts logo. It comes from .env.local (see .env.example); without it charts still render, with the logo.
+const license = import.meta.env.VITE_AMCHARTS_LICENSE;
+if (license) am5.addLicense(license);
+
 /** What `build` receives: the chart's root and the palette's chart colors for the active scheme. */
 export type ChartContext = { root: am5.Root; colors: ReturnType<typeof chartColors> };
 
