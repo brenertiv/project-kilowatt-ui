@@ -29,7 +29,8 @@ Tokens come in three tiers, each reading only from the one below it.
 ## Surfaces and borders
 
 - Surfaces go by elevation: `background.level0` (the page, darkest) to `background.level4` (the highest surface, lightest), in both schemes. Paper takes its level from its `elevation`, so cards, menus and dialogs need nothing extra. Set a level yourself only on a surface that isn't Paper: `sx={{ bgcolor: 'background.level2' }}`.
-- Borders go by contrast, in both schemes. `border.level0` to `border.level2` separate and frame: `border.level0` for quiet separators, `divider` (`border.level1`) by default, `border.level2` where the edge must read. `border.level3` is the strongest: it reaches 3:1 on every dark surface, as WCAG asks of a control's boundary, and sits below 3:1 in light for now, by design decision. Use it for an outline you draw on something interactive, never for dividers or containers. MUI's controls (inputs, selects, outlined buttons, toggle buttons) take their outline from `palette.control.border` through the `control-outlines` departure: the Figma file's quieter slate 500 in light and navy 700 in dark, below 3:1 by design decision.
+- Borders go by contrast, in both schemes. `border.level0` to `border.level2` separate and frame: `border.level0` for quiet separators, `divider` (`border.level1`) by default, `border.level2` where the edge must read. `border.level3` is the strongest, for a frame or separator that must stand out; it reaches 3:1 on every dark surface and sits below 3:1 in light for now, by design decision.
+- Control outlines are a separate role, `palette.control` (`border`, `hover`, `focus`, `pressed`), set for inputs, selects, outlined buttons and toggle buttons through the `control-outlines` departure. They don't follow the border levels, and the border levels don't follow them, so either can change on its own. Don't outline a control with a `border.level*`, and don't frame a surface with a `control` color. At rest the control outline is slate 600 in light and navy 700 in dark, below 3:1 by design decision.
 - Intents (`primary`, `error`, `success` and the rest) pass 4.5:1 as text on every surface level, in both schemes, so any intent can sit on any surface. Use them through `color` props or palette keys, never by hex.
 - Never use a ramp step (`src/mui/colors.ts`) in a component. The levels are the API; the ramps are what they're made of.
 
@@ -69,7 +70,7 @@ Advisory: check for this while building a component or layout, as part of the wo
 
 The theme has one corner radius, `shape.borderRadius` (8px), and every rounded component takes it, buttons and icon buttons included. In `sx`, `borderRadius` counts in theme radii: `1` is 8px, `1.5` is 12px.
 
-All buttons, icon buttons and other rounded components share that one radius, and it changes only in one place: the `shape-radius` departure. Don't give one intent, variant or instance its own radius, in a theme override or in `sx`; `tokens.test.ts` fails any component override that rounds with anything but the theme radius.
+All buttons, icon buttons and other rounded components share that one radius, and it changes only in one place: the `shape-radius` departure. Don't give one intent, variant or instance its own radius, in a theme override or in `sx`. The one exception is a container whose controls always sit close to its corners: its departure rounds it at a whole multiple of the theme radius (`calc(2 * var(--mui-shape-borderRadius))`), as `card-radius` does for cards. `tokens.test.ts` fails any component override that rounds with anything else.
 
 When a rounded element sits close inside a rounded container, their corners are concentric: the container's radius is the element's radius plus the gap between them.
 
@@ -92,10 +93,13 @@ Every component with a `size` prop uses `medium`: buttons, icon buttons, button 
 
 ## Typography
 
+Foundations → Typography lists every variant's computed size, weight, line height and letter spacing, read from the running theme. Take type from those variants; never set a size, weight or tracking of your own.
+
 - **A compact heading scale.** `h1` to `h6` run 32, 28, 24, 20, 18 and 16px (the `type-scale` departure), sized for product screens rather than MUI's marketing-page headings. Body, caption, button and input sizes stay MUI's. Pick a heading by its place in the page, and set the HTML element with `component` when it differs from the variant: `<Typography variant="h5" component="h2">`. Don't set `fontSize` on a heading to resize it; pick another variant.
 - **Antialiased rendering.** MUI's CssBaseline sets `-webkit-font-smoothing: antialiased` and `-moz-osx-font-smoothing: grayscale` on the page, so text renders thinner and crisper on macOS. It's stock MUI, not a departure: render every app under `MuiProvider`, which includes CssBaseline, and never override font smoothing. A surface rendered outside it (an iframe, a portal into another document) needs MUI's `ScopedCssBaseline`.
 - **Tabular numerals.** Digits that line up in a column or change in place use tabular figures, each the same width. Table cells, pagination, badges, chips and slider labels get them from the theme (the `tabular-numerals` departure). Anywhere else a number is data rather than part of a sentence (a KPI, a meter reading, a timer, a column of figures in your own layout), add `sx={{ fontVariantNumeric: 'tabular-nums' }}`. Leave numbers in running text proportional.
 - **Wrapping.** Headings balance their lines and body text avoids a lone last word (the `text-wrap` departure). Don't override `textWrap` per instance.
+- **One weight for type styles.** Every `Typography` variant is regular (400, the `regular-weight` departure); size and color carry hierarchy. Don't set `fontWeight` on a variant to emphasize it; pick another variant, or use `strong` (`fontWeightBold`) for emphasis within text.
 - **No faux styles.** Roboto is loaded at 300, 400, 500 and 700, with no italics, and the browser doesn't fake the rest (the `font-synthesis` departure). Use only the theme's weights (`fontWeightLight` to `fontWeightBold`). Don't rely on italic for emphasis; use weight or wording.
 - **Inputs stay at 16px.** MUI's inputs use `body1` (16px), which keeps Safari on iOS from zooming the page when a field is focused. Don't set a smaller type style on an input, and never cap zoom with `maximum-scale` in the viewport tag.
 
@@ -103,7 +107,7 @@ Every component with a `size` prop uses `medium`: buttons, icon buttons, button 
 
 - **Line length.** Cap long-form text (guide pages, long descriptions, empty-state explanations) at 60ch to 75ch: `sx={{ maxWidth: '65ch' }}`. Labels, table cells and other UI text don't need a cap.
 - **Typographic punctuation.** Write copy with the real characters: curly quotes and apostrophes (“ ” ’), an en dash for ranges (9:00–17:00, Jan–Mar), an em dash to set off a thought, and the ellipsis character (…) instead of three periods. Straight quotes belong only in code. Use a non-breaking space between a value and its unit where a break would split them (`12&nbsp;kWh`).
-- **Truncation keeps the full value.** Truncate with MUI's `noWrap` on `Typography`, or clamp to a number of lines, rather than letting text overflow its container. Anything clipped must be readable another way: a `Tooltip` with the full text, an expanded view, or the detail page it links to.
+- **Truncation keeps the full value.** Truncate with MUI's `noWrap` on `Typography`, or clamp to a number of lines, rather than letting text overflow its container. Anything clipped must be readable another way: a `Tooltip` with the full text, an expanded view, or the detail page it links to. `TruncatedText` (`src/components/TruncatedText`) does both for one line of text.
 - **Locale formatting.** Format numbers, units, currency, dates and times with `Intl` (`Intl.NumberFormat`, `Intl.DateTimeFormat`, `Intl.RelativeTimeFormat`) in the user's locale. Never build them by hand (`value.toFixed(2) + ' kWh'`, `'$' + amount`, `month + '/' + day`). A building's local time zone applies to its readings; say which zone a time is in when it isn't the user's.
 
 ## Motion
@@ -112,7 +116,7 @@ Every component with a `size` prop uses `medium`: buttons, icon buttons, button 
 
 ## Charts
 
-Charts use amCharts 5, the library Enertiv's app is built on, inside MUI's outlined `Card` (`variant="outlined"`): `CardHeader` for the title, period or units and actions, `CardContent` for the chart. amCharts draws on a canvas and doesn't read the MUI theme, so one Kilowatt theme function turns the palette into an amCharts theme, and every chart's root goes through it.
+Every way Kilowatt's charts differ from stock amCharts is listed in Foundations → amCharts departures (`src/charts/departures.ts`), and each chart's page lists its own. Charts use amCharts 5, the library Enertiv's app is built on, inside MUI's outlined `Card` (`variant="outlined"`): `CardHeader` for the title and actions, then the chart straight in the card, padding itself through the chart's `inset`: 16px at the sides and bottom by default, in line with the title and `CardContent`; 8px for a tighter fit; 0 to run edge to edge. The period is set for the whole page, and units sit with the numbers (Units, below), so chart headers have no subtitle. amCharts draws on a canvas and doesn't read the MUI theme, so one Kilowatt theme function turns the palette into an amCharts theme, and every chart's root goes through it.
 
 **Where charts live.** Kilowatt holds the reference: the conventions, the theme function and a reference implementation of each chart type, with stories in the Charts section of Storybook. Enertiv's app is where charts ship; its chart components are rebuilt from Kilowatt's references, not imported from Kilowatt. Keeping the two in step is not set up yet.
 
@@ -127,8 +131,34 @@ Charts use amCharts 5, the library Enertiv's app is built on, inside MUI's outli
 - **Colors come from the theme, never from the chart.** Chart code doesn't call `am5.color()` with a hex value or a ramp step. Data takes its color from the series order or a slot number; everything else comes from the theme function.
 - **Both schemes.** amCharts applies a theme when it builds a chart, so a chart rebuilds with the other scheme's theme when the color scheme changes.
 - **Motion.** The amCharts animation theme is added only when the user hasn't asked for reduced motion (Motion above).
-- **Not color alone.** Prefer direct labels to a legend. Give every chart a text alternative: a one-line summary of what it shows, or the data as a table.
+- **Not color alone.** Prefer direct labels to a legend. Give every chart a text alternative: a one-line summary of what it shows, as the accessible name of the `figure` around it (not shown on screen), or the data as a table.
+- **Units sit with the numbers.** A unit goes where its values are read, never in the card header: above its value axis, read horizontally and left-aligned with the axis's numbers (`axisUnit` from `src/charts/theme`), and in the tooltip after each value. A headline number above the chart carries its unit too.
+- **Value axes.** A chart with one value axis puts it on the right; a two-unit chart puts its first unit on the left and its second on the right. Axis numbers are left-aligned on both sides, so a left axis's numbers and unit line up with the card's title; compact numbers are short enough that none sits far from the plot.
+- **Axis numbers are compact; everything else is full.** Value axes write numbers in `Intl.NumberFormat`'s compact notation in the viewer's locale (1.5K, 60K, 1.2M), which `useChart` sets as the chart's default number format (`axisNumberFormat`). Tooltips, headline numbers, tables and the chart's summary show the full value (61,240 kWh). Because the axis rounds, every chart item a pointer can rest on (a line point, a column, a slice) has a tooltip with its exact value and unit, written with `tooltipNumberFormat` from `src/charts/theme`. Don't set a number format on an axis.
+- **Two units at most.** A chart with two units (energy and outdoor temperature) has two value axes, each labeled with its unit, and each series names its unit in the legend ("Energy use (kWh)"), so a line isn't tied to its axis by color alone. `LineChart` does this with `rightUnit` and `right` lines (Charts → Line → Two units). Past two units, split the chart into small multiples. Convert one quantity to one unit (kW, not kW and MW) rather than adding an axis.
 - **Contrast.** Every `chart.series` color and `chart.neutral` reach 3:1 on every surface level, and every pair of them stays apart under normal vision and simulated protanopia, deuteranopia and tritanopia; `departures.test.ts` checks both. Series and status colors can't all be kept apart (status takes red, orange, purple and green), so don't mix them in one chart: color a chart either by series or by status.
+
+## Maps
+
+Every way Kilowatt's maps differ from stock CARTO is listed in Foundations → CARTO departures (`src/maps/departures.ts`). Maps use MapLibre GL with CARTO's vector basemaps, Positron in light and Dark Matter in dark, and deck.gl for the data drawn on them. MapLibre draws the basemap from a style file that doesn't read the MUI theme, so one Kilowatt theme function rewrites CARTO's style from the palette, and every map loads its basemap through it.
+
+**Where maps live.** As with charts, Kilowatt holds the reference: the conventions, the theme function and a reference implementation of each map type, with stories in the Maps section of Storybook (`SiteMap` so far). Enertiv's app rebuilds its maps from them rather than importing them. A new reference map adds its name to `MapName` in `src/maps/departures.ts`, and the conventions that name it are then checked against its source and its page.
+
+**Keys.** The basemaps are public and need no key. CARTO's platform APIs (deck.gl's CARTO data sources, `fetchMap`) take the access token in `VITE_CARTO_API_KEY` (`.env.local`, see `.env.example`), read through `cartoAccessToken` in `src/maps/carto`. Vite puts it in the browser bundle and Storybook is public, so it must be a token scoped to read only what maps show.
+
+**In code.** `SiteMap` (Maps → Site map) is the reference. Load the basemap with `basemapStyle(scheme)` from `src/maps/theme`, which fetches CARTO's style for the scheme and applies the theme, and pass it to MapLibre's `style` (or `setStyle` when the scheme changes). Take data colors from `mapColors(scheme)`, which gives the palette's chart roles as the RGBA arrays deck.gl takes. Map code never sets a basemap paint property or a color of its own.
+
+- **The basemap uses roles that already exist.** Land is the card surface the map sits on (`background.level1`), so a map runs edge to edge in its card with no seam. Buildings and road fills are a level up (`background.level2`), road edges `border.level0`, boundaries `border.level1`, labels `text.secondary` haloed in the land color. Water is the one map role, `map.water` (the `map-palette` departure): a step of the surface ramp past the land, with no hue of its own, so it can't be mistaken for data.
+- **Data takes the chart roles, and the chart rules.** Categories: `series`, six at most. Magnitude (a choropleth, a heat map): `sequential`, passed as `colors` to CARTO's `colorBins` or `colorContinuous` in place of a CARTOColors scheme. Deviation: `below` and `above` (`error` and `success`). Status: the intents. What isn't the focus: `neutral`. Don't mix series and status colors on one map, and redesign a map that needs another color rather than adding one (Charts above).
+- **Contrast.** Every series color and the neutral reach 3:1 on the land, water and buildings, and labels 4.5:1 on the land and water, in both schemes; `src/maps/departures.test.ts` checks both. That's why light water stops at slate 700.
+- **In a card.** A map sits in an outlined `Card` under a title-only `CardHeader`, edge to edge below it and clipped to the card's corners (Concentric corners above), like a chart run at `inset` 0.
+- **Controls are MUI.** Zoom in, zoom out and recenter are `IconButton`s with `Icon` and an `aria-label`, not MapLibre's `NavigationControl`. Leave the scroll to the page: maps turn on `cooperativeGestures`, so zoom takes Ctrl or ⌘ with the wheel.
+- **Keep the attribution.** CARTO's terms and OpenStreetMap's license require their credit. Show it with `attributionControl: { compact: true }`; never remove it.
+- **Tooltips.** Every item a pointer can rest on (a site, a region) has a tooltip on the menu surface with its name and exact value and unit, written with `Intl`.
+- **Not color alone, and not the map alone.** Name the map's `figure` with a one-line summary (`aria-label`), and make what it shows available as a list or table, since a map is hard to use by keyboard or screen reader.
+- **Motion.** MapLibre already jumps camera moves (`flyTo`, `easeTo`) to their end under `prefers-reduced-motion` unless they're marked `essential`; don't mark them.
+- **Labels in Roboto.** MapLibre draws labels from glyph files, and CARTO's font server has no Roboto, so Kilowatt serves Roboto Regular and Medium itself (`src/maps/fonts`, at `/map-fonts/` in Storybook) and sets every label in them, upright (the `basemap-label-font` departure). Chinese, Japanese and Korean names use the viewer's system font. An app that rebuilds the maps hosts the same folder and passes its glyphs URL to `basemapStyle(scheme, glyphs)`; other scripts (Arabic, Hebrew) would need Noto's glyphs added beside Roboto's.
+- **License.** CARTO's basemaps are free only within CARTO's terms for their use; check Enertiv's CARTO plan before a map ships in the app.
 
 ## Adding a convention
 
@@ -137,6 +167,17 @@ A convention is anything that differs from MUI's default: a theme value, a defau
 1. Add an entry to `src/mui/departures.ts` with the reason. Theme changes go in `options`; anything outside the theme goes in `convention`, saying what MUI does, what Kilowatt does instead and where. List the MUI components it changes in `components` (leave it out only for a theme-wide change), and add the departure to each of those components' pages under MUI departures.
 2. Don't set theme values anywhere else. `departures.test.ts` fails when the theme differs from stock MUI anywhere a departure doesn't claim.
 3. Check that the new convention doesn't overlap an existing one. If two entries touch the same thing, merge them.
+
+Charts work the same way against amCharts' defaults, in `src/charts/departures.ts` (Foundations → amCharts departures):
+
+1. Add an entry with the reason and the reference charts it changes (`charts`). A `theme` entry sets amCharts rules in `apply`, and `chartThemes` is built from these entries, so don't call `theme.rule` anywhere else. A `convention` entry is something each chart does in its own code: say what amCharts does, what Kilowatt does instead and where, and give a `check` that every chart it names matches.
+2. Add it to each named chart's page under amCharts departures, right after MUI departures. `src/charts/departures.test.ts` and `src/charts/docs.test.ts` fail when the theme, a chart or a page doesn't match the list.
+3. A chart's own design (grouping into Other, striped columns, two units) is a feature, not a departure; it goes in the chart page's Variants.
+
+Maps work the same way against CARTO's basemaps and deck.gl's defaults, in `src/maps/departures.ts` (Foundations → CARTO departures):
+
+1. Add an entry with the reason. A `theme` entry changes basemap layers in `apply`, picking them by what they draw (`layers('water')`, from `basemapFeature`), and `basemapTheme` is built from these entries, so don't set a basemap paint property anywhere else. A `convention` entry is something each map does in its own code: say what CARTO or MapLibre does, what Kilowatt does instead and where, name the reference maps it applies to in `maps`, and give a `check` that every map it names matches.
+2. A color the basemap needs that no role covers is a palette departure in `src/mui/departures.ts`, as `map-palette` is, not a value in `src/maps`. `src/maps/departures.test.ts` fails when the basemap paints a color that isn't from the palette, or a CARTO layer isn't mapped to a feature.
 
 ## Icons
 
@@ -151,3 +192,16 @@ A convention is anything that differs from MUI's default: a theme value, a defau
 - **Not color alone.** Color never carries meaning by itself. Pair it with text or an icon: an invalid field shows `error` plus `helperText` saying what's wrong, a status chip has a label, a chart series has a legend or direct label.
 - **Announce what changes on its own.** A result that appears without moving focus ("Copied", "Saved", "Export ready") reaches screen readers: show it in MUI's `Snackbar` or `Alert`, or put it in an `aria-live="polite"` region. Use `assertive` only for something that hurts if it arrives late, such as a session about to expire.
 - Every story runs an axe check in the story tests, and a violation fails it.
+
+## Before a screen is done
+
+Check every screen against this list before review. Each line points back to the rule it summarizes.
+
+- [ ] It renders under `MuiProvider` and builds with MUI components and documented props ([Build with MUI as MUI documents it](#build-with-mui-as-mui-documents-it)).
+- [ ] Color, type, spacing, radius and elevation come from theme roles, with no hex values, pixel radii, font sizes or font families of its own ([Token tiers](#token-tiers)).
+- [ ] Surfaces use `background.level*` and `border.level*`, with one border per edge and concentric corners ([Surfaces and borders](#surfaces-and-borders), [One border per edge](#one-border-per-edge), [Concentric corners](#concentric-corners)).
+- [ ] Text uses Typography variants, and numbers that are data use tabular figures ([Typography](#typography)).
+- [ ] It works in light and dark, and its transitions still under `prefers-reduced-motion` ([Motion](#motion)).
+- [ ] Every control has a visible focus state, an accessible name and a 24px hit area, and no meaning rests on color alone ([Accessibility](#accessibility)).
+- [ ] Its loading, empty, error and partial-data states each show something true, never a blank or misleading view.
+- [ ] Lint, the type-check and the tests pass (in this repository: `npm run lint`, `npx tsc --noEmit -p .storybook` and `npm test`).

@@ -44,8 +44,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(root, process.argv[2] ?? 'storybook-static');
 const read = <T>(file: string): T => JSON.parse(readFileSync(join(out, file), 'utf8')) as T;
 
-/** The component sections, in sidebar order: MUI's categories, then Charts. */
-const sections = ['Inputs', 'Data display', 'Feedback', 'Surfaces', 'Navigation', 'Layout', 'Utils', 'Charts'];
+/** The component sections, in sidebar order: MUI's categories, then Charts and Maps. */
+const sections = ['Inputs', 'Data display', 'Feedback', 'Surfaces', 'Navigation', 'Layout', 'Utils', 'Charts', 'Maps'];
 
 /**
  * The import block from the manifest, cut down to what a consumer writes.
@@ -186,7 +186,14 @@ function main() {
   const llms = [
     '# Kilowatt UI',
     "> Enertiv's design system: Material UI with light and dark color schemes, changed only where Foundations → MUI departures says so (the palette, corner radius, button style and icons). Build with MUI as MUI documents it.",
-    'Read Guides/Rules and Foundations/MUI departures first. Each component page has its import line, props, guidance and example snippets. Agents that speak MCP can query the same content from the Storybook MCP server (`/mcp` on a running Storybook dev server).',
+    [
+      'Read in this order: Introduction (set up MUI in an app), Guides/Rules, Foundations/MUI departures, Foundations/Typography and Foundations/Color, then the page for each component you use. Each component page has its import line, props, guidance and example snippets. Agents that speak MCP can query the same content from `/mcp` on this site.',
+      '',
+      '1. [Introduction](introduction.md)',
+      '2. [Rules](guides/rules.md)',
+      '3. [MUI departures](foundations/mui-departures.md)',
+      '4. [Typography](foundations/typography.md) and [Color](foundations/color.md)',
+    ].join('\n'),
     ...order.filter((group) => pageLinks.has(group)).map((group) => `## ${group}\n\n${pageLinks.get(group)!.sort().join('\n')}`),
     [
       '## Optional',

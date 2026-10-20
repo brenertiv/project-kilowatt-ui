@@ -1,8 +1,8 @@
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import type { Decorator } from '@storybook/react-vite';
 import { mockControls, resetMockControls, setMockFailure } from '../api/mock';
+import { TruncatedText } from '../components/TruncatedText';
 
 /** Per-story switches for the in-process mock API. Set them with `parameters.mockApi`. */
 export type MockApiParameters = {
@@ -33,10 +33,11 @@ export const inCard: Decorator = (Story, { parameters }) => {
   const { title, subheader } = (parameters.card ?? {}) as { title?: string; subheader?: string };
   return (
     <Card variant="outlined" sx={{ maxWidth: 720 }}>
-      <CardHeader title={title} subheader={subheader} />
-      <CardContent sx={{ pt: 0 }}>
-        <Story />
-      </CardContent>
+      <CardHeader
+        title={title && <TruncatedText>{title}</TruncatedText>}
+        subheader={subheader && <TruncatedText>{subheader}</TruncatedText>}
+      />
+      <Story />
     </Card>
   );
 };

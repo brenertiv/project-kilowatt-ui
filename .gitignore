@@ -5,6 +5,7 @@ dist
 .cursor
 .env
 .env.*
+!.env.example
 Enertiv UI examples
 enertiv-frontend-overview copy.md
 storybook-static

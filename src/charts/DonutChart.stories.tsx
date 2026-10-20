@@ -27,7 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Up to six parts of one whole, largest first, each labeled with its share. */
 export const Parts: Story = {
-  parameters: { card: { title: 'Energy Use by Building', subheader: 'September 2026 · kWh' } },
+  parameters: { card: { title: 'Energy Use by Building' } },
   args: {
     data: buildingShares,
     unit: 'kWh',
@@ -42,7 +42,7 @@ export const Parts: Story = {
 /** More than six parts: the five largest keep their slices, and the rest are grouped into a neutral "Other". */
 export const GroupedIntoOther: Story = {
   name: 'Grouped into Other',
-  parameters: { card: { title: 'Utility Cost', subheader: '350 Park Avenue · September 2026 · USD' } },
+  parameters: { card: { title: 'Utility Cost' } },
   args: {
     data: utilityCost,
     unit: 'USD',

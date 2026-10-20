@@ -1,0 +1,60 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as TruncatedTextStories from './TruncatedText.stories';
+
+<Meta
+  of={TruncatedTextStories}
+  summary="Kilowatt's TruncatedText for one line of text that truncates with an ellipsis and shows the full text in a tooltip only when it's cut off: card titles and other one-line labels."
+/>
+
+# TruncatedText
+
+`TruncatedText` keeps text on one line, cuts it off with an ellipsis when it doesn't fit, and shows the full text in MUI's `Tooltip` (`@mui/material`, Material UI v9) only while it's cut off. It's Kilowatt's own component, because MUI's `Typography` `noWrap` truncates but gives no way to see the rest (Rules → Content and layout). It renders a `Typography` with `variant="inherit"`, so it takes its parent's type.
+
+<Canvas of={TruncatedTextStories.Truncated} />
+
+## When to use
+
+- Use it for every `CardHeader` title, and for a subheader when a card has one. The theme already keeps them on one line (`card-header-layout`); `TruncatedText` adds the tooltip.
+- Use it for any other label that must stay on one line in a space it may not fit: a tab, a list row, a table cell with a fixed width.
+- For body text, let it wrap; don't truncate sentences people need to read.
+- For a value people copy or compare (a meter ID, an address), give it room or show it in full elsewhere, not only in a tooltip.
+
+## Usage
+
+```tsx
+import CardHeader from '@mui/material/CardHeader';
+import { TruncatedText } from 'src/components/TruncatedText';
+
+<CardHeader title={<TruncatedText>Energy Use by Floor</TruncatedText>} />
+```
+
+Pass the text as a string. `TruncatedText` measures itself as it resizes, so the tooltip and the tab stop appear only while the text is cut off.
+
+## States
+
+- **Fits:** plain text, with no tooltip and no tab stop.
+- **Cut off:** an ellipsis at the end, the full text in a tooltip on hover and on keyboard focus, and the text becomes a tab stop so keyboard users can reach the tooltip.
+
+## Do and don't
+
+- Do wrap card titles (and any subheader) in `TruncatedText`, so every card header can show its full text.
+- Don't set `noWrap` or `textOverflow` on text yourself; it truncates with no way to see the rest.
+- Do write titles short enough to fit a typical card, and let truncation handle the narrow cases.
+- Don't put a `Tooltip` around `TruncatedText`; it brings its own, shown only when it's needed.
+
+## MUI departures
+
+None. `TruncatedText` composes MUI's `Typography` and `Tooltip` as MUI documents them. Theme-wide departures (the tooltip's surface, the type scale) apply; see Foundations → MUI departures.
+
+## Accessibility
+
+- Screen readers read the full text whether or not it's cut off; the ellipsis is only visual.
+- While the text is cut off, it's focusable (`tabIndex={0}`) and its tooltip opens on focus as well as hover, so the full text doesn't depend on a mouse.
+- The tooltip is MUI's, which closes on Escape and stays open while the pointer is over it.
+
+## Related
+
+- `Card` for the card headers it's mostly used in.
+- Rules → Content and layout, on giving truncated text a way to see the full value.
+
+<Stories includePrimary={false} />

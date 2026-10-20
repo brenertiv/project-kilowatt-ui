@@ -17,6 +17,8 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { iconNames } from '../src/icons';
+import { chartDepartures } from '../src/charts/departures';
+import { mapDepartures } from '../src/maps/departures';
 import { departures } from '../src/mui/departures';
 import { foundationPages } from '../src/mui/foundations';
 import { departureChanges } from '../src/mui/themeDiff';
@@ -204,6 +206,64 @@ function writeDepartures() {
   return 1;
 }
 
+/**
+ * Foundations/amCharts departures: every way Kilowatt's charts differ from stock amCharts 5, from
+ * src/charts/departures.ts: the theme every chart gets, then the conventions each chart follows.
+ */
+function writeChartDepartures() {
+  const lead =
+    "Kilowatt's charts are stock amCharts 5 plus the departures below, and nothing else. Theme departures are applied to every chart through `useChart`; conventions are what each reference chart does in its own code, and what Enertiv's app reproduces when it rebuilds a chart. Each departure lives in src/charts/departures.ts with its reason; the chart theme is built from that list, a test checks each chart follows the conventions that name it, and each chart's page lists its own.";
+  const cell = (text: string) => text.replace(/\|/g, '\\|');
+  const charts = (names: string[]) => `Applies to: ${names.map((name) => `\`${name}\``).join(', ')}.`;
+  const sections: string[] = [];
+  for (const [kind, heading] of [
+    ['theme', 'Theme: every chart'],
+    ['convention', 'Conventions: each chart'],
+  ] as const) {
+    sections.push(`## ${heading}`);
+    for (const departure of chartDepartures.filter((entry) => entry.kind === kind)) {
+      sections.push(`### ${departure.title}`, departure.why, `\`${departure.id}\`. ${charts(departure.charts)}`);
+      if (departure.convention) {
+        const { amchartsDefault, kilowatt, where } = departure.convention;
+        sections.push(`| amCharts default | Kilowatt | Where |\n| --- | --- | --- |\n| ${cell(amchartsDefault)} | ${cell(kilowatt)} | ${cell(where)} |`);
+      }
+    }
+  }
+  const body = ['# amCharts departures', lead, markdownToMdx(sections.join('\n\n'))].join('\n\n');
+  mkdirSync(join(out, 'foundations'), { recursive: true });
+  writeFileSync(join(out, 'foundations', 'amCharts departures.mdx'), page({ title: 'Foundations/amCharts departures', summary: lead, body }));
+  return 1;
+}
+
+/**
+ * Foundations/CARTO departures: every way Kilowatt's maps differ from stock CARTO basemaps and
+ * deck.gl, from src/maps/departures.ts: the basemap theme every map gets, then the conventions each map follows.
+ */
+function writeMapDepartures() {
+  const lead =
+    "Kilowatt's maps are MapLibre GL with CARTO's basemaps (Positron in light, Dark Matter in dark) and deck.gl for data, plus the departures below, and nothing else. Theme departures change the basemap style every map loads, through `basemapStyle`; conventions are what each reference map does in its own code, and what Enertiv's app reproduces when it rebuilds a map. Each departure lives in src/maps/departures.ts with its reason; the basemap theme is built from that list, and a test checks it paints only palette colors.";
+  const cell = (text: string) => text.replace(/\|/g, '\\|');
+  const maps = (names: string[]) => (names.length ? `Applies to: ${names.map((name) => `\`${name}\``).join(', ')}.` : 'Applies to: every map.');
+  const sections: string[] = [];
+  for (const [kind, heading] of [
+    ['theme', 'Theme: every basemap'],
+    ['convention', 'Conventions: each map'],
+  ] as const) {
+    sections.push(`## ${heading}`);
+    for (const departure of mapDepartures.filter((entry) => entry.kind === kind)) {
+      sections.push(`### ${departure.title}`, departure.why, `\`${departure.id}\`. ${maps(departure.maps)}`);
+      if (departure.convention) {
+        const { cartoDefault, kilowatt, where } = departure.convention;
+        sections.push(`| CARTO default | Kilowatt | Where |\n| --- | --- | --- |\n| ${cell(cartoDefault)} | ${cell(kilowatt)} | ${cell(where)} |`);
+      }
+    }
+  }
+  const body = ['# CARTO departures', lead, markdownToMdx(sections.join('\n\n'))].join('\n\n');
+  mkdirSync(join(out, 'foundations'), { recursive: true });
+  writeFileSync(join(out, 'foundations', 'CARTO departures.mdx'), page({ title: 'Foundations/CARTO departures', summary: lead, body }));
+  return 1;
+}
+
 function writeGuides() {
   const dir = join(out, 'guides');
   mkdirSync(dir, { recursive: true });
@@ -221,5 +281,5 @@ function writeGuides() {
 }
 
 rmSync(out, { recursive: true, force: true });
-const counts = { foundations: writeDepartures() + writeFoundations() + writeIcons(), guides: writeGuides() };
+const counts = { foundations: writeDepartures() + writeChartDepartures() + writeMapDepartures() + writeFoundations() + writeIcons(), guides: writeGuides() };
 console.log(`build-docs: ${counts.foundations} foundations pages, ${counts.guides} guides in src/docs/generated`);

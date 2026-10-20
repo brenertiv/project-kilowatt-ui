@@ -61,11 +61,12 @@ describe('token tiers', () => {
 
   it.each(schemes)('component overrides in the %s theme round only with the theme radius', (scheme) => {
     // One radius for everything (Rules → Concentric corners): an override may point a component at the
-    // theme radius, never set its own, so changing shape-radius moves every rounded component together.
+    // theme radius, or a whole multiple of it for a container's concentric corners, never set its own,
+    // so changing shape-radius moves every rounded component together.
     for (const departure of departures) {
       for (const [path, value] of leaves(departure.options?.(scheme).components)) {
         if (!/(^|\.)border(Top|Bottom)?(Left|Right)?Radius$/.test(path)) continue;
-        expect(value, `${departure.id}: components.${path}`).toBe('var(--mui-shape-borderRadius)');
+        expect(value, `${departure.id}: components.${path}`).toMatch(/^(calc\(\d+ \* )?var\(--mui-shape-borderRadius\)\)?$/);
       }
     }
   });

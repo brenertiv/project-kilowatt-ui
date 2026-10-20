@@ -1,14 +1,16 @@
 import * as am5 from '@amcharts/amcharts5';
+import type * as am5xy from '@amcharts/amcharts5/xy';
 import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
 import { decomposeColor, rgbToHex } from '@mui/material/styles';
 import { createSchemeTheme } from '../mui/theme';
 import type { ColorScheme } from '../mui/departures';
+import { chartDepartures, type ChartThemeContext } from './departures';
 
 /**
- * Kilowatt's amCharts 5 theme (Rules → Charts, the `amcharts-theme` departure). amCharts draws
+ * Kilowatt's amCharts 5 theme (Rules → Charts, Foundations → amCharts departures). amCharts draws
  * on a canvas and doesn't read the MUI theme, so this turns one scheme's palette into amCharts
- * rules. Chart code sets no colors of its own: series take `chart.series` in order, and the
- * chart's chrome takes the roles every component uses.
+ * rules. Every rule comes from a `theme` entry in `./departures`: chart code sets no colors of its
+ * own, series take `chart.series` in order, and the chart's chrome takes the roles every component uses.
  */
 
 const themes = { light: createSchemeTheme('light'), dark: createSchemeTheme('dark') };
@@ -22,70 +24,31 @@ function solid(color: string, surface: string): string {
 }
 
 /**
- * The amCharts themes for one color scheme, for `root.setThemes()`. `useChart` calls this; call
- * it yourself only for a root that `useChart` doesn't make.
+ * The amCharts themes for one color scheme, for `root.setThemes()`, built from the `theme` entries in
+ * `./departures` (it also sets the root's number format). `useChart` calls this; call it yourself only
+ * for a root that `useChart` doesn't make.
  *
  * @param root - The chart's root.
  * @param scheme - The active color scheme, `light` or `dark`.
  * @param reducedMotion - Leaves out amCharts' animation theme when the user asks for reduced motion. Default `false`.
  */
 export function chartThemes(root: am5.Root, scheme: ColorScheme, reducedMotion = false): am5.Theme[] {
-  const { palette, typography } = themes[scheme];
-  const card = palette.background.level1;
-  const color = (value: string) => am5.color(solid(value, card));
-
+  const mui = themes[scheme];
+  const card = mui.palette.background.level1;
   const theme = am5.Theme.new(root);
-  theme.rule('InterfaceColors').setAll({
-    background: color(card),
-    fill: color(card),
-    stroke: color(card),
-    grid: color(palette.border.level1),
-    text: color(palette.text.secondary),
-    alternativeBackground: color(palette.text.primary),
-    alternativeText: color(card),
-    disabled: color(palette.text.disabled),
-    positive: color(palette.success.main),
-    negative: color(palette.error.main),
-    warning: color(palette.warning.main),
-    primaryButton: color(palette.primary.main),
-    primaryButtonHover: color(palette.primary.dark),
-    primaryButtonDown: color(palette.primary.dark),
-    primaryButtonActive: color(palette.primary.dark),
-    primaryButtonText: color(palette.primary.contrastText),
-    primaryButtonStroke: color(palette.primary.main),
-    secondaryButton: color(palette.background.level3),
-    secondaryButtonHover: color(palette.background.level4),
-    secondaryButtonDown: color(palette.background.level4),
-    secondaryButtonActive: color(palette.background.level4),
-    secondaryButtonText: color(palette.text.primary),
-    secondaryButtonStroke: color(palette.border.level1),
-  });
-
-  // Data colors: the six series hues in order, used as they are (no lightening on a second pass).
-  theme.rule('ColorSet').setAll({ colors: palette.chart.series.map(color), step: 1, reuse: true, passOptions: {} });
-
-  // Labels and ticks: text.secondary in the caption style.
-  theme.rule('Label').setAll({
-    fontFamily: typography.fontFamily,
-    fontSize: typography.caption.fontSize,
-    fill: color(palette.text.secondary),
-  });
-
-  // Gridlines at full strength in border.level1, the divider; the grid interface color sets the stroke.
-  theme.rule('Grid').setAll({ strokeOpacity: 1 });
-
-  // Tooltips on the menu surface with primary text, outlined like a menu, rather than filled in the series color.
-  theme.rule('Tooltip').setAll({ getFillFromSprite: false, getStrokeFromSprite: false, autoTextColor: false });
-  theme.rule('PointedRectangle', ['tooltip', 'background']).setAll({
-    fill: color(palette.background.level3),
-    fillOpacity: 1,
-    stroke: color(palette.border.level1),
-    strokeOpacity: 1,
-    cornerRadius: Number(themes[scheme].shape.borderRadius),
-  });
-  theme.rule('Label', ['tooltip']).setAll({ fill: color(palette.text.primary) });
-
-  return reducedMotion ? [theme] : [am5themes_Animated.new(root), theme];
+  const context: ChartThemeContext = {
+    root,
+    theme,
+    themes: [theme],
+    mui,
+    color: (value) => am5.color(solid(value, card)),
+    card,
+    reducedMotion,
+    animated: () => am5themes_Animated.new(root),
+  };
+  // The theme is the departures' rules and nothing else (Foundations → amCharts departures).
+  for (const departure of chartDepartures) departure.apply?.(context);
+  return context.themes;
 }
 
 /** The palette's chart colors for one scheme, as amCharts colors, for a series that takes a slot rather than the next color in order. */
@@ -105,6 +68,23 @@ export function chartColors(scheme: ColorScheme) {
     reference: color(palette.text.secondary),
   };
 }
+
+/** How value axes write their numbers: compact, in the viewer's locale (the `compact-axis-numbers` departure). */
+export { axisNumberFormat } from './departures';
+
+/**
+ * How tooltips write a value: in full, with grouping and up to two decimals (61,240.5), never compact.
+ * Axes round to compact numbers, so every chart item a pointer can rest on (a line point, a column, a
+ * slice) shows its exact value in a tooltip. Use it in a tooltip's text: `{valueY.formatNumber('${tooltipNumberFormat}')}`.
+ */
+export const tooltipNumberFormat = '#,###.##';
+
+/**
+ * A chart's padding at its sides and bottom, in theme spacing units, when it sits straight in a `Card`:
+ * `2` (16px) by default, in line with `CardContent` and the card's title; `1` (8px) for a tighter fit;
+ * `0` to run edge to edge.
+ */
+export type ChartInset = 0 | 1 | 2;
 
 /** How a series asks for its color: a fixed `slot` for a product meaning, `neutral` for what isn't the focus, or neither for the next free slot. */
 export type SeriesColor = { slot?: number; neutral?: boolean };
@@ -135,4 +115,40 @@ export function legend(root: am5.Root): am5.Legend {
     paddingTop: 8,
     layout: am5.GridLayout.new(root, { maxColumns: 3 }),
   });
+}
+
+/** Each chart's row of unit labels, above the plot, made by the first `axisUnit` call. */
+const unitRows = new WeakMap<am5xy.XYChart, am5.Container>();
+
+/**
+ * The unit of one value axis, as a small label above it, read horizontally, so every number on the axis
+ * sits next to its unit (Rules → Charts → Units). The label is left-aligned with the axis's numbers on
+ * whichever side the axis sits, and follows it if the chart resizes; an axis narrower than its unit widens to fit it. Call it once per value axis, after
+ * pushing the axis to `chart.yAxes`. Two units at most; past two, split the chart.
+ *
+ * @param root - The chart's root.
+ * @param chart - The XY chart the axis belongs to.
+ * @param axis - The value axis the unit labels.
+ * @param unit - The unit, as people write it: `kWh`, `kW`, `°F`, `USD`.
+ */
+export function axisUnit(root: am5.Root, chart: am5xy.XYChart, axis: am5xy.Axis<am5xy.AxisRenderer>, unit: string): am5.Label {
+  let row = unitRows.get(chart);
+  if (!row) {
+    row = chart.children.unshift(am5.Container.new(root, { width: am5.p100, paddingBottom: 12 }));
+    unitRows.set(chart, row);
+  }
+  const label = row.children.push(am5.Label.new(root, { text: unit, paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0 }));
+  const place = () => {
+    // The axis's numbers start at its labels' left padding, inside the axis, on the left or right of the plot.
+    const inset = axis.get('renderer').labels.values[0]?.get('paddingLeft') ?? 0;
+    // A unit wider than the axis's numbers ("kWh" over "60K") widens the axis, so it isn't cut off at the chart's edge.
+    const needed = Math.ceil(inset + label.width());
+    if ((axis.get('minWidth') ?? 0) < needed) axis.set('minWidth', needed);
+    const start = axis.parent === chart.rightAxesContainer ? chart.leftAxesContainer.width() + chart.plotContainer.width() : 0;
+    label.set('x', start + inset);
+  };
+  chart.leftAxesContainer.events.on('boundschanged', place);
+  chart.plotContainer.events.on('boundschanged', place);
+  label.events.on('boundschanged', place);
+  return label;
 }

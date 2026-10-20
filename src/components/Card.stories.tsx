@@ -8,10 +8,15 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, waitFor } from 'storybook/test';
+import { axisUnit, tooltipNumberFormat } from 'src/charts/theme';
 import { useChart, type ChartContext } from 'src/charts/useChart';
+import { TruncatedText } from 'src/components/TruncatedText';
 import { Icon } from 'src/icons';
 
 /**
@@ -115,7 +120,9 @@ function buildEnergyChart({ root, colors }: ChartContext) {
   const xAxis = chart.xAxes.push(
     am5xy.DateAxis.new(root, { baseInterval: { timeUnit: 'day', count: 1 }, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 60 }) }),
   );
-  const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, {}) }));
+  // One value axis, on the right, with its unit above it.
+  const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+  axisUnit(root, chart, yAxis, 'kWh');
   const line = (field: 'current' | 'previous', name: string, color: am5.Color) => {
     const series = chart.series.push(
       am5xy.LineSeries.new(root, {
@@ -126,7 +133,7 @@ function buildEnergyChart({ root, colors }: ChartContext) {
         valueYField: field,
         stroke: color,
         fill: color,
-        tooltip: am5.Tooltip.new(root, { labelText: "{name}: {valueY.formatNumber('#,###')} kWh" }),
+        tooltip: am5.Tooltip.new(root, { labelText: `{name}: {valueY.formatNumber('${tooltipNumberFormat}')} kWh` }),
       }),
     );
     series.strokes.template.setAll({ strokeWidth: 2 });
@@ -148,33 +155,124 @@ function EnergyUseChart() {
 }
 
 /**
- * A chart in a card: `CardHeader` names what's measured, the period and units, with actions in
- * `action`; the chart fills `CardContent`, run through `useChart`, in a `figure` whose caption is a one-line summary, its text alternative.
+ * A chart in a card: a title-only `CardHeader` names what's measured, in `TruncatedText`, with actions in
+ * `action`; the unit sits above the value axis and in the tooltip, and the page sets the period; the chart sits straight in the card with 16px of its own padding, run through `useChart`, in a `figure` named by a one-line summary, its text alternative for screen readers.
  */
 export const Chart: Story = {
   render: (args) => (
     <Card {...args} variant="outlined" sx={{ maxWidth: 640 }}>
       <CardHeader
-        title="Energy Use"
-        subheader="Sep 1–30, 2026 · kWh"
+        title={<TruncatedText>Energy Use</TruncatedText>}
         action={
           <IconButton aria-label="Chart options">
             <Icon name="more_horiz" fontSize="inherit" />
           </IconButton>
         }
       />
-      <CardContent sx={{ pt: 0 }}>
-        <Box component="figure" aria-labelledby="energy-use-summary" sx={{ m: 0 }}>
-          <EnergyUseChart />
-          <Typography id="energy-use-summary" component="figcaption" variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-            {summary}
-          </Typography>
-        </Box>
-      </CardContent>
+      <Box component="figure" aria-label={summary} sx={{ m: 0, px: 2, pb: 2 }}>
+        <EnergyUseChart />
+      </Box>
     </Card>
   ),
   play: async ({ canvas }) => {
     const figure = canvas.getByRole('figure', { name: /This period used/ });
     await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
+  },
+};
+
+/** Three meters and their readings so far this period, in kWh. */
+const meters = [
+  { name: 'Main switchgear', reading: 412_880 },
+  { name: 'Floors 2–20', reading: 236_410 },
+  { name: 'Chiller plant', reading: 98_675 },
+];
+
+/**
+ * Content that runs edge to edge: the `Card` has no padding of its own, so leave `CardContent` out and
+ * let the element set its own. Here a `List` sits straight under the header, and its rows pad themselves.
+ */
+export const EdgeToEdge: Story = {
+  render: (args) => (
+    <Card {...args} variant="outlined" sx={{ maxWidth: 360 }}>
+      <CardHeader
+        title={<TruncatedText>Meters</TruncatedText>}
+        action={
+          <IconButton aria-label="Meter options">
+            <Icon name="more_horiz" fontSize="inherit" />
+          </IconButton>
+        }
+      />
+      <List>
+        {meters.map((meter) => (
+          <ListItem key={meter.name} secondaryAction={<Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>{kWh.format(meter.reading)}\u00a0kWh</Typography>}>
+            <ListItemText primary={meter.name} />
+          </ListItem>
+        ))}
+      </List>
+    </Card>
+  ),
+};
+
+/** The header's action, the same in every header story. */
+const options = (
+  <IconButton aria-label="Card options">
+    <Icon name="more_horiz" fontSize="inherit" />
+  </IconButton>
+);
+
+/**
+ * A title alone: the icon sits level with the title line, 16px from the card's right edge, and the
+ * header is the title's height plus 16px above and below; the button doesn't make it taller.
+ */
+export const TitleOnly: Story = {
+  render: (args) => (
+    <Card {...args} variant="outlined" sx={{ maxWidth: 360 }}>
+      <CardHeader title={<TruncatedText>Energy Use</TruncatedText>} action={options} />
+      <CardContent sx={{ pt: 0 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Down from last period across every floor.
+        </Typography>
+      </CardContent>
+    </Card>
+  ),
+};
+
+/**
+ * A headline number: the title says what's measured, and the unit sits right after the number,
+ * smaller and in `text.secondary`, after a no-break space so the two never split.
+ */
+export const Metric: Story = {
+  render: (args) => (
+    <Card {...args} variant="outlined" sx={{ maxWidth: 360 }}>
+      <CardHeader title={<TruncatedText>Energy Use</TruncatedText>} action={options} />
+      <CardContent sx={{ pt: 0 }}>
+        <Typography variant="h2" component="p" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+          {kWh.format(sum('current'))}
+          <Typography component="span" variant="body1" sx={{ color: 'text.secondary' }}>
+            {'\u00a0'}kWh
+          </Typography>
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+          {change.format(difference)} {difference < 0 ? 'less' : 'more'} than the previous 30 days
+        </Typography>
+      </CardContent>
+    </Card>
+  ),
+};
+
+/** A title too long for the card: it truncates to one line, with the full text in a tooltip. */
+export const LongTitle: Story = {
+  render: (args) => (
+    <Card {...args} variant="outlined" sx={{ maxWidth: 360 }}>
+      <CardHeader
+        title={<TruncatedText>Energy Use by Floor, Tenant Submeters and Common Areas</TruncatedText>}
+        action={options}
+      />
+    </Card>
+  ),
+  play: async ({ canvas }) => {
+    const title = canvas.getByText(/^Energy Use by Floor/);
+    await waitFor(() => expect(title).toHaveAttribute('tabindex', '0'));
+    await expect(title.getBoundingClientRect().height).toBeLessThan(30);
   },
 };

@@ -37,8 +37,8 @@ function storybookTheme(scheme: Scheme) {
   // MUI types the radius as number | string; Kilowatt's is a number of pixels (the shape-radius departure).
   const radius = Number(shape.borderRadius);
   // One border for the whole interface: frames, separators, buttons and inputs alike.
-  // Storybook's own controls aren't held to the 3:1 control outline (border level3), so
-  // they take the frame border too: the divider (level1), as the Figma frames draw it.
+  // Storybook's own controls are part of its interface, not Kilowatt controls, so they
+  // take the frame border too: the divider (level1), as the Figma frames draw it.
   const frameBorder = palette.divider;
   return create({
     base: scheme,

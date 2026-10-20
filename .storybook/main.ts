@@ -8,6 +8,8 @@ const config: StorybookConfig = {
   staticDirs: [
     // The logos and favicon for the Storybook interface (.storybook/manager.ts).
     { from: '../src/assets', to: '/brand' },
+    // Roboto as MapLibre glyph files, for basemap labels (src/maps/fonts/README.md).
+    { from: '../src/maps/fonts', to: '/map-fonts' },
   ],
   addons: [
     {

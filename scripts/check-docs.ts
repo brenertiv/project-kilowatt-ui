@@ -2,7 +2,7 @@
  * Fails when the design system's docs fall behind its code. Run after
  * `storybook build`, against the manifest agents read:
  *
- * - every exported component in src/components, src/charts and src/pages is
+ * - every exported component in src/components, src/charts, src/maps and src/pages is
  *   used by a story file;
  * - every manifest entry has a one-line summary, from its JSDoc `@summary`
  *   or, for recipes and patterns with no component, from its guidance page;
@@ -41,7 +41,7 @@ function files(dir: string): string[] {
 const problems: string[] = [];
 
 // Every exported component is used by a story file.
-const sources = ['src/components', 'src/charts', 'src/pages']
+const sources = ['src/components', 'src/charts', 'src/maps', 'src/pages']
   .map((dir) => join(root, dir))
   .filter((dir) => existsSync(dir))
   .flatMap((dir) => files(dir));

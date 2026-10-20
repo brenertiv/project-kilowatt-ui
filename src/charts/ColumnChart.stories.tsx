@@ -36,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 
 /** One measure across categories: every column takes the first series color, since the categories are labeled on the axis. */
 export const Categories: Story = {
-  parameters: { card: { title: 'Energy Use by Building', subheader: 'September 2026 · kWh' } },
+  parameters: { card: { title: 'Energy Use by Building' } },
   args: {
     data: buildingTotals,
     categoryField: 'building',
@@ -52,7 +52,7 @@ export const Categories: Story = {
 /** Parts of a total, stacked: supply and delivery are variants of one meaning, so they share its slot and delivery is `striped`. */
 export const StackedVariants: Story = {
   name: 'Stacked variants',
-  parameters: { card: { title: 'Electricity Cost', subheader: '2026 by month · USD' } },
+  parameters: { card: { title: 'Electricity Cost' } },
   args: {
     unit: 'USD',
     data: monthlySupplyDelivery,
