@@ -7,13 +7,12 @@
 type SurfaceLevels = { level0: string; level1: string; level2: string; level3: string; level4: string };
 
 /**
- * Borders by contrast against the surfaces, in both schemes: level0 is the faintest; level3,
- * the strongest, for outlines on interactive elements (3:1 in dark; below it in light for now);
- * MUI's controls take their outline from `control` instead.
+ * Surface borders by contrast, in both schemes, for separators and frames: level0 is the
+ * faintest, level3 the strongest. Control outlines don't use them; they have `control`.
  */
 export type BorderLevels = { level0: string; level1: string; level2: string; level3: string };
 
-/** Control outlines (inputs, selects, outlined buttons, toggle buttons), by state, from the Figma button-border tokens. */
+/** Control outlines (inputs, selects, outlined buttons, toggle buttons), by state. Independent of the surface border levels. */
 export type ControlColors = { border: string; hover: string; focus: string; pressed: string };
 
 /**

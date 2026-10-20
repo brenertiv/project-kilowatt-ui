@@ -1,8 +1,8 @@
-import { useCallback, useId } from 'react';
+import { useCallback } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5percent from '@amcharts/amcharts5/percent';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+import { tooltipNumberFormat, type ChartInset } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
 /** One part of the whole. */
@@ -18,12 +18,14 @@ export type DonutChartProps = {
   data: DonutSlice[];
   /** The unit of the values, shown in the tooltip: `kWh`, `USD`. */
   unit: string;
-  /** One sentence on what the chart shows, with the numbers that matter. It's the figure's visible caption and its accessible name. */
+  /** One sentence on what the chart shows, with the numbers that matter. It isn't shown: it's the figure's accessible name, the chart's text alternative for screen readers. */
   summary: string;
   /** The name of the slice that groups the smallest parts when there are more than six. Default `'Other'`. */
   otherLabel?: string;
   /** The chart's height in pixels. Default `280`. */
   height?: number;
+  /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
+  inset?: ChartInset;
 };
 
 /** Shares in the labels and tooltips, formatted with Intl (Rules → Content and layout). */
@@ -48,14 +50,13 @@ function slices(data: DonutSlice[], otherLabel: string) {
  * A donut chart of the parts of one whole, in Kilowatt's chart theme (Rules → Charts): a
  * reference implementation that Enertiv's app rebuilds. Slices take `chart.series` colors,
  * largest first, and are labeled directly with their share. Past six parts, the smallest are
- * grouped into one neutral slice. The chart sits in a `figure` whose caption is `summary`.
+ * grouped into one neutral slice. The chart sits in a `figure` named by `summary`.
  * Put it in a `Card` under a `CardHeader`.
  *
  * @summary A donut chart of up to six parts of a whole, labeled directly, with the smallest grouped into Other.
  * @import import { DonutChart } from 'src/charts/DonutChart';
  */
-export function DonutChart({ data, unit, summary, otherLabel = 'Other', height = 280 }: DonutChartProps) {
-  const captionId = useId();
+export function DonutChart({ data, unit, summary, otherLabel = 'Other', height = 280, inset = 2 }: DonutChartProps) {
   const build = useCallback(
     ({ root, colors }: ChartContext) => {
       const chart = root.container.children.push(am5percent.PieChart.new(root, { innerRadius: am5.percent(60), radius: am5.percent(50) }));
@@ -65,7 +66,7 @@ export function DonutChart({ data, unit, summary, otherLabel = 'Other', height =
       series.slices.template.set('templateField', 'sliceSettings');
       // Aligned labels (amCharts' default) space themselves out, so small neighbouring slices stay readable.
       series.labels.template.setAll({ text: '{category} {share}', oversizedBehavior: 'truncate', maxWidth: 140 });
-      series.slices.template.set('tooltipText', `{category}: {value.formatNumber('#,###')} ${unit} ({share})`);
+      series.slices.template.set('tooltipText', `{category}: {value.formatNumber('${tooltipNumberFormat}')} ${unit} ({share})`);
       const { parts, other } = slices(data, otherLabel);
       const total = data.reduce((sum, part) => sum + part.value, 0);
       const share = (value: number) => percent.format(value / total);
@@ -79,11 +80,8 @@ export function DonutChart({ data, unit, summary, otherLabel = 'Other', height =
   const ref = useChart(build);
 
   return (
-    <Box component="figure" aria-labelledby={captionId} sx={{ m: 0 }}>
+    <Box component="figure" aria-label={summary} sx={{ m: 0, px: inset, pb: inset }}>
       <Box ref={ref} sx={{ height }} />
-      <Typography id={captionId} component="figcaption" variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-        {summary}
-      </Typography>
     </Box>
   );
 }

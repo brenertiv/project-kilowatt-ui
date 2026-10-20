@@ -87,7 +87,7 @@ describe('createKilowattTheme', () => {
   });
 
   // Light is left out for now: its border.level3 (slate 950) sits below 3:1, by design decision.
-  it('gives the dark scheme a control border (border.level3) at 3:1 on every surface, as WCAG asks of control boundaries', () => {
+  it('gives the dark scheme a strongest border (border.level3) at 3:1 on every surface', () => {
     const { palette } = createSchemeTheme('dark');
     for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
       const surface = palette.background[level];

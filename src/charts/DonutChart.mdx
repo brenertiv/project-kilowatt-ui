@@ -25,10 +25,8 @@ A donut chart shows how one whole splits into parts. `DonutChart` is Kilowatt's 
 import { DonutChart } from 'src/charts/DonutChart';
 
 <Card variant="outlined">
-  <CardHeader title="Utility Cost" subheader="350 Park Avenue · September 2026 · USD" />
-  <CardContent sx={{ pt: 0 }}>
-    <DonutChart data={costs} unit="USD" summary="Electricity was 63% of the building's utility cost." />
-  </CardContent>
+  <CardHeader title="Utility Cost" />
+  <DonutChart data={costs} unit="USD" summary="Electricity was 63% of the building's utility cost." />
 </Card>
 ```
 
@@ -41,8 +39,8 @@ import { DonutChart } from 'src/charts/DonutChart';
 
 ## Do and don't
 
-- Do put the chart in an outlined `Card` (`variant="outlined"`) under a `CardHeader` that says what's measured, the period and the unit.
-- Don't put the title or unit inside the chart; the card header carries them.
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`, 16px by default to line up with the title and any `CardContent`, `1` (8px) for a tighter fit, `0` to run edge to edge. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` puts it in the tooltip, next to each value, and the summary should state it with its numbers.
 - Do use a donut only for parts that add up to a meaningful whole.
 - Don't use a donut for values that overlap or don't sum, such as averages or rates.
 - Do let the chart group the smallest parts into "Other" past six, and name them in the summary.
@@ -53,13 +51,25 @@ import { DonutChart } from 'src/charts/DonutChart';
 ## MUI departures
 
 - `chart-palette`: slices take `chart.series` in order, largest first, and the grouped slice takes `chart.neutral`.
-- `amcharts-theme`: `useChart` applies the chart theme for the active scheme: labels in `text.secondary`, tooltips on the menu surface, and no animation under reduced motion.
 
-Theme-wide departures (the surface levels the card sits on, the 8px radius) apply too; see Foundations → MUI departures.
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every hoverable item has a tooltip with its exact value and unit (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
 
 ## Accessibility
 
-- The chart draws on a canvas, so the `figure` around it is named by its visible caption, `summary`, through `aria-labelledby`.
+- Every point, column or slice shows its exact value and unit in a tooltip on hover, since axis numbers are rounded to compact form (1.5K).
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the slices.
 - Slices are told apart by their direct labels (name and share) as well as color.
 - For exact values, offer the data as a table beside the chart.

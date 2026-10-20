@@ -3,7 +3,7 @@ import * as LineChartStories from './LineChart.stories';
 
 <Meta
   of={LineChartStories}
-  summary="Kilowatt's reference line chart for values over time: amCharts 5 in the chart theme, one to six colored lines plus neutral baselines, captioned with a one-line summary."
+  summary="Kilowatt's reference line chart for values over time: amCharts 5 in the chart theme, one to six colored lines plus neutral baselines, with a second unit on a right axis when needed."
 />
 
 # Line chart
@@ -18,12 +18,12 @@ A line chart shows how values change over time. `LineChart` is Kilowatt's refere
 - For values across categories that aren't time (buildings, utilities), use a column chart.
 - For parts of one whole, with six parts or fewer, use a donut chart.
 - For more than six lines, group the smallest into "Other", split the chart, or show a table.
+- For a measure against what drives it in another unit (energy against outdoor temperature), use two units on two value axes. Past two units, split into separate charts.
 
 ## Usage
 
 ```tsx
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import { LineChart } from 'src/charts/LineChart';
 
@@ -33,11 +33,20 @@ const series = [
 ];
 
 <Card variant="outlined">
-  <CardHeader title="Energy Use" subheader="Sep 1–30, 2026 against the previous 30 days · kWh" />
-  <CardContent sx={{ pt: 0 }}>
-    <LineChart data={readings} series={series} unit="kWh" summary="This period used 34,024 kWh, 5% less than the previous 30 days." />
-  </CardContent>
+  <CardHeader title="Energy Use" />
+  <LineChart data={readings} series={series} unit="kWh" summary="This period used 34,024 kWh, 5% less than the previous 30 days." />
 </Card>
+```
+
+The value axis sits on the right. For a second unit, mark its lines `right` and set `rightUnit`: the first unit's axis moves to the left, and the chart adds a right value axis with the second unit above it, on the left axis's gridlines, and every line's legend name and tooltip carry its unit:
+
+```tsx
+const series = [
+  { field: 'current', name: 'Energy use' },
+  { field: 'temperature', name: 'Outdoor temperature', neutral: true, right: true },
+];
+
+<LineChart data={readings} series={series} unit="kWh" rightUnit="°F" summary="…" />
 ```
 
 `data` is rows of numbers with a UTC timestamp in `date`. Keep `data` and `series` stable (constants or `useMemo`), since the chart is rebuilt when they change.
@@ -47,34 +56,58 @@ const series = [
 - **Single.** One measure; the line takes the first series color.
 - **Highlight.** The line that matters in a series color, and the context (the previous period, a baseline) with `neutral` and `dashed`.
 - **Comparison.** Up to six lines, told apart by `chart.series` color in order. Give a line a `slot` when it stands for a fixed meaning (a utility type), so it keeps one color on every chart.
+- **Aligned with content.** A chart under a `CardContent` (a headline number): its default 16px inset lines it up with the content above.
+- **Two units.** A measure on the left axis and what it's read against on the right (`right`, `rightUnit`), each axis labeled with its unit. Draw the context line `neutral`.
 
 `dashed` marks a variant of another line, such as a forecast; it keeps the hue rather than taking a new color.
 
 ## Do and don't
 
-- Do put the chart in an outlined `Card` (`variant="outlined"`) under a `CardHeader` that says what's measured, the period and the unit.
-- Don't put the title or unit inside the chart; the card header carries them.
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`, 16px by default to line up with the title and any `CardContent`, `1` (8px) for a tighter fit, `0` to run edge to edge. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` shows it above the value axis and in the tooltip, next to the numbers.
 - Do write `summary` as one sentence with the numbers that matter.
-- Don't leave the summary generic ("Energy use chart"); it's what screen readers and the caption say.
+- Don't leave the summary generic ("Energy use chart"); it's what screen readers say for the whole chart.
 - Do draw the context line `neutral` when one line is the point.
 - Don't give a baseline its own series color; two colored lines read as equals.
 - Do give a line a `slot` when it stands for a product meaning, so electricity is the same color on every chart.
 - Don't set a color in chart code or add a palette color for a meaning; map the meaning to a slot.
+- Do use `rightUnit` for a second unit, and draw the line that's context `neutral`.
+- Don't put a third unit on a chart, or two scales of one quantity (kW and MW); split the chart or convert to one unit.
 - Do group or switch to a table past six lines.
 - Don't show more than six colored lines; the hues stop being told apart.
 
 ## MUI departures
 
 - `chart-palette`: lines take `chart.series` in order or by `slot`, and neutral lines take `chart.neutral`.
-- `amcharts-theme`: `useChart` applies the chart theme for the active scheme: labels in `text.secondary`, gridlines in `border.level1`, tooltips on the menu surface, and no animation under reduced motion.
 
-Theme-wide departures (the surface levels the card sits on, the 8px radius) apply too; see Foundations → MUI departures.
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level1`, the divider.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: value-axis numbers are left-aligned, 8px from the plot, so a left axis lines up with the card's title.
+- `legend-items`: legend items have no left padding, so the legend lines up with the axis and the title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: one value axis sits on the right; two units take the left and the right.
+- `axis-units`: each value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `full-value-tooltips`: every hoverable item has a tooltip with its exact value and unit (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
 
 ## Accessibility
 
-- The chart draws on a canvas, so the `figure` around it is named by its visible caption, `summary`, through `aria-labelledby`.
+- Every point, column or slice shows its exact value and unit in a tooltip on hover, since axis numbers are rounded to compact form (1.5K).
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the legend and data points.
 - Lines are told apart by color and by name in the legend and tooltip; a dashed line is told apart by pattern too.
+- With two units, each legend name carries its unit ("Energy use (kWh)"), so which axis a line reads against doesn't depend on color. Say both units in `summary`.
 - For detailed values, offer the data as a table beside the chart.
 
 ## Related

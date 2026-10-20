@@ -46,7 +46,7 @@ export const surfaceSteps = {
   dark: { level0: 950, level1: 900, level2: 700, level3: 600, level4: 600 },
 } as const satisfies Record<ColorScheme, Record<string, number>>;
 
-/** Borders by contrast, per scheme: level0 the faintest; level3, the strongest, for outlines on interactive elements (3:1 in dark; below it in light for now). `divider` is level1. */
+/** Surface borders by contrast, per scheme: level0 the faintest, level3 the strongest. `divider` is level1. Control outlines are separate (`control-outlines`). */
 export const borderSteps = {
   light: { level0: 400, level1: 500, level2: 700, level3: 950 },
   dark: { level0: 800, level1: 700, level2: 500, level3: 200 },
@@ -177,7 +177,7 @@ export const departures: Departure[] = [
     id: 'shape-radius',
     area: 'Theme',
     title: 'Corner radius',
-    why: "One corner radius of 8px instead of MUI's 4px, for a softer look at Kilowatt's density. It's MUI's single `shape.borderRadius`, so every component that rounds with the theme (buttons, inputs, cards, menus, dialogs, tooltips, toggle buttons) follows it, and `sx` multiples scale from it: `borderRadius: 1` is 8px, `2` is 16px.",
+    why: "One corner radius of 8px instead of MUI's 4px, for a softer look at Kilowatt's density. It's MUI's single `shape.borderRadius`, so every component that rounds with the theme (buttons, inputs, cards, menus, dialogs, tooltips, toggle buttons) follows it, cards at twice it (`card-radius`), and `sx` multiples scale from it: `borderRadius: 1` is 8px, `2` is 16px.",
     options: () => ({ shape: { borderRadius: 8 } }),
   },
   {
@@ -241,7 +241,7 @@ export const departures: Departure[] = [
     area: 'Typography',
     components: ['CardHeader'],
     title: 'A compact heading scale',
-    why: "MUI's headings are sized for marketing pages (`h1` 96px down to `h6` 20px), which is too large for a dense product UI. Kilowatt's step down from 32px to 16px, one step apart, so `h6` meets body size. Only `h1` to `h6` change: body, caption, button and input text keep MUI's sizes, so reading sizes don't shrink. Weights, line heights and letter spacing stay MUI's. `CardHeader` titles use `h5`, so card titles are 18px with no change to the card.",
+    why: "MUI's headings are sized for marketing pages (`h1` 96px down to `h6` 20px), which is too large for a dense product UI. Kilowatt's step down from 32px to 16px, one step apart, so `h6` meets body size. Only `h1` to `h6` change: body, caption, button and input text keep MUI's sizes, so reading sizes don't shrink. Line heights and letter spacing stay MUI's, and every style is regular weight (`regular-weight`). `CardHeader` titles use `h5`, so card titles are 18px with no change to the card.",
     options: () => ({
       typography: {
         h1: { fontSize: '2rem' },
@@ -260,6 +260,57 @@ export const departures: Departure[] = [
     title: 'Card subtitles in body2',
     why: "MUI sets a `CardHeader` subtitle in `body1` (16px), and in `body2` (14px) only when the header has an avatar. With the compact heading scale the title is 18px, so a 16px subtitle sits almost level with it. Kilowatt sets every subtitle in `body2`, the size MUI already uses beside an avatar, so the title leads. The subtitle keeps MUI's `text.secondary` color and still renders as a `span`.",
     options: () => ({ components: { MuiCardHeader: { defaultProps: { slotProps: { subheader: { variant: 'body2' } } } } } }),
+  },
+  {
+    id: 'card-header-layout',
+    area: 'Components',
+    components: ['CardHeader'],
+    title: 'Card headers: aligned actions and one-line titles',
+    why: "MUI pulls a `CardHeader` action out by 4px at the top and bottom and 8px at the right, tuned to its 24px title on a 32px line, and centers the header's contents, so a title moves with the height of whatever sits beside it. Kilowatt pulls the action out by 8px on all three sides, so on its 24px title line the icon inside an icon button sits level with a one-line title, 16px from the card's right edge in line with the content below, and the button never makes the header taller than its title. Contents align to the top, so a title sits 16px from the top and left of every card, with or without a subtitle. Titles and subtitles stay on one line and truncate, so cards in a grid keep one header height; wrap them in `TruncatedText` to show the full text in a tooltip.",
+    options: () => ({
+      components: {
+        MuiCardHeader: {
+          defaultProps: { slotProps: { title: { noWrap: true }, subheader: { noWrap: true } } },
+          styleOverrides: {
+            root: { alignItems: 'flex-start' },
+            content: { minWidth: 0 },
+            action: { margin: 'calc(-1 * var(--mui-spacing)) calc(-1 * var(--mui-spacing)) calc(-1 * var(--mui-spacing)) 0' },
+          },
+        },
+      },
+    }),
+  },
+  {
+    id: 'card-content-padding',
+    area: 'Components',
+    components: ['CardContent'],
+    title: 'Card content is 16px on every side',
+    why: "MUI gives the last `CardContent` 24px of bottom padding against 16px everywhere else. Kilowatt keeps 16px on every side, so a card's sections sit on one inset. The `Card` itself stays unpadded, as in MUI: each section sets its own padding, and a list, table or chart runs edge to edge by leaving `CardContent` out.",
+    options: () => ({
+      components: { MuiCardContent: { styleOverrides: { root: { '&:last-child': { paddingBottom: 'calc(2 * var(--mui-spacing))' } } } } },
+    }),
+  },
+  {
+    id: 'card-radius',
+    area: 'Components',
+    components: ['Card'],
+    title: 'Cards round at twice the theme radius',
+    why: "A card's header action and its `CardActions` buttons sit 8px from its corners, and a button keeps the theme radius, so the card's corner is the button's radius plus that gap (Rules → Concentric corners): two theme radii, 16px, instead of MUI's one. It follows `shape-radius`, so changing the theme radius moves cards with it.",
+    options: () => ({ components: { MuiCard: { styleOverrides: { root: { borderRadius: 'calc(2 * var(--mui-shape-borderRadius))' } } } } }),
+  },
+  {
+    id: 'regular-weight',
+    area: 'Typography',
+    title: 'Every type style at regular weight',
+    why: "MUI sets `h1` and `h2` light (300) and `h6` and `subtitle2` medium (500), so weight shifts between neighbouring styles. Kilowatt sets every type style at regular (400, `fontWeightRegular`): size and color carry the hierarchy, and a headline number reads at the same weight as the text around it. `button` is regular through `button-text-weight`. The weight tokens (`fontWeightLight` to `fontWeightBold`) keep MUI's values, for the components that use them directly and for `strong`.",
+    options: () => ({
+      typography: {
+        h1: { fontWeight: 400 },
+        h2: { fontWeight: 400 },
+        h6: { fontWeight: 400 },
+        subtitle2: { fontWeight: 400 },
+      },
+    }),
   },
   {
     id: 'button-text-case',
@@ -300,13 +351,13 @@ export const departures: Departure[] = [
     area: 'Components',
     components: ['Button', 'ButtonGroup', 'ToggleButton', 'TextField', 'Select', 'Autocomplete', 'OutlinedInput'],
     title: 'One outline color for every control',
-    why: "MUI outlines its controls in three different colors: inputs at 23% black (or white), outlined buttons in their intent color at half strength, toggle buttons in the divider color. Kilowatt gives them one outline, `palette.control.border`, so inputs, selects, outlined buttons and toggle buttons share one edge. Both schemes follow the Enertiv UI Foundations Figma file's button-border tokens: a quiet outline at rest (slate 500 in light, navy 700 in dark; below 3:1, by design decision), a stronger one on hover (navy 200, the nearest ramp step to Figma's #6598c2, and navy 300), the primary text color on keyboard focus and navy 400 or navy 100 when pressed. Inputs show focus with MUI's 2px primary outline. Error and disabled keep MUI's. Outlined buttons in the other intents (secondary, error, warning, info, success) keep MUI's intent-colored outline on purpose: the color carries their meaning.",
+    why: "MUI outlines its controls in three different colors: inputs at 23% black (or white), outlined buttons in their intent color at half strength, toggle buttons in the divider color. Kilowatt gives them one outline per state from their own palette role, `palette.control`, kept apart from the surface border levels so either can change without moving the other. The colors start from the Enertiv UI Foundations Figma file's button-border tokens: a quiet outline at rest (slate 600 in light, a step darker than Figma's slate 500; navy 700 in dark; below 3:1, by design decision), a stronger one on hover (slate 950 in light, navy 300 in dark), the primary text color on keyboard focus and navy 400 or navy 100 when pressed. Inputs show focus with MUI's 2px primary outline. Error and disabled keep MUI's. Outlined buttons in the other intents (secondary, error, warning, info, success) keep MUI's intent-colored outline on purpose: the color carries their meaning.",
     options: (scheme) => ({
       palette: {
         control:
           scheme === 'dark'
             ? { border: navy[700], hover: navy[300], focus: slate[100], pressed: navy[100] }
-            : { border: slate[500], hover: navy[200], focus: navy[950], pressed: navy[400] },
+            : { border: slate[600], hover: slate[950], focus: navy[950], pressed: navy[400] },
       },
       components: {
         MuiOutlinedInput: {
@@ -389,18 +440,6 @@ export const departures: Departure[] = [
     options: (scheme) => {
       const { series, neutral, sequential } = chartSteps[scheme];
       return { palette: { chart: { series: series.map(chartColor), neutral: chartColor(neutral), sequential: sequential.map(chartColor) } } };
-    },
-  },
-  {
-    id: 'amcharts-theme',
-    area: 'Theme',
-    components: ['Card'],
-    title: 'Charts take their theme from the palette',
-    why: "Charts use amCharts 5, which draws on a canvas and doesn't read the MUI theme. One Kilowatt theme function (`src/charts`) turns the palette into an amCharts theme, so chart code never sets a color: series take `chart.series` in order, and labels, gridlines, tooltips and range bands take the roles every component uses. Chart cards are outlined rather than raised, so a dashboard of charts reads as one flat grid of equal panels.",
-    convention: {
-      muiDefault: 'No charts in MUI core; amCharts 5 brings its own colors, fonts and animation',
-      kilowatt: 'Every chart sits in an outlined `Card` (`variant="outlined"`) under a `CardHeader`, and its root goes through `useChart` from `src/charts`, which applies the Kilowatt theme for the active scheme and adds animation only without reduced motion',
-      where: 'Every amCharts 5 chart, and the card around it',
     },
   },
   {

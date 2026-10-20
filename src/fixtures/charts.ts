@@ -13,6 +13,13 @@ export const dailyUse = Array.from({ length: 30 }, (_, i) => {
   return { date, current: Math.round(base + 60 * Math.sin(i / 2)), previous: Math.round(base * 1.06 + 50 * Math.cos(i / 3)) };
 });
 
+/** September 2026, day by day: this period's energy use (kWh) with the day's mean outdoor temperature (`temperature`, °F), cooling into fall. */
+export const dailyUseAndTemperature = dailyUse.map(({ date, current }, i) => ({
+  date,
+  current,
+  temperature: Math.round(80 - 0.5 * i + 3 * Math.sin(i / 1.7)),
+}));
+
 /** The sample portfolio's buildings. */
 export const buildings = ['350 Park Avenue', '200 Vesey Street', '599 Lexington Avenue', '55 Water Street', '1 Liberty Plaza', '425 Park Avenue'];
 

@@ -1,9 +1,8 @@
-import { useCallback, useId } from 'react';
+import { useCallback } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import { legend, seriesColors, type SeriesColor } from './theme';
+import { axisUnit, legend, seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
 /** One set of columns: the data field it plots, its name in the legend and tooltip, and how it takes its color. */
@@ -23,34 +22,37 @@ export type ColumnChartProps = {
   categoryField: string;
   /** The series, in legend order. Up to six colored series, plus any `neutral` ones. Keep it stable, like `data`. */
   series: ColumnSeries[];
-  /** The unit of the values, shown in the tooltip: `kWh`, `USD`. */
+  /** The unit of the values, shown above the value axis and in the tooltip: `kWh`, `USD`. */
   unit: string;
-  /** One sentence on what the chart shows, with the numbers that matter. It's the figure's visible caption and its accessible name. */
+  /** One sentence on what the chart shows, with the numbers that matter. It isn't shown: it's the figure's accessible name, the chart's text alternative for screen readers. */
   summary: string;
   /** Stacks the series in one column per category, for parts that add up to a total. Default `false`, side by side. */
   stacked?: boolean;
   /** The plot's height in pixels. Default `240`. */
   height?: number;
+  /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
+  inset?: ChartInset;
 };
 
 /**
  * A column chart of values across categories, in Kilowatt's chart theme (Rules → Charts): a
  * reference implementation that Enertiv's app rebuilds. Series take `chart.series` colors in
  * order, or a fixed `slot`; a `striped` series is a variant that keeps its hue. The chart sits in
- * a `figure` whose caption is `summary`. Put it in a `Card` under a `CardHeader`.
+ * a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
  * @summary A column chart of values across categories, side by side or stacked, themed from the palette.
  * @import import { ColumnChart } from 'src/charts/ColumnChart';
  */
-export function ColumnChart({ data, categoryField, series, unit, summary, stacked = false, height = 240 }: ColumnChartProps) {
-  const captionId = useId();
+export function ColumnChart({ data, categoryField, series, unit, summary, stacked = false, height = 240, inset = 2 }: ColumnChartProps) {
   const build = useCallback(
     ({ root, colors }: ChartContext) => {
       const chart = root.container.children.push(am5xy.XYChart.new(root, { layout: root.verticalLayout, paddingLeft: 0, paddingRight: 0 }));
       const xAxis = chart.xAxes.push(
         am5xy.CategoryAxis.new(root, { categoryField, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30, cellStartLocation: 0.15, cellEndLocation: 0.85 }) }),
       );
-      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, {}) }));
+      // A chart's one value axis sits on the right.
+      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+      axisUnit(root, chart, yAxis, unit);
       // Long category names (building addresses) wrap under their column instead of running into the next one.
       xAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'wrap', maxWidth: 88, textAlign: 'center' });
       const fills = seriesColors(series, colors);
@@ -65,10 +67,15 @@ export function ColumnChart({ data, categoryField, series, unit, summary, stacke
             valueYField: field,
             fill: fills[i],
             stroke: fills[i],
-            tooltip: am5.Tooltip.new(root, { labelText: `{name}, {categoryX}: {valueY.formatNumber('#,###')} ${unit}` }),
+            tooltip: am5.Tooltip.new(root, {}),
           }),
         );
-        set.columns.template.setAll({ width: am5.percent(stacked ? 70 : 90), strokeOpacity: 0 });
+        set.columns.template.setAll({
+          width: am5.percent(stacked ? 70 : 90),
+          strokeOpacity: 0,
+          // Each column shows its full value on hover, since the axis rounds to compact numbers.
+          tooltipText: `{name}, {categoryX}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
+        });
         if (striped) {
           // The series color with stripes of the card surface over it: the same shape as a solid column, so stacked
           // and side-by-side columns line up, with no outline. (amCharts centers a stroke on the edge, which widens a column.)
@@ -85,11 +92,8 @@ export function ColumnChart({ data, categoryField, series, unit, summary, stacke
   const ref = useChart(build);
 
   return (
-    <Box component="figure" aria-labelledby={captionId} sx={{ m: 0 }}>
+    <Box component="figure" aria-label={summary} sx={{ m: 0, px: inset, pb: inset }}>
       <Box ref={ref} sx={{ height }} />
-      <Typography id={captionId} component="figcaption" variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-        {summary}
-      </Typography>
     </Box>
   );
 }

@@ -17,6 +17,7 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { iconNames } from '../src/icons';
+import { chartDepartures } from '../src/charts/departures';
 import { departures } from '../src/mui/departures';
 import { foundationPages } from '../src/mui/foundations';
 import { departureChanges } from '../src/mui/themeDiff';
@@ -204,6 +205,35 @@ function writeDepartures() {
   return 1;
 }
 
+/**
+ * Foundations/amCharts departures: every way Kilowatt's charts differ from stock amCharts 5, from
+ * src/charts/departures.ts: the theme every chart gets, then the conventions each chart follows.
+ */
+function writeChartDepartures() {
+  const lead =
+    "Kilowatt's charts are stock amCharts 5 plus the departures below, and nothing else. Theme departures are applied to every chart through `useChart`; conventions are what each reference chart does in its own code, and what Enertiv's app reproduces when it rebuilds a chart. Each departure lives in src/charts/departures.ts with its reason; the chart theme is built from that list, a test checks each chart follows the conventions that name it, and each chart's page lists its own.";
+  const cell = (text: string) => text.replace(/\|/g, '\\|');
+  const charts = (names: string[]) => `Applies to: ${names.map((name) => `\`${name}\``).join(', ')}.`;
+  const sections: string[] = [];
+  for (const [kind, heading] of [
+    ['theme', 'Theme: every chart'],
+    ['convention', 'Conventions: each chart'],
+  ] as const) {
+    sections.push(`## ${heading}`);
+    for (const departure of chartDepartures.filter((entry) => entry.kind === kind)) {
+      sections.push(`### ${departure.title}`, departure.why, `\`${departure.id}\`. ${charts(departure.charts)}`);
+      if (departure.convention) {
+        const { amchartsDefault, kilowatt, where } = departure.convention;
+        sections.push(`| amCharts default | Kilowatt | Where |\n| --- | --- | --- |\n| ${cell(amchartsDefault)} | ${cell(kilowatt)} | ${cell(where)} |`);
+      }
+    }
+  }
+  const body = ['# amCharts departures', lead, markdownToMdx(sections.join('\n\n'))].join('\n\n');
+  mkdirSync(join(out, 'foundations'), { recursive: true });
+  writeFileSync(join(out, 'foundations', 'amCharts departures.mdx'), page({ title: 'Foundations/amCharts departures', summary: lead, body }));
+  return 1;
+}
+
 function writeGuides() {
   const dir = join(out, 'guides');
   mkdirSync(dir, { recursive: true });
@@ -221,5 +251,5 @@ function writeGuides() {
 }
 
 rmSync(out, { recursive: true, force: true });
-const counts = { foundations: writeDepartures() + writeFoundations() + writeIcons(), guides: writeGuides() };
+const counts = { foundations: writeDepartures() + writeChartDepartures() + writeFoundations() + writeIcons(), guides: writeGuides() };
 console.log(`build-docs: ${counts.foundations} foundations pages, ${counts.guides} guides in src/docs/generated`);

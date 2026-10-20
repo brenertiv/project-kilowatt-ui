@@ -15,7 +15,7 @@ A card holds content and actions about one subject. Kilowatt uses MUI's `Card`, 
 ## When to use
 
 - Use a card for one self-contained subject that sits beside others like it: a building in a portfolio, a meter, a saved report.
-- Use an outlined card for every chart: `CardHeader` names what's measured, the period and the units, and the chart fills `CardContent` (Rules → Charts).
+- Use an outlined card for every chart: a title-only `CardHeader` names what's measured, and the chart sits straight in the card, padding itself 16px, with its unit above the value axis (Rules → Charts).
 - For a plain raised area with no card structure (a panel, a toolbar backdrop), use `Paper`.
 - For rows of the same fields that people compare or sort, use a table, not a grid of cards.
 - For content that people expand and collapse in place, use `Accordion`.
@@ -44,10 +44,11 @@ import Typography from '@mui/material/Typography';
 </Card>
 ```
 
-For a chart, use `variant="outlined"`, put the title, period and units in `CardHeader`, with any actions in its `action` slot, and the chart in `CardContent`, run through `useChart` from `src/charts` so it takes Kilowatt's chart theme. Wrap the chart in a `figure` whose `figcaption` is a one-line summary of what it shows:
+For a chart, use `variant="outlined"`, put the title in `CardHeader`, with any actions in its `action` slot, and the chart straight in the `Card`, with no `CardContent`, run through `useChart` from `src/charts` so it takes Kilowatt's chart theme. The chart pads itself 16px at the sides and bottom (`px: 2, pb: 2`), in line with the title and `CardContent`; the reference charts do this for you, and their `inset` changes it. Wrap the chart in a `figure` named by a one-line summary of what it shows (`aria-label`). The summary isn't shown; it's the chart's text alternative for screen readers:
 
 ```tsx
 import CardHeader from '@mui/material/CardHeader';
+import { TruncatedText } from 'src/components/TruncatedText';
 import { useChart } from 'src/charts/useChart';
 
 function EnergyUseChart() {
@@ -56,17 +57,41 @@ function EnergyUseChart() {
 }
 
 <Card variant="outlined">
-  <CardHeader title="Energy Use" subheader="Sep 1–30, 2026 · kWh" action={<IconButton aria-label="Chart options">…</IconButton>} />
-  <CardContent sx={{ pt: 0 }}>
-    <Box component="figure" aria-labelledby="energy-use-summary" sx={{ m: 0 }}>
-      <EnergyUseChart />
-      <Typography id="energy-use-summary" component="figcaption" variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-        This period used 32,914 kWh, 6% less than the previous 30 days.
-      </Typography>
-    </Box>
-  </CardContent>
+  <CardHeader
+    title={<TruncatedText>Energy Use</TruncatedText>}
+    action={<IconButton aria-label="Chart options">…</IconButton>}
+  />
+  <Box component="figure" aria-label="This period used 32,914 kWh, 6% less than the previous 30 days." sx={{ m: 0, px: 2, pb: 2 }}>
+    <EnergyUseChart />
+  </Box>
 </Card>
 ```
+
+### Header layout
+
+- **A title, no subtitle.** The title says what's measured: "Energy Use", not "Energy Use (kWh)". The page sets the period for every card, so headers don't repeat it.
+- **Units sit with the numbers.** "32,914 kWh" in the content, a unit above a chart's value axis, a unit after each value in a tooltip or list. A card can show values in more than one unit, and each number carries its own.
+- **A subtitle is the exception.** Add one only when the card's period differs from the page's ("Last 12 months" on a monthly dashboard). It holds that period and nothing else, never a unit.
+- **Titles sit in one place.** A header's title is 16px from the card's top and left edges, with or without a subtitle, so the titles in a grid of cards line up. A subtitle only adds height below the title.
+- **One line each.** Titles and subtitles truncate instead of wrapping (`card-header-layout`). Wrap each in `TruncatedText`, so a cut-off title shows in full in a tooltip.
+- **The action lines up with the content.** An icon button in `action` is centered on a one-line title, and its icon sits 16px from the card's right edge, in line with the content below. The button's hover background reaches to 8px from the corner, which is why cards round at 16px (`card-radius`). The button doesn't add height: a header with only a title is the title line plus 16px above and below.
+
+<Canvas of={CardStories.Metric} />
+
+### Padding
+
+The `Card` has no padding of its own. Each kind of content owns its inset, so a chart, a list and a block of text can each take the padding that suits it:
+
+| Content | Inset | How |
+| --- | --- | --- |
+| Header | 16px | `CardHeader`, always. |
+| Text, a metric, a form | 16px | `CardContent`, always 16px. Under a `CardHeader`, take its top padding off (`sx={{ pt: 0 }}`) so the gap below the header stays 16px. |
+| A chart | 16px at the sides and bottom by default | Straight in the `Card`, no `CardContent`. The reference charts pad themselves through `inset`: `2` (16px) in line with the title and `CardContent`, `1` (8px) for a tighter fit, `0` to run edge to edge. |
+| A list or table | Its rows' own padding | Straight in the `Card`, no `CardContent`. |
+
+**Don't resize `CardContent`.** MUI pads the last `CardContent` in a card with a stronger rule (`:last-child`), which our `card-content-padding` departure sets to 16px. A plain `sx={{ pb: 1 }}` loses to it, so the bottom padding wouldn't change. Content that needs a different inset leaves `CardContent` out and sets its own padding.
+
+<Canvas of={CardStories.EdgeToEdge} />
 
 ## Variants
 
@@ -85,26 +110,35 @@ function EnergyUseChart() {
 - Don't put buttons or links inside a `CardActionArea`; a button can't contain another control, so use `CardActions` for a card with several actions.
 - Do choose one look per grid: all elevation or all outlined.
 - Don't add a border to an elevation card or a shadow to an outlined one; keep one edge per card.
-- Do make a chart card outlined, with a `CardHeader` that says what's measured, over what period and in what units.
+- Do make a chart card outlined, with a title-only `CardHeader` that says what's measured.
+- Do put each unit next to its number: `32,914 kWh`, formatted with `Intl.NumberFormat` and a no-break space.
+- Don't put units or the page's period in a title or subtitle; use a subtitle only for a period that differs from the page's.
 - Don't set a chart's colors in chart code; `useChart` applies the chart theme, and series take `chart.series` in order.
-- Do let the card take its surface and radius from the theme.
-- Don't set the card's `backgroundColor` or `borderRadius` with `sx`; the surface comes from its elevation and the radius from `shape-radius`.
+- Do let each kind of content set its own inset: `CardContent` for 16px, a chart's `inset`, a list's own rows.
+- Don't change `CardContent`'s padding with `sx`; its last-child bottom padding won't move. Leave `CardContent` out instead.
+- Don't pad the `Card` itself, or nudge a header action into place with margins; its position comes from `card-header-layout`.
+- Do wrap header titles and subtitles in `TruncatedText`, and keep them short enough to fit a typical card.
+- Don't let a title wrap or set `noWrap` on it yourself; the theme keeps it on one line, and `TruncatedText` shows the rest.
+- Do let the card take its surface and its 16px radius from the theme.
+- Don't set the card's `backgroundColor` or `borderRadius` with `sx`; the surface comes from its elevation and the radius from `card-radius`.
 
 ## MUI departures
 
 - `type-scale`: `CardHeader` titles use `h5`, which is 18px on Kilowatt's compact heading scale instead of MUI's 24px. The title still renders as a `span`, as MUI renders it.
 - `card-header-subheader`: `CardHeader` subtitles use `body2` (14px) instead of MUI's `body1` (16px), so the 18px title leads. It's the size MUI uses when the header has an avatar.
-- `amcharts-theme`: a chart card is outlined (`variant="outlined"`), so dashboards of charts read as one flat grid.
+- `card-header-layout`: a `CardHeader` action is pulled out 8px at the top, right and bottom instead of MUI's 4px and 8px, so its icon sits level with a one-line title and 16px from the right edge; contents align to the top instead of the center, so a title keeps its place with or without a subtitle; titles and subtitles stay on one line and truncate.
+- `card-content-padding`: `CardContent` is 16px on every side instead of 24px at the bottom of the last one.
+- `card-radius`: cards round at twice the theme radius, 16px instead of MUI's one radius, because their header action and `CardActions` buttons sit 8px from the corners.
 - `paper-surface-levels`: a card is a Paper at elevation 1, so it sits on surface `background.level1` in both schemes, in place of MUI's white light surface and its dark-scheme white overlay.
 
-Theme-wide departures (CSS variables, the 8px radius, surface and border levels, the text and intent colors) apply too; see Foundations → MUI departures.
+How the charts inside cards differ from stock amCharts (an outlined card, the 16px inset, units above axes) is listed on each chart's page and in Foundations → amCharts departures. Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text and intent colors) apply too; see Foundations → MUI departures.
 
 ## Accessibility
 
 - `Card` renders a plain `div` with no role; give it a heading (`component="h2"` or the right level for the page) so people can find it by heading.
 - `CardActionArea` renders a `button`, with keyboard activation and a visible focus state. Its accessible name is all the text inside it, so keep that text short.
 - Name each button in `CardActions` for its action, so "View Building" makes sense when read out of the card.
-- A chart draws on a canvas that screen readers can't read. Put it in a `figure` with a visible one-line summary as the `figcaption`, linked with `aria-labelledby` so every screen reader names the figure by it; for detailed data, offer it as a table too. Don't give the chart's container `role="img"`: amCharts adds focusable elements for keyboard access, and an image can't contain them.
+- A chart draws on a canvas that screen readers can't read. Put it in a `figure` named by a one-line summary with the numbers that matter (`aria-label`); the summary isn't shown on screen. For detailed data, offer it as a table too. Don't give the chart's container `role="img"`: amCharts adds focusable elements for keyboard access, and an image can't contain them.
 
 ## Related
 

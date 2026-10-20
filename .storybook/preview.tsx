@@ -117,7 +117,7 @@ const preview: Preview = {
     backgrounds: { grid: { cellSize: spacingUnit, cellAmount: 8 } },
     options: {
       storySort: {
-        order: ['Introduction', 'Guides', ['Rules', 'Writing stories', '*'], 'Foundations', ['MUI departures', 'Color', 'Typography', 'Spacing', 'Shape', 'Elevation', 'Layout', 'Z-index', 'Motion', 'Icons'], 'Inputs', 'Data display', 'Feedback', 'Surfaces', 'Navigation', 'Layout', 'Utils', 'Charts', ['Line', 'Column', 'Donut']],
+        order: ['Introduction', 'Guides', ['Rules', 'Writing stories', '*'], 'Foundations', ['MUI departures', 'amCharts departures', 'Color', 'Typography', 'Spacing', 'Shape', 'Elevation', 'Layout', 'Z-index', 'Motion', 'Icons'], 'Inputs', 'Data display', 'Feedback', 'Surfaces', 'Navigation', 'Layout', 'Utils', 'Charts', ['Line', 'Column', 'Donut']],
       },
     },
     controls: { expanded: true, sort: 'requiredFirst' },
