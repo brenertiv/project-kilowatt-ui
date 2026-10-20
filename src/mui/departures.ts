@@ -160,6 +160,17 @@ export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: Cha
   },
 };
 
+/**
+ * Basemap water, per scheme (Rules → Maps): a step of the surface ramp past the land, which is
+ * `background.level1`, so water reads as water without a hue of its own. Light water is darker
+ * than the land and dark water lighter, as on CARTO's Positron and Dark Matter. Light stops at
+ * slate 700: past it, the first series color drops below 3:1 on water (src/maps/departures.test.ts).
+ */
+export const mapSteps: Record<ColorScheme, { water: string }> = {
+  light: { water: slate[700] },
+  dark: { water: navy[800] },
+};
+
 const chartColor = ({ ramp, step }: ChartStep) => (chartRamps[ramp] as Record<string, string>)[step];
 
 /** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
@@ -441,6 +452,13 @@ export const departures: Departure[] = [
       const { series, neutral, sequential } = chartSteps[scheme];
       return { palette: { chart: { series: series.map(chartColor), neutral: chartColor(neutral), sequential: sequential.map(chartColor) } } };
     },
+  },
+  {
+    id: 'map-palette',
+    area: 'Palette',
+    title: 'Map colors',
+    why: "MUI's palette has nothing for a basemap. A map's land, buildings, roads and labels take the surface, border and text roles every component uses, and only water gets a role of its own, `map.water`: a step of the surface ramp past the land, so it reads as water without adding a hue that data could be confused with. Data on a map takes the chart roles.",
+    options: (scheme) => ({ palette: { map: mapSteps[scheme] } }),
   },
   {
     id: 'paper-surface-levels',

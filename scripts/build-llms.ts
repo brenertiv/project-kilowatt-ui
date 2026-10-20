@@ -44,8 +44,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(root, process.argv[2] ?? 'storybook-static');
 const read = <T>(file: string): T => JSON.parse(readFileSync(join(out, file), 'utf8')) as T;
 
-/** The component sections, in sidebar order: MUI's categories, then Charts. */
-const sections = ['Inputs', 'Data display', 'Feedback', 'Surfaces', 'Navigation', 'Layout', 'Utils', 'Charts'];
+/** The component sections, in sidebar order: MUI's categories, then Charts and Maps. */
+const sections = ['Inputs', 'Data display', 'Feedback', 'Surfaces', 'Navigation', 'Layout', 'Utils', 'Charts', 'Maps'];
 
 /**
  * The import block from the manifest, cut down to what a consumer writes.

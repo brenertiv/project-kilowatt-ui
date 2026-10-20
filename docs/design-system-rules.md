@@ -138,6 +138,28 @@ Every way Kilowatt's charts differ from stock amCharts is listed in Foundations 
 - **Two units at most.** A chart with two units (energy and outdoor temperature) has two value axes, each labeled with its unit, and each series names its unit in the legend ("Energy use (kWh)"), so a line isn't tied to its axis by color alone. `LineChart` does this with `rightUnit` and `right` lines (Charts → Line → Two units). Past two units, split the chart into small multiples. Convert one quantity to one unit (kW, not kW and MW) rather than adding an axis.
 - **Contrast.** Every `chart.series` color and `chart.neutral` reach 3:1 on every surface level, and every pair of them stays apart under normal vision and simulated protanopia, deuteranopia and tritanopia; `departures.test.ts` checks both. Series and status colors can't all be kept apart (status takes red, orange, purple and green), so don't mix them in one chart: color a chart either by series or by status.
 
+## Maps
+
+Every way Kilowatt's maps differ from stock CARTO is listed in Foundations → CARTO departures (`src/maps/departures.ts`). Maps use MapLibre GL with CARTO's vector basemaps, Positron in light and Dark Matter in dark, and deck.gl for the data drawn on them. MapLibre draws the basemap from a style file that doesn't read the MUI theme, so one Kilowatt theme function rewrites CARTO's style from the palette, and every map loads its basemap through it.
+
+**Where maps live.** As with charts, Kilowatt holds the reference: the conventions, the theme function and a reference implementation of each map type, with stories in the Maps section of Storybook (`SiteMap` so far). Enertiv's app rebuilds its maps from them rather than importing them. A new reference map adds its name to `MapName` in `src/maps/departures.ts`, and the conventions that name it are then checked against its source and its page.
+
+**Keys.** The basemaps are public and need no key. CARTO's platform APIs (deck.gl's CARTO data sources, `fetchMap`) take the access token in `VITE_CARTO_API_KEY` (`.env.local`, see `.env.example`), read through `cartoAccessToken` in `src/maps/carto`. Vite puts it in the browser bundle and Storybook is public, so it must be a token scoped to read only what maps show.
+
+**In code.** `SiteMap` (Maps → Site map) is the reference. Load the basemap with `basemapStyle(scheme)` from `src/maps/theme`, which fetches CARTO's style for the scheme and applies the theme, and pass it to MapLibre's `style` (or `setStyle` when the scheme changes). Take data colors from `mapColors(scheme)`, which gives the palette's chart roles as the RGBA arrays deck.gl takes. Map code never sets a basemap paint property or a color of its own.
+
+- **The basemap uses roles that already exist.** Land is the card surface the map sits on (`background.level1`), so a map runs edge to edge in its card with no seam. Buildings and road fills are a level up (`background.level2`), road edges `border.level0`, boundaries `border.level1`, labels `text.secondary` haloed in the land color. Water is the one map role, `map.water` (the `map-palette` departure): a step of the surface ramp past the land, with no hue of its own, so it can't be mistaken for data.
+- **Data takes the chart roles, and the chart rules.** Categories: `series`, six at most. Magnitude (a choropleth, a heat map): `sequential`, passed as `colors` to CARTO's `colorBins` or `colorContinuous` in place of a CARTOColors scheme. Deviation: `below` and `above` (`error` and `success`). Status: the intents. What isn't the focus: `neutral`. Don't mix series and status colors on one map, and redesign a map that needs another color rather than adding one (Charts above).
+- **Contrast.** Every series color and the neutral reach 3:1 on the land, water and buildings, and labels 4.5:1 on the land and water, in both schemes; `src/maps/departures.test.ts` checks both. That's why light water stops at slate 700.
+- **In a card.** A map sits in an outlined `Card` under a title-only `CardHeader`, edge to edge below it and clipped to the card's corners (Concentric corners above), like a chart run at `inset` 0.
+- **Controls are MUI.** Zoom in, zoom out and recenter are `IconButton`s with `Icon` and an `aria-label`, not MapLibre's `NavigationControl`. Leave the scroll to the page: maps turn on `cooperativeGestures`, so zoom takes Ctrl or ⌘ with the wheel.
+- **Keep the attribution.** CARTO's terms and OpenStreetMap's license require their credit. Show it with `attributionControl: { compact: true }`; never remove it.
+- **Tooltips.** Every item a pointer can rest on (a site, a region) has a tooltip on the menu surface with its name and exact value and unit, written with `Intl`.
+- **Not color alone, and not the map alone.** Name the map's `figure` with a one-line summary (`aria-label`), and make what it shows available as a list or table, since a map is hard to use by keyboard or screen reader.
+- **Motion.** MapLibre already jumps camera moves (`flyTo`, `easeTo`) to their end under `prefers-reduced-motion` unless they're marked `essential`; don't mark them.
+- **Label type.** MapLibre draws labels from glyph files, and CARTO's font server has no Roboto, so labels stay in CARTO's Montserrat and Open Sans, upright (the `basemap-label-fonts` departure). Setting them in Roboto means hosting Roboto's glyphs; until then this is a known gap, on purpose.
+- **License.** CARTO's basemaps are free only within CARTO's terms for their use; check Enertiv's CARTO plan before a map ships in the app.
+
 ## Adding a convention
 
 A convention is anything that differs from MUI's default: a theme value, a default prop, or a rule about how a component is used. To add one:
@@ -151,6 +173,11 @@ Charts work the same way against amCharts' defaults, in `src/charts/departures.t
 1. Add an entry with the reason and the reference charts it changes (`charts`). A `theme` entry sets amCharts rules in `apply`, and `chartThemes` is built from these entries, so don't call `theme.rule` anywhere else. A `convention` entry is something each chart does in its own code: say what amCharts does, what Kilowatt does instead and where, and give a `check` that every chart it names matches.
 2. Add it to each named chart's page under amCharts departures, right after MUI departures. `src/charts/departures.test.ts` and `src/charts/docs.test.ts` fail when the theme, a chart or a page doesn't match the list.
 3. A chart's own design (grouping into Other, striped columns, two units) is a feature, not a departure; it goes in the chart page's Variants.
+
+Maps work the same way against CARTO's basemaps and deck.gl's defaults, in `src/maps/departures.ts` (Foundations → CARTO departures):
+
+1. Add an entry with the reason. A `theme` entry changes basemap layers in `apply`, picking them by what they draw (`layers('water')`, from `basemapFeature`), and `basemapTheme` is built from these entries, so don't set a basemap paint property anywhere else. A `convention` entry is something each map does in its own code: say what CARTO or MapLibre does, what Kilowatt does instead and where, name the reference maps it applies to in `maps`, and give a `check` that every map it names matches.
+2. A color the basemap needs that no role covers is a palette departure in `src/mui/departures.ts`, as `map-palette` is, not a value in `src/maps`. `src/maps/departures.test.ts` fails when the basemap paints a color that isn't from the palette, or a CARTO layer isn't mapped to a feature.
 
 ## Icons
 

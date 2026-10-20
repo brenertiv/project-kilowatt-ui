@@ -22,6 +22,12 @@ export type ControlColors = { border: string; hover: string; focus: string; pres
  */
 export type ChartColors = { series: string[]; neutral: string; sequential: string[] };
 
+/**
+ * Basemap colors the surface roles don't cover (Rules → Maps): `water`, a step away from the
+ * land, which is the card surface the map sits on.
+ */
+export type MapColors = { water: string };
+
 declare module '@mui/material/styles' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface TypeBackground extends SurfaceLevels {}
@@ -29,10 +35,12 @@ declare module '@mui/material/styles' {
     border: BorderLevels;
     control: ControlColors;
     chart: ChartColors;
+    map: MapColors;
   }
   interface PaletteOptions {
     border?: Partial<BorderLevels>;
     control?: ControlColors;
     chart?: ChartColors;
+    map?: MapColors;
   }
 }

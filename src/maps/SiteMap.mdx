@@ -1,0 +1,92 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SiteMapStories from './SiteMap.stories';
+
+<Meta
+  of={SiteMapStories}
+  summary="Kilowatt's reference site map: sites as dots on CARTO's basemap, themed from the palette, with MUI controls, a tooltip per site and a list for screen readers."
+/>
+
+# Site map
+
+A site map shows where a portfolio's buildings are, and can carry one reading per site. `SiteMap` is Kilowatt's reference implementation: MapLibre GL (`maplibre-gl`) draws CARTO's basemap from `basemapStyle`, themed for the active color scheme, and deck.gl (`@deck.gl/layers`) draws each site as a dot in a color from `mapColors` (Rules → Maps). Enertiv's app rebuilds its maps from this one rather than importing it.
+
+<Canvas of={SiteMapStories.Sites} />
+
+## When to use
+
+- Use a site map when where the sites are is the point: which buildings are near each other, which region a problem is in.
+- To compare readings across sites, use a column chart or a table; a dot's color can't show a value precisely. Use the map beside them, not in place of them.
+- For a measure over time at one site, use a line chart.
+- Past six kinds of site, group them or show a table, as with chart series.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { SiteMap } from 'src/maps/SiteMap';
+
+const sites = buildings.map(({ id, name, latitude, longitude }) => ({ id, name, latitude, longitude }));
+
+<Card variant="outlined">
+  <CardHeader title="Buildings" />
+  <SiteMap sites={sites} summary="Seven buildings in Manhattan, from the Financial District to Midtown." />
+</Card>
+```
+
+Give each site a `value` and the map a `unit` to show a reading in each site's tooltip. Leave out sites without coordinates; the map opens fitted to the sites it's given. Keep `sites` stable (a constant or `useMemo`), since the layer is rebuilt when it changes.
+
+## Variants
+
+- **Sites.** Every site in the first series color. Give a site a `slot` when it stands for a product meaning (a building type), so it keeps one color on every map and chart.
+- **Highlight.** The site that matters in a series color, and the rest `neutral`: smaller, gray and drawn underneath, so the highlighted site reads first by size as well as color.
+
+## Do and don't
+
+- Do put the map in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader`, straight in the card: the map runs edge to edge below the header, and the card clips it to its corners.
+- Don't wrap the map in `CardContent` or give it a border of its own; the card is its frame.
+- Do write `summary` as one sentence that says where the sites are and what stands out.
+- Don't leave the summary generic ("Map"); it's what screen readers say for the whole map.
+- Do mark context sites `neutral` when one site is the point.
+- Don't set a color in map code or pass a CARTOColors scheme; take colors from `mapColors`.
+- Do keep CARTO's attribution; its terms and OpenStreetMap's license require it.
+- Don't turn off cooperative gestures; a map that zooms on every scroll traps the page.
+
+## MUI departures
+
+- `chart-palette`: sites take `chart.series` by `slot`, and neutral sites take `chart.neutral`.
+- `map-palette`: the basemap's water takes `map.water`.
+
+Theme-wide departures (the surface levels the card and basemap use, the theme radius) apply too; see Foundations → MUI departures.
+
+## CARTO departures
+
+How this map differs from stock CARTO and MapLibre, from `src/maps/departures.ts`; Foundations → CARTO departures has the reasons.
+
+- `basemap-surfaces`: the land is the card surface, buildings a level up, water `map.water`.
+- `basemap-roads`: roads are filled a level up from the land and edged in `border.level0`.
+- `basemap-boundaries`: boundaries are drawn in `border.level1`, the divider.
+- `basemap-labels`: labels are `text.secondary`, haloed in the land color.
+- `basemap-label-fonts`: labels are upright, never italic.
+- `map-card`: the map fills the `figure` below the card's header, with no padding.
+- `map-controls`: zoom in, zoom out and show all sites are `IconButton`s on an outlined `Paper`.
+- `map-scroll-zoom`: cooperative gestures are on, so zoom takes Ctrl or ⌘ with the wheel.
+- `map-attribution`: CARTO's and OpenStreetMap's credit is kept, as MapLibre's compact button on the card surface.
+- `map-data-colors`: sites take their colors from `mapColors`.
+- `map-tooltips`: every site has a tooltip on the menu surface with its name and full value.
+- `map-text-alternative`: the `figure` is named by `summary`, and the sites are listed for screen readers.
+
+## Accessibility
+
+- The map draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`, and every site, with its value, is in a list that screen readers read and the screen doesn't show.
+- The zoom and fit controls are buttons with names, and reachable by keyboard. MapLibre also zooms and pans with the keyboard once the map has focus.
+- A site's dot is 16px, or 12px when `neutral`, and the pointer picks it from 6px further out, so every hit area is 24px or more.
+- Sites are told apart by name in the tooltip and the list, not by color alone; a highlighted site is named in the summary.
+- MapLibre jumps camera moves (zoom, fit) to their end when the user asks for reduced motion.
+
+## Related
+
+- Rules → Maps for the basemap theme and map colors.
+- Charts → Line, Column and Donut for readings over time and across sites.
+
+<Stories includePrimary={false} />
