@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec';
 import { getContrastRatio } from '@mui/material/styles';
@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest';
 import { createSchemeTheme } from '../mui/theme';
 import type { ColorScheme } from '../mui/departures';
 import { cartoStyle } from './cartoStyle.fixture';
-import { mapDepartures, uprightFonts } from './departures';
-import { basemapFeature, basemapTheme, mapColors } from './theme';
+import { mapDepartures, mapFonts } from './departures';
+import { basemapFeature, basemapTheme, mapColors, mapGlyphsUrl } from './theme';
 
 const source = (file: string) => readFileSync(fileURLToPath(new URL(file, import.meta.url)), 'utf8');
 const schemes: ColorScheme[] = ['light', 'dark'];
@@ -36,11 +36,7 @@ describe('map departures', () => {
         expect(departure.convention, departure.id).toBeUndefined();
         const all = JSON.stringify(basemapTheme(cartoStyle, 'light'));
         const without = JSON.stringify(
-          basemapTheme(
-            cartoStyle,
-            'light',
-            mapDepartures.filter((entry) => entry !== departure),
-          ),
+          basemapTheme(cartoStyle, 'light', { departures: mapDepartures.filter((entry) => entry !== departure) }),
         );
         expect(without, `${departure.id} changes nothing`).not.toBe(all);
       } else {
@@ -112,17 +108,31 @@ describe('basemap theme', () => {
     }
   });
 
-  it('sets no label in italic', () => {
-    const fonts = basemapTheme(cartoStyle, 'light').layers.flatMap((layer) =>
-      layer.type === 'symbol' && Array.isArray(layer.layout?.['text-font']) ? layer.layout['text-font'] : [],
+  it("sets every label in Roboto, upright, from Kilowatt's own glyphs", () => {
+    const style = basemapTheme(cartoStyle, 'light', {
+      glyphs: 'https://example.com/map-fonts/{fontstack}/{range}.pbf',
+    });
+    expect(style.glyphs).toBe('https://example.com/map-fonts/{fontstack}/{range}.pbf');
+    const stacks = style.layers.flatMap((layer) => (layer.type === 'symbol' ? [layer.layout?.['text-font']] : []));
+    expect(stacks.length).toBeGreaterThan(0);
+    for (const stack of stacks) expect(Object.values(mapFonts).map((font) => [font])).toContainEqual(stack);
+    // CARTO's medium and bold faces become Roboto Medium, so place names keep their weight.
+    expect(stacks).toContainEqual([mapFonts.medium]);
+    expect(stacks).toContainEqual([mapFonts.regular]);
+  });
+
+  it.each(Object.values(mapFonts))('serves %s for every character range', (font) => {
+    const dir = fileURLToPath(new URL(`./fonts/${font}/`, import.meta.url));
+    expect(existsSync(dir), dir).toBe(true);
+    // MapLibre asks for a range whenever a label has a character in it, so all 256 must exist.
+    const ranges = Array.from({ length: 256 }, (_, i) => `${i * 256}-${i * 256 + 255}.pbf`);
+    expect(new Set(readdirSync(dir))).toEqual(new Set(ranges));
+  });
+
+  it('resolves the glyphs URL without encoding its placeholders', () => {
+    expect(mapGlyphsUrl('https://kilowatt-ui.vercel.app/iframe.html')).toBe(
+      'https://kilowatt-ui.vercel.app/map-fonts/{fontstack}/{range}.pbf',
     );
-    expect(fonts.length).toBeGreaterThan(0);
-    expect(fonts.filter((font) => /italic/i.test(String(font)))).toEqual([]);
-    // Every italic face is replaced with one CARTO's styles already load, so its glyphs exist on the font server.
-    const cartoFonts = new Set(
-      cartoStyle.layers.flatMap((layer) => (layer.type === 'symbol' ? (layer.layout?.['text-font'] as string[]) : [])),
-    );
-    for (const upright of Object.values(uprightFonts)) expect(cartoFonts, upright).toContain(upright);
   });
 });
 

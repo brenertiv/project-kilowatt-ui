@@ -157,7 +157,7 @@ Every way Kilowatt's maps differ from stock CARTO is listed in Foundations → C
 - **Tooltips.** Every item a pointer can rest on (a site, a region) has a tooltip on the menu surface with its name and exact value and unit, written with `Intl`.
 - **Not color alone, and not the map alone.** Name the map's `figure` with a one-line summary (`aria-label`), and make what it shows available as a list or table, since a map is hard to use by keyboard or screen reader.
 - **Motion.** MapLibre already jumps camera moves (`flyTo`, `easeTo`) to their end under `prefers-reduced-motion` unless they're marked `essential`; don't mark them.
-- **Label type.** MapLibre draws labels from glyph files, and CARTO's font server has no Roboto, so labels stay in CARTO's Montserrat and Open Sans, upright (the `basemap-label-fonts` departure). Setting them in Roboto means hosting Roboto's glyphs; until then this is a known gap, on purpose.
+- **Labels in Roboto.** MapLibre draws labels from glyph files, and CARTO's font server has no Roboto, so Kilowatt serves Roboto Regular and Medium itself (`src/maps/fonts`, at `/map-fonts/` in Storybook) and sets every label in them, upright (the `basemap-label-font` departure). Chinese, Japanese and Korean names use the viewer's system font. An app that rebuilds the maps hosts the same folder and passes its glyphs URL to `basemapStyle(scheme, glyphs)`; other scripts (Arabic, Hebrew) would need Noto's glyphs added beside Roboto's.
 - **License.** CARTO's basemaps are free only within CARTO's terms for their use; check Enertiv's CARTO plan before a map ships in the app.
 
 ## Adding a convention

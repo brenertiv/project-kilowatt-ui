@@ -41,6 +41,8 @@ export type BasemapThemeContext = {
   color: (value: string) => string;
   /** The land, which is the card surface the map sits on (`background.level1`). */
   land: string;
+  /** Where Kilowatt's map fonts are served, as a MapLibre glyphs URL with `{fontstack}` and `{range}`. */
+  glyphs: string;
 };
 
 export type MapDeparture = {
@@ -60,12 +62,12 @@ export type MapDeparture = {
   check?: RegExp;
 };
 
-/** CARTO's italic label fonts, and the upright face of the same family that replaces each (the `basemap-label-fonts` departure). */
-export const uprightFonts: Record<string, string> = {
-  'Montserrat Regular Italic': 'Montserrat Regular',
-  'Montserrat Medium Italic': 'Montserrat Medium',
-  'Open Sans Italic': 'Open Sans Regular',
-};
+/**
+ * The Roboto faces basemap labels are set in (the `basemap-label-font` departure), as glyph files in
+ * `src/maps/fonts`: Medium where CARTO sets a label in a medium or bold face (places, water bodies),
+ * Regular everywhere else. Both are theme weights (`fontWeightRegular`, `fontWeightMedium`).
+ */
+export const mapFonts = { regular: 'Roboto Regular', medium: 'Roboto Medium' } as const;
 
 /** The paint properties that color each kind of layer. */
 const colorProperties: Record<string, string[]> = {
@@ -129,16 +131,18 @@ export const mapDepartures: MapDeparture[] = [
     },
   },
   {
-    id: 'basemap-label-fonts',
+    id: 'basemap-label-font',
     kind: 'theme',
-    title: 'Upright labels',
-    why: "CARTO sets water names in italics. Kilowatt doesn't use italic for anything (the `font-synthesis` departure), so water names take the upright face of the same font. Labels stay in CARTO's fonts, Montserrat and Open Sans: MapLibre draws text from glyph files, and CARTO's font server has no Roboto.",
+    title: 'Labels in Roboto',
+    why: "CARTO sets labels in Montserrat and Open Sans from its own font server, which has no Roboto, and sets water names in italics. Kilowatt serves Roboto's glyphs itself (`src/maps/fonts`) and sets every label in Roboto, Medium where CARTO uses a medium or bold face and Regular elsewhere, upright, so a map's labels match the type around it (`font-synthesis`: no italics). Chinese, Japanese and Korean names fall back to the viewer's system font, as MapLibre draws them locally.",
     maps: all,
-    apply: ({ layers }) => {
+    apply: ({ style, layers, glyphs }) => {
+      style.glyphs = glyphs;
       for (const layer of layers('label')) {
         if (layer.type !== 'symbol' || !Array.isArray(layer.layout?.['text-font'])) continue;
-        // CARTO's font stacks are plain lists of font names.
-        layer.layout['text-font'] = (layer.layout['text-font'] as string[]).map((font) => uprightFonts[font] ?? font);
+        // CARTO's font stacks are plain lists of font names, the first its own face for the label.
+        const [face] = layer.layout['text-font'] as string[];
+        layer.layout['text-font'] = [/Medium|Bold/.test(face) ? mapFonts.medium : mapFonts.regular];
       }
     },
   },

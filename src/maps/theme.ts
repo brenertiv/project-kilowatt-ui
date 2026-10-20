@@ -19,6 +19,19 @@ export const basemapStyleUrl: Record<ColorScheme, string> = {
   dark: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
 };
 
+/**
+ * Where Kilowatt's map fonts are served, relative to the page: Storybook serves `src/maps/fonts` at
+ * `/map-fonts/` (`.storybook/main.ts`). An app that rebuilds the maps hosts the same folder and
+ * passes its own glyphs URL to `basemapStyle`.
+ */
+export const mapFontsPath = 'map-fonts/';
+
+/** The MapLibre glyphs URL for Kilowatt's map fonts, absolute, from the page's base URL. */
+export function mapGlyphsUrl(base = typeof document === 'undefined' ? 'http://localhost/' : document.baseURI): string {
+  // `{fontstack}` and `{range}` are added after the URL is resolved, so they aren't percent-encoded.
+  return `${new URL(mapFontsPath, base).href}{fontstack}/{range}.pbf`;
+}
+
 /** A palette color as a solid hex: a translucent one (text.secondary) is blended over the land, since MapLibre would blend it over whatever is drawn below. */
 function solid(color: string, surface: string): string {
   const fg = decomposeColor(color).values;
@@ -60,12 +73,12 @@ export function basemapFeature(layer: LayerSpecification): BasemapFeature | unde
  *
  * @param style - CARTO's style for the scheme, as fetched from `basemapStyleUrl[scheme]`.
  * @param scheme - The active color scheme, `light` or `dark`.
- * @param departures - The departures to apply. Default: all of them; tests pass fewer.
+ * @param options - `glyphs`: where the map fonts are served (default `mapGlyphsUrl()`); `departures`: the departures to apply (default all of them; tests pass fewer).
  */
 export function basemapTheme(
   style: StyleSpecification,
   scheme: ColorScheme,
-  departures: MapDeparture[] = mapDepartures,
+  { glyphs = mapGlyphsUrl(), departures = mapDepartures }: { glyphs?: string; departures?: MapDeparture[] } = {},
 ): StyleSpecification {
   const mui = themes[scheme];
   const land = mui.palette.background.level1;
@@ -81,32 +94,35 @@ export function basemapTheme(
     mui,
     color: (value) => solid(value, land),
     land,
+    glyphs,
   };
   // The theme is the departures' changes and nothing else (Foundations → CARTO departures).
   for (const departure of departures) departure.apply?.(context);
   return copy;
 }
 
-const styles = new Map<ColorScheme, Promise<StyleSpecification>>();
+const styles = new Map<string, Promise<StyleSpecification>>();
 
 /**
  * Fetches CARTO's basemap style for one color scheme and applies Kilowatt's theme, once per scheme.
  * Pass the result to MapLibre's `style` option, or to `setStyle` when the scheme changes.
  *
  * @param scheme - The active color scheme, `light` or `dark`.
+ * @param glyphs - Where the map fonts are served, as a MapLibre glyphs URL. Default `mapGlyphsUrl()`, Storybook's `/map-fonts/`.
  */
-export function basemapStyle(scheme: ColorScheme): Promise<StyleSpecification> {
-  let style = styles.get(scheme);
+export function basemapStyle(scheme: ColorScheme, glyphs = mapGlyphsUrl()): Promise<StyleSpecification> {
+  const key = `${scheme} ${glyphs}`;
+  let style = styles.get(key);
   if (!style) {
     style = fetch(basemapStyleUrl[scheme])
       .then((response) => {
         if (!response.ok) throw new Error(`CARTO basemap style: ${response.status}`);
         return response.json() as Promise<StyleSpecification>;
       })
-      .then((carto) => basemapTheme(carto, scheme));
+      .then((carto) => basemapTheme(carto, scheme, { glyphs }));
     // A failed fetch isn't kept, so the next map tries again.
-    style.catch(() => styles.delete(scheme));
-    styles.set(scheme, style);
+    style.catch(() => styles.delete(key));
+    styles.set(key, style);
   }
   return style;
 }
