@@ -42,6 +42,8 @@ Each row of `data` is one category: its label in `categoryField` and a number pe
 - **Categories.** One measure across categories. Every column takes one color: the categories are named on the axis, so coloring them apart adds nothing.
 - **Side by side.** Up to six series per category, told apart by `chart.series` color.
 - **Stacked.** `stacked` puts the series in one column per category, for parts that add up to a total.
+- **Ranking.** `horizontal` lays the bars out across, categories down the left in `data` order and values along the bottom, so long names fit. Sort `data` largest first, and keep one color.
+- **Grouped into Other.** Past six colored series, the five with the largest totals keep their colors and the rest are summed into one neutral series named `otherLabel`.
 - **Striped.** `striped` marks a variant of another series (delivery beside supply, estimated beside actual). Give both the same `slot`: they keep one hue, and the stripes tell them apart.
 
 ## Do and don't
@@ -55,7 +57,9 @@ Each row of `data` is one category: its label in `categoryField` and a number pe
 - Do stack only parts that add up to a meaningful total.
 - Don't stack values in different units, or values that overlap.
 - Do write `summary` as one sentence with the numbers that matter.
-- Don't show more than six colored series; group the smallest or use a table.
+- Do use `horizontal` bars for a ranking or for long category names, sorted largest first.
+- Don't color each bar of a ranking or draw each one as its own series; one series in one color reads as one measure.
+- Don't pass more than six colored series expecting six colors; the chart groups the rest into Other, so name `otherLabel` for what they are, or use a table.
 
 ## MUI departures
 

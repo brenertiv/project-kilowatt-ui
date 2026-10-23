@@ -1,0 +1,79 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SegmentedBarStories from './SegmentedBar.stories';
+
+<Meta
+  of={SegmentedBarStories}
+  summary="Kilowatt's SegmentedBar for the parts of one whole in a single bar, such as work orders by status, colored by meaning or by status, with a legend of values and shares that carries the numbers."
+/>
+
+# SegmentedBar
+
+`SegmentedBar` shows the parts of one whole as segments of a single bar, with a legend under it that names each part, its value and its share. It's Kilowatt's own component, built from MUI's `Box` and `Typography` (`@mui/material`, Material UI v9) rather than amCharts, since a bar and a list need no canvas. Its colors follow the chart rules (Rules → Charts): a product meaning takes its `chart.series` slot, a status its intent, and anything else `chart.neutral`.
+
+<Canvas of={SegmentedBarStories.ByStatus} />
+
+## When to use
+
+- Use it for a few parts of one whole in a small space, where the order matters as much as the size: work orders through their lifecycle, a budget by category.
+- For parts of a whole where the share is the point and the parts have no order, a donut chart works too.
+- For more than seven or eight parts, use a table; the segments get too thin to see.
+- For one measure against its limit, use `LinearProgress`.
+
+## Usage
+
+```tsx
+import CardContent from '@mui/material/CardContent';
+import { workOrderStatusIntents } from 'src/charts/meanings';
+import { SegmentedBar } from 'src/components/SegmentedBar';
+
+const segments = statusCounts.map(({ status, count }) => ({
+  label: sentenceCase(status),
+  value: count,
+  status: workOrderStatusIntents[status],
+}));
+
+<CardContent>
+  <SegmentedBar segments={segments} unit="work orders" label="Work orders by status" />
+</CardContent>
+```
+
+Pass the parts in the order they should read, left to right: a lifecycle's order for statuses, largest first otherwise. Look meanings up by the API's name (`workOrderStatusIntents['In Progress']`), then show the name in sentence case.
+
+## Variants
+
+- **By status.** Each part takes an intent (`status`), and parts that need no one's attention take `neutral`.
+- **By meaning.** Each part takes the series `slot` of what it stands for, so it matches every other chart.
+
+## States
+
+- A part with no value has no segment but stays in the legend, with 0 and 0%.
+- With nothing at all, show the empty state of `AsyncContent` instead of an empty bar.
+
+## Do and don't
+
+- Do keep every part in the legend, values and shares written out.
+- Don't make people compare segment lengths to read the numbers.
+- Do color a bar by status or by meaning.
+- Don't mix series slots and statuses in one bar; the colors would claim two kinds of meaning at once.
+- Do order statuses as the lifecycle runs.
+- Don't sort a lifecycle by size; the order is part of what it says.
+
+## MUI departures
+
+None of Kilowatt's departures change `Box` or `Typography`.
+
+Theme-wide departures (the `chart-palette` roles and the intents it colors with, the theme radius on the bar's ends) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The bar is hidden from screen readers (`aria-hidden`); the legend under it is a list with every part's name, value with its unit, and share, in the bar's order.
+- The figure is named by `label`.
+- The legend names every part in text, so parts that share `chart.neutral` are still told apart.
+- Values use tabular figures so the columns line up.
+
+## Related
+
+- Donut chart for parts of a whole where the share is the point.
+- LinearProgress for one measure against its limit.
+
+<Stories includePrimary={false} />

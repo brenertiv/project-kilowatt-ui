@@ -16,7 +16,7 @@ import type { Theme } from '@mui/material/styles';
  */
 
 /** Kilowatt's reference charts, by component name. */
-export type ChartName = 'LineChart' | 'ColumnChart' | 'DonutChart';
+export type ChartName = 'LineChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap';
 
 /** What a theme entry's `apply` works with, for one chart root and color scheme. */
 export type ChartThemeContext = {
@@ -61,7 +61,7 @@ export type ChartDeparture = {
  */
 export const axisNumberFormat: Intl.NumberFormatOptions = { notation: 'compact' };
 
-const all: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart'];
+const all: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap'];
 const xy: ChartName[] = ['LineChart', 'ColumnChart'];
 
 export const chartDepartures: ChartDeparture[] = [
@@ -201,7 +201,7 @@ export const chartDepartures: ChartDeparture[] = [
     charts: xy,
     convention: {
       amchartsDefault: '`AxisRendererY` with `opposite: false`',
-      kilowatt: '`opposite: true` for a single value axis; left then right for two units',
+      kilowatt: '`opposite: true` for a single value axis; left then right for two units; along the bottom for horizontal bars',
       where: 'Every value axis',
     },
     check: /opposite:/,
@@ -214,7 +214,7 @@ export const chartDepartures: ChartDeparture[] = [
     charts: xy,
     convention: {
       amchartsDefault: 'No unit label; a rotated axis title if one is added',
-      kilowatt: '`axisUnit(root, chart, axis, unit)` for every value axis',
+      kilowatt: '`axisUnit(root, chart, axis, unit)` for every vertical value axis; a horizontal bar chart puts its unit at the end of its value axis, under the numbers',
       where: 'Every value axis',
     },
     check: /axisUnit\(/,
@@ -257,5 +257,83 @@ export const chartDepartures: ChartDeparture[] = [
       where: 'Every chart with a legend',
     },
     check: /legend\(root\)/,
+  },
+  {
+    id: 'reference-lines',
+    kind: 'convention',
+    title: 'Targets and benchmarks as dashed lines',
+    why: "amCharts draws an axis range as a solid gridline with an axis label. Kilowatt draws a target or benchmark as a dashed line in `text.secondary`, labeled with its name, full value and unit at the plot's left edge on a plate of the card surface, over the series, so it reads as a reference rather than data, no line runs through its label, and the label never covers the latest values at the right.",
+    charts: ['LineChart', 'Sparkline'],
+    convention: {
+      amchartsDefault: 'An axis range: a solid gridline in the grid color, its label among the axis numbers',
+      kilowatt: '`references`, drawn by `referenceLines` from `src/charts/theme`: a dashed `text.secondary` line, labeled "Name: value unit" at the left edge of the plot on the card surface',
+      where: 'Every target, benchmark or threshold line',
+    },
+    check: /referenceLines\(/,
+  },
+  {
+    id: 'projected-segments',
+    kind: 'convention',
+    title: 'Projections continue their line, dashed',
+    why: 'amCharts has no notion of a projection, so charts often draw the forecast as a second series in a second color. A forecast is a variant of what it forecasts (Rules → Charts → Variants don\'t get colors): Kilowatt continues the one line dashed in its own hue from the first projected point, and the tooltip says "projected", so the change reads by pattern and in words.',
+    charts: ['LineChart'],
+    convention: {
+      amchartsDefault: 'No projection; a separate series for the forecast',
+      kilowatt: "`projectedFrom` on the series: a series axis range from that date, dashed in the series' hue, and \"projected\" (or `projectedNote`) in the tooltip",
+      where: 'Every measured-then-projected line',
+    },
+    check: /projectedFrom/,
+  },
+  {
+    id: 'status-bands',
+    kind: 'convention',
+    title: 'A score colored by its bands',
+    why: "amCharts colors a line by its series. A score read against bands (excellent, fair, poor) is status, so Kilowatt colors the line and its markers band by band with the intents, through series axis ranges on the value axis, and names the band in the tooltip so color isn't the only signal. A chart colored by status has no other colored line (Rules → Charts: by series or by status, not both).",
+    charts: ['LineChart'],
+    convention: {
+      amchartsDefault: 'One stroke color per series',
+      kilowatt: '`bands` on the series: each band an axis range stroked in its intent (`chart.status`), the band named in the tooltip',
+      where: 'Every score line',
+    },
+    check: /colors\.status/,
+  },
+  {
+    id: 'point-markers',
+    kind: 'convention',
+    title: 'Markers only where they say something',
+    why: "amCharts draws no markers until a bullet is added, and charts then tend to mark every point. Kilowatt draws none by default; `markers: 'last'` marks the latest reading, and `'all'` marks every point of sparse data, where each point is a reading. A marker is a 4px dot in the line's color (or its band's) ringed in the card surface, so it stays legible where lines cross.",
+    charts: ['LineChart', 'Sparkline'],
+    convention: {
+      amchartsDefault: 'No bullets; when added, usually on every point',
+      kilowatt: "`markers: 'last' | 'all'` on a `LineChart` series, and the last point of every `Sparkline`: a 4px dot ringed in the card surface",
+      where: 'Every line that marks points',
+    },
+    check: /am5\.Circle\.new/,
+  },
+  {
+    id: 'sparkline-chrome',
+    kind: 'convention',
+    title: 'A sparkline has no axes',
+    why: "amCharts draws an XY chart's axes, labels and gridlines wherever it has room. A sparkline sits under the headline number it explains, which carries the value and unit, so Kilowatt hides its axes, gridlines, legend and cursor line, marks the latest point, and leaves scale to its references and the full-value tooltip.",
+    charts: ['Sparkline'],
+    convention: {
+      amchartsDefault: 'Axis labels, gridlines and a cursor line on every XY chart',
+      kilowatt: 'Labels and gridlines `forceHidden` on both axes, no legend, the cursor line hidden; the last point marked',
+      where: 'Every sparkline',
+    },
+    check: /forceHidden/,
+  },
+  {
+    id: 'heatmap-scale',
+    kind: 'convention',
+    title: 'Heatmaps color by deviation or magnitude, in steps',
+    why: "amCharts' heat rules blend continuously between two colors of the chart's choosing. Kilowatt's heatmap uses the chart color jobs (Rules → Charts): a deviation from 0 in `success` below and `error` above, in four steps of strength up to a cap, around a neutral midpoint; a magnitude in the steps of `chart.sequential`. Cells with no value take the range-band color and say why in the tooltip, and a legend in words reads the scale, so no cell rests on color alone.",
+    charts: ['Heatmap'],
+    convention: {
+      amchartsDefault: '`heatRules` blending between any two colors, continuously',
+      kilowatt: "`scale=\"diverging\"`: `success`/`error` at 25–100% strength by distance from 0, capped; `scale=\"sequential\"`: `chart.sequential` steps; no data in `action.hover`; a legend in words under the grid",
+      where: 'Every heatmap',
+    },
+    check: /colors\.status\.success/,
   },
 ];

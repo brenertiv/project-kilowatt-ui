@@ -49,7 +49,24 @@ const series = [
 <LineChart data={readings} series={series} unit="kWh" rightUnit="°F" summary="…" />
 ```
 
-`data` is rows of numbers with a UTC timestamp in `date`. Keep `data` and `series` stable (constants or `useMemo`), since the chart is rebuilt when they change.
+`data` is rows of numbers with a UTC timestamp in `date`. Keep `data`, `series` and `references` stable (constants or `useMemo`), since the chart is rebuilt when they change.
+
+Targets, projections and scores read against bands:
+
+```tsx
+import { scoreBands } from 'src/charts/meanings';
+
+// A target or benchmark: a dashed line labeled with its name and full value.
+<LineChart data={readings} series={series} unit="kWh" references={[{ value: 1100, label: 'Daily target' }]} summary="…" />
+
+// Measured, then projected: one line, dashed from the first projected month.
+<LineChart data={emissions} series={[{ field: 'emissions', name: 'Emissions', projectedFrom: Date.UTC(2026, 10, 1) }]} unit="tCO₂e" interval="month" summary="…" />
+
+// A score in its bands, with today's score marked.
+<LineChart data={scores} series={[{ field: 'score', name: 'Maintenance score', bands: scoreBands, markers: 'last' }]} unit="pts" summary="…" />
+```
+
+Product meanings take their color from `src/charts/meanings`: spread `meaningColor(utilitySlots, 'Natural Gas')` into a line for its slot. Look meanings up by the API's name, never a translated label.
 
 ## Variants
 
@@ -58,8 +75,12 @@ const series = [
 - **Comparison.** Up to six lines, told apart by `chart.series` color in order. Give a line a `slot` when it stands for a fixed meaning (a utility type), so it keeps one color on every chart.
 - **Aligned with content.** A chart under a `CardContent` (a headline number): its default 16px inset lines it up with the content above.
 - **Two units.** A measure on the left axis and what it's read against on the right (`right`, `rightUnit`), each axis labeled with its unit. Draw the context line `neutral`.
+- **Target.** A goal or benchmark the line is read against: `references`, a dashed line in `text.secondary` labeled with its name and full value inside the plot. Set `labelBelow` on a reference whose label would cover the data just above its line.
+- **Projected.** One line measured up to a date and projected after it: `projectedFrom` continues the line dashed in its own hue, and the tooltip says "projected". For a stretch that's provisional rather than projected (a month still being billed), set `projectedNote` to what the tooltip should say instead: `incomplete`.
+- **Score bands.** A score colored by status, band by band (`bands`, usually `scoreBands`), with the band named in the tooltip; `markers: 'last'` marks the latest reading. A chart colored by status has no other colored line. Set `max={100}` for a score or a percentage, so the axis always runs to the ceiling.
+- **Pathways.** Scenarios years ahead against a pathway (`interval="year"`): each scenario in a series color, the pathway `neutral`. Keep to one neutral line, so the legend tells every line apart. Rows can also be a `quarter` apart.
 
-`dashed` marks a variant of another line, such as a forecast; it keeps the hue rather than taking a new color.
+`dashed` marks a variant of another line, such as the previous period; it keeps the hue rather than taking a new color. `markers: 'all'` marks every point of sparse data, where each point is a reading.
 
 ## Do and don't
 
@@ -73,12 +94,17 @@ const series = [
 - Don't set a color in chart code or add a palette color for a meaning; map the meaning to a slot.
 - Do use `rightUnit` for a second unit, and draw the line that's context `neutral`.
 - Don't put a third unit on a chart, or two scales of one quantity (kW and MW); split the chart or convert to one unit.
+- Do draw a forecast with `projectedFrom` on the line it continues.
+- Don't draw a forecast as a second series in a second color; a variant keeps its hue.
+- Do read a score against `scoreBands`, so every score chart bands alike.
+- Don't color a score by status and add another colored line; color a chart by series or by status.
 - Do group or switch to a table past six lines.
 - Don't show more than six colored lines; the hues stop being told apart.
 
 ## MUI departures
 
 - `chart-palette`: lines take `chart.series` in order or by `slot`, and neutral lines take `chart.neutral`.
+- `intents-on-surfaces`: a line in `bands` takes the intents (`success`, `info`, `warning`, `error`) as they are on the card surface.
 
 Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
 
@@ -100,6 +126,10 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `full-value-tooltips`: every hoverable item has a tooltip with its exact value and unit (`tooltipNumberFormat`).
 - `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
 - `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
+- `reference-lines`: `references` are dashed `text.secondary` lines, labeled with name, full value and unit inside the plot on the card surface.
+- `projected-segments`: `projectedFrom` continues a line dashed in its own hue, with "projected" in the tooltip.
+- `status-bands`: `bands` color a line and its markers by intent, band by band, and name the band in the tooltip.
+- `point-markers`: no markers by default; `markers` marks the last point or every point with a 4px dot ringed in the card surface.
 
 ## Accessibility
 
@@ -107,6 +137,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the legend and data points.
 - Lines are told apart by color and by name in the legend and tooltip; a dashed line is told apart by pattern too.
+- A projected stretch is dashed and its tooltip says "projected"; a banded score's tooltip names its band; a reference line is labeled in text. None of them rests on color alone. Say the target, the projection or the band in `summary` when it matters.
 - With two units, each legend name carries its unit ("Energy use (kWh)"), so which axis a line reads against doesn't depend on color. Say both units in `summary`.
 - For detailed values, offer the data as a table beside the chart.
 
