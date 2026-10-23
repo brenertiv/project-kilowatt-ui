@@ -172,3 +172,22 @@ export const monthlyUseGrid = varianceBuildings.flatMap((row, b) =>
     value: Math.round((900 - b * 70) * (1 + 0.3 * Math.cos(((m - 6.5) / 12) * 2 * Math.PI))),
   })),
 );
+
+/** The first reading of `intervalDemand`: midnight UTC on October 1, 2025. */
+export const intervalStart = Date.UTC(2025, 9, 1);
+
+/**
+ * October 2025 to September 2026, every 15 minutes: one building's electric demand (kW), 35,040 readings.
+ * A base load overnight and on weekends, an occupied plateau from 7:00 to 19:00 on weekdays, and cooling
+ * that lifts summer afternoons, with a little meter noise.
+ */
+export const intervalDemand = Array.from({ length: 365 * 96 }, (_, i) => {
+  const date = intervalStart + i * 15 * 60 * 1000;
+  const hour = (i % 96) / 4;
+  const dayOfYear = Math.floor(i / 96) + 273;
+  const summer = 0.5 - 0.5 * Math.cos(((dayOfYear - 15) / 365) * 2 * Math.PI);
+  const occupied = isWeekend(date) ? 0.15 : 1 / (1 + Math.exp(-2 * (hour - 7))) - 1 / (1 + Math.exp(-2 * (hour - 19)));
+  const afternoon = Math.exp(-(((hour - 15) / 4) ** 2));
+  const noise = ((Math.sin(i * 12.9898) * 43758.5453) % 1) * 30;
+  return { date, demand: Math.round((380 + 520 * occupied + 420 * summer * afternoon * (0.4 + occupied) + noise) * 10) / 10 };
+});

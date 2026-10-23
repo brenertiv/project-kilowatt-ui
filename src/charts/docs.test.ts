@@ -10,7 +10,7 @@ import { chartDepartures, type ChartName } from './departures';
  * when a departure is added, removed or retargeted.
  */
 
-const charts: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap'];
+const charts: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart'];
 
 /** The body of one `## heading` section. */
 function section(mdx: string, heading: string) {

@@ -12,7 +12,11 @@ const source = (file: string) => readFileSync(fileURLToPath(new URL(file, import
 function recorder() {
   const rules: string[] = [];
   const rootSettings: string[] = [];
-  const settings = (key: string) => ({ setAll: () => rules.push(key), set: () => rules.push(key) });
+  const settings = (key: string) => ({
+    setAll: () => rules.push(key),
+    set: () => rules.push(key),
+    states: { create: (state: string) => rules.push(`${key}:${state}`) },
+  });
   const theme = { rule: (name: string, tags: string[] = []) => settings([name, ...tags].join('.')) } as unknown as am5.Theme;
   const root = { numberFormatter: { set: (key: string) => rootSettings.push(key) } } as unknown as am5.Root;
   const animated = {} as am5.Theme;
