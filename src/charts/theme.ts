@@ -183,6 +183,8 @@ export type ReferenceLine = {
  * the reference color across the plot, labeled "Name: value unit" at the plot's left edge, above its line
  * (or below, with `labelBelow`), on a plate of the card surface. The labels sit over the series, so no line
  * runs through the text, at the left, where the oldest data is, so they never cover the latest values.
+ * With `onLine`, each label is amCharts' own axis-range label instead: centered on its line at the plot's
+ * edge beside the value axis, on a plate of the range-band color, moved with the line by amCharts.
  *
  * @param root - The chart's root.
  * @param chart - The XY chart the axis belongs to.
@@ -190,6 +192,7 @@ export type ReferenceLine = {
  * @param references - The lines to draw.
  * @param unit - The axis's unit, written after each value.
  * @param colors - The chart colors from `useChart`.
+ * @param onLine - Uses the axis range's own label, centered on its line beside the value axis on a plate of the range-band color, instead of a label at the plot's left edge. Default `false`.
  */
 export function referenceLines(
   root: am5.Root,
@@ -198,17 +201,39 @@ export function referenceLines(
   references: ReferenceLine[],
   unit: string,
   colors: ReturnType<typeof chartColors>,
+  onLine = false,
 ) {
   for (const { value, label, labelBelow } of references) {
     const item = axis.makeDataItem({ value });
     axis.createAxisRange(item);
+    const grid = item.get('grid');
     // forceHidden: false, since a chart that hides its axis's own grid (a sparkline) still shows its references.
-    item.get('grid')?.setAll({ forceHidden: false, stroke: colors.reference, strokeOpacity: 1, strokeDasharray: [4, 4], location: 0 });
+    grid?.setAll({ forceHidden: false, stroke: colors.reference, strokeOpacity: 1, strokeDasharray: [4, 4], location: 0 });
+    const text = `${label}: ${root.numberFormatter.format(value, tooltipNumberFormat)} ${unit}`;
+    if (onLine) {
+      // amCharts' own label for the range: inside the plot beside the axis, centered on the line, and moved with it.
+      item.get('label')?.setAll({
+        text,
+        inside: true,
+        location: 0,
+        // Right-aligned to the axis, so the label runs into the plot. amCharts' own rule for inside labels
+        // keys on a tag the label gets only when it's made inside, so the anchor is set here.
+        centerX: am5.p100,
+        centerY: am5.p50,
+        fill: colors.reference,
+        paddingTop: 2,
+        paddingBottom: 2,
+        paddingLeft: 8,
+        paddingRight: 8,
+        background: am5.Rectangle.new(root, { fill: colors.band, fillOpacity: 1 }),
+      });
+      continue;
+    }
     item.get('label')?.set('forceHidden', true);
     // The label is the plot's own, not the axis range's, so it sits over the series at the left edge whichever side the axis is on.
-    const text = chart.plotContainer.children.push(
+    const plate = chart.plotContainer.children.push(
       am5.Label.new(root, {
-        text: `${label}: ${root.numberFormatter.format(value, tooltipNumberFormat)} ${unit}`,
+        text,
         fill: colors.reference,
         x: 0,
         centerY: labelBelow ? 0 : am5.p100,
@@ -219,11 +244,12 @@ export function referenceLines(
         background: am5.Rectangle.new(root, { fill: colors.surface, fillOpacity: 1 }),
       }),
     );
-    const place = () => text.set('y', axis.get('renderer').positionToCoordinate(axis.valueToPosition(value)));
-    axis.events.on('boundschanged', place);
-    axis.onPrivate('min', place);
-    axis.onPrivate('max', place);
-    axis.onPrivate('selectionMin', place);
-    axis.onPrivate('selectionMax', place);
+    // The label takes its height from the line itself, which amCharts moves on every redraw (zooming, the axis
+    // rescaling, its animation), so the two never part. Both sit in the plot's coordinates.
+    const follow = () => plate.set('y', grid?.y() ?? 0);
+    grid?.on('y', follow);
+    follow();
+    // When zooming takes the line out of the plot, its label goes too.
+    grid?.onPrivate('visible', (visible) => plate.set('visible', visible !== false));
   }
 }

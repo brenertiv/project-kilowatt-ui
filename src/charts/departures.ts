@@ -125,17 +125,20 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'chart-tooltips',
     kind: 'theme',
     title: 'Tooltips on the menu surface',
-    why: "amCharts fills a tooltip with its series' color and picks a text color to match. Kilowatt shows every tooltip on the menu surface (`background.level3`) with `text.primary`, outlined in `border.level1` and rounded with the theme radius, like a menu, so tooltips read the same on every series.",
+    why: "amCharts fills a tooltip with its series' color and picks a text color to match. amCharts fills an axis's tooltip (the cursor's date or value) dark and square. Kilowatt shows every tooltip, an axis's included, on the menu surface (`background.level3`) with `text.primary`, outlined in `border.level1` and rounded with the theme radius, like a menu, so tooltips read the same on every series and axis.",
     charts: all,
     apply: ({ theme, mui, color }) => {
       theme.rule('Tooltip').setAll({ getFillFromSprite: false, getStrokeFromSprite: false, autoTextColor: false });
-      theme.rule('PointedRectangle', ['tooltip', 'background']).setAll({
+      const surface = {
         fill: color(mui.palette.background.level3),
         fillOpacity: 1,
         stroke: color(mui.palette.border.level1),
         strokeOpacity: 1,
         cornerRadius: Number(mui.shape.borderRadius),
-      });
+      };
+      theme.rule('PointedRectangle', ['tooltip', 'background']).setAll(surface);
+      // An axis's tooltip (the cursor's date) gets its own dark, square background from amCharts; it takes the menu surface too.
+      theme.rule('PointedRectangle', ['axis', 'tooltip', 'background']).setAll(surface);
       theme.rule('Label', ['tooltip']).setAll({ fill: color(mui.palette.text.primary) });
     },
   },
@@ -287,11 +290,11 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'reference-lines',
     kind: 'convention',
     title: 'Targets and benchmarks as dashed lines',
-    why: "amCharts draws an axis range as a solid gridline with an axis label. Kilowatt draws a target or benchmark as a dashed line in `text.secondary`, labeled with its name, full value and unit at the plot's left edge on a plate of the card surface, over the series, so it reads as a reference rather than data, no line runs through its label, and the label never covers the latest values at the right.",
-    charts: ['LineChart', 'Sparkline'],
+    why: "amCharts draws an axis range as a solid gridline with an axis label. Kilowatt draws a target or benchmark as a dashed line in `text.secondary`, labeled with its name, full value and unit at the plot's left edge on a plate of the card surface, over the series, so it reads as a reference rather than data, no line runs through its label, and the label never covers the latest values at the right. An `IntervalChart` target, which the readings are judged against as you zoom, keeps amCharts' own label for the line, centered on it at the right edge, so amCharts moves the two together.",
+    charts: ['LineChart', 'Sparkline', 'IntervalChart'],
     convention: {
       amchartsDefault: 'An axis range: a solid gridline in the grid color, its label among the axis numbers',
-      kilowatt: '`references`, drawn by `referenceLines` from `src/charts/theme`: a dashed `text.secondary` line, labeled "Name: value unit" at the left edge of the plot on the card surface',
+      kilowatt: '`references`, drawn by `referenceLines` from `src/charts/theme`: a dashed `text.secondary` line, labeled "Name: value unit" at the left edge of the plot on the card surface; an `IntervalChart` target is labeled by amCharts\' own axis-range label instead, centered on its line at the plot\'s right edge on `action.hover` (`onLine`)',
       where: 'Every target, benchmark or threshold line',
     },
     check: /referenceLines\(/,
