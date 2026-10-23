@@ -2,11 +2,11 @@ import { useCallback } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5percent from '@amcharts/amcharts5/percent';
 import Box from '@mui/material/Box';
-import { tooltipNumberFormat, type ChartInset } from './theme';
+import { seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
-/** One part of the whole. */
-export type DonutSlice = {
+/** One part of the whole, and how it takes its color: a fixed `slot` for a product meaning (`meaningColor` from `src/charts/meanings`), `neutral`, or neither for the next free slot, largest first. */
+export type DonutSlice = SeriesColor & {
   /** The part's name, shown in its label and tooltip, in sentence case. */
   category: string;
   /** The part's value, in `unit`. */
@@ -49,7 +49,7 @@ function slices(data: DonutSlice[], otherLabel: string) {
 /**
  * A donut chart of the parts of one whole, in Kilowatt's chart theme (Rules → Charts): a
  * reference implementation that Enertiv's app rebuilds. Slices take `chart.series` colors,
- * largest first, and are labeled directly with their share. Past six parts, the smallest are
+ * largest first, or a fixed `slot` for a product meaning, and are labeled directly with their share. Past six parts, the smallest are
  * grouped into one neutral slice. The chart sits in a `figure` named by `summary`.
  * Put it in a `Card` under a `CardHeader`.
  *
@@ -70,8 +70,10 @@ export function DonutChart({ data, unit, summary, otherLabel = 'Other', height =
       const { parts, other } = slices(data, otherLabel);
       const total = data.reduce((sum, part) => sum + part.value, 0);
       const share = (value: number) => percent.format(value / total);
+      // Slices with a slot keep it, so a work-order type is one color on every chart; the rest take the free slots, largest first.
+      const fills = seriesColors(parts, colors);
       series.data.setAll([
-        ...parts.map((part, i) => ({ ...part, share: share(part.value), sliceSettings: { fill: colors.series[i] } })),
+        ...parts.map(({ category, value }, i) => ({ category, value, share: share(value), sliceSettings: { fill: fills[i] } })),
         ...(other ? [{ ...other, share: share(other.value), sliceSettings: { fill: colors.neutral } }] : []),
       ]);
     },

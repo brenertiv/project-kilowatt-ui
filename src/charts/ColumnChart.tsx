@@ -28,53 +28,105 @@ export type ColumnChartProps = {
   summary: string;
   /** Stacks the series in one column per category, for parts that add up to a total. Default `false`, side by side. */
   stacked?: boolean;
+  /** Lays the bars out horizontally, categories down the left in `data` order and values along the bottom: a ranking, or categories with long names. Sort `data` largest first for a ranking. Default `false`. */
+  horizontal?: boolean;
+  /** The name of the series that groups the smallest series when there are more than six colored ones. Default `'Other'`. */
+  otherLabel?: string;
   /** The plot's height in pixels. Default `240`. */
   height?: number;
   /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
   inset?: ChartInset;
 };
 
+/** The most colored series a chart shows: the number of `chart.series` colors (Rules → Charts). */
+const maxSeries = 6;
+
+/**
+ * The series to draw, and the rows with an `other` field. Past six colored series, the five with the
+ * largest totals keep their own and the rest are summed into one neutral `otherLabel` series.
+ */
+function grouped(data: ColumnChartProps['data'], series: ColumnSeries[], otherLabel: string) {
+  const colored = series.filter(({ neutral }) => !neutral);
+  if (colored.length <= maxSeries) return { rows: data, sets: series };
+  const total = (field: string) => data.reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
+  const kept = new Set([...colored].sort((a, b) => total(b.field) - total(a.field)).slice(0, maxSeries - 1));
+  const rest = colored.filter((set) => !kept.has(set));
+  const rows = data.map((row) => ({ ...row, other: rest.reduce((sum, { field }) => sum + (Number(row[field]) || 0), 0) }));
+  return { rows, sets: [...series.filter((set) => set.neutral || kept.has(set)), { field: 'other', name: otherLabel, neutral: true }] };
+}
+
 /**
  * A column chart of values across categories, in Kilowatt's chart theme (Rules → Charts): a
  * reference implementation that Enertiv's app rebuilds. Series take `chart.series` colors in
- * order, or a fixed `slot`; a `striped` series is a variant that keeps its hue. The chart sits in
- * a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
+ * order, or a fixed `slot`; a `striped` series is a variant that keeps its hue. Past six colored
+ * series, the smallest are grouped into one neutral series. `horizontal` turns the columns into bars
+ * for a ranking. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
  * @summary A column chart of values across categories, side by side or stacked, themed from the palette.
  * @import import { ColumnChart } from 'src/charts/ColumnChart';
  */
-export function ColumnChart({ data, categoryField, series, unit, summary, stacked = false, height = 240, inset = 2 }: ColumnChartProps) {
+export function ColumnChart({
+  data,
+  categoryField,
+  series,
+  unit,
+  summary,
+  stacked = false,
+  horizontal = false,
+  otherLabel = 'Other',
+  height = 240,
+  inset = 2,
+}: ColumnChartProps) {
   const build = useCallback(
     ({ root, colors }: ChartContext) => {
       const chart = root.container.children.push(am5xy.XYChart.new(root, { layout: root.verticalLayout, paddingLeft: 0, paddingRight: 0 }));
-      const xAxis = chart.xAxes.push(
-        am5xy.CategoryAxis.new(root, { categoryField, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30, cellStartLocation: 0.15, cellEndLocation: 0.85 }) }),
-      );
-      // A chart's one value axis sits on the right.
-      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
-      axisUnit(root, chart, yAxis, unit);
-      // Long category names (building addresses) wrap under their column instead of running into the next one.
-      xAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'wrap', maxWidth: 88, textAlign: 'center' });
-      const fills = seriesColors(series, colors);
-      const sets = series.map(({ field, name, striped }, i) => {
+      const cells = { cellStartLocation: 0.15, cellEndLocation: 0.85 };
+      let categoryAxis: am5xy.CategoryAxis<am5xy.AxisRenderer>;
+      let valueAxis: am5xy.ValueAxis<am5xy.AxisRenderer>;
+      if (horizontal) {
+        // Bars: categories down the left, first row at the top, and the values along the bottom.
+        categoryAxis = chart.yAxes.push(
+          am5xy.CategoryAxis.new(root, { categoryField, renderer: am5xy.AxisRendererY.new(root, { inversed: true, minGridDistance: 16, ...cells }) }),
+        );
+        valueAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 60 }) }));
+        // A number at the plot's right edge would sit half outside the chart, so none is drawn there.
+        valueAxis.get('renderer').labels.template.set('maxPosition', 0.97);
+        // The unit sits at the value axis's end, under its numbers, as it sits above a vertical one.
+        valueAxis.children.push(am5.Label.new(root, { text: unit, x: am5.p100, centerX: am5.p100, paddingTop: 4, paddingRight: 0 }));
+        // Long category names (building addresses) truncate; the bar's tooltip names the category in full.
+        categoryAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'truncate', maxWidth: 160, centerX: 0, paddingLeft: 0 });
+      } else {
+        categoryAxis = chart.xAxes.push(
+          am5xy.CategoryAxis.new(root, { categoryField, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30, ...cells }) }),
+        );
+        // A chart's one value axis sits on the right.
+        valueAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+        axisUnit(root, chart, valueAxis, unit);
+        // Long category names (building addresses) wrap under their column instead of running into the next one.
+        categoryAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'wrap', maxWidth: 88, textAlign: 'center' });
+      }
+      const { rows, sets: drawn } = grouped(data, series, otherLabel);
+      const fills = seriesColors(drawn, colors);
+      const sets = drawn.map(({ field, name, striped }, i) => {
         const set = chart.series.push(
           am5xy.ColumnSeries.new(root, {
             name,
-            xAxis,
-            yAxis,
+            xAxis: horizontal ? valueAxis : categoryAxis,
+            yAxis: horizontal ? categoryAxis : valueAxis,
             stacked,
-            categoryXField: categoryField,
-            valueYField: field,
+            ...(horizontal ? { categoryYField: categoryField, valueXField: field } : { categoryXField: categoryField, valueYField: field }),
             fill: fills[i],
             stroke: fills[i],
             tooltip: am5.Tooltip.new(root, {}),
           }),
         );
         set.columns.template.setAll({
-          width: am5.percent(stacked ? 70 : 90),
+          [horizontal ? 'height' : 'width']: am5.percent(stacked ? 70 : 90),
           strokeOpacity: 0,
           // Each column shows its full value on hover, since the axis rounds to compact numbers.
-          tooltipText: `{name}, {categoryX}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
+          tooltipText: horizontal
+            ? `{name}, {categoryY}: {valueX.formatNumber('${tooltipNumberFormat}')} ${unit}`
+            : `{name}, {categoryX}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
         });
         if (striped) {
           // The series color with stripes of the card surface over it: the same shape as a solid column, so stacked
@@ -83,11 +135,11 @@ export function ColumnChart({ data, categoryField, series, unit, summary, stacke
         }
         return set;
       });
-      xAxis.data.setAll(data);
+      categoryAxis.data.setAll(rows);
       if (sets.length > 1) chart.children.push(legend(root)).data.setAll(sets);
-      for (const set of sets) set.data.setAll(data);
+      for (const set of sets) set.data.setAll(rows);
     },
-    [data, categoryField, series, unit, stacked],
+    [data, categoryField, series, unit, stacked, horizontal, otherLabel],
   );
   const ref = useChart(build);
 

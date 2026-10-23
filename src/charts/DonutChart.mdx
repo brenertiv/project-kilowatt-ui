@@ -36,6 +36,7 @@ import { DonutChart } from 'src/charts/DonutChart';
 
 - **Parts.** Up to six slices, largest first, in `chart.series` order, each labeled with its name and share.
 - **Grouped into Other.** With more than six parts, the five largest keep their slices and the rest are summed into one slice in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
+- **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each slice, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
 
 ## Do and don't
 
@@ -45,6 +46,8 @@ import { DonutChart } from 'src/charts/DonutChart';
 - Don't use a donut for values that overlap or don't sum, such as averages or rates.
 - Do let the chart group the smallest parts into "Other" past six, and name them in the summary.
 - Don't raise the slice count or add colors to fit more parts; use a table instead.
+- Do give slices that stand for product meanings their `slot` from `src/charts/meanings`.
+- Don't let a work-order type change color between charts because its rank changed.
 - Do write `summary` as one sentence with the share that matters.
 - Don't add a legend; each slice is labeled directly.
 

@@ -1,9 +1,14 @@
 import type {
+  ActionCategory,
   ActionPriority,
+  ActionRequestStatus,
   ActionStatus,
+  ActionType,
   AlertType,
   AlertTypeCategory,
+  BudgetStatus,
   LocationType,
+  ProjectType,
   UtilityBillType,
 } from '../../api/types';
 
@@ -39,6 +44,50 @@ export const actionStatuses: ActionStatus[] = [
   },
   { id: 5, name: 'Cancelled', description: 'User cancelled action', sort_order: -1, default_filter: false },
 ];
+
+/** Work-order types, as the API serves them (read October 2026). */
+export const actionTypes: ActionType[] = [
+  { id: 1, name: 'Installation', description: null },
+  { id: 2, name: 'Preventative', description: null },
+  { id: 3, name: 'Reactive', description: null },
+  { id: 4, name: 'Inspection', description: null },
+  { id: 5, name: 'Rounds', description: null },
+  { id: 6, name: 'Meter Reading', description: null },
+  { id: 7, name: 'Survey', description: null },
+];
+
+/** Budget statuses, as the API serves them (read October 2026). */
+export const budgetStatuses: BudgetStatus[] = [
+  { id: 1, name: 'Under Review', description: 'Budget not currently approved' },
+  { id: 3, name: 'Approved', description: 'Budget approved' },
+  { id: 4, name: 'Generating', description: 'Carbon plan is being generated in the background.' },
+  { id: 5, name: 'Failed', description: 'Carbon plan generation failed with a fatal error.' },
+  { id: 2, name: 'Declined', description: 'Budget declined' },
+];
+
+/** Project types, as the API serves them (read October 2026), in its order. */
+export const projectTypes: ProjectType[] = [
+  [1, 'Appliances'], [2, 'BMS'], [3, 'Building Envelope'], [4, 'Code Compliance'], [5, 'Electrical'], [6, 'Elevators'],
+  [27, 'Energy Supply and Grid Services'], [7, 'Environmental Consideration'], [8, 'Fire and Life Safety'], [9, 'HVAC'],
+  [23, 'Industrial'], [10, 'Interior/Exterior Finishes'], [24, 'Lighting'], [11, 'Mechanical'], [12, 'Metering'], [22, 'Other'],
+  [13, 'Plumbing'], [26, 'Refrigerants'], [25, 'Renewable Energy'], [14, 'Security'], [15, 'Site Features/Parking'],
+  [17, 'Structural'], [16, 'Systems Commissioning'], [18, 'Technology'], [19, 'Transportation'], [21, 'Waste'], [20, 'Water'],
+].map(([id, name]) => ({ id: id as number, name: name as string, description: name as string }));
+
+/** Tenant ticket categories, as the API serves them (read October 2026), in its order. */
+export const actionCategories: ActionCategory[] = [
+  [2, 'Access Card'], [23, 'Amenity Reservation'], [22, 'Cameras'], [25, 'Ceiling'], [12, 'COVID-19 Protocol'], [4, 'Door Issue'],
+  [5, 'Electrical'], [19, 'Elevator'], [18, 'Fire Sprinkler'], [24, 'Flooring'], [20, 'HVAC - Repairs'], [6, 'HVAC - Too Cold'],
+  [7, 'HVAC - Too Hot'], [3, 'Janitorial'], [8, 'Keys/Locks'], [15, 'Light Ballast Replacement'], [10, 'Lighting'], [1, 'Other'],
+  [14, 'Overtime HVAC'], [11, 'Pest Control'], [16, 'Plumbing Leak'], [9, 'Plumbing Misc'], [17, 'Roof Leak'], [13, 'Signage'],
+  [21, 'Windows'],
+].map(([id, name]) => ({ id: id as number, name: name as string, description: null }));
+
+/** Tenant ticket statuses, as the API serves them (read October 2026), in its order. */
+export const actionRequestStatuses: ActionRequestStatus[] = [
+  [7, 'Cancelled'], [5, 'Completed'], [2, 'Declined'], [6, 'Expired'], [4, 'In Progress'], [8, 'On Hold'], [3, 'Open'],
+  [1, 'Pending Approval'], [10, 'Request Expired'], [9, 'Requires Attention'],
+].map(([id, name]) => ({ id: id as number, name: name as string, description: null }));
 
 export const actionPriorities: ActionPriority[] = [
   { id: 1, name: 'Lowest', description: 'No priority', sort_order: 1 },
@@ -148,6 +197,11 @@ export const locationTypes: LocationType[] = [
 
 export const lookups = {
   action_status: actionStatuses,
+  action_type: actionTypes,
+  budget_status: budgetStatuses,
+  project_type: projectTypes,
+  action_category: actionCategories,
+  action_request_status: actionRequestStatuses,
   action_priority: actionPriorities,
   alert_type: alertTypes,
   alert_type_category: alertTypeCategories,

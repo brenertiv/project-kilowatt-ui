@@ -39,7 +39,7 @@ export const Contained: Story = {
 };
 ```
 
-- **Title.** `<Category>/<Name>`, with the category MUI's docs file the component under, as its own sidebar section: Inputs, Data display, Feedback, Surfaces, Navigation, Layout or Utils (`Inputs/Button`, `Surfaces/Card`). Charts go under `Charts/<Type>` (`Charts/Line`). The title is the sidebar path and the story id agents see. Titles are public: renaming one breaks links and agent references.
+- **Title.** `<Category>/<Name>`, with the category MUI's docs file the component under, as its own sidebar section: Inputs, Data display, Feedback, Surfaces, Navigation, Layout or Utils (`Inputs/Button`, `Surfaces/Card`). Charts go under `Charts/<Type>` (`Charts/Line`), and dashboard widget recipes under `Widgets/<Name>` (`Widgets/Score trend`), beside their recipe in `src/widgets`. The title is the sidebar path and the story id agents see. Titles are public: renaming one breaks links and agent references.
 - **`parameters.muiComponents`.** The MUI components the page documents, by import name. The page's MUI departures section is checked against them.
 - **`tags: ['!autodocs']`.** The `.mdx` page is the docs page.
 - **Args hold only what differs from the default.** Every arg shows up in the snippet agents copy, so `size="medium"` or `disabled={false}` teaches them to write noise. Put a value in `meta.args` only if every story needs it, and give callbacks (`fn()`) only to stories whose `play` function uses them.

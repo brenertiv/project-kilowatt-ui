@@ -1,0 +1,97 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as HeatmapStories from './Heatmap.stories';
+
+<Meta
+  of={HeatmapStories}
+  summary="Kilowatt's reference heatmap for values across two dimensions, such as buildings by month: a change from 0 in success and error, or a magnitude on the sequential ramp, with a legend in words."
+/>
+
+# Heatmap
+
+A heatmap shows a value for every pair of two dimensions at once: each building's energy use by month, against last year or in total. `Heatmap` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Enertiv's app rebuilds its heatmaps from this one rather than importing it.
+
+<Canvas of={HeatmapStories.Diverging} />
+
+## When to use
+
+- Use a heatmap to spot patterns across many rows and periods: which buildings ran over last year, and in which months.
+- For one row over time, use a line chart; for a few rows, a line chart with a line each.
+- For exact values people compare closely, use a table; a heatmap shows the pattern, its tooltips the numbers.
+- For more rows than fit (dozens of buildings), page or filter them; don't shrink the rows.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { Heatmap } from 'src/charts/Heatmap';
+
+<Card variant="outlined">
+  <CardHeader title="Energy Use Against Last Year" />
+  <Heatmap
+    rows={buildingNames}
+    columns={['Jan', 'Feb', 'Mar']}
+    cells={[{ row: '350 Park Avenue', column: 'Jan', value: -4.2 }, { row: '120 Wall Street', column: 'Jan', state: 'noData' }]}
+    unit="%"
+    cap={15}
+    sides={['Less than 2025', 'More than 2025']}
+    summary="Most buildings used less energy than in 2025; 425 Park Avenue used 18% more in July."
+  />
+</Card>
+```
+
+Each cell names its `row` and `column`. A cell with no value says why with `state`: `'noData'` for nothing recorded (before metering began, a gap) and `'pending'` while it loads. A row and column with no cell at all show as no data. Keep `cells` stable (a constant or `useMemo`), since the chart is rebuilt when it changes.
+
+## Variants
+
+- **Diverging.** The default: a change from 0, below in `success` and above in `error`, in four steps of strength, full strength from `cap` on. For a variance where less is better (energy, cost, emissions). Name both sides with `sides`.
+- **Sequential.** `scale="sequential"`: a magnitude on `chart.sequential`, light to dark, with the range in the legend.
+
+## States
+
+- **No data.** The cell takes the range-band color (`action.hover`), and its tooltip says "No data".
+- **Pending.** The same, with "Loading" in the tooltip, while that cell's data is on its way; the rest show as they arrive.
+
+## Do and don't
+
+- Do set `cap` to the change that matters (15%), so a few outliers don't wash out every other cell.
+- Don't let one extreme month set the scale for the whole grid.
+- Do use the diverging scale only where one direction is better; say which in `sides`.
+- Don't color a magnitude with success and error; use `scale="sequential"`.
+- Do give months before metering began `state: 'noData'`.
+- Don't write 0 for a month with no data; 0 is a value, and it reads as "no change".
+- Do write `summary` with the pattern and the cells that stand out.
+
+## MUI departures
+
+- `chart-palette`: a sequential heatmap takes `chart.sequential`, and the midpoint of a diverging one `chart.neutral`.
+- `intents-on-surfaces`: a diverging heatmap takes `success` and `error` as they are on the card surface, at four strengths.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the heatmap sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every cell has a tooltip with its row, column and full value and unit, signed for a change.
+- `chart-text-alternative`: the `figure` around the heatmap is named by `summary` (`aria-label`).
+- `heatmap-scale`: deviation in `success` and `error` steps around a neutral midpoint, or magnitude in `chart.sequential` steps; no data in `action.hover`; a legend in words.
+
+## Accessibility
+
+- The heatmap draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say the overall pattern and the cells that stand out.
+- Every cell's tooltip names its row and column and gives the full value, signed for a change ("+18%"), or why it has none.
+- The legend under the grid is text: what each side means, the cap, and what the no-data color stands for.
+- For the full table of values, offer it beside the heatmap (a table view).
+
+## Related
+
+- Line chart for one row over time.
+- Rules → Charts for what each color job means.
+
+<Stories includePrimary={false} />

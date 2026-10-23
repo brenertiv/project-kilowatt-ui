@@ -1,0 +1,105 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SparklineStories from './Sparkline.stories';
+
+<Meta
+  of={SparklineStories}
+  summary="Kilowatt's reference sparkline: one measure's trend under the headline number it explains, with no axes, its latest point marked and up to two dashed references."
+/>
+
+# Sparkline
+
+A sparkline shows the trend behind a headline number in a small space: a score over the last 30 days, a rating over the year. `Sparkline` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). It has no axes, gridlines or legend; the number above it carries the value and unit. Enertiv's app rebuilds its sparklines from this one rather than importing it.
+
+<Canvas of={SparklineStories.Score} />
+
+## When to use
+
+- Use a sparkline under a headline number in a summary card, to show which way the number is heading.
+- For a trend people need to read values off, with dates and a scale, use a line chart.
+- For more than one measure, use a line chart; a sparkline draws one line.
+- For a number with no history, show the number alone.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
+import Typography from '@mui/material/Typography';
+import { Sparkline } from 'src/charts/Sparkline';
+
+const benchmark = [{ value: 65, label: 'Benchmark' }];
+
+<Card variant="outlined">
+  <CardHeader title="Maintenance Score" />
+  <CardContent sx={{ pt: 0, pb: 1 }}>
+    <Typography variant="h2" component="p">87 pts</Typography>
+  </CardContent>
+  <Sparkline
+    data={scores}
+    field="score"
+    name="Maintenance score"
+    unit="pts"
+    min={0}
+    max={100}
+    references={benchmark}
+    summary="The maintenance score is 87, recovered over 30 days from a low of 49 and above the 65-point benchmark."
+  />
+</Card>
+```
+
+`data` is rows with a UTC timestamp in `date` and the value in `field`. Keep `data` and `references` stable (constants or `useMemo`), since the chart is rebuilt when they change. Set `min` and `max` for a measure with fixed bounds, such as a 0–100 score, so a small change doesn't look like a big one.
+
+## Variants
+
+- **Score.** A score on its fixed range with one benchmark, which gives the line its scale.
+- **Two references.** Two thresholds at most, such as a national median and a certification level. Set `labelBelow` on a reference whose label would cover the data above its line.
+- **Fitted.** A measure with no fixed range: the line fills the height, and the headline number carries the unit.
+
+The line takes the first `chart.series` color. Give it a `slot` when it stands for a product meaning, or `neutral` when the sparkline is context beside another chart.
+
+## Do and don't
+
+- Do put a sparkline under the headline number it explains, in the same card.
+- Don't use a sparkline on its own; without the number above it, nothing says what the line measures.
+- Do set `min` and `max` for scores and percentages.
+- Don't let a 0–100 score fit its data; a two-point wobble would fill the height.
+- Do give it a benchmark or threshold when one exists, so the line has a scale.
+- Don't add more than two references; past two, their labels have no room.
+- Do write `summary` with the latest value, the change and the reference it's read against.
+- Don't add axes or a legend; when people need them, use a line chart.
+
+## MUI departures
+
+- `chart-palette`: the line takes `chart.series` by slot, or `chart.neutral`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and the line takes `chart.series`, used as it is.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the sparkline sits straight in an outlined `Card` and pads itself 16px (`inset`), under the headline number's `CardContent`.
+- `full-value-tooltips`: every point has a tooltip with its date, exact value and unit (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the sparkline is named by `summary` (`aria-label`).
+- `reference-lines`: `references` are dashed `text.secondary` lines, labeled with name, full value and unit inside the plot on the card surface.
+- `point-markers`: the latest point is marked with a 4px dot ringed in the card surface.
+- `sparkline-chrome`: no axes, gridlines, legend or cursor line; the headline number carries the value and unit.
+
+## Accessibility
+
+- The sparkline draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown; say the latest value, the change and the reference it's read against.
+- Every point shows its date, exact value and unit in a tooltip on hover.
+- References are labeled in text, so a threshold doesn't rest on the dash alone.
+- The headline number above the sparkline is real text, so the value reads without the chart.
+
+## Related
+
+- Line chart for a trend people read values off.
+- Card → Metric for the headline number above it.
+
+<Stories includePrimary={false} />

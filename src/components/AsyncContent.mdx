@@ -1,0 +1,83 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as AsyncContentStories from './AsyncContent.stories';
+
+<Meta
+  of={AsyncContentStories}
+  summary="Kilowatt's AsyncContent for every state data passes through (loading, fetching, empty, idle, error and no access), shown in the space the data will take so a card keeps its size."
+/>
+
+# AsyncContent
+
+`AsyncContent` shows whatever state a piece of data is in, in the space the data will take: a chart, a headline number, a table. It takes an `AsyncState` (`src/api/state`, Guides → Data layer) and renders MUI's `Skeleton`, `LinearProgress` and `Alert` from `@mui/material` (Material UI v9) for the states that aren't the data itself. It's Kilowatt's own component, so every card handles loading, empty, error and no access the same way rather than each building its own. The props of the parts are MUI's: see the [Skeleton API](https://mui.com/material-ui/api/skeleton/), [LinearProgress API](https://mui.com/material-ui/api/linear-progress/) and [Alert API](https://mui.com/material-ui/api/alert/).
+
+<Canvas of={AsyncContentStories.Failed} />
+
+## When to use
+
+- Use it around anything drawn from a request: a chart in a card, a headline number, a table, a list.
+- Derive the state with `fromQuery` from the TanStack Query result; give stories a literal state.
+- For an action the user started (a save, an export), use a `Snackbar` or the control's own pending state, not `AsyncContent`.
+- For a whole page that can't load, use the page's own error view; `AsyncContent` is for one piece of data within a page.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { fromQuery } from 'src/api/state';
+import { LineChart } from 'src/charts/LineChart';
+import { AsyncContent } from 'src/components/AsyncContent';
+
+const query = useEnergyData('meter', meterId, params);
+
+<Card variant="outlined">
+  <CardHeader title="Energy Use" />
+  <AsyncContent state={fromQuery(query)} height={256} loadingLabel="Loading energy use" emptyText="No energy use recorded for this period.">
+    <LineChart data={rows} series={series} unit="kWh" summary={summary} />
+  </AsyncContent>
+</Card>
+```
+
+Set `height` to what the content takes, its inset included: a 240px chart with its 16px inset is `256`. Every state holds that height, so the card doesn't jump when the data arrives. Under a chart, leave `inset` at `2`, the chart's own padding; inside `CardContent`, which pads already, set `inset={0}`.
+
+## States
+
+- **Ready.** `children` render as they are.
+- **Loading.** The first load: a rounded `Skeleton` fills the space, announced as a progress bar named by `loadingLabel`.
+- **Fetching.** Newer data is on its way: the current data stays on screen under a thin `LinearProgress`, so the card doesn't blank out when the period changes.
+- **Empty.** The request succeeded with nothing in it: `emptyText` says what has no data. Never draw zeros or an empty axis for missing data.
+- **Idle.** Nothing has been asked yet, because something must be chosen first: `idleText` says what to choose.
+- **Error.** The request failed: an error `Alert` with the state's message, and a Retry button when the state has `onRetry`.
+- **Forbidden.** The API answered 403, because the user's account doesn't include this data: an info `Alert` with the state's message and no Retry, since asking again won't help.
+
+## Do and don't
+
+- Do set `height` to the content's height, so loading, empty and error take the same space as the data.
+- Don't let a card collapse to a line of text while it loads; it shifts everything below it.
+- Do write `emptyText` about what has no data ("No energy use recorded for this period.").
+- Don't show 0, a flat line or an empty chart for data that isn't there; say so in `emptyText`.
+- Do pass `onRetry` (from `fromQuery`) for failures a retry can fix.
+- Don't offer Retry for no access; `fromQuery` turns a 403 into `forbidden`, which has none.
+- Do name what's loading in `loadingLabel` ("Loading energy use"), since several cards load at once.
+- Don't nest `AsyncContent` inside another for the same data; one state per request.
+
+## MUI departures
+
+None of Kilowatt's departures change `Skeleton`, `LinearProgress` or `Alert`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius, the intents) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI's `Alert` has `role="alert"`, so an error or no-access message is announced when it appears.
+- The container is a polite live region and is `aria-busy` while loading or fetching, so a screen reader hears the result once it settles rather than every step.
+- The skeleton and the progress bar are progress bars named by `loadingLabel`.
+- Retry is a real button, reachable by keyboard.
+- The error and no-access alerts carry an icon and a message, so their meaning doesn't rest on color.
+
+## Related
+
+- Guides → Data layer for `AsyncState` and `fromQuery`.
+- Card → Chart for the card around a chart.
+
+<Stories includePrimary={false} />

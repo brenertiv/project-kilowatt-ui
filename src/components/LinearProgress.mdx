@@ -1,0 +1,73 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as LinearProgressStories from './LinearProgress.stories';
+
+<Meta
+  of={LinearProgressStories}
+  summary="MUI's LinearProgress for a measure against its limit (a budget spent, a target reached) as a determinate bar with its label and amounts as text, and for work with no known end."
+/>
+
+# LinearProgress
+
+A linear progress bar shows how far something has come against a limit: a budget spent, a quota used, a target reached. Kilowatt uses MUI's `LinearProgress` from `@mui/material` (Material UI v9) with no wrapper; the theme differs from stock MUI only as listed under MUI departures below. Props are MUI's: see the [LinearProgress API](https://mui.com/material-ui/api/linear-progress/).
+
+<Canvas of={LinearProgressStories.Determinate} />
+
+## When to use
+
+- Use a determinate bar for one measure against its limit, with the amounts written beside it: carbon budget spent, tickets closed against the month's target.
+- For parts of a whole told apart (work orders by status), use a segmented bar.
+- For a measure over time, use a line chart.
+- For data loading in a card, use `AsyncContent`, which shows the right bar or skeleton for each state.
+
+## Usage
+
+```tsx
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
+import Typography from '@mui/material/Typography';
+
+<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+  <Typography id="budget-label" variant="body2">Carbon budget spent</Typography>
+  <Typography variant="body2" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
+    $1,490,000 of $2,400,000
+  </Typography>
+</Box>
+<LinearProgress variant="determinate" value={62} aria-labelledby="budget-label" />
+```
+
+`value` is a percentage from 0 to 100. Work it out from the amounts and round it, since screen readers read it out as it is, and write the amounts, formatted with `Intl`, beside the bar: the bar shows the proportion, the text the numbers.
+
+## Variants
+
+- **Determinate.** `variant="determinate"`: a measure against its limit, in the primary color.
+- **Over the limit.** A full bar with `color="error"` (or `warning` when it's close), and text that says by how much. Set `aria-valuetext` to the real share ("109% of budget"), since `value` stops at 100.
+- **Indeterminate.** The default variant: work with no known end, named with `aria-label`.
+
+## Do and don't
+
+- Do write the amounts beside the bar, in full, with their unit.
+- Don't make people read a number off the bar's length.
+- Do color the bar with an intent only for a status (over budget, close to it), and say it in the text too.
+- Don't color a bar to decorate it; the primary color is the default for a reason.
+- Do keep the bar at MUI's default height.
+- Don't stack several bars to show parts of a whole; use a segmented bar.
+
+## MUI departures
+
+None of Kilowatt's departures change `LinearProgress`.
+
+Theme-wide departures (CSS variables, the navy primary for the bar and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- MUI gives the bar `role="progressbar"`, and a determinate bar `aria-valuenow`, `aria-valuemin` and `aria-valuemax`.
+- Name every bar: `aria-labelledby` pointing at its visible label, or `aria-label` when it has none.
+- When the real value is past 100%, set `aria-valuetext` to it.
+- The amounts are text beside the bar, and an overrun is said in words, so neither rests on the bar's length or color.
+
+## Related
+
+- Segmented bar for parts of a whole in one bar.
+- AsyncContent for loading states.
+
+<Stories includePrimary={false} />

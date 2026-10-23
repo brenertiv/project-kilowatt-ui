@@ -66,8 +66,18 @@ export function chartColors(scheme: ColorScheme) {
     band: color(palette.action.hover),
     /** Target and reference lines, drawn dashed. */
     reference: color(palette.text.secondary),
+    /** The intents, for a chart colored by status rather than by series (a score in its bands). Never both in one chart. */
+    status: {
+      success: color(palette.success.main),
+      info: color(palette.info.main),
+      warning: color(palette.warning.main),
+      error: color(palette.error.main),
+    },
   };
 }
+
+/** A status a chart can color by: one of the intents. */
+export type ChartStatus = keyof ReturnType<typeof chartColors>['status'];
 
 /** How value axes write their numbers: compact, in the viewer's locale (the `compact-axis-numbers` departure). */
 export { axisNumberFormat } from './departures';
@@ -87,7 +97,12 @@ export const tooltipNumberFormat = '#,###.##';
 export type ChartInset = 0 | 1 | 2;
 
 /** How a series asks for its color: a fixed `slot` for a product meaning, `neutral` for what isn't the focus, or neither for the next free slot. */
-export type SeriesColor = { slot?: number; neutral?: boolean };
+export type SeriesColor = {
+  /** The `chart.series` slot, 0 to 5, for a product meaning (`meaningColor` from `src/charts/meanings`), so it's one color on every chart. Default: the next free slot. */
+  slot?: number;
+  /** Draws it in `chart.neutral`: context, such as a baseline or the previous period, rather than the point. Default `false`. */
+  neutral?: boolean;
+};
 
 /**
  * The color for each series, in order (Rules → Charts): `neutral` series take `chart.neutral`;
@@ -151,4 +166,64 @@ export function axisUnit(root: am5.Root, chart: am5xy.XYChart, axis: am5xy.Axis<
   chart.plotContainer.events.on('boundschanged', place);
   label.events.on('boundschanged', place);
   return label;
+}
+
+/** A target or benchmark the values are read against, drawn as a dashed line across the plot. */
+export type ReferenceLine = {
+  /** The value on the value axis. */
+  value: number;
+  /** What the line is, in sentence case: `Portfolio benchmark`. Its full value and unit follow it on the chart. */
+  label: string;
+  /** Sets the label under its line instead of above it, where the data runs just above the line. Default `false`. */
+  labelBelow?: boolean;
+};
+
+/**
+ * Draws targets and benchmarks on a value axis (the `reference-lines` departure): each a dashed line in
+ * the reference color across the plot, labeled "Name: value unit" at the plot's left edge, above its line
+ * (or below, with `labelBelow`), on a plate of the card surface. The labels sit over the series, so no line
+ * runs through the text, at the left, where the oldest data is, so they never cover the latest values.
+ *
+ * @param root - The chart's root.
+ * @param chart - The XY chart the axis belongs to.
+ * @param axis - The value axis the lines sit on.
+ * @param references - The lines to draw.
+ * @param unit - The axis's unit, written after each value.
+ * @param colors - The chart colors from `useChart`.
+ */
+export function referenceLines(
+  root: am5.Root,
+  chart: am5xy.XYChart,
+  axis: am5xy.ValueAxis<am5xy.AxisRenderer>,
+  references: ReferenceLine[],
+  unit: string,
+  colors: ReturnType<typeof chartColors>,
+) {
+  for (const { value, label, labelBelow } of references) {
+    const item = axis.makeDataItem({ value });
+    axis.createAxisRange(item);
+    // forceHidden: false, since a chart that hides its axis's own grid (a sparkline) still shows its references.
+    item.get('grid')?.setAll({ forceHidden: false, stroke: colors.reference, strokeOpacity: 1, strokeDasharray: [4, 4], location: 0 });
+    item.get('label')?.set('forceHidden', true);
+    // The label is the plot's own, not the axis range's, so it sits over the series at the left edge whichever side the axis is on.
+    const text = chart.plotContainer.children.push(
+      am5.Label.new(root, {
+        text: `${label}: ${root.numberFormatter.format(value, tooltipNumberFormat)} ${unit}`,
+        fill: colors.reference,
+        x: 0,
+        centerY: labelBelow ? 0 : am5.p100,
+        paddingTop: 2,
+        paddingBottom: 2,
+        paddingLeft: 4,
+        paddingRight: 4,
+        background: am5.Rectangle.new(root, { fill: colors.surface, fillOpacity: 1 }),
+      }),
+    );
+    const place = () => text.set('y', axis.get('renderer').positionToCoordinate(axis.valueToPosition(value)));
+    axis.events.on('boundschanged', place);
+    axis.onPrivate('min', place);
+    axis.onPrivate('max', place);
+    axis.onPrivate('selectionMin', place);
+    axis.onPrivate('selectionMax', place);
+  }
 }
