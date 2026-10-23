@@ -62,6 +62,12 @@ export type Lookup = {
 };
 
 export type ActionStatus = Lookup;
+export type ActionType = Lookup;
+export type BudgetStatus = Lookup;
+export type ActionCategory = Lookup;
+export type ActionRequestStatus = Lookup;
+export type ProjectType = Lookup;
+export type ProjectStatus = Lookup;
 export type ActionPriority = Lookup;
 export type AlertTypeCategory = Lookup;
 export type UtilityBillType = Lookup;
@@ -266,6 +272,11 @@ export type EntityRecord = {
 
 export const lookupPaths = {
   action_status: '/action_status/',
+  action_type: '/action_type/',
+  budget_status: '/budget_status/',
+  action_category: '/action_category/',
+  action_request_status: '/action_request_status/',
+  project_type: '/project_type/',
   action_priority: '/action_priority/',
   alert_type: '/alert_type/',
   alert_type_category: '/alert_type_category/',
@@ -277,9 +288,409 @@ export type LookupName = keyof typeof lookupPaths;
 
 export type LookupRecord = {
   action_status: ActionStatus;
+  action_type: ActionType;
+  budget_status: BudgetStatus;
+  project_type: ProjectType;
+  action_category: ActionCategory;
+  action_request_status: ActionRequestStatus;
   action_priority: ActionPriority;
   alert_type: AlertType;
   alert_type_category: AlertTypeCategory;
   utility_bill_type: UtilityBillType;
   location_type: LocationType;
+};
+
+/**
+ * The kinds of score the API serves, each from 0 to 1: work orders (`action`), tenant billing, alerts
+ * (`notification`), insights and ENERGY STAR. Each is served at `/{kind}/score/` and
+ * `/{kind}/score/average/`, scoped by a `/client/{id}` or `/location/{id}` prefix.
+ */
+export const scoreKinds = ['action', 'tenant_billing', 'notification', 'insight', 'energy_star'] as const;
+
+export type ScoreKind = (typeof scoreKinds)[number];
+
+export type ScoreParams = {
+  /** First day of the window, `YYYY-MM-DD`. Required. */
+  from_time: IsoDate;
+  /** Last day of the window, `YYYY-MM-DD`, inclusive. Required. */
+  to_time: IsoDate;
+  /** `/score/` only: one row per day across locations rather than one per location per day. */
+  aggregate?: boolean;
+  location_id?: Uuid;
+  /** Comma-separated location ids. */
+  location_id__in?: string;
+};
+
+/** One location's score; `null` where the location has nothing to score. */
+export type LocationScore = { location_id: Uuid; score: number | null };
+
+/** `/{kind}/score/average/`: the window's average, and the same-length window before it. */
+export type ScoreAverage = {
+  score: number | null;
+  location_scores: LocationScore[];
+  previous_score: number | null;
+  previous_from_time: IsoDate;
+  previous_to_time: IsoDate;
+  previous_location_scores: LocationScore[];
+};
+
+/** `/{kind}/score/?aggregate=true`: one row per day. */
+export type ScorePoint = { timestamp: IsoDate; score: number | null };
+
+/** `/{kind}/score/`: one row per location per day. */
+export type LocationScorePoint = ScorePoint & { location_id: Uuid };
+
+/** `/action/count/` takes the work-order filters, plus `group_by` for one row per value of a field. */
+export type CountParams = ListParams & {
+  /** A field to group by, e.g. `action_status_id`; each row carries that field and its `count`. */
+  group_by?: string;
+};
+
+/** `/action/count/` without `group_by`. */
+export type Count = { count: number };
+
+/** One row of `/action/count/?group_by=…`: the grouped field's value under its own name, and the count. */
+export type GroupedCount = { count: number; [field: string]: string | number | null };
+
+/** The series `/location_data/` serves. Energy is in kBtu, GHG in tCO₂e. */
+export type LocationDataSeries = 'energy' | 'electricity' | 'natural_gas' | 'water' | 'ghg';
+
+export type LocationDataParams = {
+  series: LocationDataSeries;
+  /** Comma-separated series, to fetch several at once into `series_data`. */
+  series__in?: string;
+  interval: 'month';
+  /** Start of the window, `YYYY-MM-DD`. */
+  fromTime: IsoDate;
+  /** End of the window, `YYYY-MM-DD`. */
+  toTime: IsoDate;
+  normalization?: 'actual' | 'weather';
+  /** Client scope only: comma-separated location ids, to page through a portfolio. */
+  location_id__in?: string;
+};
+
+/**
+ * How complete a point is. `OK` and `Partial` are observed; a month with part of its days recorded is
+ * `Partial`, with `coverage` below 1.
+ */
+export type DataStatus = 'OK' | 'Partial';
+
+/** One month of one series at one location. `ts` is the month's start, local time, without an offset. */
+export type LocationDataPoint = {
+  point_key: string;
+  ts: string;
+  value: number;
+  unit: string;
+  /** The share of the month with data, 0 to 1. */
+  coverage: number;
+  data_provenance: string;
+  source: string;
+  is_interpolated: boolean;
+  data_status: DataStatus;
+};
+
+/** One series at one location: its points (a month with no data has none), and the first and last month with data. */
+export type LocationSeriesData = {
+  series: LocationDataSeries;
+  unit: string;
+  points: LocationDataPoint[];
+  data_range: { first_ts: string | null; last_ts: string | null };
+};
+
+export type LocationData = LocationSeriesData & {
+  location_id: Uuid;
+  location_name: string;
+  series_data: Partial<Record<LocationDataSeries, LocationSeriesData>>;
+};
+
+/** `/location/{id}/location_data/` (one location) and `/client/{id}/location_data/` (one per building). */
+export type LocationDataResponse = {
+  fromTime: IsoDateTime;
+  toTime: IsoDateTime;
+  interval: 'month';
+  series: LocationDataSeries;
+  series__in: LocationDataSeries[];
+  scope: 'building';
+  normalization: 'actual' | 'weather';
+  normalization_method: string | null;
+  included_data_provenance: string[];
+  locations: LocationData[];
+};
+
+/**
+ * Carbon and capital planning. A budget is a plan: a capital plan someone wrote, or a carbon plan the
+ * Carbon Planner generated (`auto_generated`). Projects belong to budgets through `budgetproject_set`, and
+ * their costs fall in years through `projectcost_set`. Shapes read from the live API in October 2026.
+ */
+
+/** Budget statuses by id, as the API serves them. Only approved plans count toward a portfolio's totals. */
+export const budgetStatusIds = { underReview: 1, declined: 2, approved: 3, generating: 4, failed: 5 } as const;
+
+/** `/budget/`, `/client/{id}/budget/`: a plan, its status a bare id unless `budget_status=true`. */
+export type Budget = {
+  id: Uuid;
+  client: Uuid;
+  budget_status: Expandable<BudgetStatus>;
+  name: string;
+  description: string;
+  auto_generated: boolean;
+  /** The plan's first day, `YYYY-MM-DD`. */
+  start_year: IsoDate;
+};
+
+/** A plan's totals, with `totals=true`. Money is US dollars; CO₂ is kilograms a year. */
+export type CarbonPlanTotals = {
+  total_investment: number;
+  total_annual_co2_reduction_kg: number;
+  total_annual_savings: number;
+  avg_roi: number | null;
+  avg_payback_years: number | null;
+  npv: number | null;
+  discount_rate: number | null;
+  total_actual_cost: number | null;
+};
+
+/** `/client/{id}/carbon_planner/`, cursor paged: one carbon plan. */
+export type CarbonPlanSummary = {
+  id: Uuid;
+  name: string;
+  description: string;
+  created: IsoDateTime;
+  start_year: IsoDate;
+  client_id: Uuid;
+  budget_status_id: number;
+  created_by_id: number | null;
+  auto_generated: boolean;
+  carbon_planner_preset_id: number | null;
+  carbon_planner_preset_config: Record<string, unknown> | null;
+  timeline_years: number;
+  crrem_pathway_version: string;
+  total_budget_constraint: number | null;
+  /** The plan's baseline, in kgCO₂e a year: a decimal string, as the API sends it. */
+  baseline_emissions_kgco2e: string | null;
+  portfolio_strengths: string[];
+  portfolio_gaps: string[];
+  portfolio_reasoning: string;
+  /** With `budget_status=true`. */
+  budget_status?: BudgetStatus;
+  /** With `totals=true`. */
+  totals?: CarbonPlanTotals;
+};
+
+/** One project in a plan's chart data. */
+export type ChartDataProject = {
+  id: Uuid;
+  name: string;
+  project_type_name: string;
+  location_name: string;
+  project_status: string;
+  start_year: number;
+  cost: number;
+  annual_savings: number | null;
+  /** kgCO₂e a year, once the project is done. */
+  co2_avoided: number | null;
+  duration_years: number;
+};
+
+/** One year of a plan: what it spends, and what it has saved and avoided by then (cumulative, kg and US dollars). */
+export type YearlySummaryRow = {
+  year: number;
+  spend: number;
+  cumulative_co2_reduction: number;
+  cumulative_cost_savings: number;
+  projects_starting: number;
+  budget_utilization: number;
+};
+
+/** A year of the CRREM decarbonization pathway, in kgCO₂e. */
+export type CrremPathwayPoint = { year: number; kgco2e: number };
+
+/** `/budget/{id}/carbon_planner/chart-data/`. */
+export type ChartDataResponse = {
+  projects: ChartDataProject[];
+  yearly_summary: YearlySummaryRow[];
+  crrem_pathway?: CrremPathwayPoint[];
+  crrem_pathway_version?: string;
+  npv?: number | null;
+  discount_rate?: number | null;
+  npv_methodology?: string;
+};
+
+/** `/client/{id}/carbon_planner/pathway/`: the portfolio's baseline and the CRREM pathway, whatever the plans. */
+export type PortfolioPathwayResponse = {
+  baseline_kgco2e: number | null;
+  crrem_pathway: CrremPathwayPoint[];
+  crrem_pathway_version: string;
+};
+
+/** One year's cost of a project. */
+export type ProjectCost = { id: Uuid; project: Uuid; project_date: IsoDate; value: number };
+
+/** A project's place in a budget. */
+export type BudgetProject = { id: Uuid; budget: Uuid; project: Uuid };
+
+/**
+ * `/project/`, `/client/{id}/project/`, `/location/{id}/project/`, `/budget/{id}/project/`, cursor paged.
+ * Relations expand per field (`project_type=true`, `location=true`); the cost and budget sets are
+ * included only when asked for (`projectcost_set=true`, `budgetproject_set=true`).
+ */
+export type Project = {
+  id: Uuid;
+  project_type: Expandable<ProjectType>;
+  project_priority: number;
+  expense_type: number;
+  name: string;
+  description: string;
+  recommendation: string;
+  auto_generated: boolean;
+  resourcetype: 'LocationProject';
+  project_status: Expandable<ProjectStatus>;
+  /** kgCO₂e a year, once the project is done; `null` where it isn't estimated. */
+  co2_avoided: number | null;
+  payback_period: number | null;
+  declined: boolean;
+  location: Expandable<Location>;
+  projectcost_set?: ProjectCost[];
+  budgetproject_set?: BudgetProject[];
+};
+
+/**
+ * Tenant billing. A submeter log is one building's bill to its tenants for one utility and one billing
+ * period: what the utility charged the building (`Utility Total Cost`) and what the tenants are billed
+ * (`Total Cost`). The figures sit in `properties` under display names, as the API sends them. Shapes read
+ * from the live API in October 2026.
+ */
+
+/** A utility type, as a submeter log expands it with `utility_type=true`. */
+export type UtilityType = { id: number; name: string; tag_name: string };
+
+/** The figures of a submeter log the dashboard reads. The API sends many more (per-area intensities, demand, tax), all under display names. */
+export type SubmeterLogProperties = {
+  /** `YYYY-MM-DD`. */
+  'Billing Period Start': IsoDate;
+  /** `YYYY-MM-DD`. */
+  'Billing Period End': IsoDate;
+  'Building Name': string;
+  /** What the tenants are billed, in US dollars. */
+  'Total Cost': number;
+  /** What the utility charged the building, in US dollars. */
+  'Utility Total Cost': number;
+  /** `Total Cost` over `Utility Total Cost`, 0 to 1. */
+  'Recovery Percentage': number;
+  'Tenant Count': number;
+  /** 0 to 1. */
+  'Leased Square Footage Percentage': number;
+  [figure: string]: string | number;
+};
+
+/** `/submeter_log/` (with `client_hierarchy_id`) and `/location/{id}/submeter_log/`, cursor paged. */
+export type SubmeterLog = {
+  id: number;
+  client_id: Uuid;
+  /** A bare id unless `utility_type=true`. */
+  utility_type: Expandable<UtilityType>;
+  issue_date: IsoDate;
+  processed_count: number;
+  submeter_log_status: number;
+  reading_type: number;
+  display_reading_type: number | null;
+  estimated: boolean;
+  /** With `properties=true`. */
+  properties?: SubmeterLogProperties;
+};
+
+export type SubmeterLogParams = ListParams & {
+  /** The portfolio, at the top-level route. */
+  client_hierarchy_id?: Uuid;
+  /** First day of the window, `YYYYMMDD`; logs whose billing period ends in the window are served. */
+  fromTime?: string;
+  /** Last day of the window, `YYYYMMDD`. */
+  toTime?: string;
+  utility_type?: boolean;
+  properties?: boolean;
+  submeter_bills?: boolean;
+  utility_bills?: boolean;
+};
+
+/** Ticket statuses by id, as the API serves them. Pending approval is a tenant's request no one has approved yet. */
+export const actionRequestStatusIds = { pendingApproval: 1, declined: 2, open: 3, inProgress: 4, completed: 5 } as const;
+
+/**
+ * Data coverage: how much of each period has bills behind it. A meter's `data_coverage` lists the
+ * window's days in segments: a segment with a `meter_consumption` (or, for a utility account, a
+ * `utility_bill`) is covered by a bill, and one with `null` is a gap. Shapes read from the live API in
+ * October 2026.
+ */
+
+/** An ENERGY STAR meter type and the utility it measures, as `/pm_type_of_meter/?utilitytypepmtypeofmeter=true` serves it. */
+export type PmTypeOfMeter = {
+  id: number;
+  name: string;
+  utilitytypepmtypeofmeter?: { id: number; utility_type: UtilityType; type_of_meter: number; miscellaneous: boolean };
+};
+
+/** The bill behind a covered segment of a meter. */
+export type MeterConsumption = {
+  id: number;
+  start_date: IsoDate;
+  end_date: IsoDate;
+  usage: number;
+  cost: number | null;
+  estimated_value: boolean;
+  meter: number;
+  demand: number | null;
+  demand_cost: number | null;
+};
+
+/** A segment of a meter's window: covered when it has a `meter_consumption`, a gap when that's `null`. */
+export type MeterCoveragePeriod = { start_date: IsoDate; end_date: IsoDate; days: number; meter_consumption: MeterConsumption | null };
+
+/** `/pm_meter/data_coverage/` (top level, or under `/client/{id}` or `/location/{id}`), cursor paged: an ENERGY STAR meter and its coverage over `data_coverage_start_date`–`data_coverage_end_date`. */
+export type PmMeterCoverage = {
+  id: number;
+  /** A bare id unless `type=true`. */
+  type: Expandable<{ id: number; name: string }>;
+  name: string;
+  metered: boolean;
+  unit_of_measure: number;
+  /** The meter's first bill, `YYYY-MM-DD`: it isn't expected to have data before. */
+  first_bill_date: IsoDate | null;
+  in_use: boolean;
+  /** When the meter was retired, `YYYY-MM-DD`: it isn't expected to have data after. */
+  inactive_date: IsoDate | null;
+  other_description: string | null;
+  access_level: number;
+  aggregate_meter: number | null;
+  /** The ENERGY STAR property the meter belongs to. */
+  property: number;
+  associated: boolean;
+  created_by: string;
+  created_date: IsoDateTime;
+  last_updated_by: string;
+  last_updated_date: IsoDateTime;
+  data_coverage: MeterCoveragePeriod[];
+};
+
+/** A segment of a utility account's window: covered when it has a `utility_bill`. */
+export type AccountCoveragePeriod = { start_date: IsoDate; end_date: IsoDate; days: number; utility_bill: Uuid | null };
+
+/** `/location_utility_account/data_coverage/` (top level, or under `/client/{id}` or `/location/{id}`), cursor paged: a building's utility account and its bill coverage. */
+export type UtilityAccountCoverage = {
+  id: Uuid;
+  location: Uuid;
+  utility_company: number;
+  /** A bare id unless `utility_bill_type=true`; `utility_type` is the utility it bills. */
+  utility_bill_type: Expandable<{ id: number; name: string; utility_type: number }>;
+  tariff: number | null;
+  clean_utility_account_number: string;
+  additional_utility_account_number: string | null;
+  allocation: number;
+  enabled: boolean;
+  start_date: IsoDate | null;
+  end_date: IsoDate | null;
+  landlord_tenant_controlled: boolean | null;
+  meter_pm_meter: Uuid | null;
+  meter_pm_waste_meter: Uuid | null;
+  utility_account: Uuid;
+  data_coverage: AccountCoveragePeriod[];
 };
