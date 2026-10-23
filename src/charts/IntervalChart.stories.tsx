@@ -12,6 +12,11 @@ const when = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', 
 const energy = intervalDemand.reduce((total, row) => total + row.demand / 4, 0);
 const MWh = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
+const limit = { value: 1300, label: 'Demand limit' };
+const overLimit = intervalDemand.filter((row) => row.demand > limit.value);
+const daysOver = new Set(overLimit.map((row) => Math.floor(row.date / 86400000)));
+const longDay = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' });
+
 const demand = [{ field: 'demand', name: 'Demand' }];
 const use = [{ field: 'use', name: 'Energy use' }];
 // Each 15-minute reading of demand in kW is a quarter hour of energy: kWh = kW / 4.
@@ -50,6 +55,24 @@ export const Peak: Story = {
   args: {
     aggregate: 'high',
     summary: `Demand peaked at ${kW.format(peak.demand)} kW on ${when.format(peak.date)}; summer weekday peaks run about twice the winter weekend ones.`,
+  },
+};
+
+/**
+ * A target to read the readings against: `target` draws a dashed reference line, and the line is `chart.neutral`
+ * within it and takes its hue, filled to the target, past it, so the readings over the limit stand out. The tooltip
+ * says "over target". With `aggregate="high"`, zooming out keeps every day that went over.
+ */
+export const Target: Story = {
+  parameters: { card: { title: 'Peak Demand' } },
+  args: {
+    aggregate: 'high',
+    target: limit,
+    summary: `Demand went over the ${kW.format(limit.value)} kW limit on ${daysOver.size} days, from ${longDay.format(overLimit[0].date)} to ${longDay.format(overLimit[overLimit.length - 1].date)}, in ${kW.format(overLimit.length)} of ${readings} 15-minute readings.`,
+  },
+  play: async ({ canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /over the 1,300 kW limit/ });
+    await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
   },
 };
 

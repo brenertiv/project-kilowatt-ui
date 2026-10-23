@@ -4,7 +4,7 @@ import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { Icon } from '../icons';
-import { axisUnit, legend, seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
+import { axisUnit, legend, referenceLines, seriesColors, tooltipNumberFormat, type ChartInset, type ReferenceLine, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
 /** One line of readings: the data field it plots, its name in the legend and tooltip, and how it takes its color. */
@@ -18,6 +18,12 @@ export type IntervalSeries = SeriesColor & {
 /** How readings combine into a longer interval when the chart groups them: `average` for a rate (kW), `sum` for an amount (kWh), `high` for a peak. */
 export type IntervalAggregate = 'average' | 'sum' | 'high';
 
+/** A target the readings are held to, such as a demand limit: a dashed reference line, with the readings past it highlighted. */
+export type IntervalTarget = ReferenceLine & {
+  /** Which side of the target is past it: `above` for a limit not to exceed, `below` for a minimum to keep. Default `'above'`. */
+  past?: 'above' | 'below';
+};
+
 export type IntervalChartProps = {
   /** The readings, oldest first, each with a UTC timestamp in `dateField` and a number per series: tens of thousands of rows is expected. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
   data: Record<string, number>[];
@@ -27,6 +33,8 @@ export type IntervalChartProps = {
   unit: string;
   /** How readings combine when the chart groups them into hours, days, weeks or months. Default `'average'`. */
   aggregate?: IntervalAggregate;
+  /** A target the readings are held to: a dashed line labeled with its name and value. The line is drawn in `chart.neutral` where it's within the target and in its own hue, filled to the target, where it's past it; the tooltip says so in words. Keep it stable, like `data`. Default none. */
+  target?: IntervalTarget;
   /** One sentence on what the chart shows, with the numbers that matter. It isn't shown: it's the figure's accessible name, the chart's text alternative for screen readers. */
   summary: string;
   /** The field in each row that holds the UTC timestamp. Default `'date'`. */
@@ -57,14 +65,8 @@ const scrollbarGap = 8;
 /** The reset button's width in pixels: a medium `IconButton`, as tall as the scrollbar. */
 const resetWidth = 40;
 
-/** How the tooltip writes a point's date, by the interval in view, in amCharts' date format. */
-const dateFormats: Partial<Record<am5.time.TimeUnit, string>> = {
-  minute: 'MMM d, yyyy, h:mm a',
-  hour: 'MMM d, yyyy, h a',
-  day: 'EEE, MMM d, yyyy',
-  week: "'Week of' MMM d, yyyy",
-  month: 'MMMM yyyy',
-};
+/** How strongly the stretch past a target is filled, in the line's hue: the amCharts demo's tint, light enough that gridlines show through. */
+const pastFillOpacity = 0.2;
 
 /** What the tooltip says a grouped value is: `daily average`, `weekly peak`. */
 const periods: Partial<Record<am5.time.TimeUnit, string>> = { hour: 'hourly', day: 'daily', week: 'weekly', month: 'monthly' };
@@ -78,7 +80,9 @@ const aggregates: Record<IntervalAggregate, string> = { average: 'average', sum:
  * with two fingers (or pinch, or turn the mouse wheel) over the plot to zoom, swipe sideways to pan, drag
  * across the plot to zoom to a range, use the scrollbar below it to pan or resize the view (its grips take the arrow keys), and
  * the button at the scrollbar's right to show the whole period again. Lines take `chart.series` colors
- * in order, or a fixed `slot`; the scrollbar's preview is `chart.neutral`. The chart sits in a `figure`
+ * in order, or a fixed `slot`; the scrollbar's preview is `chart.neutral`. A `target` draws a dashed reference
+ * line and highlights the readings past it: the line is `chart.neutral` within the target and takes its hue,
+ * filled to the target, past it. The chart sits in a `figure`
  * named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
  * @summary A zoomable line chart of fine-interval readings that groups them by hour, day, week or month as it zooms, named by a one-line summary for screen readers.
@@ -89,6 +93,7 @@ export function IntervalChart({
   series,
   unit,
   aggregate = 'average',
+  target,
   summary,
   dateField = 'date',
   intervalMinutes = 15,
@@ -114,6 +119,8 @@ export function IntervalChart({
           groupIntervals: [baseInterval, ...groupIntervals.filter(({ timeUnit }) => timeUnit !== 'minute')],
           maxDeviation: 0,
           renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 60 }),
+          // The cursor's date, on the axis: amCharts writes it for the interval in view (its `tooltipDateFormats`).
+          tooltip: am5.Tooltip.new(root, {}),
         }),
       );
       // A label at the plot's left edge would sit half outside the chart, so none is drawn there.
@@ -128,6 +135,9 @@ export function IntervalChart({
       xAxis.on('end', updateZoomed);
       const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
       axisUnit(root, chart, yAxis, unit);
+      if (target && series.filter(({ neutral }) => !neutral).length > 1) {
+        console.warn('An IntervalChart with a target has more than one colored line; highlight one line against its target (Rules → Charts).');
+      }
 
       const strokes = seriesColors(series, colors);
       const lines = series.map(({ field, name }, i) =>
@@ -147,20 +157,44 @@ export function IntervalChart({
       );
       for (const line of lines) line.strokes.template.set('strokeWidth', 2);
 
-      // The tooltip writes the date at the interval in view, and says when a value stands for a group of readings.
-      const labelTooltips = () => {
-        const interval = xAxis.getPrivate('groupInterval') ?? baseInterval;
-        const period = interval.timeUnit === 'minute' ? undefined : periods[interval.timeUnit];
-        const note = period ? ` (${period} ${aggregates[aggregate]})` : '';
-        series.forEach(({ name }, i) => {
-          lines[i].get('tooltip')?.set(
-            'labelText',
-            `{valueX.formatDate("${dateFormats[interval.timeUnit]}")}\n${name}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}${note}`,
-          );
+      // A target: the dashed reference line, and each line in chart.neutral within it and in its own hue past it,
+      // filled to the target (the series fill reaches the axis, and the range clips it to the target's far side).
+      const past = target?.past ?? 'above';
+      const isPast = (value: number | undefined) => target !== undefined && value !== undefined && (past === 'above' ? value > target.value : value < target.value);
+      if (target) {
+        // The label sits on its line, so it stays with the line however far the readings run past it.
+        referenceLines(root, chart, yAxis, [target], unit, colors, true);
+        lines.forEach((line, i) => {
+          line.set('stroke', colors.neutral);
+          const item = yAxis.makeDataItem({ value: target.value, endValue: past === 'above' ? Number.MAX_SAFE_INTEGER : 0 });
+          const range = line.createAxisRange(item) as am5xy.ILineSeriesAxisRange;
+          range.strokes?.template.setAll({ stroke: strokes[i], strokeWidth: 2 });
+          range.fills?.template.setAll({ fill: strokes[i], fillOpacity: pastFillOpacity, visible: true });
+          // The range marks the series, not the axis: the reference line above is the target's only mark on the axis.
+          item.get('grid')?.set('forceHidden', true);
+          item.get('label')?.set('forceHidden', true);
+          item.get('tick')?.set('forceHidden', true);
         });
+      }
+
+      // The tooltip says when a value stands for a group of readings, and says in words when it's past the target,
+      // which the line shows by color. The date is on the date axis's tooltip.
+      let period: string | undefined;
+      const updatePeriod = () => {
+        const interval = xAxis.getPrivate('groupInterval') ?? baseInterval;
+        period = interval.timeUnit === 'minute' ? undefined : periods[interval.timeUnit];
       };
-      labelTooltips();
-      xAxis.events.on('groupintervalchanged', labelTooltips);
+      series.forEach(({ name }, i) => lines[i].get('tooltip')?.set('labelText', `${name}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`));
+      for (const line of lines) {
+        const tooltip = line.get('tooltip');
+        tooltip?.label.adapters.add('text', (text) => {
+          if (!text) return text;
+          const notes = [period && `${period} ${aggregates[aggregate]}`, isPast((tooltip.dataItem as am5.DataItem<am5xy.ILineSeriesDataItem> | undefined)?.get('valueY')) && `${past === 'above' ? 'over' : 'under'} target`].filter(Boolean);
+          return notes.length ? `${text} (${notes.join(', ')})` : text;
+        });
+      }
+      updatePeriod();
+      xAxis.events.on('groupintervalchanged', updatePeriod);
 
       chart.set('cursor', am5xy.XYCursor.new(root, { behavior: 'zoomX', xAxis }));
       if (lines.length > 1) chart.children.push(legend(root)).data.setAll(lines);
@@ -206,7 +240,7 @@ export function IntervalChart({
       for (const line of lines) line.data.setAll(data);
       preview.data.setAll(data);
     },
-    [data, series, unit, aggregate, dateField, intervalMinutes],
+    [data, series, unit, aggregate, target, dateField, intervalMinutes],
   );
   const ref = useChart(build);
 

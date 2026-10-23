@@ -49,12 +49,19 @@ Set `aggregate` by what the readings measure, so a grouped point means the same 
 <IntervalChart data={use} series={[{ field: 'use', name: 'Energy use' }]} unit="kWh" aggregate="sum" summary="…" />
 ```
 
+A target the readings are held to, such as a demand limit, takes `target`: a dashed reference line whose name and value sit on a faint plate centered on the line, at the plot's right edge beside the value axis (amCharts' own label for the line, which it moves with the line), and the readings past it highlighted. Set `past: 'below'` for a minimum to keep rather than a limit not to exceed:
+
+```tsx
+<IntervalChart data={readings} series={series} unit="kW" aggregate="high" target={{ value: 1300, label: 'Demand limit' }} summary="…" />
+```
+
 Over the plot, swipe up or down with two fingers on a trackpad (or pinch, or turn the mouse wheel) to zoom, and swipe sideways to pan; drag across the plot to zoom to a range. The scrollbar below the plot previews the whole period, month by month, on a faint tint (`action.hover`); drag its grips to resize the view or its middle to pan, or focus a grip and use the arrow keys. The button at the scrollbar's right shows the whole period again; it's disabled while the whole period is in view. Outside the plot, the wheel scrolls the page.
 
 ## Variants
 
 - **Average.** A rate (demand in kW) averaged over each group. Zoomed out, a year reads as a weekday-and-weekend comb on a seasonal curve; zoomed in, a week shows its daily profile.
 - **Peak.** `aggregate="high"`: each group's highest reading, so the peaks that set demand charges survive zooming out. The tooltip says "daily peak".
+- **Target.** `target`: a dashed reference line, with the readings past it highlighted, after amCharts' [horizontal target demo](https://www.amcharts.com/demos/line-chart-with-horizontal-target/). The line is `chart.neutral` where it's within the target and takes its hue, filled to the target, where it's past it (Rules → Charts → Highlight, don't rainbow), and the tooltip says "over target". Pair a limit with `aggregate="high"`, so zooming out keeps every day that went over; an average can hide them.
 - **Total.** `aggregate="sum"`: an amount (energy in kWh) added up over each group, so a point is the hour's, day's, week's or month's total, and the axis rescales as you zoom. The tooltip says "daily total".
 
 Lines take `chart.series` in order, or a `slot`, or `neutral`, like a line chart's; the scrollbar previews the first line. Compare at most a few lines: dense readings overlap quickly.
@@ -67,6 +74,8 @@ Lines take `chart.series` in order, or a `slot`, or `neutral`, like a line chart
 - Don't sum a rate or average an amount; a summed kW means nothing, and an averaged kWh hides the total.
 - Do write `summary` as one sentence with the range and the pattern that matter.
 - Don't leave the summary generic ("Demand chart"); it's what screen readers say for the whole chart.
+- Do pair a demand limit with `aggregate="high"`, so the days over it still show when the chart groups by day or week.
+- Don't give a chart with a `target` a second colored line; highlight one line against its target.
 - Do use a line chart when every point fits; zooming is only worth it when it doesn't.
 - Don't make a chart taller than it needs to be; over the plot the wheel zooms the chart, so a tall one leaves less of the page to scroll from.
 
@@ -92,16 +101,18 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
 - `value-axis-side`: the value axis sits on the right.
 - `axis-units`: the value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
-- `full-value-tooltips`: every point has a tooltip with its date, exact value and unit (`tooltipNumberFormat`).
+- `full-value-tooltips`: every point has a tooltip with its exact value and unit (`tooltipNumberFormat`); the cursor's date shows on the date axis, written for the interval in view.
 - `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
 - `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
+- `reference-lines`: a `target` is a dashed `text.secondary` line, labeled with name, full value and unit by amCharts' own axis-range label: centered on the line at the plot's right edge, on a plate of `action.hover`.
 - `data-grouping`: readings group as the chart zooms out, by `aggregate`, and the tooltip names the grouping ("daily average").
 - `zoom-controls`: zoom with a two-finger swipe, a pinch or the wheel over the plot, pan with a sideways swipe, drag to zoom to a range, and an MUI `IconButton` to show the whole period.
 
 ## Accessibility
 
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
-- Every point shows its date, exact value and unit in a tooltip, and says when it stands for a group of readings ("hourly average", "daily peak"), so a grouped value never passes for a single reading.
+- Every point shows its exact value and unit in a tooltip, with its date on the date axis, and says when it stands for a group of readings ("hourly average", "daily peak"), so a grouped value never passes for a single reading.
+- With a `target`, the readings past it are marked three ways: in the line's hue rather than `chart.neutral`, by the fill between the line and the target, and by "over target" (or "under target") in the tooltip. Say how often and when they went past it in `summary`.
 - The scrollbar's grips are focusable sliders that take the arrow keys, so the view can be zoomed and panned without a pointer. Swiping, pinching and dragging across the plot are shortcuts for pointers.
 - The reset button is an MUI `IconButton` named "Show the whole period", beside the scrollbar it resets, and disabled while the whole period is in view.
 - The wheel and trackpad zoom the chart only while the pointer is over the plot; elsewhere they scroll the page.
