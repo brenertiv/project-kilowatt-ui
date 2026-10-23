@@ -29,6 +29,10 @@ Kilowatt is Enertiv's design system. It is Material UI with light and dark color
 12. **Maps.** MapLibre GL with CARTO's basemaps (Positron in light, Dark Matter in dark) and deck.gl for data, themed by one Kilowatt theme function, never by colors in map code. Load the basemap with `basemapStyle(scheme)` and take data colors from `mapColors(scheme)` (`src/maps/theme`): the land is the card surface, water is `map.water`, and data takes the chart roles and rules. Maps sit edge to edge in an outlined `Card`, use MUI buttons for controls, keep CARTO's compact attribution and have a text alternative. Departures from CARTO go in `src/maps/departures.ts` (the basemap theme is built from it). See Rules → Maps.
 13. **Use only documented props.** If a prop you need doesn't exist, say so rather than passing something undocumented.
 
+## Dashboard widgets
+
+Kilowatt is rebuilding the widgets of Enertiv's Portfolio Dashboard. `docs/dashboard-widgets.md` (Guides → Dashboard widgets) is the plan: the phases, which chart and recipe each widget maps to, what's built and what waits, and how to build a recipe. A recipe in `src/widgets` fetches with a query hook from `src/api`, maps the response with a tested function in `src/widgets/mappings.ts`, and draws a chart inside `AsyncContent`. Read the guide before adding or changing a widget, and update its table when you do.
+
 ## When you change the system
 
 - **New or changed components.** Every component gets `Name.stories.tsx` and `Name.mdx` in `src/components`, in the one format in `docs/stories.md` (Button is the reference): `parameters.muiComponents`, args only for non-default values, one story per variant and state with a JSDoc line, and a page with When to use, Usage, Do and don't, MUI departures and Accessibility sections. `src/components/docs.test.ts` enforces it. A component of our own also needs JSDoc (a description, `@summary`, `@import`, and a line for every prop with its default).
@@ -48,5 +52,6 @@ Kilowatt is Enertiv's design system. It is Material UI with light and dark color
 | `src/maps` | The reference maps (`SiteMap`), the CARTO basemap theme and `mapColors` (`theme.ts`), the departures from stock CARTO it's built from (`departures.ts`), the CARTO access token (`carto.ts`), and their tests. |
 | `src/icons.tsx` | The `Icon` component and the icon names it accepts. |
 | `src/api` | API types, the mock adapter, `AsyncState` and the query hooks. |
-| `src/fixtures/data` | The sample portfolio the mock API serves. |
+| `src/widgets` | Dashboard widget recipes, their mappings from API responses to chart props (`mappings.ts`), and their stories. |
+| `src/fixtures/data` | The sample portfolio the mock API serves, and the time series drawn from it (`series.ts`). |
 | `docs/` | Guides, which also appear in Storybook. |

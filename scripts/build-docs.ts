@@ -35,6 +35,7 @@ const guideTitles: Record<string, string> = {
   'stories.md': 'Writing stories',
   'data-layer.md': 'Data layer',
   'stack-overview.md': 'Stack overview',
+  'dashboard-widgets.md': 'Dashboard widgets',
 };
 
 /**
