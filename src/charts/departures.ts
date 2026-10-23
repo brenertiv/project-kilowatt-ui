@@ -16,7 +16,7 @@ import type { Theme } from '@mui/material/styles';
  */
 
 /** Kilowatt's reference charts, by component name. */
-export type ChartName = 'LineChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap';
+export type ChartName = 'LineChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap' | 'IntervalChart';
 
 /** What a theme entry's `apply` works with, for one chart root and color scheme. */
 export type ChartThemeContext = {
@@ -61,8 +61,8 @@ export type ChartDeparture = {
  */
 export const axisNumberFormat: Intl.NumberFormatOptions = { notation: 'compact' };
 
-const all: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap'];
-const xy: ChartName[] = ['LineChart', 'ColumnChart'];
+const all: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart'];
+const xy: ChartName[] = ['LineChart', 'ColumnChart', 'IntervalChart'];
 
 export const chartDepartures: ChartDeparture[] = [
   {
@@ -168,6 +168,31 @@ export const chartDepartures: ChartDeparture[] = [
     charts: xy,
     apply: ({ root }) => {
       root.numberFormatter.set('numberFormat', axisNumberFormat);
+    },
+  },
+  {
+    id: 'scrollbar-selection',
+    kind: 'theme',
+    title: 'The scrollbar stands out and shows its selection',
+    why: "amCharts fills a scrollbar with the chart's own background, rounded, so on a card it barely shows, and it hides the part of an XY chart's scrollbar between its grips (its thumb, at opacity 0 until hovered), only fading what's outside it, so the range in view is hard to see. Kilowatt drops the fade and tints the scrollbar faintly with `action.hover`, the range-band color, so it reads as a control apart from the plot, and squares it like the plot it previews. The chart shows the thumb (`scrollbar.thumb` at opacity 1), and the theme marks it as MUI marks a selected item: `primary` at `action.selectedOpacity`, a little stronger on hover, square and with no outline.",
+    charts: ['IntervalChart'],
+    apply: ({ theme, mui: { palette }, color }) => {
+      theme.rule('RoundedRectangle', ['scrollbar', 'main', 'background']).setAll({
+        fill: color(palette.action.hover),
+        fillOpacity: 1,
+        cornerRadiusTL: 0,
+        cornerRadiusTR: 0,
+        cornerRadiusBL: 0,
+        cornerRadiusBR: 0,
+      });
+      // amCharts fades what's outside the range in view toward the chart's background; the marked range does that job, so the scrollbar keeps its level throughout.
+      theme.rule('Graphics', ['scrollbar', 'overlay']).setAll({ fillOpacity: 0 });
+      const thumb = ['xy', 'scrollbar', 'thumb'];
+      const fill = color(palette.primary.main);
+      theme.rule('RoundedRectangle', thumb).setAll({ fill, fillOpacity: palette.action.selectedOpacity });
+      const hover = palette.action.selectedOpacity + palette.action.hoverOpacity;
+      theme.rule('RoundedRectangle', thumb).states.create('hover', { fill, fillOpacity: hover });
+      theme.rule('RoundedRectangle', thumb).states.create('down', { fill, fillOpacity: hover, stateAnimationDuration: 0 });
     },
   },
   {
@@ -335,5 +360,31 @@ export const chartDepartures: ChartDeparture[] = [
       where: 'Every heatmap',
     },
     check: /colors\.status\.success/,
+  },
+  {
+    id: 'data-grouping',
+    kind: 'convention',
+    title: 'Dense readings group by what they measure',
+    why: "amCharts groups a dense series into longer intervals only when `groupData` is on, and then keeps each group's last reading, which can drop a peak or misstate a total. Kilowatt groups fine-interval readings as the chart zooms out and combines them by what they measure (`aggregate`: an average for a rate, a sum for an amount, the highest for a peak), and the tooltip names the grouping (\"daily average\"), so a grouped point never passes for a single reading.",
+    charts: ['IntervalChart'],
+    convention: {
+      amchartsDefault: "Every point drawn; with `groupData`, each group's `close` value",
+      kilowatt: '`groupData` on the date axis, `valueYGrouped` from `aggregate`, and the period and aggregate in the tooltip',
+      where: 'Every chart of fine-interval readings',
+    },
+    check: /valueYGrouped: aggregate/,
+  },
+  {
+    id: 'zoom-controls',
+    kind: 'convention',
+    title: 'Zoom on the trackpad, reset with an MUI button',
+    why: "amCharts doesn't zoom on the wheel unless asked, and resets with a round button of its own over the plot, in `primaryButton` colors that hide its icon. Kilowatt zooms like amCharts' data-grouping demo: over the plot a two-finger swipe up or down (or a pinch, or the mouse wheel) zooms and a sideways swipe pans, dragging across the plot zooms to a range, and the scrollbar, the chart's last row, previews in `chart.neutral` because it's context. It resets with an MUI `IconButton` at the scrollbar's right, beside the control it affects and off the data, disabled while the whole period is in view. The wheel is the chart's only while the pointer is over the plot; the page scrolls everywhere else.",
+    charts: ['IntervalChart'],
+    convention: {
+      amchartsDefault: "`wheelX`/`wheelY` `'none'`; `zoomOutButton` in `primaryButton` colors",
+      kilowatt: "`wheelY: 'zoomX'`, `wheelX: 'panX'`, `XYCursor` `behavior: 'zoomX'`, an `XYChartScrollbar` previewing the first line in `chart.neutral`, and an `IconButton` (`fit_screen`, \"Show the whole period\") at the scrollbar's right in place of `zoomOutButton`",
+      where: 'Every zoomable chart',
+    },
+    check: /zoomOutButton\.set\('forceHidden', true\)/,
   },
 ];

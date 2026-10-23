@@ -1,0 +1,116 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as IntervalChartStories from './IntervalChart.stories';
+
+<Meta
+  of={IntervalChartStories}
+  summary="Kilowatt's reference chart for fine-interval readings: a zoomable amCharts 5 line chart that groups tens of thousands of readings by hour, day, week or month as it zooms, with a scrollbar to pan."
+/>
+
+# Interval chart
+
+An interval chart shows meter readings at a fine interval over a long period: a year of 15-minute demand is 35,040 readings. `IntervalChart` is Kilowatt's reference implementation, after amCharts' [data grouping demo](https://www.amcharts.com/demos/data-grouping-50k-points/): amCharts 5 run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). Zoomed out, it groups readings into hours, days, weeks or months, so it never draws more than a few hundred points; zoomed in, it shows them one by one. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={IntervalChartStories.Average} />
+
+## When to use
+
+- Use an interval chart for readings too many to draw at once, which people explore by zooming: 15-minute demand, hourly energy, a sensor's readings over months.
+- For a period short enough to draw every point (30 days of daily use, 24 hours of 15-minute demand), use a line chart.
+- For when in the week or the day use happens, rather than how it changes over the year, use a heatmap.
+- For a trend under a headline number, use a sparkline.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { IntervalChart } from 'src/charts/IntervalChart';
+
+const series = [{ field: 'demand', name: 'Demand' }];
+
+<Card variant="outlined">
+  <CardHeader title="Demand" />
+  <IntervalChart data={readings} series={series} unit="kW" summary="35,040 15-minute demand readings over a year: 350 to 1,500 kW, highest on summer weekday afternoons." />
+</Card>
+```
+
+`data` is rows of numbers with a UTC timestamp in `date`, `intervalMinutes` apart (15 by default). Keep `data` and `series` stable (constants or `useMemo`), since the chart is rebuilt when they change.
+
+Set `aggregate` by what the readings measure, so a grouped point means the same thing as a single reading:
+
+```tsx
+// A rate (kW): each group's average. The default.
+<IntervalChart data={readings} series={series} unit="kW" summary="…" />
+
+// A peak that matters, such as the demand that sets a demand charge: each group's highest reading.
+<IntervalChart data={readings} series={series} unit="kW" aggregate="high" summary="…" />
+
+// An amount (kWh): each group's total.
+<IntervalChart data={use} series={[{ field: 'use', name: 'Energy use' }]} unit="kWh" aggregate="sum" summary="…" />
+```
+
+Over the plot, swipe up or down with two fingers on a trackpad (or pinch, or turn the mouse wheel) to zoom, and swipe sideways to pan; drag across the plot to zoom to a range. The scrollbar below the plot previews the whole period, month by month, on a faint tint (`action.hover`); drag its grips to resize the view or its middle to pan, or focus a grip and use the arrow keys. The button at the scrollbar's right shows the whole period again; it's disabled while the whole period is in view. Outside the plot, the wheel scrolls the page.
+
+## Variants
+
+- **Average.** A rate (demand in kW) averaged over each group. Zoomed out, a year reads as a weekday-and-weekend comb on a seasonal curve; zoomed in, a week shows its daily profile.
+- **Peak.** `aggregate="high"`: each group's highest reading, so the peaks that set demand charges survive zooming out. The tooltip says "daily peak".
+- **Total.** `aggregate="sum"`: an amount (energy in kWh) added up over each group, so a point is the hour's, day's, week's or month's total, and the axis rescales as you zoom. The tooltip says "daily total".
+
+Lines take `chart.series` in order, or a `slot`, or `neutral`, like a line chart's; the scrollbar previews the first line. Compare at most a few lines: dense readings overlap quickly.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`.
+- Don't put the unit or the grouping in the card header; the unit sits above the value axis and in the tooltip, and the tooltip names the grouping.
+- Do set `aggregate` by what the readings measure: `average` for a rate, `sum` for an amount, `high` for a peak.
+- Don't sum a rate or average an amount; a summed kW means nothing, and an averaged kWh hides the total.
+- Do write `summary` as one sentence with the range and the pattern that matter.
+- Don't leave the summary generic ("Demand chart"); it's what screen readers say for the whole chart.
+- Do use a line chart when every point fits; zooming is only worth it when it doesn't.
+- Don't make a chart taller than it needs to be; over the plot the wheel zooms the chart, so a tall one leaves less of the page to scroll from.
+
+## MUI departures
+
+- `chart-palette`: lines take `chart.series` in order or by `slot`, neutral lines and the scrollbar's preview take `chart.neutral`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level1`, the divider.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: value-axis numbers are left-aligned, 8px from the plot.
+- `legend-items`: legend items have no left padding, so the legend lines up with the axis and the title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `scrollbar-selection`: the scrollbar is tinted faintly with `action.hover`, square, and the range in view is marked like a selected item, `primary` at `action.selectedOpacity`, square with no outline.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: the value axis sits on the right.
+- `axis-units`: the value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `full-value-tooltips`: every point has a tooltip with its date, exact value and unit (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
+- `data-grouping`: readings group as the chart zooms out, by `aggregate`, and the tooltip names the grouping ("daily average").
+- `zoom-controls`: zoom with a two-finger swipe, a pinch or the wheel over the plot, pan with a sideways swipe, drag to zoom to a range, and an MUI `IconButton` to show the whole period.
+
+## Accessibility
+
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
+- Every point shows its date, exact value and unit in a tooltip, and says when it stands for a group of readings ("hourly average", "daily peak"), so a grouped value never passes for a single reading.
+- The scrollbar's grips are focusable sliders that take the arrow keys, so the view can be zoomed and panned without a pointer. Swiping, pinching and dragging across the plot are shortcuts for pointers.
+- The reset button is an MUI `IconButton` named "Show the whole period", beside the scrollbar it resets, and disabled while the whole period is in view.
+- The wheel and trackpad zoom the chart only while the pointer is over the plot; elsewhere they scroll the page.
+- For exact readings, offer them as a download or a table beside the chart; tens of thousands of points don't read aloud.
+
+## Related
+
+- Charts → Line for a period whose points all fit.
+- Card → Chart for the card around a chart.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />
