@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { errorMessage, fromQuery, isEmptyData, isNotFound, type QueryLike } from './state';
+import { combineStates, errorMessage, fromQuery, isEmptyData, isForbidden, isNotFound, type QueryLike } from './state';
 
 function query<T>(overrides: Partial<QueryLike<T>>): QueryLike<T> {
   return { status: 'success', fetchStatus: 'idle', data: undefined, error: null, refetch: vi.fn(), ...overrides };
@@ -25,6 +25,11 @@ describe('fromQuery', () => {
     expect(refetch).toHaveBeenCalledOnce();
   });
 
+  it('tells no access from a failure, with no retry', () => {
+    const state = fromQuery(query({ status: 'error', error: { response: { status: 403 } } }));
+    expect(state).toEqual({ status: 'forbidden', error: 'You don’t have access to this data.' });
+  });
+
   it('lets the caller decide what empty means', () => {
     expect(fromQuery(query({ data: { total: 0 } }), { isEmpty: (data) => data.total === 0 }).status).toBe('empty');
   });
@@ -42,6 +47,7 @@ describe('helpers', () => {
   it('reads the most specific error message available', () => {
     expect(errorMessage(new Error('Network down'))).toBe('Network down');
     expect(errorMessage({ response: { status: 404 } })).toBe('Not found.');
+    expect(errorMessage({ response: { status: 400, data: { from_time: ['Enter a valid date.'] } } })).toBe('Enter a valid date.');
     expect(errorMessage(undefined)).toBe('Something went wrong.');
   });
 
@@ -50,5 +56,20 @@ describe('helpers', () => {
     expect(isNotFound({ response: { status: 500 } })).toBe(false);
     expect(isNotFound(new Error('Network down'))).toBe(false);
     expect(isNotFound(null)).toBe(false);
+    expect(isForbidden({ response: { status: 403 } })).toBe(true);
+    expect(isForbidden({ response: { status: 404 } })).toBe(false);
+  });
+});
+
+describe('combineStates', () => {
+  it('lets a failure win, then loading, then empty, and is ready only when every request is', () => {
+    const retry = vi.fn();
+    expect(combineStates({ status: 'ready' }, { status: 'error', error: 'Down.', onRetry: retry }, { status: 'loading' }).status).toBe('error');
+    expect(combineStates({ status: 'ready' }, { status: 'loading' }).status).toBe('loading');
+    expect(combineStates({ status: 'ready' }, { status: 'empty' }).status).toBe('empty');
+    expect(combineStates({ status: 'ready' }, { status: 'fetching' }).status).toBe('fetching');
+    expect(combineStates({ status: 'ready' }, { status: 'ready' }).status).toBe('ready');
+    combineStates({ status: 'error', onRetry: retry }, { status: 'error', onRetry: retry }).onRetry?.();
+    expect(retry).toHaveBeenCalledTimes(2);
   });
 });
