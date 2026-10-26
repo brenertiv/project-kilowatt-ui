@@ -9,7 +9,22 @@ import { useTheme } from '@mui/material/styles';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, screen, waitFor, within } from 'storybook/test';
 import { AppShell, type AppShellCompany, type AppShellSection } from 'src/components/AppShell';
+import { ScopePicker, type Scope, type ScopeGroup, type ScopeProperty } from 'src/components/ScopePicker';
 import { Icon } from 'src/icons';
+import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
+
+/** The portfolio the scope picker in the header chooses from. */
+const scopeProperties: ScopeProperty[] = [
+  { id: '120-broadway', name: '120 Broadway', city: 'New York, NY' },
+  { id: '350-park', name: '350 Park Avenue', city: 'New York, NY' },
+  { id: '55-water', name: '55 Water Street', city: 'New York, NY' },
+  { id: 'highpoint-1', name: 'Highpoint 1', city: 'Denver, CO', image: highpoint1 },
+  { id: 'mesa-commons', name: 'Mesa Commons', city: 'Phoenix, AZ' },
+];
+const scopeGroups: ScopeGroup[] = [
+  { id: 'east', name: 'East Region', propertyIds: ['120-broadway', '350-park', '55-water'] },
+  { id: 'west', name: 'West Region', propertyIds: ['highpoint-1', 'mesa-commons'] },
+];
 
 /** The sections, each with its pages. Tenant Billing and Maintenance have no pages of their own, so no panel, and are left out on phones. */
 const sections: AppShellSection[] = [
@@ -23,11 +38,43 @@ const sections: AppShellSection[] = [
           New
         </Button>
       ),
+      filter: {
+        label: 'Filter by type',
+        options: [
+          { value: 'dashboard', label: 'Dashboards' },
+          { value: 'report', label: 'Reports' },
+          { value: 'plan', label: 'Plans' },
+        ],
+      },
       items: [
-        { id: 'reporting-readiness', label: 'Reporting readiness', secondary: 'Dashboard', icon: 'table_rows' },
-        { id: 'energy-esg-summary', label: 'Energy and ESG summary', secondary: 'Report', icon: 'bar_chart' },
-        { id: 'emissions-energy', label: 'Emissions and energy', secondary: 'Dashboard', icon: 'table_rows' },
-        { id: 'decarbonization-plan', label: 'Decarbonization plan', secondary: 'Plan', icon: 'trending_down' },
+        {
+          id: 'reporting-readiness',
+          label: 'Reporting readiness',
+          secondary: 'Dashboard',
+          kind: 'dashboard',
+          icon: 'table_rows',
+        },
+        {
+          id: 'energy-esg-summary',
+          label: 'Energy and ESG summary',
+          secondary: 'Report',
+          kind: 'report',
+          icon: 'bar_chart',
+        },
+        {
+          id: 'emissions-energy',
+          label: 'Emissions and energy',
+          secondary: 'Dashboard',
+          kind: 'dashboard',
+          icon: 'table_rows',
+        },
+        {
+          id: 'decarbonization-plan',
+          label: 'Decarbonization plan',
+          secondary: 'Plan',
+          kind: 'plan',
+          icon: 'trending_down',
+        },
       ],
     },
   },
@@ -128,6 +175,7 @@ const meta = {
       'ListItemButton',
       'IconButton',
       'TextField',
+      'Dialog',
       'Badge',
       'Tooltip',
       'Avatar',
@@ -153,6 +201,7 @@ const meta = {
     const [page, setPage] = useState(firstPage(args.section));
     const [assistantOpen, setAssistantOpen] = useState(args.asideOpen ?? false);
     const [company, setCompany] = useState(args.company);
+    const [scope, setScope] = useState<Scope>({ level: 'portfolio' });
     // On phones the header has room for an icon, not the label.
     const phone = useMediaQuery(useTheme().breakpoints.down('md'));
     const current = sections.find((item) => item.id === section);
@@ -172,23 +221,7 @@ const meta = {
           setSection(sectionId);
           setPage(id);
         }}
-        headerStart={
-          <Button
-            startIcon={<Icon name="view_column" />}
-            endIcon={<Icon name="expand_more" />}
-            aria-label="Change scope: Portfolio, 48 properties"
-          >
-            Portfolio
-            <Typography
-              component="span"
-              variant="caption"
-              color="text.secondary"
-              sx={{ ml: 1, fontVariantNumeric: 'tabular-nums' }}
-            >
-              48 properties
-            </Typography>
-          </Button>
-        }
+        headerStart={<ScopePicker groups={scopeGroups} properties={scopeProperties} value={scope} onChange={setScope} />}
         headerEnd={
           phone ? (
             <IconButton
@@ -305,7 +338,7 @@ export const NoPanel: Story = {
   },
 };
 
-/** The panel undocked, for more room: hovering a rail item floats that section's panel inside the frame, and Dock navigation puts it back. */
+/** The panel undocked, for more room: hovering a rail item floats that section's panel inside the frame. The header keeps no panel buttons; clicking the current section's rail item opens its panel, whose Dock navigation puts it back. */
 export const PanelUndocked: Story = {
   args: { defaultPanelOpen: false },
   play: async ({ canvas, userEvent }) => {
@@ -315,26 +348,58 @@ export const PanelUndocked: Story = {
     await userEvent.click(within(panel).getByRole('button', { name: 'Meters' }));
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Meters');
     await expect(canvas.queryByRole('navigation', { name: 'Property Info' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Dock navigation' }));
+    await expect(canvas.queryByRole('button', { name: 'Dock navigation' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Property Info' }));
+    const pinned = await canvas.findByRole('navigation', { name: 'Property Info' });
+    await userEvent.click(within(pinned).getByRole('button', { name: 'Dock navigation' }));
     await expect(canvas.getByRole('navigation', { name: 'Property Info' })).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Collapse navigation' }));
     await expect(canvas.queryByRole('navigation', { name: 'Property Info' })).toBeNull();
   },
 };
 
-/** Search narrows the panel's pages as you type, and says so when nothing matches. */
-export const PanelSearch: Story = {
-  args: { section: 'property-info' },
+/** Without hover (keyboard, touch): Enter on the current section's rail item pins its panel open with focus inside, and Escape closes it, back on the rail item. */
+export const PanelUndockedKeyboard: Story = {
+  name: 'Panel undocked, keyboard',
+  args: { defaultPanelOpen: false },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.type(canvas.getByRole('textbox', { name: 'Search Property Info' }), 'me');
-    await expect(canvas.getByRole('button', { name: 'Meters' })).toBeVisible();
-    await expect(canvas.queryByRole('button', { name: 'Bills' })).toBeNull();
-    await userEvent.type(canvas.getByRole('textbox', { name: 'Search Property Info' }), 'xx');
-    await expect(canvas.getByRole('status')).toHaveTextContent('No pages match “mexx”.');
+    const item = canvas.getByRole('button', { name: 'Workspace' });
+    item.focus();
+    await userEvent.keyboard('{Enter}');
+    const panel = await canvas.findByRole('navigation', { name: 'Workspace' });
+    await waitFor(() => expect(panel).toContainElement(document.activeElement as HTMLElement));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByRole('navigation', { name: 'Workspace' })).toBeNull());
+    await expect(item).toHaveFocus();
   },
 };
 
-/** The panel resizes between 220px and 380px by dragging its edge, or with the arrow keys, Home and End once it's focused. */
+/** Search is an icon button in the panel's header, beside its toggle; it opens one dialog that finds a page in any section. */
+export const Search: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Search' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Search' });
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search pages' }), 'me');
+    await expect(within(dialog).getByRole('status')).toHaveTextContent('3 pages');
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Meters/ }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search' })).toBeNull());
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Meters');
+  },
+};
+
+/** Workspace's filter button narrows its items to one type; a dot on the button shows a filter is on. */
+export const PanelFilter: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Filter by type' }));
+    await userEvent.click(await screen.findByRole('menuitemradio', { name: 'Reports' }));
+    const panel = canvas.getByRole('navigation', { name: 'Workspace' });
+    await expect(within(panel).getByRole('button', { name: /^Energy and ESG summary/ })).toBeVisible();
+    await expect(within(panel).queryByRole('button', { name: /^Reporting readiness/ })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Filter by type: Reports' })).toBeVisible();
+  },
+};
+
+/** The panel resizes between 220px and 380px by dragging its edge, or with the arrow keys, Home and End once it's focused; the hover panel keeps a fixed 248px. */
 export const PanelResize: Story = {
   play: async ({ canvas, userEvent }) => {
     const handle = canvas.getByRole('separator', { name: 'Resize navigation' });
@@ -343,6 +408,11 @@ export const PanelResize: Story = {
     await expect(handle).toHaveAttribute('aria-valuenow', '272');
     await userEvent.keyboard('{End}');
     await expect(handle).toHaveAttribute('aria-valuenow', '380');
+    // Undocked, the hover panel keeps its own fixed width rather than the docked panel's.
+    await userEvent.click(canvas.getByRole('button', { name: 'Collapse navigation' }));
+    await userEvent.hover(canvas.getByRole('button', { name: 'People' }));
+    const floating = await canvas.findByRole('navigation', { name: 'People' });
+    await expect(floating.getBoundingClientRect().width).toBe(248);
   },
 };
 
@@ -397,6 +467,22 @@ export const PhonePageMenu: Story = {
     await userEvent.click(await screen.findByRole('menuitem', { name: /^Decarbonization plan/ }));
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Decarbonization plan');
+  },
+};
+
+/** On a phone, Search sits in the menu's header, beside Close, and opens the same search, filling the screen. The top bar keeps the menu button and the page's title. */
+export const PhoneSearch: Story = {
+  globals: phoneViewport,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.queryByRole('button', { name: 'Search' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
+    const menu = await screen.findByRole('navigation', { name: 'Menu' });
+    await userEvent.click(within(menu).getByRole('button', { name: 'Search' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Search' });
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search pages' }), 'tenants');
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Tenants/ }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search' })).toBeNull());
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Tenants');
   },
 };
 

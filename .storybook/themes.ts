@@ -38,7 +38,7 @@ function storybookTheme(scheme: Scheme) {
   const radius = Number(shape.borderRadius);
   // One border for the whole interface: frames, separators, buttons and inputs alike.
   // Storybook's own controls are part of its interface, not Kilowatt controls, so they
-  // take the frame border too: the divider (level1), as the Figma frames draw it.
+  // take the frame border too: the divider (level1), so the chrome and the stories share one line.
   const frameBorder = palette.divider;
   return create({
     base: scheme,
