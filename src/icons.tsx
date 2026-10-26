@@ -7,6 +7,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
  * than a word on screen. Browse the set at https://fonts.google.com/icons.
  */
 export const iconNames = [
+  'account_tree',
   'add',
   'apartment',
   'arrow_downward',
@@ -19,6 +20,7 @@ export const iconNames = [
   'chevron_left',
   'chevron_right',
   'close',
+  'close_small',
   'content_copy',
   'dark_mode',
   'delete',
@@ -29,10 +31,12 @@ export const iconNames = [
   'download',
   'edit',
   'error',
+  'expand_all',
   'expand_more',
   'filter_alt_off',
   'filter_list',
   'fit_screen',
+  'folder_open',
   'fullscreen',
   'fullscreen_exit',
   'inbox',

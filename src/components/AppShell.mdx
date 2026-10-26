@@ -14,10 +14,10 @@ On wide screens (`md` and up), from left to right:
 
 - **Rail.** The company button at the top (with two or more `companies`, it opens a menu to switch), one icon per section, then the sections placed at the `end` at the bottom: Notifications and My account. It sits on the page surface, outside the frame.
 - **Section panel.** The current section's title with its header buttons (a filter when the panel has one, Search, and Collapse navigation), optional actions (a New button) and its pages. It resizes from its edge (220px to 380px) and undocks from its header. Undocked, hovering a section in the rail floats that section's panel over the page, so another section's pages are one move away; Dock navigation, in the header or the floating panel, docks it again. Sections with no pages of their own have no panel.
-- **Header.** Dock navigation and Search when the panel is undocked (or the section has no panel), then the scope (`headerStart`) at the start and page-wide actions (`headerEnd`) at the end.
+- **Header.** The scope (`headerStart`) at the start and page-wide actions (`headerEnd`) at the end, nothing else, so the scope has the room. Dock navigation and Search live in the panel, docked or floating.
 - **Main.** The page. The frame fills the window and only `main` scrolls.
 - **Aside.** An optional column at the end, for the assistant. Below `lg` it opens as a bottom sheet.
-- **Search.** One search dialog for the whole app, opened from the Search button that sits beside the panel's toggle on every page. It finds a page in any section by name and goes to it.
+- **Search.** One search dialog for the whole app, opened from the Search button in the panel's header, docked or floating. Sections with no panel have no Search on wide screens. On phones it's in the menu's header, beside Close, and fills the screen. It finds a page in any section by name and goes to it.
 
 Below `md` the shell switches to a layout built for a phone's browser: a sticky header and a one-column menu (Variants → Phones).
 
@@ -83,8 +83,8 @@ On phones, add `viewport-fit=cover` to the app's viewport meta tag, so the shell
 A phone's browser keeps its own toolbars on screen: Safari's sits at the bottom by default (iOS 26), Chrome's at the top. So below `md` the shell puts nothing at the bottom of the page and lets the browser's toolbars shrink:
 
 - **The document scrolls** under a sticky header, rather than inside a fixed frame, so the browser can shrink its toolbars as people scroll.
-- **Header:** the menu button (with a dot for unread notifications), Search beside it (the same search dialog, filling the screen), the page's title and `headerEnd` (an icon button; there's no room for a label). The title is a menu of the current section's pages, so a neighbouring page is one tap away. `headerStart` (the scope) moves to the top of the page.
-- **Menu:** one column, not the rail and panel side by side. It opens on the current section's pages, with All sections to go up a level; there, Notifications leads, and sections with pages drill in. The menu's header (the back arrow, the level's title and the close button) stays put while the list slides: in from the right when drilling in, from the left when going back, over 300ms (`duration.standard`, `easeOut`).
+- **Header:** the menu button (with a dot for unread notifications), the page's title and `headerEnd` (an icon button; there's no room for a label). The title is a menu of the current section's pages, so a neighbouring page is one tap away. `headerStart` (the scope) moves to the top of the page.
+- **Menu:** one column, not the rail and panel side by side. It opens on the current section's pages, with All sections to go up a level; there, Notifications leads, and sections with pages drill in. The menu's header (the back arrow, the level's title, Search and the close button) stays put while the list slides: in from the right when drilling in, from the left when going back, over 300ms (`duration.standard`, `easeOut`).
 - **Pinned to the foot of the menu,** on both levels: My account, which drills into its pages and the appearance control, and the company button, an outlined button with the company's name that opens the company menu. Choosing a company closes both menus, then calls `onCompanyChange`.
 - **Back closes it.** The menu, the title's menu and the company menu each take a step in the browser's history while open, so the browser's Back button or back swipe closes the top one rather than leaving the page.
 - **Left out on phones:** sections with `hideOnPhone` (the upgrade pages), the panel's `filter` and `actions` (put a section's New action and filters in its page too), docking, resizing, hover and tooltips.
@@ -95,7 +95,7 @@ Test the phone layout on a real iPhone (with Safari's toolbar at the bottom and 
 
 ## States
 
-- **Panel undocked:** the page takes the room, and the header shows Dock navigation. Hovering a section in the rail floats its panel over the page, 8px inside the frame on every edge (the frame's border included), at a fixed 248px wide whatever the docked panel was resized to. Its corners are concentric with the frame's (the frame's 16px is the panel's 8px theme radius plus the 8px gap), and it sits on level2 with a low shadow (`elevation={2}`). It stays while the pointer is over the rail or the panel (with a 200ms grace for crossing the gap), and closes when a page is chosen, the pointer leaves, or on Escape. Rail items with a panel show it in place of their tooltip.
+- **Panel undocked:** the page takes the room, and the header shows no panel buttons. Hovering a section in the rail floats its panel over the page, 8px inside the frame on every edge (the frame's border included), at a fixed 248px wide whatever the docked panel was resized to. Its corners are concentric with the frame's (the frame's 16px is the panel's 8px theme radius plus the 8px gap), and it sits on level2 with a low shadow (`elevation={2}`). It stays while the pointer is over the rail or the panel (with a 200ms grace for crossing the gap), and closes when a page is chosen, the pointer leaves, or on Escape. Rail items with a panel show it in place of their tooltip. Clicking the current section's rail item (or Enter on it) pins its panel open, with focus inside, until a click outside, Escape or the rail item again closes it: the way to the panel, its Search and Dock navigation without hover. The panel's header has Dock navigation.
 - **Searching:** the dialog opens with the field focused and says what it finds as you type ("3 pages", or that none match); each result names its section. Choosing one closes the dialog and goes to the page; so does Escape, the close button and the browser's Back, without going anywhere.
 - **Filtered:** only the pages of the chosen `kind` show, the filter button carries a dot, and the panel says when none match.
 - **Section with news:** a section's `badge` puts a dot on its icon and is read with its label ("Maintenance, Upgrade available"). With a `count`, the icon shows the number instead of the dot; give `badge` the words for it ("10 unread").
@@ -107,6 +107,8 @@ Test the phone layout on a real iPhone (with Safari's toolbar at the bottom and 
 - Don't render a page's own frame, border or background inside `main`; the shell's frame is the page's edge (Rules → One border per edge).
 - Do keep sections to a handful of top-level areas, each with an icon and a short label.
 - Don't put page actions in the panel; put them in the page's header, and keep the panel for navigation.
+- Do keep the header to the scope and page-wide actions.
+- Don't put navigation controls (Dock navigation, Search) in the header; they belong to the panel, which can be opened from the rail without hover.
 - Do give a section's `badge` words, since the dot alone is only color.
 - Don't pass `fill` to rail or panel icons; selected rows fill theirs through the theme.
 - Do mark sections people rarely need on a phone with `hideOnPhone`, so the phone menu stays short.
@@ -138,7 +140,7 @@ Theme-wide departures (surfaces, borders, radius, type, reduced motion) apply to
 - The search dialog is named Search and opens with its field focused; its result count or no-match message is a polite `status`, and MUI's `Dialog` traps focus and closes on Escape. The filter button says it opens a menu, and its options are radio items (`menuitemradio`) with the chosen one `aria-checked`.
 - The resize handle is a focusable `separator` with its width as its value: the arrow keys move it by 8px, Home and End to its limits. Hovered, focused or dragged, it takes the primary color, softened toward both ends, so where to grab shows without relying on the cursor alone.
 - MUI's `Drawer` and `Menu` trap focus while open and close on Escape.
-- The floating panel opens on hover only; keyboard users reach every section's pages by choosing the section, or by docking the panel. Escape closes it while focus is inside.
+- The floating panel opens on hover, and from the keyboard (or by touch) when the current section's rail item is chosen: it opens pinned, moves focus to its first control, and closes on Escape, handing focus back to the rail item. Its header holds Dock navigation and Search, so neither needs hover.
 
 ## Related
 

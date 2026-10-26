@@ -1,0 +1,95 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ScopePickerStories from './ScopePicker.stories';
+
+<Meta
+  of={ScopePickerStories}
+  summary="Kilowatt's ScopePicker for AppShell's headerStart: the global scope (portfolio, group or property) as breadcrumbs of split buttons, and a Change scope dialog with search, recent scopes, and Portfolios and Properties columns."
+/>
+
+# ScopePicker
+
+`ScopePicker` sets the global scope every section works in: the whole portfolio, one group of properties or one property. It's Kilowatt's own component, composed from MUI's `Breadcrumbs`, `Divider`, `Button`, `IconButton`, `Avatar`, `Tooltip`, `Dialog`, `TextField`, `List`, `ListItemButton` and `Chip` (`@mui/material`, Material UI v9; MUI documents their props). It sits in AppShell's `headerStart`.
+
+The scope's path shows as breadcrumbs, separated by a thin vertical `Divider` (`border.level2`) that leans like a slash. Each crumb is a fill a step above the header's surface, framed by the faintest border (`border.level0`) and rounded at 16px, concentric with the 8px photo inside it. It's split flush into a text button and an icon button, each the crumb's full height (48px), so the half under the pointer fills on hover. The type above each name is in `text.secondary` and the `caption` style, so the name leads. There are at most two crumbs: the portfolio (all properties or one group) and, at property scope, the property, on the highest surface with the building's photo. A crumb's name sets that level as the scope; its chevron opens the Change scope dialog at that level, the portfolio's on the groups and the property's on the portfolio's properties. One icon-only close button after the active crumb, on the portfolio crumb's surface (`background.level2`), goes up a level: from a property to its portfolio, from a group to all properties.
+
+<Canvas of={ScopePickerStories.Property} />
+
+## When to use
+
+- Use it once, in AppShell's `headerStart`, for the scope the whole app works in.
+- For narrowing a list or a chart within a page, use a filter in the page's toolbar (`Select`, `Autocomplete`, `ToggleButton`), never the scope picker.
+- For the buildings a report or plan covers, use the report's own controls; the global scope doesn't change them.
+- For switching Company, use AppShell's company button; the picker shows only the current Company's portfolio.
+
+## Usage
+
+```tsx
+import { ScopePicker, type Scope } from 'src/components/ScopePicker';
+
+const [scope, setScope] = useState<Scope>({ level: 'portfolio' });
+
+<AppShell
+  headerStart={<ScopePicker groups={groups} properties={properties} value={scope} onChange={setScope} recent={recent} />}
+/>
+```
+
+Pass only the groups and properties the user can access. `value` is controlled: put the scope in the URL and pass it back, and keep `recent` (newest first) per user and per Company. A property chosen through a group carries that group as `groupId`, and the portfolio crumb shows that group; without one it shows All properties, never a guessed group.
+
+## States
+
+- **Portfolio:** one crumb, "Portfolio" over "All properties", and no close button.
+- **Group:** one crumb, "Portfolio" over the group's name, then the close button, back to all properties. Every group is labelled "Portfolio"; the picker doesn't name a group's kind (region, fund), so its label never repeats its name.
+- **Property:** the portfolio crumb (its name goes up to it), then the property's crumb, on the highest surface (`background.level4`) with the building's photo (`image`, or the property icon without one), then the close button, back to the portfolio crumb's level. A property reached without a group sits under All properties.
+- **Current crumb:** its name opens the dialog at its level, as its chevron does, since its level is already the scope.
+- **Choosing a portfolio:** in the dialog's Portfolios column, each row is built like a crumb: the crumb frame (`border.level0`, 16px corners) around two flush buttons, each with its own hover. The name selects that portfolio (All properties or a group), and the chevron browses its properties without changing scope. The rows stand 4px apart, and the columns have no outer frame, only the line between them.
+- **Searching:** the columns give way to results, groups first, a property in two groups once per group with its path; no match says so in words.
+- **Phones:** the dialog fills the screen and shows Portfolios, then the browsed portfolio's Properties, one at a time.
+- **Narrow header:** the crumbs stay on one line and their names truncate with an ellipsis, the portfolio's first, down to about six characters; a cut-off name's tooltip leads with the full name. The chevrons and the close button never shrink. Below `sm` the crumbs drop their icon and photo, and the name moves in to 12px from the crumb's edge, matching the chevron half.
+- **Single property:** the property's crumb with its photo and name, and nothing to open.
+
+## Do and don't
+
+- Do put the picker in `headerStart` and nowhere else.
+- Don't use it as a filter in a page or a list toolbar; use the page's own filter controls.
+- Do show the scope's property count on the page, where it's needed; the crumbs carry names only, and the dialog lists a count on every row.
+- Don't add counts or a group's kind to the crumbs; keep them to the type and the name.
+- Do keep the portfolio rows 4px apart, each in its own frame, so each reads as one split button. This is a deliberate exception to "items in a list touch" (Rules → Accessibility); every target stays well above 24px.
+- Don't frame the Portfolios column as well; a frame around framed rows doubles every edge (Rules → One border per edge).
+- Do pass only the groups and properties the user can access.
+- Don't pass groups or properties the user can't open; the picker would offer scopes they can't reach.
+- Do keep the scope in the URL and pass it back as `value`.
+- Don't change the scope silently from a page, such as when the user opens a building; change it only through the picker or an action that names the change.
+- Do keep `recent` per user and per Company.
+- Don't share recent scopes across Companies; they'd show buildings from another portfolio.
+
+## MUI departures
+
+- `button-text-case`: crumb names show as written.
+- `button-text-weight`: crumb names are at the regular weight; the property crumb stands out by its surface and photo, not its weight.
+- `flat-buttons`: the crumb buttons are text buttons, so they have no elevation either way.
+- `control-outlines`: the search field takes the control outline. The crumbs are text buttons on a surface fill (`background.level2`, and `level4` for the property), so they have none.
+- `icon-button-radius`: the close button after the crumbs and the dialog's close and back buttons take the theme radius; the crumbs' chevrons round at the crumb's 16px.
+- `medium-size`: every control is at the default medium size.
+- `paper-surface-levels`: the dialog picks its surface from its elevation.
+- `icons`: the level icons, chevrons and close buttons are Material Symbols.
+- `selected-fills-icons`: the open group and the current scope's row fill their icons.
+- `tabular-numerals`: recent-scope chips use tabular figures.
+
+Theme-wide departures (the palette, the type scale, the corner radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The crumbs are a `nav` named "Scope", from MUI's `Breadcrumbs`; the dividers between crumbs are hidden from screen readers.
+- Each crumb's name is its accessible name, with a tooltip as its description saying what it does; the current crumb is marked `aria-current="location"`.
+- The chevrons are named "Change portfolio" and "Change property", with `aria-haspopup="dialog"` and `aria-expanded`. The close button shows no text; its accessible name says where it goes, "Back to West Region" or "Back to all properties".
+- The dialog is named "Change scope", focuses the search field when it opens, closes on Escape and returns focus to the chevron (MUI's `Dialog`).
+- The result count is a status region, so screen readers hear it as the user types.
+- The current scope's row is marked with a check, so it doesn't depend on color. In the Portfolios column the selected style marks the portfolio being browsed.
+- Each portfolio row's chevron is named for what it browses: "Browse West Region", "Browse all properties".
+- A truncated crumb name is cut off only visually; screen readers read it in full.
+
+## Related
+
+- `AppShell`, whose `headerStart` holds the picker.
+
+<Stories includePrimary={false} />

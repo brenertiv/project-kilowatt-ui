@@ -4,6 +4,7 @@ import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Dialog from '@mui/material/Dialog';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
@@ -656,6 +657,10 @@ function PhoneShell({
       <Typography variant="h5" component="h2" noWrap sx={{ flex: 1 }}>
         {heading}
       </Typography>
+      {/* Search sits in the menu's header, as it does in the panel's on wide screens, leaving the top bar to the page's title. */}
+      <IconButton aria-label="Search" onClick={() => hideMenu(showSearch)}>
+        <Icon name="search" />
+      </IconButton>
       <IconButton aria-label="Close menu" onClick={() => hideMenu()}>
         <Icon name="close" />
       </IconButton>
@@ -779,9 +784,6 @@ function PhoneShell({
             <Badge variant="dot" color="secondary" invisible={!news.length}>
               <Icon name="menu" />
             </Badge>
-          </IconButton>
-          <IconButton aria-label="Search" onClick={showSearch}>
-            <Icon name="search" />
           </IconButton>
           {hasPanel(current) ? (
             <Button
@@ -949,6 +951,11 @@ export function AppShell({
   const [panelWidth, setPanelWidth] = useState(() => clampWidth(defaultPanelWidth));
   // The section whose panel floats over the page while the panel is undocked.
   const [flyout, setFlyout] = useState<string | null>(null);
+  // Whether the floating panel was opened from the rail item (click or Enter) rather than hover, so it
+  // stays until dismissed: the way to it, and to Dock navigation, without hover (keyboard and touch).
+  const [flyoutPinned, setFlyoutPinned] = useState(false);
+  const flyoutRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const panelRef = useRef<HTMLDivElement>(null);
   const [companyAnchor, setCompanyAnchor] = useState<HTMLElement | null>(null);
@@ -961,8 +968,12 @@ export function AppShell({
   const docked = panelOpen;
   const flyoutSection = sections.find((item) => item.id === flyout);
 
-  const togglePanel = (open: boolean) => {
+  const closeFlyout = () => {
     setFlyout(null);
+    setFlyoutPinned(false);
+  };
+  const togglePanel = (open: boolean) => {
+    closeFlyout();
     setPanelOpen(open);
     onPanelOpenChange?.(open);
   };
@@ -972,22 +983,44 @@ export function AppShell({
     onPanelWidthChange?.(next);
   };
   const openFlyout = (id: string) => {
+    if (flyoutPinned) return;
     clearTimeout(closeTimer.current);
     setFlyout(hasPanel(sections.find((item) => item.id === id)) ? id : null);
   };
   const keepFlyout = () => clearTimeout(closeTimer.current);
   const leaveFlyout = () => {
+    if (flyoutPinned) return;
     clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => setFlyout(null), flyoutCloseDelay);
   };
+  // Escape, or a click outside, closes the pinned panel; Escape hands focus back to the rail item.
+  const dismissFlyout = (refocus: boolean) => {
+    closeFlyout();
+    if (refocus) railRef.current?.querySelector<HTMLElement>('[aria-current="page"]')?.focus();
+  };
   const chooseSection = (id: string) => {
-    setFlyout(null);
+    // Undocked, the current section's rail item opens (or closes) its panel instead of reloading the section.
+    if (!panelOpen && id === section && hasPanel(current)) {
+      clearTimeout(closeTimer.current);
+      if (flyoutPinned && flyout === id) closeFlyout();
+      else {
+        setFlyout(id);
+        setFlyoutPinned(true);
+      }
+      return;
+    }
+    closeFlyout();
     onSectionChange?.(id);
   };
   const choosePage = (id: string, sectionId: string) => {
-    setFlyout(null);
+    closeFlyout();
     onPageChange?.(id, sectionId);
   };
+
+  // A pinned panel takes focus, so keyboard users land in it.
+  useEffect(() => {
+    if (flyoutPinned) flyoutRef.current?.querySelector<HTMLElement>('button, a[href]')?.focus();
+  }, [flyoutPinned, flyout]);
 
   // Undocked, rail items open their section's panel on hover instead of a tooltip.
   const flies = !panelOpen;
@@ -1043,8 +1076,45 @@ export function AppShell({
     );
   };
 
+  // Floats inside the frame, 8px in from its edges (its 1px border included), so the corners are
+  // concentric: the frame's 16px is the panel's theme radius (8px) plus the gap. Elevation 2 puts it on
+  // level2, a step below the menu surface, with the lowest shadow that still lifts it off the page.
+  const floatingPanel = hasPanel(flyoutSection) && (
+    <Paper
+      elevation={2}
+      onPointerEnter={keepFlyout}
+      onPointerLeave={leaveFlyout}
+      ref={flyoutRef}
+      onKeyDown={(event) => event.key === 'Escape' && dismissFlyout(flyoutPinned)}
+      sx={{
+        position: 'absolute',
+        top: (t) => t.spacing(2),
+        bottom: (t) => t.spacing(2),
+        left: (t) => `calc(${railWidth}px + ${t.spacing(1)})`,
+        zIndex: 'drawer',
+        display: 'flex',
+        borderRadius: 1,
+        overflow: 'hidden',
+      }}
+    >
+      <SectionPanel
+        key={flyoutSection.id}
+        section={flyoutSection}
+        page={flyoutSection.id === section ? page : undefined}
+        width={flyoutWidth}
+        toggle={{ label: 'Dock navigation', icon: 'left_panel_open', onClick: () => togglePanel(true) }}
+        onSearch={() => {
+          closeFlyout();
+          showSearch();
+        }}
+        onChoose={(id) => choosePage(id, flyoutSection.id)}
+      />
+    </Paper>
+  );
+
   const rail = (
     <Stack
+      ref={railRef}
       component="nav"
       aria-label="Main"
       onPointerLeave={flies ? leaveFlyout : undefined}
@@ -1201,21 +1271,7 @@ export function AppShell({
         <Stack sx={{ flex: 1, minWidth: 0 }}>
           <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Toolbar sx={{ gap: 1, px: 3 }}>
-              {hasPanel(current) && !panelOpen && (
-                <Tooltip title="Dock navigation">
-                  <IconButton aria-label="Dock navigation" onClick={() => togglePanel(true)}>
-                    <Icon name="left_panel_open" />
-                  </IconButton>
-                </Tooltip>
-              )}
-              {/* Search sits beside the panel toggle: here whenever the docked panel, which has its own, isn't showing. */}
-              {!(panelOpen && hasPanel(current)) && (
-                <Tooltip title="Search">
-                  <IconButton aria-label="Search" onClick={showSearch}>
-                    <Icon name="search" />
-                  </IconButton>
-                </Tooltip>
-              )}
+              {/* Dock navigation and Search live in the panel (docked or floating), so the header's room goes to the scope. */}
               <Box sx={{ flex: 1, minWidth: 0 }}>{headerStart}</Box>
               {headerEnd}
             </Toolbar>
@@ -1239,40 +1295,10 @@ export function AppShell({
           </Box>
         )}
       </Box>
-      {flies && hasPanel(flyoutSection) && (
-        // Floats inside the frame, 8px in from its edges (its 1px border included), so the corners are
-        // concentric: the frame's 16px is the panel's theme radius (8px) plus the gap. Elevation 2 puts it on
-        // level2, a step below the menu surface, with the lowest shadow that still lifts it off the page.
-        <Paper
-          elevation={2}
-          onPointerEnter={keepFlyout}
-          onPointerLeave={leaveFlyout}
-          onKeyDown={(event) => event.key === 'Escape' && setFlyout(null)}
-          sx={{
-            position: 'absolute',
-            top: (t) => t.spacing(2),
-            bottom: (t) => t.spacing(2),
-            left: (t) => `calc(${railWidth}px + ${t.spacing(1)})`,
-            zIndex: 'drawer',
-            display: 'flex',
-            borderRadius: 1,
-            overflow: 'hidden',
-          }}
-        >
-          <SectionPanel
-            key={flyoutSection.id}
-            section={flyoutSection}
-            page={flyoutSection.id === section ? page : undefined}
-            width={flyoutWidth}
-            toggle={{ label: 'Dock navigation', icon: 'left_panel_open', onClick: () => togglePanel(true) }}
-            onSearch={() => {
-              setFlyout(null);
-              showSearch();
-            }}
-            onChoose={(id) => choosePage(id, flyoutSection.id)}
-          />
-        </Paper>
-      )}
+      {flies &&
+        floatingPanel &&
+        // Pinned, a click outside closes it. Mounted only then, so the click that pins it doesn't count.
+        (flyoutPinned ? <ClickAwayListener onClickAway={() => dismissFlyout(false)}>{floatingPanel}</ClickAwayListener> : floatingPanel)}
       <SearchDialog
         open={searchOpen}
         sections={sections}
