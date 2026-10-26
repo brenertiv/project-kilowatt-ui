@@ -10,6 +10,16 @@ Kilowatt starts from stock Material UI. The theme is `createTheme` with light an
 - Style through MUI's documented props first (`color`, `variant`, `size`, `elevation`), then `sx` with theme keys: palette paths (`color: 'text.secondary'`), spacing multiples (`p: 2`), radius multiples (`borderRadius: 1`), elevation levels (`boxShadow: 1`) and breakpoint objects.
 - Never a raw value: no hex colors, pixel radii, font families or shadows of your own, and no parallel set of CSS variables. The Foundations pages list every theme value, each marked as MUI's default or a departure.
 
+## Figma is an approximation
+
+The Storybook is the source of truth: the theme, the departures, the component pages and these rules. Figma never is.
+
+- **Treat a Figma design as an approximation of intent.** Take its layout, structure and states. Build every value from what the Storybook already has: MUI components and props, palette roles, type variants, spacing multiples, the theme radius and `Icon` names.
+- **Ignore Figma's variables and semantics.** Don't import its color variables, text styles, token names or ramp step numbers; they don't map onto Kilowatt's, even where the names match. Map each one to the closest existing role and say which.
+- **Where a design and the Storybook differ, the Storybook wins.** Build it the Storybook's way and tell the person who asked where it differs from the design (a size, a color, a type style, a radius).
+- **Confirm before going past the conventions.** Before building anything the Storybook doesn't already have (a new token, palette or type role, CSS variable, departure, component pattern or icon set), stop and ask the person who asked for the work: say what you'd add, why, and which existing conventions you tried first. Add it only once they agree, through [Adding a convention](#adding-a-convention).
+- **Never cite Figma as the reason for a decision**, in code, comments, departures or pages. Give the reason itself.
+
 ## Token tiers
 
 Tokens come in three tiers, each reading only from the one below it.
@@ -198,6 +208,7 @@ Maps work the same way against CARTO's basemaps and deck.gl's defaults, in `src/
 Check every screen against this list before review. Each line points back to the rule it summarizes.
 
 - [ ] It renders under `MuiProvider` and builds with MUI components and documented props ([Build with MUI as MUI documents it](#build-with-mui-as-mui-documents-it)).
+- [ ] Nothing in it comes from Figma's variables or styles, its differences from the design are written down, and anything the Storybook didn't already have was confirmed with the person who asked ([Figma is an approximation](#figma-is-an-approximation)).
 - [ ] Color, type, spacing, radius and elevation come from theme roles, with no hex values, pixel radii, font sizes or font families of its own ([Token tiers](#token-tiers)).
 - [ ] Surfaces use `background.level*` and `border.level*`, with one border per edge and concentric corners ([Surfaces and borders](#surfaces-and-borders), [One border per edge](#one-border-per-edge), [Concentric corners](#concentric-corners)).
 - [ ] Text uses Typography variants, and numbers that are data use tabular figures ([Typography](#typography)).

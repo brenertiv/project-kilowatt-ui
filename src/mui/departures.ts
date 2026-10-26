@@ -195,7 +195,7 @@ export const departures: Departure[] = [
     id: 'surfaces-and-borders',
     area: 'Palette',
     title: 'Surface and border levels',
-    why: "Five surfaces by elevation and four borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider. The steps follow the Enertiv UI Foundations Figma file: its page, level1, level2 and paper surfaces, and its divider as border level1. The top two levels share a step in both schemes: light runs out of steps above white, and dark stops at navy 600 because Figma's lighter paper (navy 500) would drop the secondary color and border level3 below their contrast. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
+    why: "Five surfaces by elevation and four borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider, so each raised surface steps lighter in both schemes and a separator can be as faint or as strong as its job needs. The top two levels share a step in both schemes: light runs out of steps above white, and dark stops at navy 600 because a lighter step (navy 500) would drop the secondary color and border level3 below their contrast. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
     options: (scheme) => {
       const surfaces = levels(scheme, surfaceSteps[scheme]);
       const border = levels(scheme, borderSteps[scheme]);
@@ -217,7 +217,7 @@ export const departures: Departure[] = [
     id: 'text-colors',
     area: 'Palette',
     title: 'Navy and slate text',
-    why: "MUI sets text in black or white at fixed opacities (87% and 60% in light, 100% and 70% in dark). Kilowatt follows the Enertiv UI Foundations Figma file: solid navy 950 and navy 500 in light, slate 100 and slate 900 in dark, so text takes the palette's hue and reads the same on every surface instead of blending into it.",
+    why: "MUI sets text in black or white at fixed opacities (87% and 60% in light, 100% and 70% in dark). Kilowatt uses solid navy 950 and navy 500 in light, slate 100 and slate 900 in dark, so text takes the palette's hue and reads the same on every surface instead of blending into it.",
     options: (scheme) => ({
       palette: {
         text:
@@ -231,7 +231,7 @@ export const departures: Departure[] = [
     id: 'primary-navy',
     area: 'Palette',
     title: 'Navy primary, light neutral in dark',
-    why: "Primary is Enertiv navy instead of MUI's blue in the light scheme (navy 900, the Enertiv UI Foundations Figma file's contained button). In the dark scheme it's a light neutral (slate 800, also from the Figma file) with navy text: the dark surfaces are navy, so a blue primary there would be another pale blue beside the brand-blue secondary and the info color. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) follows it.",
+    why: "Primary is Enertiv navy instead of MUI's blue in the light scheme (navy 900), so the main actions carry Enertiv's brand color. In the dark scheme it's a light neutral (slate 800) with navy text: the dark surfaces are navy, so a blue primary there would be another pale blue beside the brand-blue secondary and the info color. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) follows it.",
     options: (scheme) => {
       const { ramp, main, light, dark, contrastText } = primarySteps[scheme];
       const r = rampByName[ramp];
@@ -362,7 +362,7 @@ export const departures: Departure[] = [
     area: 'Components',
     components: ['Button', 'ButtonGroup', 'ToggleButton', 'TextField', 'Select', 'Autocomplete', 'OutlinedInput'],
     title: 'One outline color for every control',
-    why: "MUI outlines its controls in three different colors: inputs at 23% black (or white), outlined buttons in their intent color at half strength, toggle buttons in the divider color. Kilowatt gives them one outline per state from their own palette role, `palette.control`, kept apart from the surface border levels so either can change without moving the other. The colors start from the Enertiv UI Foundations Figma file's button-border tokens: a quiet outline at rest (slate 600 in light, a step darker than Figma's slate 500; navy 700 in dark; below 3:1, by design decision), a stronger one on hover (slate 950 in light, navy 300 in dark), the primary text color on keyboard focus and navy 400 or navy 100 when pressed. Inputs show focus with MUI's 2px primary outline. Error and disabled keep MUI's. Outlined buttons in the other intents (secondary, error, warning, info, success) keep MUI's intent-colored outline on purpose: the color carries their meaning.",
+    why: "MUI outlines its controls in three different colors: inputs at 23% black (or white), outlined buttons in their intent color at half strength, toggle buttons in the divider color. Kilowatt gives them one outline per state from their own palette role, `palette.control`, kept apart from the surface border levels so either can change without moving the other. The outline is quiet at rest (slate 600 in light, navy 700 in dark; below 3:1, by design decision), a stronger one on hover (slate 950 in light, navy 300 in dark), the primary text color on keyboard focus and navy 400 or navy 100 when pressed. Inputs show focus with MUI's 2px primary outline. Error and disabled keep MUI's. Outlined buttons in the other intents (secondary, error, warning, info, success) keep MUI's intent-colored outline on purpose: the color carries their meaning.",
     options: (scheme) => ({
       palette: {
         control:
