@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createTheme, useColorScheme } from '@mui/material/styles';
 import type { Decorator, Preview } from '@storybook/react-vite';
 import { DocsContainer, type DocsContainerProps } from '@storybook/addon-docs/blocks';
@@ -45,12 +45,20 @@ function SchemeDocsContainer(props: DocsContainerProps & { children?: ReactNode 
   return <DocsContainer {...props} theme={themes[scheme]} />;
 }
 
-/** Follows the `scheme` toolbar global. The theme lives on <html>, so one scheme applies to the whole canvas. */
+/**
+ * Follows the `scheme` toolbar global. The theme lives on <html>, so one scheme applies to the whole canvas.
+ * It applies the global when it changes, not on every mode change, so a story's own scheme toggle
+ * (AppShell's) works until the toolbar is used again.
+ */
 function SchemeSync({ scheme, children }: { scheme: ColorScheme; children: ReactNode }) {
-  const { mode, setMode } = useColorScheme();
+  const { setMode } = useColorScheme();
+  // setMode changes identity with the mode, so the effect re-runs on a story's change; it applies only a new global.
+  const applied = useRef<ColorScheme | null>(null);
   useEffect(() => {
-    if (scheme !== mode) setMode(scheme);
-  }, [scheme, mode, setMode]);
+    if (applied.current === scheme) return;
+    applied.current = scheme;
+    setMode(scheme);
+  }, [scheme, setMode]);
   return children;
 }
 

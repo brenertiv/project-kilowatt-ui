@@ -40,6 +40,7 @@ export const iconNames = [
   'left_panel_open',
   'light_mode',
   'link',
+  'menu',
   'more_horiz',
   'refresh',
   'remove',
