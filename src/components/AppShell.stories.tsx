@@ -23,11 +23,43 @@ const sections: AppShellSection[] = [
           New
         </Button>
       ),
+      filter: {
+        label: 'Filter by type',
+        options: [
+          { value: 'dashboard', label: 'Dashboards' },
+          { value: 'report', label: 'Reports' },
+          { value: 'plan', label: 'Plans' },
+        ],
+      },
       items: [
-        { id: 'reporting-readiness', label: 'Reporting readiness', secondary: 'Dashboard', icon: 'table_rows' },
-        { id: 'energy-esg-summary', label: 'Energy and ESG summary', secondary: 'Report', icon: 'bar_chart' },
-        { id: 'emissions-energy', label: 'Emissions and energy', secondary: 'Dashboard', icon: 'table_rows' },
-        { id: 'decarbonization-plan', label: 'Decarbonization plan', secondary: 'Plan', icon: 'trending_down' },
+        {
+          id: 'reporting-readiness',
+          label: 'Reporting readiness',
+          secondary: 'Dashboard',
+          kind: 'dashboard',
+          icon: 'table_rows',
+        },
+        {
+          id: 'energy-esg-summary',
+          label: 'Energy and ESG summary',
+          secondary: 'Report',
+          kind: 'report',
+          icon: 'bar_chart',
+        },
+        {
+          id: 'emissions-energy',
+          label: 'Emissions and energy',
+          secondary: 'Dashboard',
+          kind: 'dashboard',
+          icon: 'table_rows',
+        },
+        {
+          id: 'decarbonization-plan',
+          label: 'Decarbonization plan',
+          secondary: 'Plan',
+          kind: 'plan',
+          icon: 'trending_down',
+        },
       ],
     },
   },
@@ -128,6 +160,7 @@ const meta = {
       'ListItemButton',
       'IconButton',
       'TextField',
+      'Dialog',
       'Badge',
       'Tooltip',
       'Avatar',
@@ -322,19 +355,32 @@ export const PanelUndocked: Story = {
   },
 };
 
-/** Search narrows the panel's pages as you type, and says so when nothing matches. */
-export const PanelSearch: Story = {
-  args: { section: 'property-info' },
+/** Search is an icon button beside the panel's toggle; it opens one dialog that finds a page in any section. */
+export const Search: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.type(canvas.getByRole('textbox', { name: 'Search Property Info' }), 'me');
-    await expect(canvas.getByRole('button', { name: 'Meters' })).toBeVisible();
-    await expect(canvas.queryByRole('button', { name: 'Bills' })).toBeNull();
-    await userEvent.type(canvas.getByRole('textbox', { name: 'Search Property Info' }), 'xx');
-    await expect(canvas.getByRole('status')).toHaveTextContent('No pages match “mexx”.');
+    await userEvent.click(canvas.getByRole('button', { name: 'Search' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Search' });
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search pages' }), 'me');
+    await expect(within(dialog).getByRole('status')).toHaveTextContent('3 pages');
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Meters/ }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search' })).toBeNull());
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Meters');
   },
 };
 
-/** The panel resizes between 220px and 380px by dragging its edge, or with the arrow keys, Home and End once it's focused. */
+/** Workspace's filter button narrows its items to one type; a dot on the button shows a filter is on. */
+export const PanelFilter: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Filter by type' }));
+    await userEvent.click(await screen.findByRole('menuitemradio', { name: 'Reports' }));
+    const panel = canvas.getByRole('navigation', { name: 'Workspace' });
+    await expect(within(panel).getByRole('button', { name: /^Energy and ESG summary/ })).toBeVisible();
+    await expect(within(panel).queryByRole('button', { name: /^Reporting readiness/ })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Filter by type: Reports' })).toBeVisible();
+  },
+};
+
+/** The panel resizes between 220px and 380px by dragging its edge, or with the arrow keys, Home and End once it's focused; the hover panel keeps a fixed 248px. */
 export const PanelResize: Story = {
   play: async ({ canvas, userEvent }) => {
     const handle = canvas.getByRole('separator', { name: 'Resize navigation' });
@@ -343,6 +389,11 @@ export const PanelResize: Story = {
     await expect(handle).toHaveAttribute('aria-valuenow', '272');
     await userEvent.keyboard('{End}');
     await expect(handle).toHaveAttribute('aria-valuenow', '380');
+    // Undocked, the hover panel keeps its own fixed width rather than the docked panel's.
+    await userEvent.click(canvas.getByRole('button', { name: 'Collapse navigation' }));
+    await userEvent.hover(canvas.getByRole('button', { name: 'People' }));
+    const floating = await canvas.findByRole('navigation', { name: 'People' });
+    await expect(floating.getBoundingClientRect().width).toBe(248);
   },
 };
 
@@ -397,6 +448,19 @@ export const PhonePageMenu: Story = {
     await userEvent.click(await screen.findByRole('menuitem', { name: /^Decarbonization plan/ }));
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Decarbonization plan');
+  },
+};
+
+/** On a phone, Search sits beside the menu button and opens the same search, filling the screen. */
+export const PhoneSearch: Story = {
+  globals: phoneViewport,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Search' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Search' });
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search pages' }), 'tenants');
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Tenants/ }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search' })).toBeNull());
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Tenants');
   },
 };
 

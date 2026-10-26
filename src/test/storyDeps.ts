@@ -44,6 +44,7 @@ export const storyDeps = [
   '@mui/material/Checkbox',
   '@mui/material/colors',
   '@mui/material/CssBaseline',
+  '@mui/material/Dialog',
   '@mui/material/Drawer',
   '@mui/material/Fab',
   '@mui/material/FormControl',

@@ -8,15 +8,16 @@ import * as AppShellStories from './AppShell.stories';
 
 # AppShell
 
-`AppShell` is the frame around every Enertiv page. It's Kilowatt's own component, composed from MUI's `List`, `ListItemButton`, `Drawer`, `Paper`, `Menu`, `Slide`, `AppBar`, `IconButton`, `TextField`, `ToggleButtonGroup`, `Badge`, `Tooltip` and `Avatar` (`@mui/material`, Material UI v9; MUI documents their props). MUI has no app frame of its own, so the shell is where the layout rules for one live.
+`AppShell` is the frame around every Enertiv page. It's Kilowatt's own component, composed from MUI's `List`, `ListItemButton`, `Drawer`, `Dialog`, `Paper`, `Menu`, `Slide`, `AppBar`, `IconButton`, `TextField`, `ToggleButtonGroup`, `Badge`, `Tooltip` and `Avatar` (`@mui/material`, Material UI v9; MUI documents their props). MUI has no app frame of its own, so the shell is where the layout rules for one live.
 
 On wide screens (`md` and up), from left to right:
 
 - **Rail.** The company button at the top (with two or more `companies`, it opens a menu to switch), one icon per section, then the sections placed at the `end` at the bottom: Notifications and My account. It sits on the page surface, outside the frame.
-- **Section panel.** The current section's title, a search field, optional actions (a New button) and its pages. It resizes from its edge (220px to 380px) and undocks from its header. Undocked, hovering a section in the rail floats that section's panel over the page, so another section's pages are one move away; Dock navigation, in the header or the floating panel, docks it again. Sections with no pages of their own have no panel.
-- **Header.** Dock navigation when the panel is undocked, then the scope (`headerStart`) at the start and page-wide actions (`headerEnd`) at the end.
+- **Section panel.** The current section's title with its header buttons (a filter when the panel has one, Search, and Collapse navigation), optional actions (a New button) and its pages. It resizes from its edge (220px to 380px) and undocks from its header. Undocked, hovering a section in the rail floats that section's panel over the page, so another section's pages are one move away; Dock navigation, in the header or the floating panel, docks it again. Sections with no pages of their own have no panel.
+- **Header.** Dock navigation and Search when the panel is undocked (or the section has no panel), then the scope (`headerStart`) at the start and page-wide actions (`headerEnd`) at the end.
 - **Main.** The page. The frame fills the window and only `main` scrolls.
 - **Aside.** An optional column at the end, for the assistant. Below `lg` it opens as a bottom sheet.
+- **Search.** One search dialog for the whole app, opened from the Search button that sits beside the panel's toggle on every page. It finds a page in any section by name and goes to it.
 
 Below `md` the shell switches to a layout built for a phone's browser: a sticky header and a one-column menu (Variants → Phones).
 
@@ -70,9 +71,10 @@ On phones, add `viewport-fit=cover` to the app's viewport meta tag, so the shell
 ## Variants
 
 - **With a panel:** a section with pages. Rows show an icon and a label, and optionally a second line (the item's type) or a count (open issues). The panel is MUI's `dense` list: rows have 4px of vertical padding and `body2` text, compact for a sidebar. The phone menu keeps full-height rows, for touch.
+- **Filter:** a panel's `filter` adds a filter button to its header, whose menu narrows the pages to one `kind`: Workspace filters its items by type (Dashboards, Reports, Plans). A dot on the button shows a filter is on, and the button's name says which.
 - **No panel:** leave a section's `panel` out when it has no pages of its own, such as an upgrade page. Hovering it shows its tooltip, not a panel.
 - **At the end of the rail:** `placement: 'end'` puts a section at the bottom of the rail. Notifications is one: a section like any other, with its unread `count` and a panel that groups notifications by kind (All unread, Insights, Activity, Property alerts, Data alerts, App updates).
-- **My account:** the signed-in person's section, at the very bottom with `placement: 'end'` and their `initials` on an avatar in place of an icon. Its panel lists the account pages (Profile, Preferences, Notification preferences, Modules and entitlements, Help and support), and `colorScheme: true` adds the Light, Dark and System appearance control under them. The light/dark switch lives there, not in the rail.
+- **My account:** the signed-in person's section, at the very bottom with `placement: 'end'` and their `initials` on an avatar in place of an icon. Its panel lists the account pages (Profile, Preferences, Notification preferences, Modules and entitlements, Help and support), and `colorScheme: true` adds the appearance control under them: System, Light and Dark as icons (a monitor, a sun and a moon), each named in a tooltip. The light/dark switch lives there, not in the rail.
 - **Companies:** pass every company the person belongs to as `companies` (the current one included), each with an optional `detail` such as their role. With two or more, the company button opens a menu with the current one checked; choosing another calls `onCompanyChange`. With one, the button shows the name only.
 - **With an aside:** pass `aside` and `asideOpen`, and a button in `headerEnd` that toggles it.
 
@@ -81,11 +83,11 @@ On phones, add `viewport-fit=cover` to the app's viewport meta tag, so the shell
 A phone's browser keeps its own toolbars on screen: Safari's sits at the bottom by default (iOS 26), Chrome's at the top. So below `md` the shell puts nothing at the bottom of the page and lets the browser's toolbars shrink:
 
 - **The document scrolls** under a sticky header, rather than inside a fixed frame, so the browser can shrink its toolbars as people scroll.
-- **Header:** the menu button (with a dot for unread notifications), the page's title and `headerEnd` (an icon button; there's no room for a label). The title is a menu of the current section's pages, so a neighbouring page is one tap away. `headerStart` (the scope) moves to the top of the page.
+- **Header:** the menu button (with a dot for unread notifications), Search beside it (the same search dialog, filling the screen), the page's title and `headerEnd` (an icon button; there's no room for a label). The title is a menu of the current section's pages, so a neighbouring page is one tap away. `headerStart` (the scope) moves to the top of the page.
 - **Menu:** one column, not the rail and panel side by side. It opens on the current section's pages, with All sections to go up a level; there, Notifications leads, and sections with pages drill in. The menu's header (the back arrow, the level's title and the close button) stays put while the list slides: in from the right when drilling in, from the left when going back, over 300ms (`duration.standard`, `easeOut`).
 - **Pinned to the foot of the menu,** on both levels: My account, which drills into its pages and the appearance control, and the company button, an outlined button with the company's name that opens the company menu. Choosing a company closes both menus, then calls `onCompanyChange`.
 - **Back closes it.** The menu, the title's menu and the company menu each take a step in the browser's history while open, so the browser's Back button or back swipe closes the top one rather than leaving the page.
-- **Left out on phones:** sections with `hideOnPhone` (the upgrade pages), the panel's search and `actions` (put a section's New action in its page too), docking, resizing, hover and tooltips.
+- **Left out on phones:** sections with `hideOnPhone` (the upgrade pages), the panel's `filter` and `actions` (put a section's New action and filters in its page too), docking, resizing, hover and tooltips.
 - **Safe areas:** `main`, the menu and the sheets pad by `env(safe-area-inset-bottom)`, which needs `viewport-fit=cover` in the app's viewport meta tag; without it the inset is 0.
 - **Heights** use `dvh`, which follows the browser's toolbars as they show and hide. Menus and sheets use `overscroll-behavior: contain`, so scrolling to their end doesn't scroll the page behind.
 
@@ -93,8 +95,9 @@ Test the phone layout on a real iPhone (with Safari's toolbar at the bottom and 
 
 ## States
 
-- **Panel undocked:** the page takes the room, and the header shows Dock navigation. Hovering a section in the rail floats its panel over the page, 8px inside the frame on every edge (the frame's border included) and 8px narrower than the docked panel. Its corners are concentric with the frame's (the frame's 16px is the panel's 8px theme radius plus the 8px gap), and it sits on level2 with a low shadow (`elevation={2}`). It stays while the pointer is over the rail or the panel (with a 200ms grace for crossing the gap), and closes when a page is chosen, the pointer leaves, or on Escape. Rail items with a panel show it in place of their tooltip.
-- **Panel searched:** rows that don't match are hidden, and the panel says when none do.
+- **Panel undocked:** the page takes the room, and the header shows Dock navigation. Hovering a section in the rail floats its panel over the page, 8px inside the frame on every edge (the frame's border included), at a fixed 248px wide whatever the docked panel was resized to. Its corners are concentric with the frame's (the frame's 16px is the panel's 8px theme radius plus the 8px gap), and it sits on level2 with a low shadow (`elevation={2}`). It stays while the pointer is over the rail or the panel (with a 200ms grace for crossing the gap), and closes when a page is chosen, the pointer leaves, or on Escape. Rail items with a panel show it in place of their tooltip.
+- **Searching:** the dialog opens with the field focused and says what it finds as you type ("3 pages", or that none match); each result names its section. Choosing one closes the dialog and goes to the page; so does Escape, the close button and the browser's Back, without going anywhere.
+- **Filtered:** only the pages of the chosen `kind` show, the filter button carries a dot, and the panel says when none match.
 - **Section with news:** a section's `badge` puts a dot on its icon and is read with its label ("Maintenance, Upgrade available"). With a `count`, the icon shows the number instead of the dot; give `badge` the words for it ("10 unread").
 - **Menu open on a phone:** the menu opens at the current section's pages; choosing a page closes it, and so do the close button, the scrim, Escape and the browser's Back.
 
@@ -115,11 +118,11 @@ Test the phone layout on a real iPhone (with Safari's toolbar at the bottom and 
 - `selected-fills-icons`: the current section and page show their icons filled.
 - `icon-button-radius`: the rail's and header's icon buttons round at the theme radius.
 - `icons`: every icon is a Material Symbol through `Icon`.
-- `medium-size`: icon buttons and the search field stay at medium.
-- `control-outlines`: the search field and the phone menu's company button are outlined in the control color.
+- `medium-size`: icon buttons, toggle buttons and the search field stay at medium.
+- `control-outlines`: the search dialog's field, the appearance control and the phone menu's company button are outlined in the control color.
 - `toggle-button-text`: the appearance control's unselected options use secondary text.
-- `button-text-case`: the appearance options are written in Title Case.
-- `button-text-weight`: the appearance options are at regular weight.
+- `button-text-case`: the phone menu's company button is written as the company's name, in Title Case.
+- `button-text-weight`: the company button's label is at regular weight.
 - `tabular-numerals`: a section's `count` badge, such as unread notifications, uses tabular figures.
 
 Theme-wide departures (surfaces, borders, radius, type, reduced motion) apply too; see Foundations → MUI departures. With reduced motion on, the phone menu's slide finishes at once.
@@ -131,7 +134,8 @@ Theme-wide departures (surfaces, borders, radius, type, reduced motion) apply to
 - The current section and page carry `aria-current="page"`.
 - Every icon-only button has an accessible name and a tooltip: sections by label, with their `badge` words ("Notifications, 10 unread"); on phones the menu button includes them too ("Open menu, 10 unread").
 - The company button says it opens a menu (`aria-haspopup`, `aria-expanded`), and so does the page title on phones. The company menu is named Switch company; its companies are radio items (`menuitemradio`), and the current one is `aria-checked`.
-- The appearance control is a `ToggleButtonGroup` labelled Appearance; each option is a word, and the chosen one is `aria-pressed`.
+- The appearance control is a `ToggleButtonGroup` labelled Appearance; each icon button is named System, Light or Dark (with a matching tooltip), and the chosen one is `aria-pressed`.
+- The search dialog is named Search and opens with its field focused; its result count or no-match message is a polite `status`, and MUI's `Dialog` traps focus and closes on Escape. The filter button says it opens a menu, and its options are radio items (`menuitemradio`) with the chosen one `aria-checked`.
 - The resize handle is a focusable `separator` with its width as its value: the arrow keys move it by 8px, Home and End to its limits. Hovered, focused or dragged, it takes the primary color, softened toward both ends, so where to grab shows without relying on the cursor alone.
 - MUI's `Drawer` and `Menu` trap focus while open and close on Escape.
 - The floating panel opens on hover only; keyboard users reach every section's pages by choosing the section, or by docking the panel. Escape closes it while focus is inside.

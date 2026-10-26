@@ -4,6 +4,7 @@ import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -41,18 +42,22 @@ export type AppShellPanelItem = {
   count?: number;
   /** Where the page lives, if it has a URL: the row renders as a link. */
   href?: string;
+  /** The page's type, matched against the panel's `filter` options, such as `'report'`. */
+  kind?: string;
 };
 
 /** A section's panel: its pages, with search. */
 export type AppShellPanel = {
   /** The pages, in order. */
   items: AppShellPanelItem[];
-  /** Controls between the search field and the list, such as a New button. Left out of the phone menu, so put the same action in the page too. */
+  /** Controls under the panel's header, such as a New button. Left out of the phone menu, so put the same action in the page too. */
   actions?: ReactNode;
   /** Content under the list, such as the company name. */
   footer?: ReactNode;
-  /** Shows the Light, Dark and System appearance control under the list, as My account does. Default `false`. */
+  /** Shows the System, Light and Dark appearance control under the list, as My account does. Default `false`. */
   colorScheme?: boolean;
+  /** A filter button in the panel's header that narrows the pages to one `kind`, such as Workspace's item types. `label` names the button and its menu; each option's `value` matches the items' `kind`. */
+  filter?: { label: string; options: { value: string; label: string }[] };
 };
 
 /** A top-level section of the app, shown as an icon in the rail. */
@@ -141,6 +146,8 @@ const railWidth = 72;
 const minPanelWidth = 220;
 const maxPanelWidth = 380;
 const asideWidth = 344;
+/** The undocked panel's width, fixed whatever the docked panel is resized to: the default panel width less its 8px inset. */
+const flyoutWidth = 248;
 /** How long the undocked panel stays after the pointer leaves the rail and panel, so it survives a diagonal move. */
 const flyoutCloseDelay = 200;
 
@@ -150,43 +157,78 @@ type SectionPanelProps = {
   section: AppShellSection & { panel: AppShellPanel };
   page?: string;
   width: number | string;
-  /** The header button: collapse when docked or in the drawer, dock when floating. */
+  /** The header button: collapse when docked, dock when floating. */
   toggle: { label: string; icon: IconName; onClick: () => void };
+  /** Opens the search dialog, from the Search button beside the toggle. */
+  onSearch: () => void;
   onChoose: (page: string) => void;
 };
 
-/** A section's title, search, actions and pages. Docked, floating over the page, or in the drawer. */
-function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelProps) {
-  const [query, setQuery] = useState('');
+/** A section's title, header buttons (filter, search, collapse or dock), actions and pages. Docked or floating over the page. */
+function SectionPanel({ section, page, width, toggle, onSearch, onChoose }: SectionPanelProps) {
   const { panel, label } = section;
-  const items = panel.items.filter((item) => item.label.toLowerCase().includes(query.trim().toLowerCase()));
+  const [kind, setKind] = useState<string | null>(null);
+  const [filterButton, setFilterButton] = useState<HTMLElement | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const items = panel.items.filter((item) => kind === null || item.kind === kind);
+  const chosen = panel.filter?.options.find((option) => option.value === kind);
+  const filterName = panel.filter && (chosen ? `${panel.filter.label}: ${chosen.label}` : panel.filter.label);
   return (
     <Stack component="nav" aria-label={label} sx={{ width, flexShrink: 0, minHeight: 0, height: '100%' }}>
-      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, p: 2, pr: 1 }}>
-        <Typography variant="h5" component="h2" noWrap>
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 0.5, p: 2, pr: 1 }}>
+        <Typography variant="h5" component="h2" noWrap sx={{ flex: 1 }}>
           {label}
         </Typography>
+        {panel.filter && (
+          <>
+            <Tooltip title={filterName}>
+              <IconButton
+                ref={setFilterButton}
+                aria-label={filterName}
+                aria-haspopup="menu"
+                aria-expanded={filterOpen}
+                onClick={() => setFilterOpen(true)}
+              >
+                <Badge variant="dot" color="secondary" invisible={kind === null}>
+                  <Icon name="filter_list" />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+            <Menu
+              anchorEl={filterButton}
+              open={filterOpen}
+              onClose={() => setFilterOpen(false)}
+              slotProps={{ list: { 'aria-label': panel.filter.label } }}
+            >
+              {[{ value: null as string | null, label: 'All' }, ...panel.filter.options].map((option) => (
+                <MenuItem
+                  key={option.value ?? 'all'}
+                  role="menuitemradio"
+                  aria-checked={kind === option.value}
+                  selected={kind === option.value}
+                  onClick={() => {
+                    setKind(option.value);
+                    setFilterOpen(false);
+                  }}
+                >
+                  <ListItemText primary={option.label} />
+                  {kind === option.value && <Icon name="check" sx={{ ml: 2 }} />}
+                </MenuItem>
+              ))}
+            </Menu>
+          </>
+        )}
+        <Tooltip title="Search">
+          <IconButton aria-label="Search" onClick={onSearch}>
+            <Icon name="search" />
+          </IconButton>
+        </Tooltip>
         <Tooltip title={toggle.label}>
           <IconButton aria-label={toggle.label} onClick={toggle.onClick}>
             <Icon name={toggle.icon} />
           </IconButton>
         </Tooltip>
       </Stack>
-      <TextField
-        label={`Search ${label}`}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        sx={{ mx: 2, mb: 2 }}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <Icon name="search" />
-              </InputAdornment>
-            ),
-          },
-        }}
-      />
       {panel.actions && <Box sx={{ mx: 2, mb: 2 }}>{panel.actions}</Box>}
       {/* MUI's dense list: tighter rows for a desktop sidebar, with body2 text. */}
       <List dense sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 1, py: 0 }}>
@@ -218,7 +260,7 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
       </List>
       {items.length === 0 && (
         <Typography variant="body2" color="text.secondary" role="status" sx={{ px: 2, pb: 2 }}>
-          No pages match “{query.trim()}”.
+          Nothing here is {chosen?.label.toLowerCase()}.
         </Typography>
       )}
       {panel.colorScheme && <ColorSchemeControl />}
@@ -227,33 +269,124 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
   );
 }
 
+type SearchDialogProps = {
+  open: boolean;
+  sections: AppShellSection[];
+  /** Fills the screen, on phones. */
+  fullScreen: boolean;
+  onClose: () => void;
+  onChoose: (page: string, section: string) => void;
+};
+
+/** Searches the pages of every section, from any page: the same dialog on wide screens and phones. */
+function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchDialogProps) {
+  const [query, setQuery] = useState('');
+  const titleId = useId();
+  const term = query.trim().toLowerCase();
+  const results = term
+    ? sections.flatMap((section) =>
+        (section.panel?.items ?? [])
+          .filter((item) => item.label.toLowerCase().includes(term))
+          .map((item) => ({ section, item })),
+      )
+    : [];
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      fullScreen={fullScreen}
+      aria-labelledby={titleId}
+      slotProps={{
+        transition: { onExited: () => setQuery('') },
+        // Pinned near the top on wide screens, so it doesn't jump as the results change.
+        paper: { sx: { overscrollBehavior: 'contain', ...(!fullScreen && { alignSelf: 'flex-start', mt: 10 }) } },
+      }}
+    >
+      <Stack direction="row" sx={{ alignItems: 'center', gap: 1, p: 1, pl: 3 }}>
+        <Typography id={titleId} variant="h5" component="h2" sx={{ flex: 1 }}>
+          Search
+        </Typography>
+        <IconButton aria-label="Close search" onClick={onClose}>
+          <Icon name="close" />
+        </IconButton>
+      </Stack>
+      <Box sx={{ px: 3, pb: 1 }}>
+        <TextField
+          autoFocus
+          fullWidth
+          label="Search pages"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Icon name="search" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      </Box>
+      <Typography role="status" variant="body2" color="text.secondary" sx={{ px: 3, py: 1 }}>
+        {!term
+          ? 'Find a page in any section.'
+          : results.length === 0
+            ? `No pages match “${query.trim()}”.`
+            : new Intl.PluralRules().select(results.length) === 'one'
+              ? '1 page'
+              : `${new Intl.NumberFormat().format(results.length)} pages`}
+      </Typography>
+      <List aria-label="Results" sx={{ minHeight: 0, overflowY: 'auto', px: 1, pt: 0, pb: 2 }}>
+        {results.map(({ section, item }) => (
+          <ListItem key={`${section.id}:${item.id}`} disablePadding>
+            <ListItemButton
+              onClick={() => onChoose(item.id, section.id)}
+              {...(item.href ? { component: 'a', href: item.href } : {})}
+              sx={{ borderRadius: 1 }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <Icon name={item.icon} />
+              </ListItemIcon>
+              <ListItemText primary={item.label} secondary={section.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Dialog>
+  );
+}
+
 // Text only, so the three fit the panel at its narrowest (220px).
 const schemes = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
+  { value: 'system', label: 'System', icon: 'desktop_windows' },
+  { value: 'light', label: 'Light', icon: 'light_mode' },
+  { value: 'dark', label: 'Dark', icon: 'dark_mode' },
 ] as const;
 
-/** Light, Dark or System, through MUI's color scheme. */
+/** System, Light or Dark, through MUI's color scheme: icons with their names in tooltips. */
 function ColorSchemeControl() {
   const { mode, setMode } = useColorScheme();
   const labelId = useId();
   return (
-    <Stack sx={{ gap: 1, p: 2 }}>
-      <Typography id={labelId} variant="caption" color="text.secondary">
+    <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, p: 2 }}>
+      <Typography id={labelId} variant="body2" color="text.secondary">
         Appearance
       </Typography>
       <ToggleButtonGroup
         value={mode ?? 'system'}
         exclusive
-        fullWidth
         aria-labelledby={labelId}
         onChange={(_, value: (typeof schemes)[number]['value'] | null) => value && setMode(value)}
       >
         {schemes.map((scheme) => (
-          <ToggleButton key={scheme.value} value={scheme.value} sx={{ minWidth: 0 }}>
-            {scheme.label}
-          </ToggleButton>
+          <Tooltip key={scheme.value} title={scheme.label}>
+            <ToggleButton value={scheme.value} aria-label={scheme.label}>
+              <Icon name={scheme.icon} />
+            </ToggleButton>
+          </Tooltip>
         ))}
       </ToggleButtonGroup>
     </Stack>
@@ -463,6 +596,7 @@ function PhoneShell({
 }: PhoneShellProps) {
   const [menuOpen, showMenu, hideMenu] = useBackToClose();
   const [companiesOpen, showCompanies, hideCompanies] = useBackToClose();
+  const [searchOpen, showSearch, hideSearch] = useBackToClose();
   const [companyButton, setCompanyButton] = useState<HTMLElement | null>(null);
   const [pagesOpen, showPages, hidePages] = useBackToClose();
   // The section whose pages the menu shows; `null` shows the sections.
@@ -646,6 +780,9 @@ function PhoneShell({
               <Icon name="menu" />
             </Badge>
           </IconButton>
+          <IconButton aria-label="Search" onClick={showSearch}>
+            <Icon name="search" />
+          </IconButton>
           {hasPanel(current) ? (
             <Button
               ref={setTitleButton}
@@ -737,6 +874,13 @@ function PhoneShell({
           {menuFooter}
         </Stack>
       </Drawer>
+      <SearchDialog
+        open={searchOpen}
+        sections={sections.filter((item) => !item.hideOnPhone)}
+        fullScreen
+        onClose={() => hideSearch()}
+        onChoose={(id, sectionId) => hideSearch(() => onPageChange?.(id, sectionId))}
+      />
       {switchable && (
         <CompanyMenu
           anchorEl={companyButton}
@@ -763,15 +907,16 @@ function PhoneShell({
 /**
  * The frame every Enertiv page sits in. On wide screens: a rail of top-level sections down the left,
  * with the company switcher at the top and any `end` sections (Notifications, My account) at the
- * bottom; a section panel listing the current section's pages, with search, which resizes and undocks;
- * a header for the scope and page-wide actions; the page in `main`; and an optional side column for
- * the assistant. Undocked, the panel floats inside the frame for whichever rail item is hovered, so
- * another section's pages are one move away. Below the `md` breakpoint it switches to a layout for a
- * phone's browser: the document scrolls under a sticky header whose page title is a menu of the
- * section's pages, and the menu button opens a one-column menu that slides between the sections and a
- * section's pages, with My account and the company pinned at its foot. Below `lg` the side column
- * opens as a bottom sheet. It holds no routes: it reports choices through its callbacks, and items
- * with an `href` render as links.
+ * bottom; a section panel listing the current section's pages, with an optional filter, which
+ * resizes and undocks; a header for the scope and page-wide actions; the page in `main`; and an
+ * optional side column for the assistant. Undocked, the panel floats inside the frame for whichever
+ * rail item is hovered, so another section's pages are one move away. A Search button beside the
+ * panel's toggle, on every page, opens one search dialog that finds a page in any section. Below the
+ * `md` breakpoint it switches to a layout for a phone's browser: the document scrolls under a sticky
+ * header whose page title is a menu of the section's pages, and the menu button opens a one-column
+ * menu that slides between the sections and a section's pages, with My account and the company
+ * pinned at its foot. Below `lg` the side column opens as a bottom sheet. It holds no routes: it
+ * reports choices through its callbacks, and items with an `href` render as links.
  *
  * @summary The app frame: section rail, dockable section panel, header and main area; a drill-down menu on phones.
  * @import import { AppShell } from 'src/components/AppShell';
@@ -807,6 +952,7 @@ export function AppShell({
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const panelRef = useRef<HTMLDivElement>(null);
   const [companyAnchor, setCompanyAnchor] = useState<HTMLElement | null>(null);
+  const [searchOpen, showSearch, hideSearch] = useBackToClose();
   const switchable = companies.length > 1;
 
   useEffect(() => () => clearTimeout(closeTimer.current), []);
@@ -1045,6 +1191,7 @@ export function AppShell({
                 page={page}
                 width={panelWidth}
                 toggle={{ label: 'Collapse navigation', icon: 'left_panel_close', onClick: () => togglePanel(false) }}
+                onSearch={showSearch}
                 onChoose={(id) => choosePage(id, current.id)}
               />
             </Box>
@@ -1058,6 +1205,14 @@ export function AppShell({
                 <Tooltip title="Dock navigation">
                   <IconButton aria-label="Dock navigation" onClick={() => togglePanel(true)}>
                     <Icon name="left_panel_open" />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {/* Search sits beside the panel toggle: here whenever the docked panel, which has its own, isn't showing. */}
+              {!(panelOpen && hasPanel(current)) && (
+                <Tooltip title="Search">
+                  <IconButton aria-label="Search" onClick={showSearch}>
+                    <Icon name="search" />
                   </IconButton>
                 </Tooltip>
               )}
@@ -1108,13 +1263,23 @@ export function AppShell({
             key={flyoutSection.id}
             section={flyoutSection}
             page={flyoutSection.id === section ? page : undefined}
-            // 8px narrower than the docked panel, so its right edge lands where the docked panel's would.
-            width={panelWidth - 8}
+            width={flyoutWidth}
             toggle={{ label: 'Dock navigation', icon: 'left_panel_open', onClick: () => togglePanel(true) }}
+            onSearch={() => {
+              setFlyout(null);
+              showSearch();
+            }}
             onChoose={(id) => choosePage(id, flyoutSection.id)}
           />
         </Paper>
       )}
+      <SearchDialog
+        open={searchOpen}
+        sections={sections}
+        fullScreen={false}
+        onClose={() => hideSearch()}
+        onChoose={(id, sectionId) => hideSearch(() => choosePage(id, sectionId))}
+      />
       {switchable && (
         <CompanyMenu
           anchorEl={companyAnchor}
