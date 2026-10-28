@@ -1,4 +1,4 @@
-import { decomposeColor, getContrastRatio } from '@mui/material/styles';
+import { alpha, decomposeColor, getContrastRatio, type CssVarsPalette } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
 import { navy, slate } from './colors';
 import { departures, type ColorScheme } from './departures';
@@ -83,6 +83,30 @@ describe('createKilowattTheme', () => {
       const { values: bg } = decomposeColor(surface);
       const blended = `rgb(${[0, 1, 2].map((i) => Math.round(fg[i] * alpha + bg[i] * (1 - alpha))).join(', ')})`;
       expect(getContrastRatio(blended, surface), `text.secondary on ${level}`).toBeGreaterThanOrEqual(text);
+    }
+  });
+
+  it.each(schemes)('gives %s-scheme secondary text 4.5:1 on selected rows and filled fields, hovered too, on every surface', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    const { action, primary } = palette;
+    // MUI sets FilledInput on every scheme's palette but types it on CssVarsPalette only.
+    const { FilledInput } = palette as typeof palette & Pick<CssVarsPalette, 'FilledInput'>;
+    // MUI tints a selected list row with primary at selectedOpacity (plus hoverOpacity on hover), and a filled field with FilledInput's bg.
+    const tints = {
+      selected: alpha(primary.main, action.selectedOpacity),
+      'selected hover': alpha(primary.main, action.selectedOpacity + action.hoverOpacity),
+      filled: FilledInput.bg,
+      'filled hover': FilledInput.hoverBg,
+    };
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+      const surface = palette.background[level];
+      for (const [name, tint] of Object.entries(tints)) {
+        const { values: fg } = decomposeColor(tint);
+        const { values: bg } = decomposeColor(surface);
+        const a = fg[3] ?? 1;
+        const blended = `rgb(${[0, 1, 2].map((i) => Math.round(fg[i] * a + bg[i] * (1 - a))).join(', ')})`;
+        expect(getContrastRatio(palette.text.secondary, blended), `text.secondary on ${name} over ${level}`).toBeGreaterThanOrEqual(text);
+      }
     }
   });
 

@@ -8,7 +8,8 @@
  * Cool grays, one neutral ramp from white to near-black. 50 to 300 are the light-scheme surfaces,
  * 400 to 800 the light-scheme borders and control outlines (800, the strongest, below 3:1 on the
  * light surfaces for now, by design decision), and 900 and 950 text: 900 is light-scheme
- * secondary text and icons, at 4.5:1 or more on every light surface. In the dark scheme the light
+ * secondary text and icons, at 4.5:1 or more on every light surface and on MUI's selected and
+ * filled tints over them, hovered too. In the dark scheme the light
  * steps are text and the light neutral primary. 900 and 950 share 800's hue and its low chroma, so
  * they read grey-navy rather than blue.
  */
@@ -22,7 +23,7 @@ export const slate = {
   600: '#dce3ec',
   700: '#d6dee8',
   800: '#c3cfdd',
-  900: '#5c6875',
+  900: '#535e6b',
   950: '#10161e',
 } as const;
 
