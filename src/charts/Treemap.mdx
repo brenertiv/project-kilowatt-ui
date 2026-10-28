@@ -8,7 +8,7 @@ import * as TreemapStories from './Treemap.stories';
 
 # Treemap
 
-A treemap shows how one whole splits into parts as rectangles, each sized by its value. `Treemap` is Kilowatt's reference implementation: amCharts 5's hierarchy treemap (`@amcharts/amcharts5/hierarchy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). It's one level deep: the parts of one whole, with no drilling in. Enertiv's app rebuilds its charts from this one rather than importing it.
+A treemap shows how one whole splits into parts as rectangles, each sized by its value. `Treemap` is Kilowatt's reference implementation: amCharts 5's hierarchy treemap (`@amcharts/amcharts5/hierarchy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). It's one level deep: the parts of one whole, with no drilling in. The rectangles are laid out squarified, so they stay close to square and their labels fit, 2px apart and flush with the chart's edges. Enertiv's app rebuilds its charts from this one rather than importing it.
 
 <Canvas of={TreemapStories.Parts} />
 
@@ -31,11 +31,20 @@ import { Treemap } from 'src/charts/Treemap';
 </Card>;
 ```
 
-`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`), since the chart is rebuilt when it changes. `height` defaults to 240px.
+`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`), since the chart is rebuilt when it changes.
+
+Props, with their defaults:
+
+- `data`: the parts, `{ category, value }`, with an optional `slot` or `neutral` (`SeriesColor`).
+- `unit`: after each value in the tooltip.
+- `summary`: one sentence, the figure's accessible name.
+- `otherLabel`: the name of the grouped rectangle. Default `'Other'`.
+- `height`: the chart's height in pixels. Default `160`, a fact card's strip.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
 
 ## Variants
 
-- **Parts.** Up to six rectangles, largest first, in `chart.series` order, each labeled with its name and share where it fits.
+- **Parts.** Up to six rectangles, largest first, squarified and 2px apart, in `chart.series` order, each labeled with its name and share where it fits, in the palette's contrast text for its color.
 - **Grouped into Other.** With more than six parts, the five largest keep their rectangles and the rest are summed into one in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
 - **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each part, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
 
@@ -62,7 +71,7 @@ Theme-wide departures (the surface levels the card sits on, the theme radius) ap
 
 How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
 
-- `chart-colors`: the chart's chrome takes the palette's roles, and parts take `chart.series`, used as they are. A rectangle's label is in the card surface color (amCharts' `alternativeText`, which the theme maps to the card), which passes 3:1 on every series color in both schemes.
+- `chart-colors`: the chart's chrome takes the palette's roles, and parts take `chart.series`, used as they are. A rectangle's label is in the palette's contrast text for its color (`palette.getContrastText`), dark on the light hues and light on the dark ones, in each scheme.
 - `chart-type`: labels are in the theme's font at the `caption` size.
 - `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
 - `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
@@ -74,7 +83,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 
 - Every rectangle shows its name, exact value, unit and share in a tooltip on hover, including the ones too small for a label.
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
-- Parts are told apart by their direct labels (name and share) and their size, as well as color.
+- Parts are told apart by their direct labels (name and share) and their size, as well as color. Each label takes the palette's contrast text for its rectangle, so it reads on every series color.
 - For exact values, offer the data as a table beside the chart.
 
 ## Related

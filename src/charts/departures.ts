@@ -69,14 +69,15 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'chart-colors',
     kind: 'theme',
     title: 'Colors from the palette',
-    why: "amCharts brings its own interface colors and a data color set it lightens on each pass. Kilowatt takes both from the MUI palette, so chart code never sets a color: the chart's chrome uses the roles every component uses (the card surface, `border.level1` for gridlines, `text.secondary` for text, the intents), and series take `chart.series` in order, used as they are.",
+    why: "amCharts brings its own interface colors and a data color set it lightens on each pass. Kilowatt takes both from the MUI palette, so chart code never sets a color: the chart's chrome uses the roles every component uses (the card surface, `border.level2` for gridlines, `text.secondary` for text, the intents), and series take `chart.series` in order, used as they are.",
     charts: all,
     apply: ({ theme, mui: { palette }, color, card }) => {
       theme.rule('InterfaceColors').setAll({
         background: color(card),
         fill: color(card),
         stroke: color(card),
-        grid: color(palette.border.level1),
+        // A step past the divider, so a chart's lines read on the card (`chart-gridlines`).
+        grid: color(palette.border.level2),
         text: color(palette.text.secondary),
         alternativeBackground: color(palette.text.primary),
         alternativeText: color(card),
@@ -115,7 +116,7 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'chart-gridlines',
     kind: 'theme',
     title: 'Gridlines at full strength',
-    why: 'amCharts draws gridlines at a low opacity of its grid color. Kilowatt draws them at full strength in `border.level1`, the divider, so they read like every other separator in the UI.',
+    why: "amCharts draws gridlines at a low opacity of its grid color. Kilowatt draws them at full strength in `border.level2`, a step past the divider (`border.level1`): asked for in review, so a chart's lines read on the card.",
     charts: xy,
     apply: ({ theme }) => {
       theme.rule('Grid').setAll({ strokeOpacity: 1 });

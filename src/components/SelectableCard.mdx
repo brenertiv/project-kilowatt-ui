@@ -1,0 +1,83 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SelectableCardStories from './SelectableCard.stories';
+
+<Meta
+  of={SelectableCardStories}
+  summary="Kilowatt's SelectableCard and SelectModeProvider for adding cards to the chat as context: in select mode a tab marks each card and a click adds or removes it, and a card in the chat keeps a brand-blue outline."
+/>
+
+# SelectableCard
+
+`SelectableCard` lets a card be added to the chat as context. While select mode is on, every card wrapped in it shows a small brand-blue tab with a plus on its top edge, and a click anywhere on the card adds it to the chat or takes it out; the tab shows a check while it's in. A card in the chat keeps a `secondary.main` outline, in select mode or out of it, for as long as its chip is on the composer. `SelectModeProvider` holds the mode and the selection for every card inside it. They're Kilowatt's own components, built from MUI's `ButtonBase` (`@mui/material`, Material UI v9) over a MUI `Card`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/).
+
+<Canvas of={SelectableCardStories.Selected} />
+
+## When to use
+
+- Use it on a page whose cards people can ask the assistant about: wrap each metric, chart or table card that can be context in `SelectableCard`, and the page in `SelectModeProvider`.
+- Use it for a mode people turn on from a control in the header or the chat's composer; the cards' own controls are covered while it's on.
+- For a card that is one link or action as a whole, use `CardActionArea` (Card → Clickable).
+- For choosing items from a list to act on (bulk delete, export), use `Checkbox` rows or a table with selection, not select mode.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { SelectModeProvider, SelectableCard, type ContextItem } from 'src/components/SelectableCard';
+import { TruncatedText } from 'src/components/TruncatedText';
+
+const [selected, setSelected] = useState<ContextItem[]>([]);
+const onToggle = (item: ContextItem) =>
+  setSelected((items) => (items.some(({ id }) => id === item.id) ? items.filter(({ id }) => id !== item.id) : [...items, item]));
+
+<SelectModeProvider active={selectMode} selected={selected} onToggle={onToggle} page="/dashboard">
+  <SelectableCard title="Energy Use Intensity">
+    <Card variant="outlined">
+      <CardHeader title={<TruncatedText>Energy Use Intensity</TruncatedText>} />
+      …
+    </Card>
+  </SelectableCard>
+</SelectModeProvider>
+```
+
+The provider knows nothing about the chat. The app passes `active` (whether select mode is on), `selected` (the cards in the chat's context) and `onToggle` (what to do when a card is clicked), and shows the selected cards as chips on its composer. Each card's id comes from `contextId(page, title)`, so a chip outlines only the card on the page it came from; pass `page` when the selection outlives the page. A chip that should bring its card into view calls `revealContext(item.id)`.
+
+## States
+
+- **Off:** the card renders as it is, and its own controls work.
+- **Select mode on:** a tab with a plus sits on the card's top edge, towards the right and clear of its 16px corner. A transparent button covers the card; hovering it shows the `secondary.main` outline and the `action.hover` tint, and a click adds the card to the chat.
+- **Selected, select mode on:** the outline stays and the tab shows a check. A click takes the card out.
+- **Selected, select mode off:** the outline stays while the card's chip is on the composer, and the card's own controls work again.
+
+## Do and don't
+
+- Do wrap every card on the page that can be context, so select mode covers the page the same way throughout.
+- Don't wrap a card that has nothing for the assistant to read (an empty state, a promotion); leave it as it is.
+- Do give `SelectableCard` the card's exact title, so the button reads “Add Energy Use Intensity to the chat”.
+- Don't put a second outline or a selected tint on the card yourself; `SelectableCard` draws the one outline, over the card's own border.
+- Do leave room above the first row of cards for the tab, which sits outside the card's top edge.
+- Don't use select mode on phones, where the cards' own controls and a covering target fight for the same touch; leave the toggle out there.
+- Do take the selection from the app's chat state, so the outline and the chip on the composer always agree.
+
+## MUI departures
+
+- `focus-ring`: the click target is a `ButtonBase`, so keyboard focus is the theme's 2px ring in `palette.control.focus`, 2px outside the card at its 16px radius. The component adds no focus style of its own.
+
+The outline matches the card's radius (`card-radius`) and the tab rounds at a quarter of the theme radius above, square where it meets the card. The tab and the outline use `secondary.main` and `secondary.contrastText`, the brand blue (`secondary-brand`). Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- In select mode, each card is one `button` the size of the card, well over the 24px minimum hit area, named “Add {title} to the chat” or “Remove {title} from the chat”, with `aria-pressed` saying whether it's in the chat.
+- The tab is decorative (`aria-hidden`): the plus and the check repeat what `aria-pressed` and the name already say, so the state never rests on color alone.
+- The outline a selected card keeps out of select mode is decorative too (`aria-hidden`); the chip on the composer is the selection's text. Announce a chip being added or removed from the composer (an `aria-live="polite"` region) when the app needs it.
+- The cards' own controls are under the target in select mode, so turn the mode off to use them. Give the mode's toggle a name and `aria-pressed` of its own.
+- `revealContext` scrolls a card into view smoothly, or at once when the person asks for reduced motion. The outline and hover tint fade over the theme's shortest duration, which CssBaseline stills under reduced motion.
+
+## Related
+
+- `Card` for the cards it wraps.
+- `SourceFigure` for the figures on the metric cards it's used with.
+- `Chip` for the composer's context chips.
+
+<Stories includePrimary={false} />

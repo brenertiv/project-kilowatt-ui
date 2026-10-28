@@ -39,7 +39,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Up to six parts of one whole, largest first, each sized by its value and labeled with its share. */
+/** Up to six parts of one whole, squarified and 2px apart, each sized by its value and labeled with its share. */
 export const Parts: Story = {
   parameters: { card: { title: 'Floor Area by Property Type' } },
   args: {

@@ -63,9 +63,12 @@ function levels<T extends Record<string, number>>(scheme: ColorScheme, steps: T)
 export const elevationSurfaces: { elevations: [number, number]; level: keyof typeof surfaceSteps.light; uses: string }[] = [
   { elevations: [0, 1], level: 'level1', uses: 'Paper, Accordion' },
   { elevations: [2, 6], level: 'level2', uses: 'AppBar, Snackbar, and every Card' },
-  { elevations: [7, 12], level: 'level3', uses: 'Menu, Popover' },
-  { elevations: [13, 24], level: 'level4', uses: 'Drawer, Dialog' },
+  { elevations: [7, 12], level: 'level3', uses: 'Menu, Popover (light; level1 in dark)' },
+  { elevations: [13, 24], level: 'level4', uses: 'Drawer, Dialog (light; level1 in dark)' },
 ];
+
+/** The overlays that sit on level1 with the divider as their edge in the dark scheme, by their MUI component and Paper slot (`paper-surface-levels`). */
+const darkOverlays = ['MuiDialog', 'MuiDrawer', 'MuiMenu', 'MuiPopover'] as const;
 
 type Intent = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
 
@@ -259,9 +262,8 @@ export const departures: Departure[] = [
   {
     id: 'type-scale',
     area: 'Typography',
-    components: ['CardHeader'],
     title: 'A compact heading scale',
-    why: "MUI's headings are sized for marketing pages (`h1` 96px down to `h6` 20px), which is too large for a dense product UI. Kilowatt's step down from 32px to 16px, one step apart, so `h6` meets body size. Only `h1` to `h6` change: body, caption, button and input text keep MUI's sizes, so reading sizes don't shrink. Line heights and letter spacing stay MUI's, and every style is regular weight (`regular-weight`). `CardHeader` titles use `h5`, so card titles are 18px with no change to the card.",
+    why: "MUI's headings are sized for marketing pages (`h1` 96px down to `h6` 20px), which is too large for a dense product UI. Kilowatt's step down from 32px to 16px, one step apart, so `h6` meets body size. Only `h1` to `h6` change: body, caption, button and input text keep MUI's sizes, so reading sizes don't shrink. Line heights and letter spacing stay MUI's, and every style is regular weight (`regular-weight`). Card titles are `h6` (`card-header-title`).",
     options: () => ({
       typography: {
         h1: { fontSize: '2rem' },
@@ -274,11 +276,19 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'card-header-title',
+    area: 'Components',
+    components: ['CardHeader'],
+    title: 'Card titles in h6',
+    why: "MUI sets a `CardHeader` title in `h5`, which on the compact heading scale is 18px and reads loud beside the cards' figures and charts. Kilowatt sets every card title in `h6` (16px), one step down, as a default so every card follows without a size of its own; a card that leads a page (Card → Highlight) sets its title a step above, in `h5`. Asked for in review, so a page of cards reads by its content rather than its titles.",
+    options: () => ({ components: { MuiCardHeader: { defaultProps: { slotProps: { title: { variant: 'h6' } } } } } }),
+  },
+  {
     id: 'card-header-subheader',
     area: 'Components',
     components: ['CardHeader'],
     title: 'Card subtitles in body2',
-    why: "MUI sets a `CardHeader` subtitle in `body1` (16px), and in `body2` (14px) only when the header has an avatar. With the compact heading scale the title is 18px, so a 16px subtitle sits almost level with it. Kilowatt sets every subtitle in `body2`, the size MUI already uses beside an avatar, so the title leads. The subtitle keeps MUI's `text.secondary` color and still renders as a `span`.",
+    why: "MUI sets a `CardHeader` subtitle in `body1` (16px), and in `body2` (14px) only when the header has an avatar. Card titles are 16px (`card-header-title`), so a 16px subtitle would sit level with its title. Kilowatt sets every subtitle in `body2`, the size MUI already uses beside an avatar, so the title leads. The subtitle keeps MUI's `text.secondary` color and still renders as a `span`.",
     options: () => ({ components: { MuiCardHeader: { defaultProps: { slotProps: { subheader: { variant: 'body2' } } } } } }),
   },
   {
@@ -286,7 +296,7 @@ export const departures: Departure[] = [
     area: 'Components',
     components: ['CardHeader'],
     title: 'Card headers: aligned actions and one-line titles',
-    why: "MUI pulls a `CardHeader` action out by 4px at the top and bottom and 8px at the right, tuned to its 24px title on a 32px line, and centers the header's contents, so a title moves with the height of whatever sits beside it. Kilowatt pulls the action out by 8px on all three sides, so on its 24px title line the icon inside an icon button sits level with a one-line title, 16px from the card's right edge in line with the content below, and the button never makes the header taller than its title. Contents align to the top, so a title sits 16px from the top and left of every card, with or without a subtitle. Titles and subtitles stay on one line and truncate, so cards in a grid keep one header height; wrap them in `TruncatedText` to show the full text in a tooltip.",
+    why: "MUI pulls a `CardHeader` action out by 4px at the top and bottom and 8px at the right, tuned to its 24px title on a 32px line, and centers the header's contents, so a title moves with the height of whatever sits beside it. Kilowatt pulls the action out by 8px on all three sides, so the icon inside an icon button (on a 24px line) sits level with a one-line title (`h6`, on a 25.6px line, within 1px), 16px from the card's right edge in line with the content below, and the button never makes the header taller than its title. Contents align to the top, so a title sits 16px from the top and left of every card, with or without a subtitle. Titles and subtitles stay on one line and truncate, so cards in a grid keep one header height; wrap them in `TruncatedText` to show the full text in a tooltip.",
     options: () => ({
       components: {
         MuiCardHeader: {
@@ -499,7 +509,7 @@ export const departures: Departure[] = [
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
     title: 'Paper takes its surface from its elevation',
-    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4. Cards, outlined or raised, sit on level2, a step above the level1 frame they're laid out on, so a card reads as a surface on the page rather than only its border.",
+    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4. Cards, outlined or raised, sit on level2, a step above the level1 frame they're laid out on, so a card reads as a surface on the page rather than only its border. In the dark scheme the overlays (menus, popovers, drawers and dialogs) sit on level1 instead, with the `divider` as their edge: level3 and level4 read pale against the dark page, and level1 with the divider is the frame's own surface and edge, so an overlay matches the frame it opens over. Level1 rather than level2 because the dark divider is close to level2's step, so a bordered level2 overlay would show almost no edge. The light scheme keeps the elevation's level and MUI's shadows.",
     options: () => ({
       components: {
         MuiPaper: {
@@ -519,8 +529,54 @@ export const departures: Departure[] = [
         },
         // Two classes, to outrank the elevation rules above, which a raised card also matches.
         MuiCard: { styleOverrides: { root: { '&.MuiPaper-root': { backgroundColor: 'var(--mui-palette-background-level2)' } } } },
+        // The dark scheme's selector, as `theme.applyStyles('dark')` writes it for the `class` selector, with the paper's
+        // class three times to outrank the elevation rules (two classes) without `!important`.
+        ...Object.fromEntries(
+          darkOverlays.map((component) => [
+            component,
+            {
+              styleOverrides: {
+                paper: {
+                  '*:where(.dark) &&&': {
+                    backgroundColor: 'var(--mui-palette-background-level1)',
+                    border: '1px solid var(--mui-palette-divider)',
+                  },
+                },
+              },
+            },
+          ]),
+        ),
       },
     }),
+  },
+  {
+    id: 'soft-shadow',
+    components: ['Paper'],
+    area: 'Components',
+    title: 'A soft shadow for raised composers',
+    why: "MUI's shadows (`theme.shadows`, Paper's `elevation`) are tight and dark, tuned for surfaces stacking on the page; Kilowatt keeps them as its elevation scale. A composer that floats on the frame (a message box that stays above the content it writes into) needs a wider, fainter lift that doesn't read as a menu. Kilowatt adds one Paper variant, `variant=\"soft\"`: the level1 surface with a wide, low-strength shadow, stronger in the dark scheme so it still reads on navy. It's the only shadow outside `theme.shadows`; don't build other shadows in `sx`.",
+    convention: {
+      muiDefault: 'Paper takes `elevation` (a shadow from `theme.shadows`) or `variant="outlined"`',
+      kilowatt: 'A raised composer is `<Paper variant="soft">`: level1 with the soft shadow. Everything else keeps `elevation`',
+      where: 'Composers that float over the frame, such as the assistant’s message box',
+    },
+    options: () => {
+      // The shadow's color is the palette's black at a strength per scheme, so no raw color enters the override.
+      const shadow = (wide: number, near: number) =>
+        `0 6px 20px -4px color-mix(in srgb, var(--mui-palette-common-black) ${wide}%, transparent), 0 1px 3px color-mix(in srgb, var(--mui-palette-common-black) ${near}%, transparent)`;
+      return {
+        components: {
+          MuiPaper: {
+            variants: [
+              {
+                props: { variant: 'soft' },
+                style: { boxShadow: shadow(10, 5), '*:where(.dark) &': { boxShadow: shadow(45, 30) } },
+              },
+            ],
+          },
+        },
+      };
+    },
   },
   {
     id: 'icons',

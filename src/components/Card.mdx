@@ -15,6 +15,8 @@ A card holds content and actions about one subject. Kilowatt uses MUI's `Card`, 
 ## When to use
 
 - Use a card for one self-contained subject that sits beside others like it: a building in a portfolio, a meter, a saved report.
+- Use an outlined card with a headline number for a metric: the figure at the card's foot, set by `SourceFigure` or `PlainFigure` (Metric, below).
+- Use a highlight card for the one card a page leads with: the same outlined card, with its title a step above the others and a More menu (Highlight, below).
 - Use an outlined card for every chart: a title-only `CardHeader` names what's measured, and the chart sits straight in the card, padding itself 16px, with its unit above the value axis (Rules → Charts).
 - For a plain raised area with no card structure (a panel, a toolbar backdrop), use `Paper`.
 - For rows of the same fields that people compare or sort, use a table, not a grid of cards.
@@ -76,7 +78,37 @@ function EnergyUseChart() {
 - **One line each.** Titles and subtitles truncate instead of wrapping (`card-header-layout`). Wrap each in `TruncatedText`, so a cut-off title shows in full in a tooltip.
 - **The action lines up with the content.** An icon button in `action` is centered on a one-line title, and its icon sits 16px from the card's right edge, in line with the content below. The button's hover background reaches to 8px from the corner, which is why cards round at 16px (`card-radius`). The button doesn't add height: a header with only a title is the title line plus 16px above and below.
 
+### Metric
+
+A metric card leads with one headline number. Set it with `SourceFigure`, `ExplainedFigure` or `PlainFigure` from `src/components/SourceFigure`, which share one type; see [Data display → SourceFigure](?path=/docs/data-display-sourcefigure--docs).
+
+- **The figure is `h2` with tabular numerals.** The unit follows it in `body1` and `text.secondary`, and the value is formatted with `Intl.NumberFormat`. A value that's a phrase rather than a number (longer than 14 characters, such as “4 on track, 2 at risk”) steps down to `h4`, so it still fits.
+- **The figure sits at the card's foot, with a 160px floor.** Give the card `minHeight: (theme) => theme.spacing(20)` (20 spacing units) as a flex column, and its `CardContent` `mt: 'auto'`, so single-figure cards in a row hold one height and their figures line up along the bottom.
+- **The metric sits above any chart.** When a card has both, the figure comes first, in `CardContent`, and the chart follows, straight in the card.
+- **No caption under the figure.** A figure that needs clarifying opens its explanation instead: `SourceFigure` opens a dialog with where it comes from, with what would have been the caption as its `note`, and `ExplainedFigure` opens one with a note alone. A figure with nothing to explain is a `PlainFigure`, not a control.
+
+```tsx
+import { SourceFigure } from 'src/components/SourceFigure';
+
+<Card variant="outlined" sx={{ minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+  <CardHeader title={<TruncatedText>Energy Use</TruncatedText>} action={options} />
+  <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+    <SourceFigure title="Energy Use" value="32,914" unit="kWh" note="6% less than the previous 30 days." source={source} />
+  </CardContent>
+</Card>
+```
+
 <Canvas of={CardStories.Metric} />
+
+### Highlight
+
+The highlight card is the card a page leads with, such as the selected view's card at the top of a dashboard. It's not a component of its own: it's an outlined `Card` with the same surface and border as every other card, so it leads by its place and its title, not by color.
+
+- **The title is a step above other card titles.** Card titles are `h6` (`card-header-title`); the highlight's is `h5`, through the header's title slot: `slotProps={{ title: { variant: 'h5', component: 'h2' } }}`. It's the page's lead heading, so it renders as an `h2`.
+- **A More menu in the top right.** An icon button with `more_horiz` in the header's `action`, placed as every card header's action is (`card-header-layout`), opening a `Menu` of the card's actions.
+- **Its content follows the other card rules.** A metric at the top, then a chart straight in the card, each with its own inset.
+
+<Canvas of={CardStories.Highlight} />
 
 ### Padding
 
@@ -111,6 +143,10 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 - Do choose one look per grid: all elevation or all outlined.
 - Don't add a border to an elevation card or a shadow to an outlined one; keep one edge per card.
 - Do make a chart card outlined, with a title-only `CardHeader` that says what's measured.
+- Do set a metric card's figure with `SourceFigure` or `PlainFigure`, at the card's foot over a 160px floor, and above any chart.
+- Don't put a caption under a headline number; put it in the figure's `note`, so it opens with the figure's source.
+- Do lead a page with at most one highlight card, an outlined card with an `h5` title and a More menu.
+- Don't give a highlight card its own surface, border or color; it differs only by its title and its place.
 - Do put each unit next to its number: `32,914 kWh`, formatted with `Intl.NumberFormat` and a no-break space.
 - Don't put units or the page's period in a title or subtitle; use a subtitle only for a period that differs from the page's.
 - Don't set a chart's colors in chart code; `useChart` applies the chart theme, and series take `chart.series` in order.
@@ -124,8 +160,8 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 
 ## MUI departures
 
-- `type-scale`: `CardHeader` titles use `h5`, which is 18px on Kilowatt's compact heading scale instead of MUI's 24px. The title still renders as a `span`, as MUI renders it.
-- `card-header-subheader`: `CardHeader` subtitles use `body2` (14px) instead of MUI's `body1` (16px), so the 18px title leads. It's the size MUI uses when the header has an avatar.
+- `card-header-title`: `CardHeader` titles use `h6` (16px) instead of MUI's `h5` (18px), so a page of cards reads by its content; a Highlight card sets its title a step above, in `h5`.
+- `card-header-subheader`: `CardHeader` subtitles use `body2` (14px) instead of MUI's `body1` (16px), so the 16px title leads. It's the size MUI uses when the header has an avatar.
 - `card-header-layout`: a `CardHeader` action is pulled out 8px at the top, right and bottom instead of MUI's 4px and 8px, so its icon sits level with a one-line title and 16px from the right edge; contents align to the top instead of the center, so a title keeps its place with or without a subtitle; titles and subtitles stay on one line and truncate.
 - `card-content-padding`: `CardContent` is 16px on every side instead of 24px at the bottom of the last one.
 - `card-radius`: cards round at twice the theme radius, 16px instead of MUI's one radius, because their header action and `CardActions` buttons sit 8px from the corners.
@@ -143,6 +179,7 @@ How the charts inside cards differ from stock amCharts (an outlined card, the 16
 
 ## Related
 
+- `SourceFigure` for a metric card's headline number.
 - `Paper` for a surface without card structure.
 - `Button` for the card's actions.
 - Foundations → Elevation for the surface each elevation sits on.

@@ -58,7 +58,7 @@ export function UtilityCostBreakdownWidget({ scope, from, to, title = 'Utility C
     <Card variant="outlined">
       <CardHeader title={<TruncatedText>{title}</TruncatedText>} />
       <AsyncContent state={state} height={420} loadingLabel="Loading tenant billing" emptyText="No billing in this period.">
-        <DonutChart data={slices} unit="USD" height={220} summary={summary} />
+        <DonutChart data={slices} unit="USD" summary={summary} />
         <CardContent sx={{ pt: 0 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {month}
