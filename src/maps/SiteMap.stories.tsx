@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor } from 'storybook/test';
-import { highlightedSites, sites } from 'src/fixtures/maps';
+import { expect, fn, waitFor } from 'storybook/test';
+import { highlightedSites, sites, statusSites } from 'src/fixtures/maps';
 import { SiteMap } from 'src/maps/SiteMap';
 import { inCard } from 'src/stories/decorators';
 
@@ -41,5 +41,27 @@ export const Highlight: Story = {
   args: {
     sites: highlightedSites,
     summary: `${top.name} used the most energy in September, ${kWh.format(top.value!)} kWh.`,
+  },
+};
+
+/** Each site in the intent for its data status, with a detail line saying what the color means; a site with no data is a hollow ring. */
+export const Status: Story = {
+  parameters: { card: { title: 'Data Status' } },
+  args: {
+    sites: statusSites,
+    summary: `Data status for ${statusSites.length} buildings in Manhattan; one has no meters connected.`,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/No meters connected/)).toBeInTheDocument();
+  },
+};
+
+/** Dots sized by energy use, so a dot's area follows its value; a click opens the site (here, a logged action). */
+export const Sized: Story = {
+  parameters: { card: { title: 'Energy Use' } },
+  args: {
+    sized: true,
+    onSelect: fn(),
+    summary: `Energy use at ${sites.length} buildings in Manhattan, sized by September's use.`,
   },
 };

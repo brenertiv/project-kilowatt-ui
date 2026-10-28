@@ -62,7 +62,8 @@ import TextField from '@mui/material/TextField';
 ## MUI departures
 
 - `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
-- `control-outlines`: the resting outline is `palette.control.border`, shared by every input, select, outlined button and toggle button, from its own `control` palette role: slate 600 in light, navy 700 in dark, quieter than 3:1 by design. Hover is slate 950 (light) or navy 300 (dark); focus keeps MUI's 2px primary outline. Error and disabled keep MUI's colors.
+- `control-outlines`: the resting outline is `palette.control.border`, shared by every input, select, outlined button and toggle button, from its own `control` palette role: slate 600 in light, navy 400 in dark, quieter than 3:1 by design. Hover is slate 800 (light) or navy 200 (dark); focus is a 2px outline in the brand blue (`focus-ring`). Error and disabled keep MUI's colors.
+- `focus-ring`: a focused field's 2px outline and its label take `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), instead of the primary color.
 
 Theme-wide departures (CSS variables, the 8px corner radius, surface and border levels, the navy primary for the focus ring and label, and the other intent colors) apply too; see Foundations → MUI departures.
 

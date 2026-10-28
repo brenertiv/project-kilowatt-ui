@@ -116,7 +116,7 @@ export function colorMarkdown() {
       ]),
     ),
     '## Borders',
-    "Four borders by contrast against the surfaces, in both schemes, so level0 to level2 look the same weight in light and dark. level0 to level2 separate and frame: level0 is the faintest, and `divider` is level1, so MUI's Divider uses it. level3 is the strongest, for a frame or separator that must stand out: it reaches 3:1 on every dark surface; the light scheme's slate 950 sits below 3:1 for now, by design decision. Control outlines are a separate role, `palette.control` (`control-outlines`), and don't use these levels. Set one with `sx={{ borderColor: 'border.level2' }}`.",
+    "Four borders by contrast against the surfaces, in both schemes, so level0 to level2 look the same weight in light and dark. level0 to level2 separate and frame: level0 is the faintest, and `divider` is level1, so MUI's Divider uses it. level3 is the strongest, for a frame or separator that must stand out; in both schemes it sits below 3:1 for now, by design decision. Control outlines are a separate role, `palette.control` (`control-outlines`), and don't use these levels. Set one with `sx={{ borderColor: 'border.level2' }}`.",
     table(
       ['Level', 'Theme path', 'Light', 'Dark', 'Source'],
       (Object.keys(borderSteps.light) as (keyof typeof borderSteps.light)[]).map((level) => [

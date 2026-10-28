@@ -23,6 +23,7 @@ export const storyDeps = [
   'react-dom/client',
 
   '@amcharts/amcharts5',
+  '@amcharts/amcharts5/hierarchy',
   '@amcharts/amcharts5/percent',
   '@amcharts/amcharts5/themes/Animated',
   '@amcharts/amcharts5/xy',
@@ -69,6 +70,7 @@ export const storyDeps = [
   '@mui/material/Menu',
   '@mui/material/MenuItem',
   '@mui/material/Paper',
+  '@mui/material/Popover',
   '@mui/material/Popper',
   '@mui/material/Radio',
   '@mui/material/RadioGroup',

@@ -34,12 +34,18 @@ const sites = buildings.map(({ id, name, latitude, longitude }) => ({ id, name, 
 </Card>
 ```
 
+An app that rebuilds the map hosts `src/maps/fonts` itself and passes its glyphs URL to `basemapStyle`. With nested routes (`/company/scope/page`), resolve it from the site root, `mapGlyphsUrl(new URL('/', document.baseURI).href)`, since the default resolves from the page's own URL.
+
 Give each site a `value` and the map a `unit` to show a reading in each site's tooltip. Leave out sites without coordinates; the map opens fitted to the sites it's given. Keep `sites` stable (a constant or `useMemo`), since the layer is rebuilt when it changes.
 
 ## Variants
 
 - **Sites.** Every site in the first series color. Give a site a `slot` when it stands for a product meaning (a building type), so it keeps one color on every map and chart.
 - **Highlight.** The site that matters in a series color, and the rest `neutral`: smaller, gray and drawn underneath, so the highlighted site reads first by size as well as color.
+- **Status.** Each site takes an intent through `status` (`success`, `warning`, `error`, `info`) in place of `slot`, with a `detail` line in its tooltip and the list saying what the color stands for. A site with no data for what the map shows is `hollow`, a ring in its color, rather than left off. Don't mix `status` and `slot` on one map.
+- **Sized.** `sized` scales each dot by its `value` on a square-root scale, from 12px to 32px across, so a dot's area follows its value; a site without a value takes the smallest size. The exact value stays in the tooltip.
+
+Pass `onSelect` to make each dot open its site (a property page, say): the dot shows the pointer, and the site is passed to the callback. Keep it stable with `useCallback`.
 
 ## Do and don't
 
@@ -48,6 +54,7 @@ Give each site a `value` and the map a `unit` to show a reading in each site's t
 - Do write `summary` as one sentence that says where the sites are and what stands out.
 - Don't leave the summary generic ("Map"); it's what screen readers say for the whole map.
 - Do mark context sites `neutral` when one site is the point.
+- Do give every status site a `detail` that says in words what its color means; color is never the only signal.
 - Don't set a color in map code or pass a CARTOColors scheme; take colors from `mapColors`.
 - Do keep CARTO's attribution; its terms and OpenStreetMap's license require it.
 - Don't turn off cooperative gestures; a map that zooms on every scroll traps the page.
@@ -55,7 +62,7 @@ Give each site a `value` and the map a `unit` to show a reading in each site's t
 ## MUI departures
 
 - `chart-palette`: sites take `chart.series` by `slot`, and neutral sites take `chart.neutral`.
-- `map-palette`: the basemap's water takes `map.water`.
+- `map-palette`: the basemap's land, water, road casings and boundaries take `map.land`, `map.water`, `map.road` and `map.boundary`.
 
 Theme-wide departures (the surface levels the card and basemap use, the theme radius) apply too; see Foundations → MUI departures.
 
@@ -63,9 +70,10 @@ Theme-wide departures (the surface levels the card and basemap use, the theme ra
 
 How this map differs from stock CARTO and MapLibre, from `src/maps/departures.ts`; Foundations → CARTO departures has the reasons.
 
-- `basemap-surfaces`: the land is the card surface, buildings a level up, water `map.water`.
-- `basemap-roads`: roads are filled a level up from the land and edged in `border.level0`.
-- `basemap-boundaries`: boundaries are drawn in `border.level1`, the divider.
+- `basemap-surfaces`: the land is `map.land`, a step past the page; land use `background.level1`, buildings `border.level2`, water `map.water`.
+- `basemap-roads`: roads are filled with `background.level2` and edged in `map.road`.
+- `basemap-boundaries`: boundaries are drawn in `map.boundary`, a pixel wide at the least.
+- `basemap-low-zoom`: state lines, motorways and trunk roads and land cover draw from zoom 3, and rivers a pixel wide at the least, so a zoomed-out map shows structure.
 - `basemap-labels`: labels are `text.secondary`, haloed in the land color.
 - `basemap-label-font`: labels are set in Roboto, upright, from Kilowatt's own glyph files.
 - `map-card`: the map fills the `figure` below the card's header, with no padding.
@@ -80,8 +88,8 @@ How this map differs from stock CARTO and MapLibre, from `src/maps/departures.ts
 
 - The map draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`, and every site, with its value, is in a list that screen readers read and the screen doesn't show.
 - The zoom and fit controls are buttons with names, and reachable by keyboard. MapLibre also zooms and pans with the keyboard once the map has focus.
-- A site's dot is 16px, or 12px when `neutral`, and the pointer picks it from 6px further out, so every hit area is 24px or more.
-- Sites are told apart by name in the tooltip and the list, not by color alone; a highlighted site is named in the summary.
+- A site's dot is 16px, or 12px when `neutral` or the smallest `sized` dot, and the pointer picks it from 6px further out, so every hit area is 24px or more.
+- Sites are told apart by name in the tooltip and the list, not by color alone; a highlighted site is named in the summary, and a status map's `detail` line says in words what each color, size or ring means.
 - MapLibre jumps camera moves (zoom, fit) to their end when the user asks for reduced motion.
 
 ## Related

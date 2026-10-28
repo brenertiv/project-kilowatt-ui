@@ -45,21 +45,29 @@ export function basemapFeature(layer: LayerSpecification): BasemapFeature | unde
   if (layer.type === 'background') return 'land';
   if (layer.type === 'symbol') return 'label';
   const source = 'source-layer' in layer ? layer['source-layer'] : undefined;
+  // CARTO's `carto.streets` v2 tiles (since 2026-10-26) name their source layers `landuse`, `water`, `roads`,
+  // `boundaries`, `buildings`, `places` and `pois`; the OpenMapTiles names before them (`transportation`, `boundary`,
+  // `building`) are matched too. Land use (parks, land cover, residential areas) is its own feature, apart from the land.
   switch (source) {
     case 'landcover':
-    case 'landuse':
     case 'park':
-      return 'land';
+      return 'landuse';
+    case 'landuse':
+      // CARTO draws path areas from the landuse layer; they're thin lines, drawn like casings.
+      return /_path/.test(layer.id) ? 'roadCasing' : 'landuse';
     case 'water':
     case 'waterway':
       return 'water';
     case 'building':
+    case 'buildings':
       return 'building';
     case 'boundary':
+    case 'boundaries':
       return 'boundary';
     case 'aeroway':
       return 'road';
     case 'transportation':
+    case 'roads':
       // Casings edge a road's fill; rail and paths are thin lines, drawn like casings.
       return /_case|rail(?!_dash)|_path$/.test(layer.id) ? 'roadCasing' : 'road';
     default:
@@ -81,7 +89,8 @@ export function basemapTheme(
   { glyphs = mapGlyphsUrl(), departures = mapDepartures }: { glyphs?: string; departures?: MapDeparture[] } = {},
 ): StyleSpecification {
   const mui = themes[scheme];
-  const land = mui.palette.background.level1;
+  // The land is the map's own role, a step past the page, not the card surface.
+  const land = mui.palette.map.land;
   const copy = structuredClone(style);
   const context: BasemapThemeContext = {
     style: copy,
@@ -138,7 +147,8 @@ export type RGBAColor = [number, number, number, number];
  */
 export function mapColors(scheme: ColorScheme) {
   const { palette } = themes[scheme];
-  const land = palette.background.level1;
+  // The land is the map's own role (`basemapTheme`).
+  const land = palette.map.land;
   const rgba = (value: string): RGBAColor => {
     const [r, g, b] = decomposeColor(solid(value, land)).values;
     return [r, g, b, 255];

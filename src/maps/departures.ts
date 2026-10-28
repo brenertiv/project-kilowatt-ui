@@ -25,7 +25,8 @@ const all: MapName[] = ['SiteMap'];
  * What a basemap layer draws, from its source layer and id. CARTO's two styles share their
  * layers, so one mapping covers both; a layer that maps to none is left as CARTO draws it.
  */
-export type BasemapFeature = 'land' | 'water' | 'building' | 'road' | 'roadCasing' | 'boundary' | 'label';
+// `landuse` (parks, land cover, residential areas) is told apart from the bare land.
+export type BasemapFeature = 'land' | 'landuse' | 'water' | 'building' | 'road' | 'roadCasing' | 'boundary' | 'label';
 
 /** What a theme entry's `apply` works with, for one color scheme. */
 export type BasemapThemeContext = {
@@ -39,7 +40,7 @@ export type BasemapThemeContext = {
   mui: Theme;
   /** A palette color as a solid hex, blended over the land when it's translucent. */
   color: (value: string) => string;
-  /** The land, which is the card surface the map sits on (`background.level1`). */
+  /** The land (`map.land`), a step past the page. */
   land: string;
   /** Where Kilowatt's map fonts are served, as a MapLibre glyphs URL with `{fontstack}` and `{range}`. */
   glyphs: string;
@@ -86,12 +87,14 @@ export const mapDepartures: MapDeparture[] = [
     id: 'basemap-surfaces',
     kind: 'theme',
     title: 'Land, water and buildings from the surfaces',
-    why: "CARTO's basemaps use their own warm grays. Kilowatt's land is the card surface the map sits on (`background.level1`), so a map in a card has no seam; buildings sit a level up (`background.level2`); and water is `map.water`, a step of the same ramp past the land. Parks and land use take the land's color, so the basemap stays out of the way of the data on it.",
+    why: "CARTO's basemaps use their own warm grays. Kilowatt's land is `map.land`, a step of the surface ramp past the page, so the map sits recessed in its card, apart from every app surface; parks, land cover and residential areas take `background.level1`, a step lighter than the land, so towns and parks show as patches when zoomed out; buildings take `border.level2`, a step past the land the other way; and water is `map.water`, a step of the same ramp past the land.",
     maps: all,
     apply: (context) => {
       const { layers, mui, land } = context;
       for (const layer of layers('land')) fillWith(context, layer, land);
-      for (const layer of layers('building')) fillWith(context, layer, mui.palette.background.level2);
+      // Land use a step lighter than the land, buildings a step past it, for structure without text.
+      for (const layer of layers('landuse')) fillWith(context, layer, mui.palette.background.level1);
+      for (const layer of layers('building')) fillWith(context, layer, mui.palette.border.level2);
       for (const layer of layers('water')) fillWith(context, layer, mui.palette.map.water);
     },
   },
@@ -99,21 +102,55 @@ export const mapDepartures: MapDeparture[] = [
     id: 'basemap-roads',
     kind: 'theme',
     title: 'Roads from the surfaces and borders',
-    why: 'CARTO draws roads, rail and runways in grays of its own. Kilowatt fills them a surface level up from the land (`background.level2`) and edges them in `border.level0`, the faintest border, so streets read as structure without competing with data.',
+    why: 'CARTO draws roads, rail and runways in grays of its own. Kilowatt fills them with the highest surface (`background.level2`), the lightest tone on a light map, and edges them in `map.road`, a step past the water, so streets read as structure without competing with data. At low zoom CARTO draws only the casings of motorways and trunk roads, so `map.road` is what makes a zoomed-out map show its roads.',
     maps: all,
     apply: (context) => {
       for (const layer of context.layers('road')) fillWith(context, layer, context.mui.palette.background.level2);
-      for (const layer of context.layers('roadCasing')) fillWith(context, layer, context.mui.palette.border.level0);
+      // Casings in the map's own road role, which reaches past the water.
+      for (const layer of context.layers('roadCasing')) fillWith(context, layer, context.mui.palette.map.road);
     },
   },
   {
     id: 'basemap-boundaries',
     kind: 'theme',
     title: 'Boundaries in the divider',
-    why: "CARTO draws county, state and country boundaries in tinted grays. Kilowatt draws them in `border.level1`, the divider, keeping CARTO's dashes and widths, so they read like every other separator in the UI.",
+    why: "CARTO draws county, state and country boundaries in tinted grays, half a pixel wide when zoomed out. Kilowatt draws them in `map.boundary`, the furthest step of the surface ramp from the land, keeping CARTO's dashes, and a pixel wide at the least, so state and country lines read on a zoomed-out map without a hue of their own.",
     maps: all,
     apply: (context) => {
-      for (const layer of context.layers('boundary')) fillWith(context, layer, context.mui.palette.border.level1);
+      // The map's own boundary role, and no line thinner than a pixel.
+      for (const layer of context.layers('boundary')) {
+        fillWith(context, layer, context.mui.palette.map.boundary);
+        const width = (layer as { paint?: Record<string, unknown> }).paint?.['line-width'];
+        if (width && typeof width === 'object' && 'stops' in width && Array.isArray(width.stops)) {
+          width.stops = (width.stops as [number, number][]).map(([zoom, px]) => [zoom, Math.max(1, px)]);
+        }
+      }
+    },
+  },
+  {
+    id: 'basemap-low-zoom',
+    kind: 'theme',
+    title: 'Structure when zoomed out',
+    why: "CARTO's styles hold back most structure until the map is close: state boundaries draw only from zoom 6 (macroregions below it), motorway and trunk casings from zoom 5, land cover from zoom 7, and rivers at half a pixel. A map fitted to a portfolio sits at zoom 3 to 5, where that leaves labels and dots on bare land. Kilowatt draws state lines, the motorway and trunk network and land cover from zoom 3, and rivers a pixel wide at the least, so a zoomed-out map shows where things are without a label for each.",
+    maps: all,
+    apply: ({ style }) => {
+      for (const layer of style.layers) {
+        const paint = (layer as { paint?: Record<string, unknown> }).paint;
+        if (layer.id === 'boundary_state' && layer.type === 'line') {
+          // CARTO's filter draws states only from zoom 6 and macroregions below it; both at every zoom.
+          layer.filter = ['any', ['==', ['get', 'kind_detail'], 4], ['==', ['get', 'kind'], 'macroregion']];
+          layer.minzoom = 3;
+        } else if (/_(mot|trunk)_case/.test(layer.id)) {
+          layer.minzoom = Math.min(layer.minzoom ?? 3, 3);
+        } else if (layer.id === 'landcover') {
+          layer.minzoom = 3;
+        } else if (layer.id === 'waterway' && paint) {
+          const width = paint['line-width'];
+          if (width && typeof width === 'object' && 'stops' in width && Array.isArray(width.stops)) {
+            width.stops = (width.stops as [number, number][]).map(([zoom, px]) => [zoom, Math.max(1, px)]);
+          }
+        }
+      }
     },
   },
   {

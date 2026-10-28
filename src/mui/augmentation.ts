@@ -23,10 +23,10 @@ export type ControlColors = { border: string; hover: string; focus: string; pres
 export type ChartColors = { series: string[]; neutral: string; sequential: string[] };
 
 /**
- * Basemap colors the surface roles don't cover (Rules → Maps): `water`, a step away from the
- * land, which is the card surface the map sits on.
+ * Basemap colors the surface roles don't cover (Rules → Maps): `land`, a step past the page;
+ * `water`, a step past the land; and `road` and `boundary`, for the lines CARTO draws at low zoom.
  */
-export type MapColors = { water: string };
+export type MapColors = { land: string; water: string; road: string; boundary: string };
 
 declare module '@mui/material/styles' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
