@@ -41,7 +41,7 @@ Pass only the groups and properties the user can access. `value` is controlled: 
 - **Group:** one crumb, "Portfolio" over the group's name, then the close button, back to all properties. Every group is labelled "Portfolio"; the picker doesn't name a group's kind (region, fund), so its label never repeats its name.
 - **Property:** the portfolio crumb (its name goes up to it), then the property's crumb, on the highest surface (`background.level4`) with the building's photo (`image`, or the property icon without one), then the close button, back to the portfolio crumb's level. A property reached without a group sits under All properties.
 - **Current crumb:** its name opens the dialog at its level, as its chevron does, since its level is already the scope.
-- **Choosing a portfolio:** in the dialog's Portfolios column, each row is built like a crumb: the crumb frame (`border.level0`, 16px corners) around two flush buttons, each with its own hover. The name selects that portfolio (All properties or a group), and the chevron browses its properties without changing scope. The rows stand 4px apart, and the columns have no outer frame, only the line between them.
+- **Choosing a portfolio:** in the dialog's Portfolios column, each row is a plain list row, like the Properties column's. The row selects that portfolio (All properties or a group), and the chevron, its secondary action, browses its properties without changing scope. The portfolio being browsed takes the selected fill, and the current scope a check. The rows touch, as list items do, and the columns have no outer frame, only the line between them. On wide screens the dialog is capped to the window's height, and the columns scroll inside it.
 - **Searching:** the columns give way to results, groups first, a property in two groups once per group with its path; no match says so in words.
 - **Phones:** the dialog fills the screen and shows Portfolios, then the browsed portfolio's Properties, one at a time.
 - **Narrow header:** the crumbs stay on one line and their names truncate with an ellipsis, the portfolio's first, down to about six characters; a cut-off name's tooltip leads with the full name. The chevrons and the close button never shrink. Below `sm` the crumbs drop their icon and photo, and the name moves in to 12px from the crumb's edge, matching the chevron half.
@@ -53,7 +53,6 @@ Pass only the groups and properties the user can access. `value` is controlled: 
 - Don't use it as a filter in a page or a list toolbar; use the page's own filter controls.
 - Do show the scope's property count on the page, where it's needed; the crumbs carry names only, and the dialog lists a count on every row.
 - Don't add counts or a group's kind to the crumbs; keep them to the type and the name.
-- Do keep the portfolio rows 4px apart, each in its own frame, so each reads as one split button. This is a deliberate exception to "items in a list touch" (Rules → Accessibility); every target stays well above 24px.
 - Don't frame the Portfolios column as well; a frame around framed rows doubles every edge (Rules → One border per edge).
 - Do pass only the groups and properties the user can access.
 - Don't pass groups or properties the user can't open; the picker would offer scopes they can't reach.
@@ -74,6 +73,7 @@ Pass only the groups and properties the user can access. `value` is controlled: 
 - `icons`: the level icons, chevrons and close buttons are Material Symbols.
 - `selected-fills-icons`: the open group and the current scope's row fill their icons.
 - `tabular-numerals`: recent-scope chips use tabular figures.
+- `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the control, instead of MUI's background tint alone.
 
 Theme-wide departures (the palette, the type scale, the corner radius) apply too; see Foundations → MUI departures.
 

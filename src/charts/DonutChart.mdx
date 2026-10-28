@@ -37,6 +37,7 @@ import { DonutChart } from 'src/charts/DonutChart';
 - **Parts.** Up to six slices, largest first, in `chart.series` order, each labeled with its name and share.
 - **Grouped into Other.** With more than six parts, the five largest keep their slices and the rest are summed into one slice in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
 - **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each slice, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
+- **Filter.** With `onSelect`, the chart filters what's beside it (the map, a table): a click on a slice, or on its toggle button under the chart, passes its category to `onSelect`, and the page keeps the selection and passes it back as `selected`. While anything is selected, the other slices and swatches step back. The toggle buttons name each part and its share, and carry the selection by keyboard and for screen readers.
 
 ## Do and don't
 
@@ -49,11 +50,13 @@ import { DonutChart } from 'src/charts/DonutChart';
 - Do give slices that stand for product meanings their `slot` from `src/charts/meanings`.
 - Don't let a work-order type change color between charts because its rank changed.
 - Do write `summary` as one sentence with the share that matters.
-- Don't add a legend; each slice is labeled directly.
+- Don't add a legend; each slice is labeled directly. The toggle buttons a filter shows are its controls, not a legend.
+- Do keep the selection in the page and pass it back as `selected`, so the chart and what it filters agree.
 
 ## MUI departures
 
-- `chart-palette`: slices take `chart.series` in order, largest first, and the grouped slice takes `chart.neutral`.
+- `chart-palette`: slices take `chart.series` in order, largest first, and the grouped slice takes `chart.neutral`; a filter's toggle buttons repeat each slice's color in a swatch, from the same palette roles.
+- `selected-fills-icons`, `focus-ring` and `toggle-button-text`: a filter's toggle buttons are MUI's `ToggleButton` with Kilowatt's selected fill, focus ring and text.
 
 Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
 
@@ -75,6 +78,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the slices.
 - Slices are told apart by their direct labels (name and share) as well as color.
+- A filter's toggle buttons are reachable by Tab and announce whether each part is selected (`aria-pressed`); the slices themselves respond to the pointer only, so the buttons are the way in for keyboard and screen-reader users.
 - For exact values, offer the data as a table beside the chart.
 
 ## Related

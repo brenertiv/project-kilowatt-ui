@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { DonutChart } from 'src/charts/DonutChart';
 import { meaningColor, workOrderTypeSlots } from 'src/charts/meanings';
 import { buildingTotals, utilityCost, workOrdersByType } from 'src/fixtures/charts';
@@ -60,5 +61,30 @@ export const Meanings: Story = {
     data: byType,
     unit: 'work orders',
     summary: `${openTotal} work orders are open; ${workOrdersByType[0].count} of them (${share(byType, workOrdersByType[0].count)}) are reactive.`,
+  },
+};
+
+/** A filter: a click on a slice or its toggle button selects that part, and the rest step back. The page keeps the selection. */
+export const Filter: Story = {
+  parameters: { card: { title: 'Energy Use by Building' } },
+  args: {
+    data: buildingShares,
+    unit: 'kWh',
+    summary: `Energy use by building; ${largestBuilding.category} used ${share(buildingShares, largestBuilding.value)}.`,
+    onSelect: fn(),
+  },
+  render: function Render(args) {
+    const [selected, setSelected] = useState<string[]>([]);
+    const toggle = (category: string) => {
+      args.onSelect?.(category);
+      setSelected((current) => (current.includes(category) ? current.filter((item) => item !== category) : [...current, category]));
+    };
+    return <DonutChart {...args} selected={selected} onSelect={toggle} />;
+  },
+  play: async ({ args, canvas }) => {
+    const button = canvas.getByRole('button', { name: new RegExp(largestBuilding.category) });
+    await userEvent.click(button);
+    await expect(args.onSelect).toHaveBeenCalledWith(largestBuilding.category);
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
   },
 };

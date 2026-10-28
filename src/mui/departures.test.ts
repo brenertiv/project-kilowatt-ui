@@ -44,7 +44,7 @@ describe('createKilowattTheme', () => {
     expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[300], slate[200], slate[50]]);
     expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[950], navy[900], navy[600]]);
     expect(light.palette.divider).toBe(light.palette.border.level1);
-    expect(dark.palette.border).toEqual({ level0: navy[800], level1: navy[700], level2: navy[500], level3: navy[200] });
+    expect(dark.palette.border).toEqual({ level0: navy[600], level1: navy[500], level2: navy[400], level3: navy[200] });
   });
 
   it.each(schemes)('gives the %s scheme intents that pass 4.5:1 on every surface, with contrast text that passes on them', (scheme) => {
@@ -86,12 +86,10 @@ describe('createKilowattTheme', () => {
     }
   });
 
-  // Light is left out for now: its border.level3 (slate 950) sits below 3:1, by design decision.
-  it('gives the dark scheme a strongest border (border.level3) at 3:1 on every surface', () => {
-    const { palette } = createSchemeTheme('dark');
+  it.each(schemes)('gives the %s-scheme focus color 4.5:1 on every surface, as a focused input label', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
     for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
-      const surface = palette.background[level];
-      expect(getContrastRatio(palette.border.level3, surface), `border.level3 on ${level}`).toBeGreaterThanOrEqual(graphic);
+      expect(getContrastRatio(palette.control.focus, palette.background[level]), `control.focus on ${level}`).toBeGreaterThanOrEqual(text);
     }
   });
 

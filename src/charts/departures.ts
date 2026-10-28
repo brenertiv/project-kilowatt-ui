@@ -16,7 +16,7 @@ import type { Theme } from '@mui/material/styles';
  */
 
 /** Kilowatt's reference charts, by component name. */
-export type ChartName = 'LineChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap' | 'IntervalChart';
+export type ChartName = 'LineChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap' | 'IntervalChart' | 'Treemap';
 
 /** What a theme entry's `apply` works with, for one chart root and color scheme. */
 export type ChartThemeContext = {
@@ -30,7 +30,7 @@ export type ChartThemeContext = {
   mui: Theme;
   /** A palette color as a solid amCharts color, blended over the card surface when it's translucent. */
   color: (value: string) => am5.Color;
-  /** The card surface charts sit on (`background.level1`). */
+  /** The card surface charts sit on (`background.level2`). */
   card: string;
   /** Whether the user asks for reduced motion. */
   reducedMotion: boolean;
@@ -61,7 +61,7 @@ export type ChartDeparture = {
  */
 export const axisNumberFormat: Intl.NumberFormatOptions = { notation: 'compact' };
 
-const all: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart'];
+const all: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart', 'Treemap'];
 const xy: ChartName[] = ['LineChart', 'ColumnChart', 'IntervalChart'];
 
 export const chartDepartures: ChartDeparture[] = [

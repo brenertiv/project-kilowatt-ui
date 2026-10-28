@@ -1,0 +1,87 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as PeriodPickerStories from './PeriodPicker.stories';
+
+<Meta
+  of={PeriodPickerStories}
+  summary="Kilowatt's PeriodPicker: a read-only field naming the period a page shows, opening the standard periods and a custom range of whole months."
+/>
+
+# PeriodPicker
+
+`PeriodPicker` sets the period a page or dashboard shows: one of a few standard periods, such as year to date, or a custom range of whole months. It's Kilowatt's own component, composed from MUI's `TextField`, `Popover`, `Dialog`, `List`, `ListItemButton`, `Divider`, `MenuItem`, `Button` and `IconButton` (`@mui/material`, Material UI v9; MUI documents their props).
+
+The trigger is a read-only `TextField` with the period as its value, a date-range icon at its start and a drop-down arrow at its end, so it stands the height of the fields beside it and reads as one of them. It opens a `Popover` with the standard periods on the left, each with its months under its name, and the custom range on the right: a From and a To month select, with Cancel and Apply. Below `md` it opens as a full-screen `Dialog` instead, the list above the range. Month names and ranges are written with `Intl` in the viewer's locale ("Jan – Sep 2026").
+
+<Canvas of={PeriodPickerStories.Preset} />
+
+## When to use
+
+- Use it once per page, in the page's toolbar or filter bar, for the period every card on the page shows.
+- For a period that only one chart uses, set it in that chart's own controls; a chart's card header stays a title.
+- For a choice among a few periods with no custom range, use a `Select`.
+- For a range of days, not whole months, use a date picker; this picker works in whole months only.
+
+## Usage
+
+```tsx
+import { PeriodPicker, type Period, type PeriodPreset } from 'src/components/PeriodPicker';
+
+const presets: PeriodPreset[] = [
+  { id: 'ytd', label: 'Year to date', from: '2026-01', to: '2026-09' },
+  { id: 'last-12', label: 'Last 12 months', from: '2025-10', to: '2026-09' },
+];
+
+const [period, setPeriod] = useState<Period>('ytd');
+
+<PeriodPicker presets={presets} value={period} onChange={setPeriod} firstMonth="2024-01" lastMonth="2026-09" />;
+```
+
+`value` is controlled: a preset's `id`, or `{ from, to }` for a custom range, each month as `YYYY-MM`. Put it in the URL and pass it back. `firstMonth` and `lastMonth` bound the custom range: the first month the data covers and, usually, the last complete month.
+
+## States
+
+- **Preset:** the field shows the preset's name, and the list marks it selected.
+- **Custom range:** the field shows the range's months, and the selects open on them.
+- **Choosing a range:** Apply stays disabled until both months are set; choosing a From month after the To month clears the To month, and the To select lists only months from the From month on. Cancel, Escape or a click outside closes without a change.
+- **Phone:** below `md` the picker is a full-screen dialog titled by the field's label, with a close button.
+
+## Do and don't
+
+- Do give each preset its exact months, so the list shows them under its name and a viewer knows what "year to date" covers.
+- Don't name a preset by a relative phrase alone with no months behind it; the months are what the page's numbers cover.
+- Do keep the field at the default size, `medium` (Rules → Component size), like the fields beside it.
+- Don't set `size="small"` to fit a crowded bar; set it only when every field in that bar is small, so the controls stay one size.
+- Do end the custom range at the last complete month, so a range never includes a partial month.
+- Don't use it for a single date or a range of days; use a date picker.
+- Do keep the period in the page's toolbar and let every card follow it.
+- Don't repeat the period in each card's header; the page sets it once.
+
+## MUI departures
+
+- `control-outlines`: the field and the month selects take the control outline; Cancel and Apply are a text and a contained button, so they have none.
+- `medium-size`: the field, the selects, the buttons and the close button are at the default medium size; `size` passes through to the field only.
+- `button-text-case`: Cancel and Apply are in Title Case.
+- `button-text-weight`: Cancel and Apply are at the button weight.
+- `flat-buttons`: Apply is contained with no elevation.
+- `focus-ring`: keyboard focus on the field, the selects, the presets, the months and the buttons shows in `palette.control.focus`, the brand blue.
+- `icon-button-radius`: the phone dialog's close button takes the theme radius.
+- `paper-surface-levels`: the popover and the phone dialog pick their surface from their elevation.
+- `icons`: the date-range, drop-down and close icons are Material Symbols.
+- `selected-fills-icons`: the selected preset and the selected month are marked as MUI marks a selected item.
+
+Theme-wide departures (the palette, the type scale, the corner radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The field is a read-only text box labeled by `label` ("Period" by default) with `aria-haspopup="dialog"` and `aria-expanded`; a click, Enter, Space or the Down arrow opens it.
+- The popover is a dialog named by the label, and the phone dialog is titled by it. MUI moves focus into it, traps it there, closes on Escape and returns focus to the field.
+- The standard periods are a list named "Standard periods", and the custom range a group named "Custom range"; each select is labeled From or To.
+- The close button on phones is icon-only and labeled "Close".
+- Pages that change their numbers when the period changes should say so to screen readers, such as by naming the period in the page's heading.
+
+## Related
+
+- Inputs → Select for a choice among a few periods with no custom range.
+- Navigation → ScopePicker for the scope the page shows, which sits beside the period.
+
+<Stories includePrimary={false} />

@@ -48,8 +48,8 @@ export const surfaceSteps = {
 
 /** Surface borders by contrast, per scheme: level0 the faintest, level3 the strongest. `divider` is level1. Control outlines are separate (`control-outlines`). */
 export const borderSteps = {
-  light: { level0: 400, level1: 500, level2: 700, level3: 950 },
-  dark: { level0: 800, level1: 700, level2: 500, level3: 200 },
+  light: { level0: 400, level1: 500, level2: 700, level3: 800 },
+  dark: { level0: 600, level1: 500, level2: 400, level3: 200 },
 } as const satisfies Record<ColorScheme, Record<keyof BorderLevels, number>>;
 
 const ramps = { light: slate, dark: navy } as const;
@@ -59,10 +59,10 @@ function levels<T extends Record<string, number>>(scheme: ColorScheme, steps: T)
   return Object.fromEntries(Object.entries(steps).map(([level, step]) => [level, ramp[step]])) as Record<keyof T, string>;
 }
 
-/** The surface level each Paper elevation sits on: flat and card surfaces, app bars and snackbars, menus, drawers and dialogs. */
+/** The surface level each Paper elevation sits on: flat surfaces, app bars and snackbars, menus, drawers and dialogs. Cards sit on level2 at any elevation (`paper-surface-levels`). */
 export const elevationSurfaces: { elevations: [number, number]; level: keyof typeof surfaceSteps.light; uses: string }[] = [
-  { elevations: [0, 1], level: 'level1', uses: 'Paper, Card, Accordion' },
-  { elevations: [2, 6], level: 'level2', uses: 'AppBar, Snackbar' },
+  { elevations: [0, 1], level: 'level1', uses: 'Paper, Accordion' },
+  { elevations: [2, 6], level: 'level2', uses: 'AppBar, Snackbar, and every Card' },
   { elevations: [7, 12], level: 'level3', uses: 'Menu, Popover' },
   { elevations: [13, 24], level: 'level4', uses: 'Drawer, Dialog' },
 ];
@@ -108,7 +108,7 @@ export const primarySteps: Record<
   { ramp: RampName; main: Step; light: Step; dark: Step; contrastText?: { ramp: RampName; step: Step } }
 > = {
   light: { ramp: 'navy', main: 900, light: 700, dark: 950 },
-  dark: { ramp: 'slate', main: 800, light: 100, dark: 900, contrastText: { ramp: 'navy', step: 950 } },
+  dark: { ramp: 'slate', main: 700, light: 100, dark: 800, contrastText: { ramp: 'navy', step: 950 } },
 };
 
 /**
@@ -161,14 +161,30 @@ export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: Cha
 };
 
 /**
- * Basemap water, per scheme (Rules → Maps): a step of the surface ramp past the land, which is
- * `background.level1`, so water reads as water without a hue of its own. Light water is darker
- * than the land and dark water lighter, as on CARTO's Positron and Dark Matter. Light stops at
- * slate 700: past it, the first series color drops below 3:1 on water (src/maps/departures.test.ts).
+ * The basemap's own colors, per scheme (Rules → Maps), each a step of the surface ramp with no hue
+ * of its own. `land` is a step past the page (slate 400 in light, where the page is 300; navy 950,
+ * the page's own step, in dark, where cards are 700), so the map reads as a recessed plane in its
+ * card; `water` a step past the land; `road` and `boundary`, for the road casings and boundaries
+ * CARTO draws when zoomed out, reach past the water so a zoomed-out map shows structure, not labels
+ * alone. Light water stops at slate 500: past it, map labels (text.secondary) drop below 4.5:1 on
+ * water (src/maps/departures.test.ts).
  */
-export const mapSteps: Record<ColorScheme, { water: string }> = {
-  light: { water: slate[700] },
-  dark: { water: navy[800] },
+export const mapSteps: Record<ColorScheme, { land: string; water: string; road: string; boundary: string }> = {
+  light: { land: slate[400], water: slate[500], road: slate[800], boundary: slate[800] },
+  dark: { land: navy[950], water: navy[600], road: navy[500], boundary: navy[300] },
+};
+
+/**
+ * Keyboard focus, per scheme (`focus-ring`): the brightest brand step that still reaches 3:1 as a
+ * ring and 4.5:1 as a focused label on every surface. Light takes the secondary's main step (brand
+ * 500, the brand blue itself, is about 2.4:1 on the page); dark takes its lighter step.
+ */
+export const focusSteps: Record<ColorScheme, keyof typeof brand> = { light: 700, dark: 200 };
+
+/** Text, per scheme: primary and secondary. Neutral icons take the secondary (`icon-color`). */
+export const textSteps: Record<ColorScheme, { primary: string; secondary: string }> = {
+  light: { primary: navy[950], secondary: slate[900] },
+  dark: { primary: slate[100], secondary: slate[800] },
 };
 
 const chartColor = ({ ramp, step }: ChartStep) => (chartRamps[ramp] as Record<string, string>)[step];
@@ -217,21 +233,14 @@ export const departures: Departure[] = [
     id: 'text-colors',
     area: 'Palette',
     title: 'Navy and slate text',
-    why: "MUI sets text in black or white at fixed opacities (87% and 60% in light, 100% and 70% in dark). Kilowatt uses solid navy 950 and navy 500 in light, slate 100 and slate 900 in dark, so text takes the palette's hue and reads the same on every surface instead of blending into it.",
-    options: (scheme) => ({
-      palette: {
-        text:
-          scheme === 'dark'
-            ? { primary: slate[100], secondary: slate[900] }
-            : { primary: navy[950], secondary: navy[500] },
-      },
-    }),
+    why: "MUI sets text in black or white at fixed opacities (87% and 60% in light, 100% and 70% in dark). Kilowatt uses solid navy 950 and slate 900 in light, slate 100 and slate 800 in dark, so text takes the palette's hue and reads the same on every surface instead of blending into it. Light secondary text is slate, a grey-navy, because the navy ramp has no desaturated mid tone.",
+    options: (scheme) => ({ palette: { text: textSteps[scheme] } }),
   },
   {
     id: 'primary-navy',
     area: 'Palette',
     title: 'Navy primary, light neutral in dark',
-    why: "Primary is Enertiv navy instead of MUI's blue in the light scheme (navy 900), so the main actions carry Enertiv's brand color. In the dark scheme it's a light neutral (slate 800) with navy text: the dark surfaces are navy, so a blue primary there would be another pale blue beside the brand-blue secondary and the info color. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) follows it.",
+    why: "Primary is Enertiv navy instead of MUI's blue in the light scheme (navy 900), so the main actions carry Enertiv's brand color. In the dark scheme it's a light neutral (slate 700) with navy text: the dark surfaces are navy, so a blue primary there would be another pale blue beside the brand-blue secondary and the info color. Like the other intents, it passes 4.5:1 as text on every surface level, and its contrast text passes on it. Every component that uses `primary` (buttons, links, focus rings, checkboxes, tabs, progress) follows it.",
     options: (scheme) => {
       const { ramp, main, light, dark, contrastText } = primarySteps[scheme];
       const r = rampByName[ramp];
@@ -362,13 +371,13 @@ export const departures: Departure[] = [
     area: 'Components',
     components: ['Button', 'ButtonGroup', 'ToggleButton', 'TextField', 'Select', 'Autocomplete', 'OutlinedInput'],
     title: 'One outline color for every control',
-    why: "MUI outlines its controls in three different colors: inputs at 23% black (or white), outlined buttons in their intent color at half strength, toggle buttons in the divider color. Kilowatt gives them one outline per state from their own palette role, `palette.control`, kept apart from the surface border levels so either can change without moving the other. The outline is quiet at rest (slate 600 in light, navy 700 in dark; below 3:1, by design decision), a stronger one on hover (slate 950 in light, navy 300 in dark), the primary text color on keyboard focus and navy 400 or navy 100 when pressed. Inputs show focus with MUI's 2px primary outline. Error and disabled keep MUI's. Outlined buttons in the other intents (secondary, error, warning, info, success) keep MUI's intent-colored outline on purpose: the color carries their meaning.",
+    why: "MUI outlines its controls in three different colors: inputs at 23% black (or white), outlined buttons in their intent color at half strength, toggle buttons in the divider color. Kilowatt gives them one outline per state from their own palette role, `palette.control`, kept apart from the surface border levels so either can change without moving the other. The outline is quiet at rest (slate 600 in light, navy 400 in dark; below 3:1, by design decision), a stronger one on hover (slate 800 in light, navy 200 in dark), the brand blue on keyboard focus (`focus-ring`) and navy 400 or slate 800 when pressed. Inputs show focus with a 2px outline in the same blue. Error and disabled keep MUI's. Outlined buttons in the other intents (secondary, error, warning, info, success) keep MUI's intent-colored outline on purpose: the color carries their meaning.",
     options: (scheme) => ({
       palette: {
         control:
           scheme === 'dark'
-            ? { border: navy[700], hover: navy[300], focus: slate[100], pressed: navy[100] }
-            : { border: slate[600], hover: slate[950], focus: navy[950], pressed: navy[400] },
+            ? { border: navy[400], hover: navy[200], focus: brand[focusSteps.dark], pressed: slate[800] }
+            : { border: slate[600], hover: slate[800], focus: brand[focusSteps.light], pressed: navy[400] },
       },
       components: {
         MuiOutlinedInput: {
@@ -408,6 +417,31 @@ export const departures: Departure[] = [
         MuiToggleButton: { styleOverrides: { root: { borderColor: 'var(--mui-palette-control-border)' } } },
       },
     }),
+  },
+  {
+    id: 'focus-ring',
+    area: 'Components',
+    components: ['ButtonBase', 'Button', 'IconButton', 'ToggleButton', 'Chip', 'Tab', 'ListItemButton', 'MenuItem', 'CardActionArea', 'TextField', 'OutlinedInput', 'InputLabel'],
+    title: 'Keyboard focus in the brand blue',
+    why: "MUI shows keyboard focus on a ButtonBase (buttons, icon buttons, chips, tabs, list rows, card action areas) only as a background tint, which is easy to miss beside a hover, and on inputs as a primary-colored outline, which in light is the navy of the text around it. Kilowatt shows focus everywhere in one color, `palette.control.focus`, the brightest brand blue that passes on every surface (brand 700 in light, brand 200 in dark): a 2px ring, 2px outside every focused ButtonBase, and the focused input's 2px outline and label.",
+    options: () => ({
+      components: {
+        MuiButtonBase: {
+          styleOverrides: { root: { '&.Mui-focusVisible': { outline: '2px solid var(--mui-palette-control-focus)', outlineOffset: 2 } } },
+        },
+        MuiOutlinedInput: {
+          styleOverrides: { root: { '&.Mui-focused:not(.Mui-error) .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--mui-palette-control-focus)' } } },
+        },
+        MuiInputLabel: { styleOverrides: { root: { '&.Mui-focused:not(.Mui-error)': { color: 'var(--mui-palette-control-focus)' } } } },
+      },
+    }),
+  },
+  {
+    id: 'icon-color',
+    area: 'Palette',
+    title: 'Icons in the secondary text color',
+    why: "MUI draws neutral icons (icon buttons, list item icons, unchecked checkboxes and radios, sort arrows) in `action.active`: black at 54% in light, white in dark, neither a text color. Kilowatt sets `action.active` to the secondary text color in both schemes, so an icon reads as the text beside it does.",
+    options: (scheme) => ({ palette: { action: { active: textSteps[scheme].secondary } } }),
   },
   {
     id: 'icon-button-radius',
@@ -457,7 +491,7 @@ export const departures: Departure[] = [
     id: 'map-palette',
     area: 'Palette',
     title: 'Map colors',
-    why: "MUI's palette has nothing for a basemap. A map's land, buildings, roads and labels take the surface, border and text roles every component uses, and only water gets a role of its own, `map.water`: a step of the surface ramp past the land, so it reads as water without adding a hue that data could be confused with. Data on a map takes the chart roles.",
+    why: "MUI's palette has nothing for a basemap. A map's buildings, road fills and labels take the surface, border and text roles every component uses. Four roles are the map's own, each a step of the surface ramp with no hue that data could be confused with: `map.land`, a step past the page, so the map sits apart from every app surface; `map.water`, a step past the land; and `map.road` and `map.boundary`, for the road casings and boundaries CARTO draws at low zoom, which reach past the water so a zoomed-out map shows structure, not labels alone. Data on a map takes the chart roles.",
     options: (scheme) => ({ palette: { map: mapSteps[scheme] } }),
   },
   {
@@ -465,7 +499,7 @@ export const departures: Departure[] = [
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
     title: 'Paper takes its surface from its elevation',
-    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Cards sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4.",
+    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4. Cards, outlined or raised, sit on level2, a step above the level1 frame they're laid out on, so a card reads as a surface on the page rather than only its border.",
     options: () => ({
       components: {
         MuiPaper: {
@@ -483,6 +517,8 @@ export const departures: Departure[] = [
             },
           },
         },
+        // Two classes, to outrank the elevation rules above, which a raised card also matches.
+        MuiCard: { styleOverrides: { root: { '&.MuiPaper-root': { backgroundColor: 'var(--mui-palette-background-level2)' } } } },
       },
     }),
   },

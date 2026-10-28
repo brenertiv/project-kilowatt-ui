@@ -1,0 +1,86 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as TreemapStories from './Treemap.stories';
+
+<Meta
+  of={TreemapStories}
+  summary="Kilowatt's reference treemap for parts of one whole: amCharts 5 in the chart theme, up to six rectangles sized by value and labeled with their shares, with the smallest grouped into a neutral Other."
+/>
+
+# Treemap
+
+A treemap shows how one whole splits into parts as rectangles, each sized by its value. `Treemap` is Kilowatt's reference implementation: amCharts 5's hierarchy treemap (`@amcharts/amcharts5/hierarchy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). It's one level deep: the parts of one whole, with no drilling in. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={TreemapStories.Parts} />
+
+## When to use
+
+- Use a treemap for the parts of one whole where the card is wide and short, such as a fact card on a dashboard: floor area by property type, cost by utility. Its rectangles fill the space a donut would leave empty.
+- For the same parts where the card is square, or the share matters more than the size, use a donut chart.
+- For parts that change over time, use a stacked column chart.
+- For comparing values that don't add up to a whole, use a column chart.
+- For nested groups (a region, then its properties) or values people look up, use a table; this treemap is one level deep and groups past six.
+
+## Usage
+
+```tsx
+import { Treemap } from 'src/charts/Treemap';
+
+<Card variant="outlined">
+  <CardHeader title="Floor Area by Property Type" />
+  <Treemap data={floorArea} unit="sq ft" summary="Office is 51% of the portfolio's floor area." />
+</Card>;
+```
+
+`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`), since the chart is rebuilt when it changes. `height` defaults to 240px.
+
+## Variants
+
+- **Parts.** Up to six rectangles, largest first, in `chart.series` order, each labeled with its name and share where it fits.
+- **Grouped into Other.** With more than six parts, the five largest keep their rectangles and the rest are summed into one in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
+- **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each part, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`, 16px by default, `1` (8px) for a tighter fit, `0` to run edge to edge. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` puts it in the tooltip, next to each value, and the summary should state it with its numbers.
+- Do use a treemap only for parts that add up to a meaningful whole.
+- Don't use a treemap for values that overlap or don't sum, such as averages or rates; use a column chart.
+- Do let the chart group the smallest parts into "Other" past six, and name them in the summary.
+- Don't raise the part count or add colors to fit more parts; use a table instead.
+- Do give parts that stand for product meanings their `slot` from `src/charts/meanings`.
+- Don't nest a second level into the rectangles; show the breakdown of one part in its own chart or a table.
+- Do write `summary` as one sentence with the share that matters.
+- Don't add a legend; each rectangle is labeled directly, and a label that doesn't fit is hidden rather than shrunk, with the part still named in its tooltip.
+
+## MUI departures
+
+- `chart-palette`: rectangles take `chart.series` in order, largest first, or by `slot`; the grouped rectangle takes `chart.neutral`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and parts take `chart.series`, used as they are. A rectangle's label is in the card surface color (amCharts' `alternativeText`, which the theme maps to the card), which passes 3:1 on every series color in both schemes.
+- `chart-type`: labels are in the theme's font at the `caption` size.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every rectangle has a tooltip with its exact value, unit and share (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+
+## Accessibility
+
+- Every rectangle shows its name, exact value, unit and share in a tooltip on hover, including the ones too small for a label.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
+- Parts are told apart by their direct labels (name and share) and their size, as well as color.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Donut for the same parts of a whole in a square card.
+- Charts → Column for parts of a total across categories, stacked.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />

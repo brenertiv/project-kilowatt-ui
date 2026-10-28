@@ -5,9 +5,12 @@
  */
 
 /**
- * Cool grays for light-scheme surfaces and borders. 50 is white. 950 is one step past 900,
- * the strongest light-scheme border (border.level3). It is below 3:1 on the light
- * surfaces for now, by design decision.
+ * Cool grays, one neutral ramp from white to near-black. 50 to 300 are the light-scheme surfaces,
+ * 400 to 800 the light-scheme borders and control outlines (800, the strongest, below 3:1 on the
+ * light surfaces for now, by design decision), and 900 and 950 text: 900 is light-scheme
+ * secondary text and icons, at 4.5:1 or more on every light surface. In the dark scheme the light
+ * steps are text and the light neutral primary. 900 and 950 share 800's hue and its low chroma, so
+ * they read grey-navy rather than blue.
  */
 export const slate = {
   50: '#ffffff',
@@ -18,28 +21,29 @@ export const slate = {
   500: '#e2e8ef',
   600: '#dce3ec',
   700: '#d6dee8',
-  800: '#d0dae5',
-  900: '#cad5e2',
-  950: '#c3cfdd',
+  800: '#c3cfdd',
+  900: '#5c6875',
+  950: '#10161e',
 } as const;
 
 /**
- * Enertiv navy, a subtle ramp: deep, low-saturation blues. 600 to 950 are the
- * dark-scheme surfaces (evenly spaced, growing steadily more saturated toward 600);
- * 200 to 500 are the dark-scheme borders, 200 the control border at 3:1 or more on every
- * dark surface; 700 is light-scheme primary.
+ * Enertiv navy, a deep ramp: low-saturation blues from a teal-navy 50 to a near-black 950.
+ * 600 to 950 are the dark-scheme surfaces; 600, 500, 400 and 200 the dark-scheme borders
+ * (faint to strongest, 200 below 3:1 on the dark surfaces for now, by design decision); 400 and 200 the dark control outline and its hover; 900 is
+ * light-scheme primary and 950 light-scheme text. The ramp has no desaturated mid tone, so
+ * light secondary text comes from slate.
  */
 export const navy = {
-  50: '#88beec',
-  100: '#72abdb',
-  200: '#6ca2cf',
-  300: '#4f7da3',
-  400: '#426a8a',
-  500: '#365670',
-  600: '#294a5f',
-  700: '#1b3e4f',
-  800: '#142f3c',
-  900: '#0d2029',
+  50: '#0d597a',
+  100: '#0d506e',
+  200: '#0d4963',
+  300: '#0b4057',
+  400: '#0a374a',
+  500: '#0a3142',
+  600: '#092c3b',
+  700: '#0e2630',
+  800: '#0d222b',
+  900: '#0b1c24',
   950: '#09161c',
 } as const;
 

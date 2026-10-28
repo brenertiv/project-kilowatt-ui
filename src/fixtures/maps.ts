@@ -20,3 +20,19 @@ export const highlightedSites: MapSite[] = sites.map((site) => ({
   ...site,
   neutral: site.value !== Math.max(...sites.map(({ value = 0 }) => value)),
 }));
+
+const statuses: { status: MapSite['status']; detail: string }[] = [
+  { status: 'success', detail: 'Data complete' },
+  { status: 'warning', detail: 'Data late, last reading 3 days ago' },
+  { status: 'error', detail: 'No data for 14 days' },
+];
+
+/**
+ * The same sites by data status: each takes an intent and a detail line saying what its color stands
+ * for, and the last has no data for the period, so it's hollow.
+ */
+export const statusSites: MapSite[] = sites.map((site, i) =>
+  i === sites.length - 1
+    ? { ...site, value: undefined, hollow: true, status: 'error', detail: 'No meters connected' }
+    : { ...site, ...statuses[i % statuses.length] },
+);

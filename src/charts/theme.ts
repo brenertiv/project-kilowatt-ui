@@ -34,7 +34,7 @@ function solid(color: string, surface: string): string {
  */
 export function chartThemes(root: am5.Root, scheme: ColorScheme, reducedMotion = false): am5.Theme[] {
   const mui = themes[scheme];
-  const card = mui.palette.background.level1;
+  const card = mui.palette.background.level2;
   const theme = am5.Theme.new(root);
   const context: ChartThemeContext = {
     root,
@@ -54,13 +54,13 @@ export function chartThemes(root: am5.Root, scheme: ColorScheme, reducedMotion =
 /** The palette's chart colors for one scheme, as amCharts colors, for a series that takes a slot rather than the next color in order. */
 export function chartColors(scheme: ColorScheme) {
   const { palette } = themes[scheme];
-  const card = palette.background.level1;
+  const card = palette.background.level2;
   const color = (value: string) => am5.color(solid(value, card));
   return {
     series: palette.chart.series.map(color),
     neutral: color(palette.chart.neutral),
     sequential: palette.chart.sequential.map(color),
-    /** The card surface the chart sits on (background.level1), for a mark that shows the surface through it, such as a striped column. */
+    /** The card surface the chart sits on (background.level2), for a mark that shows the surface through it, such as a striped column. */
     surface: color(card),
     /** Range bands (weekends, schedules): action.hover over the card. */
     band: color(palette.action.hover),
@@ -110,17 +110,21 @@ export type SeriesColor = {
  * past six colored series, where the rules say to group or use a table instead.
  */
 export function seriesColors(series: SeriesColor[], colors: ReturnType<typeof chartColors>): am5.Color[] {
+  return seriesSlots(series, colors.series.length).map((slot) => (slot === 'neutral' ? colors.neutral : colors.series[slot]));
+}
+
+/**
+ * The `chart.series` slot each series takes, or `'neutral'`, by the rules `seriesColors` follows: for
+ * HTML beside a chart (a swatch) that repeats a series' color from the palette.
+ */
+export function seriesSlots(series: SeriesColor[], count = 6): (number | 'neutral')[] {
   const taken = new Set(series.flatMap(({ slot, neutral }) => (neutral || slot === undefined ? [] : [slot])));
-  const free = colors.series.map((_, slot) => slot).filter((slot) => !taken.has(slot));
+  const free = Array.from({ length: count }, (_, slot) => slot).filter((slot) => !taken.has(slot));
   const colored = series.filter(({ neutral }) => !neutral).length;
-  if (colored > colors.series.length) {
-    console.warn(`A chart has ${colored} colored series; past ${colors.series.length}, group the smallest or show a table (Rules → Charts).`);
+  if (colored > count) {
+    console.warn(`A chart has ${colored} colored series; past ${count}, group the smallest or show a table (Rules → Charts).`);
   }
-  return series.map(({ slot, neutral }) => {
-    if (neutral) return colors.neutral;
-    const index = slot ?? free.shift() ?? 0;
-    return colors.series[index % colors.series.length];
-  });
+  return series.map(({ slot, neutral }) => (neutral ? 'neutral' : (slot ?? free.shift() ?? 0) % count));
 }
 
 /** A legend below the plot that wraps into up to three columns, so six series don't squeeze the plot. */

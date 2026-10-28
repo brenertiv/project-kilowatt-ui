@@ -424,29 +424,34 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
   const check = (scope: Scope) => isCurrent(scope) && <Icon name="check" />;
 
   /**
-   * A portfolio row, built like a crumb: the crumb frame around two flush buttons, each with its own
-   * hover. The name selects that portfolio (all properties or one group) as the scope; the chevron opens
-   * it to browse its properties. Rows stand apart, 4px between them, so each reads as one split button:
-   * an exception to "items in a list touch" (Rules → Accessibility), recorded on the ScopePicker page.
+   * A portfolio row. The name selects that portfolio (all properties or one group) as the scope; the
+   * chevron, the row's secondary action, opens it to browse its properties. A plain list row, as the
+   * Properties column's and the results' are: the rows touch, as list items do (Rules → Accessibility),
+   * the browsed portfolio takes the selected fill and the current scope its check.
    */
   const portfolioRow = (scope: Scope, name: string, count: number, groupId: string | null) => (
-    <ListItem key={groupId ?? 'all'} disablePadding sx={{ ...crumbFrame, alignItems: 'stretch' }}>
-      <ListItemButton selected={openGroupId === groupId} onClick={() => onChoose(scope)} sx={{ borderRadius: crumbRadius }}>
+    <ListItem
+      key={groupId ?? 'all'}
+      disablePadding
+      secondaryAction={
+        <IconButton edge="end" aria-label={`Browse ${groupId ? name : 'all properties'}`} onClick={() => browse(groupId)}>
+          <Icon name="chevron_right" />
+        </IconButton>
+      }
+    >
+      <ListItemButton selected={openGroupId === groupId} onClick={() => onChoose(scope)} sx={{ borderRadius: 1 }}>
         <ListItemIcon sx={{ minWidth: 36 }}>
           <Icon name={groupId ? levelIcon.group : levelIcon.portfolio} />
         </ListItemIcon>
         <ListItemText primary={name} secondary={countProperties(count)} />
         {check(scope)}
       </ListItemButton>
-      <IconButton aria-label={`Browse ${groupId ? name : 'all properties'}`} onClick={() => browse(groupId)} sx={{ px: 1.5, borderRadius: crumbRadius }}>
-        <Icon name="chevron_right" />
-      </IconButton>
     </ListItem>
   );
 
   const groupsColumn = (
-    // Flush with the search field's edge; on wide screens, clear of the line before the Properties column.
-    <List aria-label="Portfolios" sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, p: 0, pr: fullScreen ? 0 : 1 }}>
+    // The same inset as the Properties column's list; on wide screens, clear of the line before it.
+    <List aria-label="Portfolios" sx={{ p: 1, pr: fullScreen ? 1 : 2 }}>
       {portfolioRow({ level: 'portfolio' }, 'All properties', properties.length, null)}
       {groups.map((group) => portfolioRow({ level: 'group', id: group.id }, group.name, group.propertyIds.length, group.id))}
     </List>
@@ -498,8 +503,20 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
       aria-labelledby={titleId}
       slotProps={{
         transition: { onEnter: reset },
-        // Pinned near the top on wide screens, so it doesn't jump as the results change.
-        paper: { sx: { overscrollBehavior: 'contain', ...(!fullScreen && { alignSelf: 'flex-start', mt: 10 }) } },
+        // Pinned near the top on wide screens, so it doesn't jump as the results change. Its height is capped to the
+        // viewport below that margin and MUI's own 32px below it, with a floor so a short list doesn't collapse the
+        // columns, which scroll inside it.
+        paper: {
+          sx: {
+            overscrollBehavior: 'contain',
+            ...(!fullScreen && {
+              alignSelf: 'flex-start',
+              mt: 10,
+              maxHeight: (theme) => `calc(100dvh - ${theme.spacing(14)})`,
+              minHeight: (theme) => `min(${theme.spacing(60)}, calc(100dvh - ${theme.spacing(14)}))`,
+            }),
+          },
+        },
       }}
     >
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, p: 1, pl: 3 }}>

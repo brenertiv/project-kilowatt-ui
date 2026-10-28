@@ -78,10 +78,11 @@ MUI's emphasis levels, from most to least:
 - `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
 - `button-text-case`: labels are shown as written, not uppercased (`typography.button.textTransform` is `none`), and written in Title Case.
 - `button-text-weight`: labels are regular weight (400) instead of MUI's medium (500).
-- `control-outlines`: a primary outlined button's outline is `palette.control.border`, shared with inputs, selects and toggle buttons, from its own `control` palette role: slate 600 in light and navy 700 in dark at rest (quieter than 3:1 by design), slate 950 or navy 300 on hover, the primary text color on keyboard focus, navy 400 or navy 100 when pressed. The other intents keep MUI's outline in their own color.
+- `control-outlines`: a primary outlined button's outline is `palette.control.border`, shared with inputs, selects and toggle buttons, from its own `control` palette role: slate 600 in light and navy 400 in dark at rest (quieter than 3:1 by design), slate 800 or navy 200 on hover, the brand blue on keyboard focus (`focus-ring`), navy 400 or slate 800 when pressed. The other intents keep MUI's outline in their own color.
 - `flat-buttons`: contained buttons have no shadow; `disableElevation` is on by default.
 - `icon-button-radius`: `IconButton` takes the theme radius (8px) instead of MUI's circle, so its hover and focus shapes match the buttons beside it.
 - `icons`: icons are `Icon` from `src/icons` (Material Symbols at weight 300), not `@mui/icons-material`. In `startIcon` and `endIcon` the button sizes them as it would MUI's SVG icons.
+- `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the control, instead of MUI's background tint alone.
 
 Theme-wide departures (CSS variables, surface and border levels, the navy primary and the other intent colors) apply too; see Foundations → MUI departures.
 

@@ -85,9 +85,11 @@ describe('basemap theme', () => {
     const allowed = new Set([
       palette.background.level1,
       palette.background.level2,
+      palette.border.level2,
+      palette.map.land,
       palette.map.water,
-      palette.border.level0,
-      palette.border.level1,
+      palette.map.road,
+      palette.map.boundary,
       textColor,
       'transparent',
     ]);
@@ -102,7 +104,7 @@ describe('basemap theme', () => {
       ({ property }) => property === 'text-color' || property === 'icon-color',
     );
     for (const { layer, value } of colors.filter(({ value }) => value !== 'transparent')) {
-      for (const surface of [palette.background.level1, palette.map.water]) {
+      for (const surface of [palette.map.land, palette.map.water]) {
         expect(getContrastRatio(value as string, surface), `${layer} on ${surface}`).toBeGreaterThanOrEqual(4.5);
       }
     }
@@ -142,7 +144,7 @@ describe('map data colors', () => {
     const { series, neutral } = mapColors(scheme);
     const css = ([r, g, b]: number[]) => `rgb(${r}, ${g}, ${b})`;
     for (const color of [...series, neutral]) {
-      for (const surface of [palette.background.level1, palette.background.level2, palette.map.water]) {
+      for (const surface of [palette.map.land, palette.background.level1, palette.border.level2, palette.map.water]) {
         expect(getContrastRatio(css(color), surface), `${css(color)} on ${surface}`).toBeGreaterThanOrEqual(3);
       }
     }

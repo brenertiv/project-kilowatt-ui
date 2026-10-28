@@ -28,6 +28,12 @@ export type MapSite = {
   slot?: number;
   /** Draws the site in `chart.neutral`: context, when other sites are the point. Default `false`. */
   neutral?: boolean;
+  /** A status the site takes its color from, in place of `slot`: an intent. Don't mix with `slot` on one map. Default none. */
+  status?: 'success' | 'warning' | 'error' | 'info';
+  /** The site has no data for the map's lens: drawn as a ring in its color, at the smallest size when the map is `sized`. Default `false`. */
+  hollow?: boolean;
+  /** A line under the site's name in its tooltip and the list: what its color stands for, or why it is hollow. Default: the reading, when there is one. */
+  detail?: string;
 };
 
 export type SiteMapProps = {
@@ -39,6 +45,10 @@ export type SiteMapProps = {
   summary: string;
   /** The map's height in pixels. Default `320`. */
   height?: number;
+  /** Called with the site whose dot is clicked. Keep it stable (`useCallback`): the layer is rebuilt when it changes. */
+  onSelect?: (site: MapSite) => void;
+  /** Sizes each dot by its `value` on a square-root scale, from the smallest dot at none to the largest at the highest value, so a dot's area follows its value. Default `false`: every dot is one size. */
+  sized?: boolean;
 };
 
 /** How far the map keeps the sites from its edges when it fits them, in pixels. */
@@ -52,6 +62,10 @@ const fitMaxZoom = 15;
 const radius = 8;
 const neutralRadius = 6;
 const pickingRadius = 6;
+// The range a sized dot takes: the smallest keeps a 24px hit area with the picking radius, the largest stays a dot rather than a region.
+const sizedRadius = { min: 6, max: 16 };
+/** No fill: a hollow dot is its outline alone. */
+const clear: [number, number, number, number] = [0, 0, 0, 0];
 
 /** The box around every site, west-south to east-north. */
 function siteBounds(sites: MapSite[]): LngLatBoundsLike | undefined {
@@ -72,7 +86,7 @@ function siteBounds(sites: MapSite[]): LngLatBoundsLike | undefined {
  * @summary A map of sites on the themed CARTO basemap, with MUI controls, tooltips and a list for screen readers.
  * @import import { SiteMap } from 'src/maps/SiteMap';
  */
-export function SiteMap({ sites, unit, summary, height = 320 }: SiteMapProps) {
+export function SiteMap({ sites, unit, summary, height = 320, onSelect, sized = false }: SiteMapProps) {
   const container = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [overlay, setOverlay] = useState<MapboxOverlay | null>(null);
@@ -83,8 +97,10 @@ export function SiteMap({ sites, unit, summary, height = 320 }: SiteMapProps) {
   const format = useMemo(() => new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }), []);
   const reading = (site: MapSite) =>
     site.value === undefined ? undefined : [format.format(site.value), unit].filter(Boolean).join(' ');
+  // What the tooltip and the list say under the name: the site's detail, else the reading.
+  const detail = (site: MapSite) => site.detail ?? reading(site);
 
-  // The map, made once. It opens on an empty style, which shows the card surface: the land, until the basemap loads.
+  // The map, made once. It opens on an empty style, which shows the card surface until the basemap loads.
   useEffect(() => {
     if (!container.current) return;
     const instance = new maplibregl.Map({
@@ -121,33 +137,57 @@ export function SiteMap({ sites, unit, summary, height = 320 }: SiteMapProps) {
   useEffect(() => {
     if (!overlay) return;
     const colors = mapColors(scheme);
+    // A site's color: neutral, its status intent, or its series slot.
+    const colorOf = ({ slot = 0, neutral, status }: MapSite) =>
+      neutral ? colors.neutral : status ? colors[status] : colors.series[slot % colors.series.length];
+    // Sized: the square root of the value's share of the highest, so a dot's area follows its value.
+    const top = sized
+      ? Math.max(
+          0,
+          ...sites.filter((site) => !site.neutral && site.value !== undefined).map((site) => site.value as number),
+        )
+      : 0;
+    const radiusOf = (site: MapSite) => {
+      if (site.neutral) return neutralRadius;
+      if (!sized) return radius;
+      if (site.value === undefined || top <= 0) return sizedRadius.min;
+      return sizedRadius.min + (sizedRadius.max - sizedRadius.min) * Math.sqrt(site.value / top);
+    };
     overlay.setProps({
+      // A dot that opens something shows the pointer.
+      getCursor: ({ isDragging, isHovering }) =>
+        isDragging ? 'grabbing' : isHovering && onSelect ? 'pointer' : 'grab',
       layers: [
         new ScatterplotLayer<MapSite>({
           id: 'sites',
-          // Neutral sites first, so the sites that are the point draw on top.
-          data: [...sites].sort((a, b) => Number(Boolean(b.neutral)) - Number(Boolean(a.neutral))),
+          // Neutral sites first, so the sites that are the point draw on top; then the largest first, so a small dot isn't covered.
+          data: [...sites].sort(
+            (a, b) => Number(Boolean(b.neutral)) - Number(Boolean(a.neutral)) || radiusOf(b) - radiusOf(a),
+          ),
           getPosition: ({ longitude, latitude }) => [longitude, latitude],
-          getFillColor: ({ slot = 0, neutral }) =>
-            neutral ? colors.neutral : colors.series[slot % colors.series.length],
+          // A hollow dot has no fill and takes its color on the outline instead.
+          getFillColor: (site) => (site.hollow ? clear : colorOf(site)),
           // An outline in the land color sets each dot apart from the roads and buildings below it.
-          getLineColor: colors.land,
+          getLineColor: (site) => (site.hollow ? colorOf(site) : colors.land),
           stroked: true,
           lineWidthUnits: 'pixels',
           getLineWidth: 2,
           radiusUnits: 'pixels',
-          getRadius: ({ neutral }) => (neutral ? neutralRadius : radius),
+          getRadius: radiusOf,
           pickable: true,
           // The pointer's place on the page, for the tooltip's anchor: deck.gl gives it within the map.
           onHover: ({ object, x, y }) => {
             const box = container.current?.getBoundingClientRect();
             setHover(object && box ? { site: object, left: box.left + x, top: box.top + y } : null);
           },
-          updateTriggers: { getFillColor: scheme, getLineColor: scheme },
+          onClick: ({ object }) => {
+            if (object && onSelect) onSelect(object);
+          },
+          updateTriggers: { getFillColor: scheme, getLineColor: scheme, getRadius: sized },
         }),
       ],
     });
-  }, [overlay, sites, scheme]);
+  }, [overlay, sites, scheme, onSelect, sized]);
 
   // The tooltip follows the hovered site: a point anchor at the pointer.
   const anchor = useMemo(
@@ -166,7 +206,7 @@ export function SiteMap({ sites, unit, summary, height = 320 }: SiteMapProps) {
         // MapLibre's attribution box, on the card surface in the caption style (the `map-attribution` departure).
         '& .maplibregl-ctrl-attrib': {
           ...theme.typography.caption,
-          bgcolor: 'background.level1',
+          bgcolor: 'background.level2',
           color: 'text.secondary',
         },
         '& .maplibregl-ctrl-attrib a': { color: 'inherit' },
@@ -202,9 +242,9 @@ export function SiteMap({ sites, unit, summary, height = 320 }: SiteMapProps) {
         {hover && (
           <Paper elevation={8} sx={{ px: 1.5, py: 1 }}>
             <Typography variant="body2">{hover.site.name}</Typography>
-            {reading(hover.site) && (
+            {detail(hover.site) && (
               <Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                {reading(hover.site)}
+                {detail(hover.site)}
               </Typography>
             )}
           </Paper>
@@ -212,7 +252,7 @@ export function SiteMap({ sites, unit, summary, height = 320 }: SiteMapProps) {
       </Popper>
       <Box component="ul" sx={visuallyHidden}>
         {sites.map((site) => (
-          <li key={site.id}>{[site.name, reading(site)].filter(Boolean).join(': ')}</li>
+          <li key={site.id}>{[site.name, detail(site)].filter(Boolean).join(': ')}</li>
         ))}
       </Box>
     </Box>
