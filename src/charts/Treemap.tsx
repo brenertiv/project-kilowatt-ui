@@ -1,7 +1,10 @@
 import { useCallback } from 'react';
+import * as am5 from '@amcharts/amcharts5';
 import * as am5hierarchy from '@amcharts/amcharts5/hierarchy';
 import Box from '@mui/material/Box';
-import { seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
+import { useColorScheme } from '@mui/material/styles';
+import { createSchemeTheme } from '../mui/theme';
+import { seriesColors, seriesSlots, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
 /** One part of the whole, and how it takes its color: a fixed `slot` for a product meaning (`meaningColor` from `src/charts/meanings`), `neutral`, or neither for the next free slot, largest first. */
@@ -21,7 +24,7 @@ export type TreemapProps = {
   summary: string;
   /** The name of the rectangle that groups the smallest parts when there are more than six. Default `'Other'`. */
   otherLabel?: string;
-  /** The chart's height in pixels. Default `240`. */
+  /** The chart's height in pixels. Default `160`. */
   height?: number;
   /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
   inset?: ChartInset;
@@ -29,6 +32,17 @@ export type TreemapProps = {
 
 /** Shares in the labels and tooltips, formatted with Intl (Rules → Content and layout). */
 const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 });
+
+/**
+ * Each scheme's label color for a rectangle, by its slot: the palette's contrast text for that series
+ * color (`getContrastText`), dark on the light hues and light on the dark ones, and for `chart.neutral`.
+ */
+const labelColors = Object.fromEntries(
+  (['light', 'dark'] as const).map((scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    return [scheme, { series: palette.chart.series.map((color) => palette.getContrastText(color)), neutral: palette.getContrastText(palette.chart.neutral) }];
+  }),
+) as Record<'light' | 'dark', { series: string[]; neutral: string }>;
 
 /** The most rectangles a treemap shows: the number of `chart.series` colors (Rules → Charts). */
 const maxParts = 6;
@@ -48,7 +62,8 @@ function parts(data: TreemapNode[], otherLabel: string) {
 /**
  * A treemap of the parts of one whole, in Kilowatt's chart theme (Rules → Charts): a reference
  * implementation that Enertiv's app rebuilds. Each part is a rectangle sized by its value, largest
- * first, labeled with its name and share where it fits; the tooltip gives every part's exact value.
+ * first in a squarified layout with 2px gaps, labeled with its name and share where it fits, in the
+ * palette's contrast text for its color; the tooltip gives every part's exact value.
  * Rectangles take `chart.series` colors, or a fixed `slot` for a product meaning. Past six parts,
  * the smallest are grouped into one neutral rectangle. It's one level deep: a click doesn't drill
  * in. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
@@ -56,7 +71,9 @@ function parts(data: TreemapNode[], otherLabel: string) {
  * @summary A treemap of up to six parts of a whole, sized by value and labeled with their shares, with the smallest grouped into Other.
  * @import import { Treemap } from 'src/charts/Treemap';
  */
-export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 240, inset = 2 }: TreemapProps) {
+export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 160, inset = 2 }: TreemapProps) {
+  const { mode, systemMode } = useColorScheme();
+  const scheme = (mode === 'system' ? systemMode : mode) === 'dark' ? 'dark' : 'light';
   const build = useCallback(
     ({ root, colors }: ChartContext) => {
       const series = root.container.children.push(
@@ -68,6 +85,10 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 24
           // The root is the whole and isn't drawn; its children are the parts, one level deep.
           topDepth: 1,
           initialDepth: 1,
+          // Squarified, so rectangles stay close to square and their labels fit; 2px apart and flush with the chart's edges.
+          layoutAlgorithm: 'squarify',
+          nodePaddingInner: 2,
+          nodePaddingOuter: 0,
         }),
       );
       // One level deep, so a part has nothing to drill into: no click, no pointer cursor.
@@ -76,25 +97,32 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 24
         cursorOverStyle: 'default',
         tooltipText: `{category}: {sum.formatNumber('${tooltipNumberFormat}')} ${unit} ({share})`,
       });
+      // The gaps between rectangles are the padding, so the rectangles have no outline of their own.
+      series.rectangles.template.set('strokeOpacity', 0);
       // A label that doesn't fit its rectangle is hidden rather than shrunk; the tooltip still names the part.
       series.labels.template.setAll({ text: '{category}\n{share}', textAlign: 'center', oversizedBehavior: 'hide' });
+      // Each label in the palette's contrast text for its rectangle's color.
+      series.labels.template.adapters.add('fill', (value, target) => (target.dataItem?.dataContext as { label?: am5.Color } | undefined)?.label ?? value);
       const { kept, other } = parts(data, otherLabel);
       const total = data.reduce((sum, part) => sum + part.value, 0);
       const share = (value: number) => (total ? percent.format(value / total) : '–');
       // Parts with a slot keep it, so a meaning is one color on every chart; the rest take the free slots, largest first.
       const fills = seriesColors(kept, colors);
+      const slots = seriesSlots(kept, colors.series.length);
+      const labels = labelColors[scheme];
+      const label = (slot: number | 'neutral') => am5.color(slot === 'neutral' ? labels.neutral : labels.series[slot]);
       series.data.setAll([
         {
           category: 'Whole',
           children: [
-            ...kept.map(({ category, value }, i) => ({ category, value, share: share(value), fill: fills[i] })),
-            ...(other ? [{ ...other, share: share(other.value), fill: colors.neutral }] : []),
+            ...kept.map(({ category, value }, i) => ({ category, value, share: share(value), fill: fills[i], label: label(slots[i]) })),
+            ...(other ? [{ ...other, share: share(other.value), fill: colors.neutral, label: label('neutral') }] : []),
           ],
         },
       ]);
       series.set('selectedDataItem', series.dataItems[0]);
     },
-    [data, unit, otherLabel],
+    [data, unit, otherLabel, scheme],
   );
   const ref = useChart(build);
 

@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, screen, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, screen, waitFor, within } from 'storybook/test';
 import { AppShell, type AppShellCompany, type AppShellSection } from 'src/components/AppShell';
 import { ScopePicker, type Scope, type ScopeGroup, type ScopeProperty } from 'src/components/ScopePicker';
 import { Icon } from 'src/icons';
@@ -26,7 +26,7 @@ const scopeGroups: ScopeGroup[] = [
   { id: 'west', name: 'West Region', propertyIds: ['highpoint-1', 'mesa-commons'] },
 ];
 
-/** The sections, each with its pages. Tenant Billing and Maintenance have no pages of their own, so no panel, and are left out on phones. */
+/** The sections, each with its pages. Tenant Billing and Maintenance are Missing: the account doesn't have them, so no panel; they're left out on phones. */
 const sections: AppShellSection[] = [
   {
     id: 'workspace',
@@ -109,8 +109,8 @@ const sections: AppShellSection[] = [
       ],
     },
   },
-  { id: 'tenant-billing', label: 'Tenant Billing', icon: 'bar_chart', badge: 'Upgrade available', hideOnPhone: true },
-  { id: 'maintenance', label: 'Maintenance', icon: 'tune', badge: 'Upgrade available', hideOnPhone: true },
+  { id: 'tenant-billing', label: 'Tenant Billing', icon: 'bar_chart', missing: true, hideOnPhone: true },
+  { id: 'maintenance', label: 'Maintenance', icon: 'tune', missing: true, hideOnPhone: true },
   {
     id: 'notifications',
     label: 'Notifications',
@@ -119,6 +119,7 @@ const sections: AppShellSection[] = [
     count: 10,
     badge: '10 unread',
     panel: {
+      headerAction: { label: 'Notification preferences', icon: 'settings', onClick: () => {} },
       items: [
         { id: 'all', label: 'All unread', icon: 'inbox' },
         { id: 'insights', label: 'Insights', icon: 'bolt' },
@@ -200,6 +201,9 @@ const meta = {
     const [section, setSection] = useState(args.section);
     const [page, setPage] = useState(firstPage(args.section));
     const [assistantOpen, setAssistantOpen] = useState(args.asideOpen ?? false);
+    const [assistantDocked, setAssistantDocked] = useState(args.asideDocked ?? true);
+    // The aside docks or floats only beside the page, at `lg` and up; below it, it's a bottom sheet.
+    const large = useMediaQuery(useTheme().breakpoints.up('lg'));
     const [company, setCompany] = useState(args.company);
     const [scope, setScope] = useState<Scope>({ level: 'portfolio' });
     // On phones the header has room for an icon, not the label.
@@ -221,7 +225,9 @@ const meta = {
           setSection(sectionId);
           setPage(id);
         }}
-        headerStart={<ScopePicker groups={scopeGroups} properties={scopeProperties} value={scope} onChange={setScope} />}
+        headerStart={
+          <ScopePicker groups={scopeGroups} properties={scopeProperties} value={scope} onChange={setScope} />
+        }
         headerEnd={
           phone ? (
             <IconButton
@@ -244,13 +250,28 @@ const meta = {
         }
         aside={
           <Stack sx={{ height: '100%' }}>
-            <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', p: 2, pr: 1 }}>
+            {/* Floating, the header is the drag handle. */}
+            <Stack
+              direction="row"
+              data-drag-handle={large && !assistantDocked ? '' : undefined}
+              sx={{ alignItems: 'center', justifyContent: 'space-between', p: 2, pr: 1 }}
+            >
               <Typography variant="h5" component="h2">
                 Ask Enertiv
               </Typography>
-              <IconButton aria-label="Close Ask Enertiv" onClick={() => setAssistantOpen(false)}>
-                <Icon name="close" />
-              </IconButton>
+              <Stack direction="row">
+                {large && (
+                  <IconButton
+                    aria-label={assistantDocked ? 'Undock Ask Enertiv' : 'Dock Ask Enertiv'}
+                    onClick={() => setAssistantDocked(!assistantDocked)}
+                  >
+                    <Icon name={assistantDocked ? 'picture_in_picture_small' : 'dock_to_right'} />
+                  </IconButton>
+                )}
+                <IconButton aria-label="Close Ask Enertiv" onClick={() => setAssistantOpen(false)}>
+                  <Icon name="close" />
+                </IconButton>
+              </Stack>
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
               Placeholder for the assistant.
@@ -258,6 +279,7 @@ const meta = {
           </Stack>
         }
         asideOpen={assistantOpen}
+        asideDocked={assistantDocked}
         asideLabel="Ask Enertiv"
         onAsideClose={() => setAssistantOpen(false)}
       >
@@ -277,7 +299,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A section with pages: the rail, the section panel with search and a New action, the header and the page. */
+/** A section with pages: the rail with Search in its foot, the section panel with a New action, the header and the page. */
 export const Default: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /^Energy and ESG summary/ }));
@@ -299,7 +321,7 @@ export const PanelCounts: Story = {
   },
 };
 
-/** Notifications is a section like the others, placed at the bottom of the rail with its unread count; its panel groups notifications by kind. */
+/** Notifications is a section like the others, placed at the bottom of the rail with its unread count; its panel groups notifications by kind, with its preferences as the panel's header action. */
 export const Notifications: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Notifications, 10 unread' }));
@@ -311,6 +333,11 @@ export const Notifications: Story = {
       within(canvas.getByRole('navigation', { name: 'Notifications' })).getByRole('button', { name: 'Data alerts' }),
     );
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Data alerts');
+    await expect(
+      within(canvas.getByRole('navigation', { name: 'Notifications' })).getByRole('button', {
+        name: 'Notification preferences',
+      }),
+    ).toBeVisible();
   },
 };
 
@@ -328,13 +355,17 @@ export const Account: Story = {
   },
 };
 
-/** A section with no pages of its own: no panel, and no panel toggle. A dot marks sections with news, read with the label. */
-export const NoPanel: Story = {
+/** A Missing section, one the account doesn't have: a plus in the disabled color, its name as its tooltip, no badge and no panel; it opens its upgrade page. */
+export const Missing: Story = {
   args: { section: 'tenant-billing' },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, userEvent }) => {
     await expect(canvas.queryByRole('navigation', { name: 'Tenant Billing' })).toBeNull();
     await expect(canvas.queryByRole('button', { name: 'Dock navigation' })).toBeNull();
-    await expect(canvas.getByRole('button', { name: 'Maintenance, Upgrade available' })).toBeVisible();
+    const maintenance = canvas.getByRole('button', { name: 'Maintenance. Opens the upgrade page' });
+    await userEvent.hover(maintenance);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent(/^Maintenance$/);
+    await userEvent.click(maintenance);
+    await expect(maintenance).toHaveAttribute('aria-current', 'page');
   },
 };
 
@@ -374,7 +405,7 @@ export const PanelUndockedKeyboard: Story = {
   },
 };
 
-/** Search is an icon button in the panel's header, beside its toggle; it opens one dialog that finds a page in any section. */
+/** Search is in the rail's foot, above Notifications, on every page; it opens one dialog that finds a page in any section. */
 export const Search: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Search' }));
@@ -399,7 +430,7 @@ export const PanelFilter: Story = {
   },
 };
 
-/** The panel resizes between 220px and 380px by dragging its edge, or with the arrow keys, Home and End once it's focused; the hover panel keeps a fixed 248px. */
+/** The panel resizes between 220px and 380px by dragging its edge, or with the arrow keys, Home and End once it's focused; the hover panel follows it, 8px narrower. */
 export const PanelResize: Story = {
   play: async ({ canvas, userEvent }) => {
     const handle = canvas.getByRole('separator', { name: 'Resize navigation' });
@@ -408,21 +439,52 @@ export const PanelResize: Story = {
     await expect(handle).toHaveAttribute('aria-valuenow', '272');
     await userEvent.keyboard('{End}');
     await expect(handle).toHaveAttribute('aria-valuenow', '380');
-    // Undocked, the hover panel keeps its own fixed width rather than the docked panel's.
+    // Undocked, the hover panel follows the docked panel's width, less its 8px inset.
     await userEvent.click(canvas.getByRole('button', { name: 'Collapse navigation' }));
     await userEvent.hover(canvas.getByRole('button', { name: 'People' }));
     const floating = await canvas.findByRole('navigation', { name: 'People' });
-    await expect(floating.getBoundingClientRect().width).toBe(248);
+    await expect(floating.getBoundingClientRect().width).toBe(372);
   },
 };
 
-/** A side column for the assistant, opened from the header. Below the `lg` breakpoint it opens as a bottom sheet. */
+/** A side column for the assistant, opened from the header, whose left edge resizes it (280px to 560px). Below the `lg` breakpoint it opens as a bottom sheet. */
 export const AssistantOpen: Story = {
   args: { asideOpen: true },
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.getByRole('complementary', { name: 'Ask Enertiv' })).toBeVisible();
+    const edge = canvas.getByRole('separator', { name: 'Resize Ask Enertiv' });
+    edge.focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(edge).toHaveAttribute('aria-valuenow', '352');
     await userEvent.click(canvas.getByRole('button', { name: 'Close Ask Enertiv' }));
     await expect(canvas.queryByRole('complementary', { name: 'Ask Enertiv' })).toBeNull();
+  },
+};
+
+/** Undocked at `lg` and up, the assistant floats at the bottom right; its header drags it, and a double-click puts it back in the corner. */
+export const AssistantFloating: Story = {
+  args: { asideOpen: true, asideDocked: false, onAsidePositionChange: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    const aside = canvas.getByRole('complementary', { name: 'Ask Enertiv' });
+    const title = within(aside).getByRole('heading', { name: 'Ask Enertiv' });
+    const start = aside.getBoundingClientRect();
+    fireEvent.pointerDown(title, { button: 0, clientX: start.left + 40, clientY: start.top + 20 });
+    fireEvent.pointerMove(window, { clientX: start.left - 60, clientY: start.top });
+    fireEvent.pointerUp(window);
+    await waitFor(() => expect(args.onAsidePositionChange).toHaveBeenLastCalledWith({ right: 116, bottom: 36 }));
+    await userEvent.dblClick(title);
+    await expect(args.onAsidePositionChange).toHaveBeenLastCalledWith(null);
+    await userEvent.click(within(aside).getByRole('button', { name: 'Dock Ask Enertiv' }));
+    await expect(canvas.getByRole('separator', { name: 'Resize Ask Enertiv' })).toBeVisible();
+  },
+};
+
+/** A page with no scope and no page-wide actions leaves the header out with `hideHeader`; the page starts at the frame's top. */
+export const NoHeader: Story = {
+  args: { hideHeader: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByRole('navigation', { name: 'Scope' })).toBeNull();
+    await expect(canvas.getByRole('heading', { level: 1 })).toBeVisible();
   },
 };
 
@@ -516,7 +578,7 @@ export const PhoneCompany: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
-    await userEvent.click(within(menu).getByRole('button', { name: 'Ridgeline Logistics REIT, switch company' }));
+    await userEvent.click(within(menu).getByRole('button', { name: 'Switch company: Ridgeline Logistics REIT' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: /^Harbor Point Residential/ }));
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
     await expect(
@@ -525,12 +587,26 @@ export const PhoneCompany: Story = {
   },
 };
 
-/** The rail's first button opens the companies to switch to. */
+/** The rail's first button, the company's mark (its initials without one), opens the companies to switch to, each with its mark. */
 export const CompanySwitch: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Switch company: Ridgeline Logistics REIT' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: /^Summit Office Partners/ }));
     await expect(canvas.getByRole('button', { name: 'Switch company: Summit Office Partners' })).toBeVisible();
+  },
+};
+
+/** With `onAddCompany`, the company menu ends with an Add company row; with one company, the menu lists just it. */
+export const CompanyAdd: Story = {
+  args: { companies: [companies[0]], onAddCompany: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Switch company: Ridgeline Logistics REIT' }));
+    await expect(await screen.findByRole('menuitemradio', { name: /^Ridgeline Logistics REIT/ })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Add company' }));
+    await expect(args.onAddCompany).toHaveBeenCalledOnce();
   },
 };
 

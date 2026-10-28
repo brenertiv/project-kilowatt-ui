@@ -44,3 +44,10 @@ declare module '@mui/material/styles' {
     map?: MapColors;
   }
 }
+
+declare module '@mui/material/Paper' {
+  /** `variant="soft"`: a raised composer's level1 surface with the soft shadow (`soft-shadow`). */
+  interface PaperPropsVariantOverrides {
+    soft: true;
+  }
+}

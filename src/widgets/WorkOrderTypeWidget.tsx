@@ -26,7 +26,7 @@ const share = new Intl.NumberFormat('en-US', { style: 'percent', maximumFraction
  * Work orders by type as parts of the whole: the recipe for Work Order Type Breakdown. It asks
  * `/action/count/?group_by=action_type_id` for the work orders due in the window, and `/action_type/` for
  * the types, maps them with `typeSlices` (each type in its series slot from `workOrderTypeSlots`, empty
- * types left out), and draws a `DonutChart` labeled with each type's share.
+ * types left out), and draws a `DonutChart` with the total in the middle and each type's share in its legend.
  *
  * @summary Work orders by type as a donut, each type in its own color, fetched and mapped from the API.
  * @import import { WorkOrderTypeWidget } from 'src/widgets/WorkOrderTypeWidget';

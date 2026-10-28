@@ -3,12 +3,12 @@ import * as DonutChartStories from './DonutChart.stories';
 
 <Meta
   of={DonutChartStories}
-  summary="Kilowatt's reference donut chart for parts of one whole: amCharts 5 in the chart theme, up to six slices labeled directly, with the smallest grouped into a neutral Other."
+  summary="Kilowatt's reference donut chart for parts of one whole: amCharts 5 in the chart theme, a thin ring of up to six slices with the total in the middle and a legend under it, the smallest grouped into a neutral Other."
 />
 
 # Donut chart
 
-A donut chart shows how one whole splits into parts. `DonutChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). Enertiv's app rebuilds its charts from this one rather than importing it.
+A donut chart shows how one whole splits into parts. `DonutChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts). It's a thin ring with the whole's total in the middle, the number large and the unit under it, and a legend under the ring that names each part and its share; the slices carry no labels. The legend's toggle buttons are MUI's `ToggleButton` (Material UI v9; see the [ToggleButton API](https://mui.com/material-ui/api/toggle-button/)). Enertiv's app rebuilds its charts from this one rather than importing it.
 
 <Canvas of={DonutChartStories.Parts} />
 
@@ -30,19 +30,34 @@ import { DonutChart } from 'src/charts/DonutChart';
 </Card>
 ```
 
-`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`), since the chart is rebuilt when it changes.
+`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`), since the chart is rebuilt when it changes. `unit` is what one unit of value is (`properties`, `kWh`, `USD`): it sits under the total in the middle and after each value in the tooltip.
+
+Props, with their defaults:
+
+- `data`: the parts, `{ category, value }`, with an optional `slot` or `neutral` (`SeriesColor`).
+- `unit`: under the total and in the tooltip.
+- `summary`: one sentence, the figure's accessible name.
+- `fill`: one color for every slice, stepped down in opacity slice by slice, and for the total. A palette key, as `sx` takes one (`'secondary.main'`), which follows the color scheme; or a solid CSS color (hex or `rgb()`), not a CSS variable, since the chart draws on a canvas. Default none: slices take `chart.series`.
+- `innerRadius`: the hole's radius in percent of the ring's outer radius. Default `82`, a thin ring.
+- `otherLabel`: the name of the grouped slice. Default `'Other'`.
+- `height`: the ring's height in pixels, the legend not included. Default `220`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+- `onSelect`: makes the chart a filter, called with a part's category. Default none: read-only.
+- `selected`: the categories selected, with `onSelect`. Default none.
 
 ## Variants
 
-- **Parts.** Up to six slices, largest first, in `chart.series` order, each labeled with its name and share.
+- **Parts.** Up to six slices, largest first, in `chart.series` order, with the total in the middle and each part's name and share in the legend under the ring, its swatch in the slice's color.
 - **Grouped into Other.** With more than six parts, the five largest keep their slices and the rest are summed into one slice in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
 - **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each slice, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
-- **Filter.** With `onSelect`, the chart filters what's beside it (the map, a table): a click on a slice, or on its toggle button under the chart, passes its category to `onSelect`, and the page keeps the selection and passes it back as `selected`. While anything is selected, the other slices and swatches step back. The toggle buttons name each part and its share, and carry the selection by keyboard and for screen readers.
+- **Filter.** With `onSelect`, the chart filters what's beside it (the map, a table): each legend entry becomes a toggle button, pressed while its part is selected, and a click on a slice or its entry passes its category to `onSelect`. The page keeps the selection and passes it back as `selected`. While anything is selected, the other slices and swatches step back. Without `onSelect`, the legend is read-only text.
+- **One color.** With `fill` (a palette key such as `'secondary.main'`), every slice takes that one color, stepping down in opacity from the largest, and the total takes it too: for a chart on a colored surface, where the series colors would clash. The legend's swatches repeat each slice's step.
+- **Inner radius.** `innerRadius` sets the hole, in percent of the ring's radius: the default 82 is a thin ring that leaves room for the total; lower it for a thicker ring where the slices need more weight.
 
 ## Do and don't
 
 - Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`, 16px by default to line up with the title and any `CardContent`, `1` (8px) for a tighter fit, `0` to run edge to edge. The page sets the period.
-- Don't put the unit in the card header or a subtitle; `unit` puts it in the tooltip, next to each value, and the summary should state it with its numbers.
+- Don't put the unit in the card header or a subtitle; `unit` puts it under the total and in the tooltip, next to each value, and the summary should state it with its numbers.
 - Do use a donut only for parts that add up to a meaningful whole.
 - Don't use a donut for values that overlap or don't sum, such as averages or rates.
 - Do let the chart group the smallest parts into "Other" past six, and name them in the summary.
@@ -50,13 +65,16 @@ import { DonutChart } from 'src/charts/DonutChart';
 - Do give slices that stand for product meanings their `slot` from `src/charts/meanings`.
 - Don't let a work-order type change color between charts because its rank changed.
 - Do write `summary` as one sentence with the share that matters.
-- Don't add a legend; each slice is labeled directly. The toggle buttons a filter shows are its controls, not a legend.
+- Don't add a legend or labels of your own; the chart's legend names every part, and with `onSelect` its entries are the filter's controls.
 - Do keep the selection in the page and pass it back as `selected`, so the chart and what it filters agree.
+- Do pass `fill` a palette key (`'secondary.main'`), so the chart follows the color scheme, and only on a colored surface.
+- Don't pass `fill` a CSS variable or a hex of your own; the canvas can't read a variable, a hex doesn't change with the scheme, and a color outside the palette is a parallel convention.
+- Don't lower `innerRadius` so far that the total no longer fits in the hole; keep the default unless the slices need more weight.
 
 ## MUI departures
 
-- `chart-palette`: slices take `chart.series` in order, largest first, and the grouped slice takes `chart.neutral`; a filter's toggle buttons repeat each slice's color in a swatch, from the same palette roles.
-- `selected-fills-icons`, `focus-ring` and `toggle-button-text`: a filter's toggle buttons are MUI's `ToggleButton` with Kilowatt's selected fill, focus ring and text.
+- `chart-palette`: slices take `chart.series` in order, largest first, and the grouped slice takes `chart.neutral`; the legend's swatches repeat each slice's color from the same palette roles.
+- `selected-fills-icons`, `focus-ring` and `toggle-button-text`: a filter's legend entries are MUI's `ToggleButton` with Kilowatt's selected fill, focus ring and text.
 
 Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
 
@@ -65,7 +83,7 @@ Theme-wide departures (the surface levels the card sits on, the theme radius) ap
 How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
 
 - `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
-- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-type`: chart labels are in the theme's font at the `caption` size, in `text.secondary`; the donut draws none, since the total and the legend are HTML in the page's type.
 - `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
 - `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
 - `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
@@ -76,9 +94,9 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 
 - Every point, column or slice shows its exact value and unit in a tooltip on hover, since axis numbers are rounded to compact form (1.5K).
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
-- amCharts adds keyboard focus and screen-reader announcements for the slices.
-- Slices are told apart by their direct labels (name and share) as well as color.
-- A filter's toggle buttons are reachable by Tab and announce whether each part is selected (`aria-pressed`); the slices themselves respond to the pointer only, so the buttons are the way in for keyboard and screen-reader users.
+- The total and the legend are text, so screen readers read them after the summary; the dot between a part and its share is hidden from them, so an entry reads "Office 42%".
+- Slices are told apart by the legend (name, share and a swatch in the slice's color) as well as color, and by their order, largest first.
+- A filter's legend entries are toggle buttons, named by their part and share, at least 24px tall, reachable by Tab and announcing whether each part is selected (`aria-pressed`); the slices themselves respond to the pointer only, so the buttons are the way in for keyboard and screen-reader users.
 - For exact values, offer the data as a table beside the chart.
 
 ## Related

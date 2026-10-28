@@ -1,4 +1,14 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
@@ -6,6 +16,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Dialog from '@mui/material/Dialog';
+import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -59,6 +70,8 @@ export type AppShellPanel = {
   colorScheme?: boolean;
   /** A filter button in the panel's header that narrows the pages to one `kind`, such as Workspace's item types. `label` names the button and its menu; each option's `value` matches the items' `kind`. */
   filter?: { label: string; options: { value: string; label: string }[] };
+  /** One icon button in the panel's header, before its collapse control, for a section-wide action such as Notifications' preferences. Left out of the phone menu, so put the same action in the page too. */
+  headerAction?: { label: string; icon: IconName; onClick: () => void };
 };
 
 /** A top-level section of the app, shown as an icon in the rail. */
@@ -69,7 +82,7 @@ export type AppShellSection = {
   label: string;
   /** Where the section lives, if it has a URL: the rail item renders as a link. */
   href?: string;
-  /** A short note read with the label, such as "Upgrade available" or "10 unread". It puts a dot on the icon, or `count` when there is one. */
+  /** A short note read with the label, such as "10 unread". It puts a dot on the icon, or `count` when there is one. */
   badge?: string;
   /** A number on the icon in place of the dot, such as unread notifications. Give `badge` the words for it. */
   count?: number;
@@ -77,8 +90,10 @@ export type AppShellSection = {
   placement?: 'start' | 'end';
   /** The section's pages. Leave it out for a section with no pages of its own: it has no panel. */
   panel?: AppShellPanel;
-  /** Leaves the section out of the phone menu, for one that's rarely used on a phone, such as an upgrade page. Default `false`. */
+  /** Leaves the section out of the phone menu, for one that's rarely used on a phone. Default `false`. */
   hideOnPhone?: boolean;
+  /** A section the account doesn't have but can upgrade to: a plus in the disabled color in place of its icon, its name as its tooltip, no badge and no panel. Choosing it opens its upgrade page through `onSectionChange`. To hide one, leave it out of `sections`. Default `false`. */
+  missing?: boolean;
 } & (
   | {
       /** The rail icon. */
@@ -100,12 +115,14 @@ export type AppShellCompany = {
   name: string;
   /** A second line in the switcher, such as the person's role there. */
   detail?: string;
+  /** The company's mark, as an image URL, shown on a white tile (marks are drawn for white). Without one, the company's initials stand in. */
+  logo?: string;
 };
 
 export type AppShellProps = {
   /** The company the person is in: the rail's first button on wide screens, and the company button at the foot of the phone menu. */
   company: AppShellCompany;
-  /** Every company the person belongs to, the current one included. With two or more, the company button opens a menu to switch. */
+  /** Every company the person belongs to, the current one included. The company button opens a menu of them, with the current one checked. Default the current company alone. */
   companies?: AppShellCompany[];
   /** The top-level sections, in rail order, each with its panel. */
   sections: AppShellSection[];
@@ -121,10 +138,24 @@ export type AppShellProps = {
   aside?: ReactNode;
   /** Whether `aside` is shown. Default `false`. */
   asideOpen?: boolean;
+  /** At `lg` and up, whether the aside is a column beside the page (`true`) or floats over it at the bottom right (`false`), where its header drags it. Put the Dock and Undock control in the aside's own header. Default `true`. */
+  asideDocked?: boolean;
+  /** The aside column's starting width in pixels, between 280 and 560; the floating aside takes it too. Default `344`. */
+  defaultAsideWidth?: number;
+  /** Called with the new width after the aside column is resized, so the app can remember it. */
+  onAsideWidthChange?: (width: number) => void;
+  /** Where the floating aside starts, as its distance from the window's right and bottom edges. Default `null`: the bottom right corner, 16px in. */
+  defaultAsidePosition?: AppShellAsidePosition | null;
+  /** Called with the floating aside's position after it's dragged, or `null` after a double-click on its header puts it back in the corner, so the app can remember it. */
+  onAsidePositionChange?: (position: AppShellAsidePosition | null) => void;
   /** The accessible name of `aside`, such as "Ask Enertiv". Default `'Side panel'`. */
   asideLabel?: string;
   /** Called when the bottom sheet's scrim or Escape closes `aside`. */
   onAsideClose?: () => void;
+  /** Leaves the header out on wide screens, for a page with no scope and no page-wide actions. Phones keep theirs, which holds the menu button. Default `false`. */
+  hideHeader?: boolean;
+  /** Whether the page is still loading. A panel docking from the floating panel keeps its overlay up until this is `false`, so the page behind it never shows mid-load. Default `false`. */
+  loading?: boolean;
   /** Whether the section panel starts docked on wide screens. Undocked, it opens over the page while a rail item is hovered. Default `true`. */
   defaultPanelOpen?: boolean;
   /** Called when the section panel docks or undocks on wide screens, so the app can remember it. */
@@ -139,20 +170,44 @@ export type AppShellProps = {
   onPageChange?: (page: string, section: string) => void;
   /** Called with a company's id when it's chosen in the company menu. */
   onCompanyChange?: (company: string) => void;
+  /** Adds an Add company row at the foot of the company menu, which calls this. Default none: no row. */
+  onAddCompany?: () => void;
   /** The page. */
   children: ReactNode;
 };
 
+/** The floating aside's place: its distance in pixels from the window's right and bottom edges. */
+export type AppShellAsidePosition = { right: number; bottom: number };
+
 const railWidth = 72;
 const minPanelWidth = 220;
 const maxPanelWidth = 380;
-const asideWidth = 344;
-/** The undocked panel's width, fixed whatever the docked panel is resized to: the default panel width less its 8px inset. */
-const flyoutWidth = 248;
+const minAsideWidth = 280;
+const maxAsideWidth = 560;
+/** The undocked panel is the docked panel's width less this, its 8px inset, so its right edge lands where the docked panel's would. */
+const flyoutInset = 8;
+/** How long the pointer rests on a rail item before its panel floats: short, so the panel doesn't feel late, but long enough that crossing the rail doesn't open each one. */
+const flyoutOpenDelay = 80;
 /** How long the undocked panel stays after the pointer leaves the rail and panel, so it survives a diagonal move. */
 const flyoutCloseDelay = 200;
 
 const clampWidth = (width: number) => Math.round(Math.min(maxPanelWidth, Math.max(minPanelWidth, width)));
+const clampAside = (width: number) => Math.round(Math.min(maxAsideWidth, Math.max(minAsideWidth, width)));
+
+/** Where the docking panel's overlay is, relative to the shell: at the floating panel's place, then the docked slot's. */
+type MorphRect = { top: number; left: number; width: number; height: number };
+type Morph = {
+  id: string;
+  from: MorphRect;
+  to: MorphRect;
+  /** `from`: at the floating panel's place, for one frame. `to`: growing into the docked slot. `grown`: there, holding until the page has loaded, then fading out over the docked panel. */
+  phase: 'from' | 'to' | 'grown';
+};
+const rectIn = (el: Element, root: Element): MorphRect => {
+  const a = el.getBoundingClientRect();
+  const b = root.getBoundingClientRect();
+  return { top: a.top - b.top, left: a.left - b.left, width: a.width, height: a.height };
+};
 
 type SectionPanelProps = {
   section: AppShellSection & { panel: AppShellPanel };
@@ -160,13 +215,11 @@ type SectionPanelProps = {
   width: number | string;
   /** The header button: collapse when docked, dock when floating. */
   toggle: { label: string; icon: IconName; onClick: () => void };
-  /** Opens the search dialog, from the Search button beside the toggle. */
-  onSearch: () => void;
   onChoose: (page: string) => void;
 };
 
-/** A section's title, header buttons (filter, search, collapse or dock), actions and pages. Docked or floating over the page. */
-function SectionPanel({ section, page, width, toggle, onSearch, onChoose }: SectionPanelProps) {
+/** A section's title, header buttons (filter, the panel's action, collapse or dock), actions and pages. Docked or floating over the page. */
+function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelProps) {
   const { panel, label } = section;
   const [kind, setKind] = useState<string | null>(null);
   const [filterButton, setFilterButton] = useState<HTMLElement | null>(null);
@@ -219,11 +272,13 @@ function SectionPanel({ section, page, width, toggle, onSearch, onChoose }: Sect
             </Menu>
           </>
         )}
-        <Tooltip title="Search">
-          <IconButton aria-label="Search" onClick={onSearch}>
-            <Icon name="search" />
-          </IconButton>
-        </Tooltip>
+        {panel.headerAction && (
+          <Tooltip title={panel.headerAction.label}>
+            <IconButton aria-label={panel.headerAction.label} onClick={panel.headerAction.onClick}>
+              <Icon name={panel.headerAction.icon} />
+            </IconButton>
+          </Tooltip>
+        )}
         <Tooltip title={toggle.label}>
           <IconButton aria-label={toggle.label} onClick={toggle.onClick}>
             <Icon name={toggle.icon} />
@@ -423,6 +478,9 @@ function SectionGlyph({ section }: { section: AppShellSection }) {
     >
       {section.initials}
     </Avatar>
+  ) : section.missing ? (
+    // A section the account doesn't have: one circled plus in the disabled color, quieter than the sections it has.
+    <Icon name="add_circle" sx={{ color: 'text.disabled' }} />
   ) : (
     <Icon name={section.icon} />
   );
@@ -504,6 +562,49 @@ function useBackToClose() {
   return [open, show, hide] as const;
 }
 
+/** A company's initials: the first letters of its first two words. */
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter((word) => /^\p{L}/u.test(word))
+    .slice(0, 2)
+    .map((word) => word[0].toUpperCase())
+    .join('');
+
+/** A company's mark on a white tile, fitted inside with a little room (marks are drawn for white), or its initials without one. */
+function CompanyMark({ company, size }: { company: AppShellCompany; size: number }) {
+  return company.logo ? (
+    <Avatar
+      variant="rounded"
+      src={company.logo}
+      alt=""
+      sx={{
+        width: size,
+        height: size,
+        bgcolor: 'common.white',
+        borderRadius: 1,
+        '& img': { objectFit: 'contain', p: size >= 48 ? 0.75 : 0.5, boxSizing: 'border-box' },
+      }}
+    />
+  ) : (
+    // Decorative: the company's name is always beside it or in its control's name.
+    <Avatar
+      aria-hidden
+      variant="rounded"
+      sx={{
+        width: size,
+        height: size,
+        bgcolor: 'background.level3',
+        color: 'text.primary',
+        typography: 'caption',
+        borderRadius: 1,
+      }}
+    >
+      {initialsOf(company.name)}
+    </Avatar>
+  );
+}
+
 type CompanyMenuProps = {
   anchorEl: HTMLElement | null;
   open: boolean;
@@ -513,10 +614,12 @@ type CompanyMenuProps = {
   placement: 'right' | 'top';
   onClose: () => void;
   onChoose: (company: string) => void;
+  /** Adds the Add company row at the foot. */
+  onAdd?: () => void;
 };
 
-/** The companies the person belongs to, with the current one checked. */
-function CompanyMenu({ anchorEl, open, company, companies, placement, onClose, onChoose }: CompanyMenuProps) {
+/** The companies the person belongs to, each with its mark, the current one checked, and an optional Add company row. */
+function CompanyMenu({ anchorEl, open, company, companies, placement, onClose, onChoose, onAdd }: CompanyMenuProps) {
   return (
     <Menu
       anchorEl={anchorEl}
@@ -529,7 +632,14 @@ function CompanyMenu({ anchorEl, open, company, companies, placement, onClose, o
         placement === 'right' ? { vertical: 'top', horizontal: 'left' } : { vertical: 'bottom', horizontal: 'left' }
       }
       slotProps={{
-        paper: { sx: { minWidth: 240, maxHeight: '70dvh', overscrollBehavior: 'contain' } },
+        paper: {
+          sx: {
+            minWidth: 280,
+            maxHeight: '70dvh',
+            overscrollBehavior: 'contain',
+            ...(placement === 'right' && { ml: 1 }),
+          },
+        },
         list: { 'aria-label': 'Switch company' },
       }}
     >
@@ -543,12 +653,21 @@ function CompanyMenu({ anchorEl, open, company, companies, placement, onClose, o
           onClick={() => onChoose(item.id)}
         >
           <ListItemIcon>
-            <Icon name="apartment" />
+            <CompanyMark company={item} size={32} />
           </ListItemIcon>
           <ListItemText primary={item.name} secondary={item.detail} />
           {item.id === company.id && <Icon name="check" sx={{ ml: 1 }} />}
         </MenuItem>
       ))}
+      {onAdd && <Divider />}
+      {onAdd && (
+        <MenuItem onClick={onAdd}>
+          <ListItemIcon>
+            <Icon name="add" />
+          </ListItemIcon>
+          <ListItemText primary="Add company" />
+        </MenuItem>
+      )}
     </Menu>
   );
 }
@@ -568,6 +687,7 @@ type PhoneShellProps = Pick<
   | 'onSectionChange'
   | 'onPageChange'
   | 'onCompanyChange'
+  | 'onAddCompany'
   | 'children'
 > & { asideLabel: string; asideOpen: boolean; companies: AppShellCompany[] };
 
@@ -593,6 +713,7 @@ function PhoneShell({
   onPageChange,
   companies,
   onCompanyChange,
+  onAddCompany,
   children,
 }: PhoneShellProps) {
   const [menuOpen, showMenu, hideMenu] = useBackToClose();
@@ -615,7 +736,6 @@ function PhoneShell({
   const title = current?.panel?.items.find((item) => item.id === page)?.label ?? current?.label ?? '';
   const news = sections.filter((item) => item.count).map((item) => item.badge ?? `${item.label}, ${item.count}`);
   const menuLabel = ['Open menu', ...news].join(', ');
-  const switchable = companies.length > 1;
 
   // Which way the last drill went, so the new level slides in from that side; `null` when the menu opens.
   const [direction, setDirection] = useState<'in' | 'out' | null>(null);
@@ -688,37 +808,32 @@ function PhoneShell({
           </ListItem>
         </List>
       )}
-      {switchable ? (
-        <Button
-          ref={setCompanyButton}
-          variant="outlined"
-          startIcon={<Icon name="apartment" />}
-          endIcon={<Icon name="unfold_more" />}
-          aria-label={`${company.name}, switch company`}
-          aria-haspopup="menu"
-          aria-expanded={companiesOpen}
-          onClick={showCompanies}
-          sx={{ mx: 1, justifyContent: 'flex-start' }}
+      {/* The same control as the rail's company button, whatever the count: the company's mark and name. */}
+      <Button
+        ref={setCompanyButton}
+        variant="outlined"
+        startIcon={<CompanyMark company={company} size={24} />}
+        endIcon={<Icon name="unfold_more" />}
+        aria-label={`Switch company: ${company.name}`}
+        aria-haspopup="menu"
+        aria-expanded={companiesOpen}
+        onClick={showCompanies}
+        sx={{ mx: 1, justifyContent: 'flex-start' }}
+      >
+        <Box
+          component="span"
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            textAlign: 'start',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
         >
-          <Box
-            component="span"
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              textAlign: 'start',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {company.name}
-          </Box>
-        </Button>
-      ) : (
-        <Typography variant="body2" color="text.secondary" noWrap sx={{ px: 2 }}>
           {company.name}
-        </Typography>
-      )}
+        </Box>
+      </Button>
     </Stack>
   );
 
@@ -736,7 +851,7 @@ function PhoneShell({
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <SectionGlyph section={item} />
               </ListItemIcon>
-              <ListItemText primary={item.label} secondary={item.badge} />
+              <ListItemText primary={item.label} secondary={item.missing ? undefined : item.badge} />
               {hasPanel(item) && <Icon name="chevron_right" color="action" />}
             </ListItemButton>
           </ListItem>
@@ -779,8 +894,9 @@ function PhoneShell({
         elevation={0}
         sx={{ top: 0, bgcolor: 'background.level1', borderBottom: 1, borderColor: 'divider' }}
       >
-        <Toolbar sx={{ gap: 0.5, px: 1 }}>
-          <IconButton aria-label={menuLabel} onClick={openMenu}>
+        {/* The page's 16px inset; the icon buttons at either end overhang it by their 8px padding, so their glyphs sit on the content's edge. */}
+        <Toolbar disableGutters sx={{ gap: 0.5, px: 2 }}>
+          <IconButton aria-label={menuLabel} onClick={openMenu} sx={{ ml: -1 }}>
             <Badge variant="dot" color="secondary" invisible={!news.length}>
               <Icon name="menu" />
             </Badge>
@@ -805,7 +921,7 @@ function PhoneShell({
             </Typography>
           )}
           <Box sx={{ flex: 1 }} />
-          {headerEnd}
+          <Box sx={{ display: 'flex', mr: -1 }}>{headerEnd}</Box>
         </Toolbar>
       </AppBar>
       <Box
@@ -883,26 +999,189 @@ function PhoneShell({
         onClose={() => hideSearch()}
         onChoose={(id, sectionId) => hideSearch(() => onPageChange?.(id, sectionId))}
       />
-      {switchable && (
-        <CompanyMenu
-          anchorEl={companyButton}
-          open={companiesOpen}
-          company={company}
-          companies={companies}
-          placement="top"
-          onClose={() => hideCompanies()}
-          onChoose={(id) =>
-            // Out of the company menu, then out of the menu, then switch.
-            hideCompanies(() => hideMenu(() => id !== company.id && onCompanyChange?.(id)))
-          }
-        />
-      )}
+      <CompanyMenu
+        anchorEl={companyButton}
+        open={companiesOpen}
+        company={company}
+        companies={companies}
+        placement="top"
+        onClose={() => hideCompanies()}
+        onChoose={(id) =>
+          // Out of the company menu, then out of the menu, then switch.
+          hideCompanies(() => hideMenu(() => id !== company.id && onCompanyChange?.(id)))
+        }
+        onAdd={onAddCompany && (() => hideCompanies(() => hideMenu(onAddCompany)))}
+      />
       {aside && (
         <AsideSheet open={asideOpen} label={asideLabel} onClose={onAsideClose}>
           {aside}
         </AsideSheet>
       )}
     </Box>
+  );
+}
+
+/** The window margin the floating aside never crosses while it's dragged. */
+const floatEdge = 8;
+/** Where the floating aside sits until it's moved: 16px from the window's right and bottom edges. */
+const floatHome: AppShellAsidePosition = { right: 16, bottom: 16 };
+
+const isDragHandle = (target: EventTarget) => {
+  const element = target as HTMLElement;
+  return (
+    Boolean(element.closest?.('[data-drag-handle]')) &&
+    !element.closest('button, a, input, textarea, [role="button"], [role="menuitem"]')
+  );
+};
+
+/**
+ * Drags the floating aside. Its content marks the drag area with `data-drag-handle` (its header); a press there, away
+ * from its buttons, moves the panel with the pointer, kept 8px inside the window, and where it's let go is kept and
+ * handed to `onChange`. A double-click on the handle puts it back in the corner. The position is measured from the
+ * window's right and bottom edges, so it stays in its corner as the window resizes, and is clamped again when it does.
+ */
+function useFloatingDrag(
+  initial: AppShellAsidePosition | null | undefined,
+  onChange: ((position: AppShellAsidePosition | null) => void) | undefined,
+  enabled: boolean,
+) {
+  // The panel, kept in state (a callback ref) so its size can be watched; the window's size, so a resize clamps again.
+  const [element, setElement] = useState<HTMLElement | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [view, setView] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  const [position, setPosition] = useState<AppShellAsidePosition | null>(initial ?? null);
+  const [live, setLive] = useState<AppShellAsidePosition | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const onResize = () => setView({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [enabled]);
+  useEffect(() => {
+    if (!element) return;
+    const observer = new ResizeObserver(() => setSize({ width: element.offsetWidth, height: element.offsetHeight }));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
+
+  const clamp = (p: AppShellAsidePosition, within = view, box = size): AppShellAsidePosition => ({
+    right: Math.round(
+      Math.min(Math.max(p.right, floatEdge), Math.max(floatEdge, within.width - box.width - floatEdge)),
+    ),
+    bottom: Math.round(
+      Math.min(Math.max(p.bottom, floatEdge), Math.max(floatEdge, within.height - box.height - floatEdge)),
+    ),
+  });
+
+  const current = live ?? (position ? clamp(position) : floatHome);
+  const settle = (next: AppShellAsidePosition | null) => {
+    setPosition(next);
+    onChange?.(next);
+  };
+
+  const onPointerDown = (event: PointerEvent) => {
+    if (event.button !== 0 || !isDragHandle(event.target)) return;
+    event.preventDefault();
+    const start = { x: event.clientX, y: event.clientY, ...current };
+    const box = { width: event.currentTarget.clientWidth, height: event.currentTarget.clientHeight };
+    let last: AppShellAsidePosition | null = null;
+    const move = (e: globalThis.PointerEvent) => {
+      last = clamp(
+        { right: start.right - (e.clientX - start.x), bottom: start.bottom - (e.clientY - start.y) },
+        { width: window.innerWidth, height: window.innerHeight },
+        box,
+      );
+      setLive(last);
+    };
+    const end = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+      setLive(null);
+      if (last) settle(last);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+  };
+
+  const onDoubleClick = (event: MouseEvent) => {
+    if (isDragHandle(event.target)) settle(null);
+  };
+
+  return { ref: setElement, position: current, dragging: live !== null, handlers: { onPointerDown, onDoubleClick } };
+}
+
+type ResizeEdgeProps = {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  /** Which side of the line the page is on: the 24px hit area sits mostly over the page's padding, not the column's rows. */
+  page: 'left' | 'right';
+  onResize: (width: number) => void;
+  /** The width for a pointer at `clientX` while the edge is dragged. */
+  widthAt: (clientX: number) => number | undefined;
+};
+
+/**
+ * A column's resize edge: a 1px line the pointer drags, and a focusable `separator` the arrow keys move by 8px (Home
+ * and End to its limits). Hovered, focused or dragged, it takes the primary color, softened at both ends to halfway
+ * toward the divider, so it reads as a handle without a hard-edged bar.
+ */
+function ResizeEdge({ label, value, min, max, page, onResize, widthAt }: ResizeEdgeProps) {
+  const onKey = (event: KeyboardEvent) => {
+    const toward = page === 'right' ? 1 : -1;
+    const step = { ArrowLeft: -8 * toward, ArrowRight: 8 * toward }[event.key];
+    if (step) {
+      event.preventDefault();
+      onResize(value + step);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      onResize(min);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      onResize(max);
+    }
+  };
+  const onMove = (event: PointerEvent) => {
+    const width = widthAt(event.clientX);
+    if (width !== undefined && event.currentTarget.hasPointerCapture(event.pointerId)) onResize(width);
+  };
+  return (
+    <Box
+      role="separator"
+      aria-label={label}
+      aria-orientation="vertical"
+      aria-valuenow={value}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      tabIndex={0}
+      onKeyDown={onKey}
+      onPointerDown={(event) => event.currentTarget.setPointerCapture(event.pointerId)}
+      onPointerMove={onMove}
+      sx={{
+        position: 'relative',
+        width: '1px',
+        flexShrink: 0,
+        bgcolor: 'divider',
+        cursor: 'col-resize',
+        touchAction: 'none',
+        outline: 'none',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          insetBlock: 0,
+          zIndex: 1,
+          ...(page === 'right' ? { left: -4, right: -19 } : { left: -19, right: -4 }),
+        },
+        '&:hover, &:focus-visible, &:active': {
+          backgroundImage:
+            'linear-gradient(to bottom, color-mix(in srgb, var(--mui-palette-primary-main) 50%, var(--mui-palette-divider)), var(--mui-palette-primary-main) 30%, var(--mui-palette-primary-main) 70%, color-mix(in srgb, var(--mui-palette-primary-main) 50%, var(--mui-palette-divider)))',
+        },
+      }}
+    />
   );
 }
 
@@ -935,6 +1214,13 @@ export function AppShell({
   asideOpen = false,
   asideLabel = 'Side panel',
   onAsideClose,
+  asideDocked = true,
+  defaultAsideWidth = 344,
+  onAsideWidthChange,
+  defaultAsidePosition = null,
+  onAsidePositionChange,
+  hideHeader = false,
+  loading = false,
   defaultPanelOpen = true,
   onPanelOpenChange,
   defaultPanelWidth = 256,
@@ -942,54 +1228,139 @@ export function AppShell({
   onSectionChange,
   onPageChange,
   onCompanyChange,
+  onAddCompany,
   children,
 }: AppShellProps) {
   const theme = useTheme();
   const wide = useMediaQuery(theme.breakpoints.up('md'), { noSsr: true });
   const asideBeside = useMediaQuery(theme.breakpoints.up('lg'), { noSsr: true });
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
   const [panelOpen, setPanelOpen] = useState(defaultPanelOpen);
   const [panelWidth, setPanelWidth] = useState(() => clampWidth(defaultPanelWidth));
+  const [asideWidth, setAsideWidth] = useState(() => clampAside(defaultAsideWidth));
   // The section whose panel floats over the page while the panel is undocked.
   const [flyout, setFlyout] = useState<string | null>(null);
   // Whether the floating panel was opened from the rail item (click or Enter) rather than hover, so it
   // stays until dismissed: the way to it, and to Dock navigation, without hover (keyboard and touch).
   const [flyoutPinned, setFlyoutPinned] = useState(false);
+  // Docking from the floating panel: the floating panel stays as an overlay that grows from where it floated into the
+  // docked slot while the slot opens and pushes the page over, and fades only once the page behind it has loaded.
+  const [morph, setMorph] = useState<Morph | null>(null);
+  const asideFloats = Boolean(aside && asideOpen && asideBeside && !asideDocked);
+  const {
+    ref: floatRef,
+    position: floatPosition,
+    dragging,
+    handlers: dragHandlers,
+  } = useFloatingDrag(defaultAsidePosition, onAsidePositionChange, asideFloats);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLElement>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const panelRef = useRef<HTMLDivElement>(null);
   const [companyAnchor, setCompanyAnchor] = useState<HTMLElement | null>(null);
   const [searchOpen, showSearch, hideSearch] = useBackToClose();
-  const switchable = companies.length > 1;
 
-  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(openTimer.current);
+      clearTimeout(closeTimer.current);
+    },
+    [],
+  );
 
   const current = sections.find((item) => item.id === section);
   const docked = panelOpen;
   const flyoutSection = sections.find((item) => item.id === flyout);
+  const flyoutWidth = panelWidth - flyoutInset;
 
   const closeFlyout = () => {
+    clearTimeout(openTimer.current);
+    clearTimeout(closeTimer.current);
     setFlyout(null);
     setFlyoutPinned(false);
   };
   const togglePanel = (open: boolean) => {
+    // Docking from the floating panel, it grows from where it floated into the docked slot; docking another section's
+    // panel goes to that section, so the panel that docks is the one that was showing.
+    const from = flyout;
+    const root = rootRef.current;
+    const frame = frameRef.current;
+    const floatingPanelEl = flyoutRef.current;
+    if (open && from && root && frame && floatingPanelEl && !reduceMotion) {
+      const slot = rectIn(frame, root);
+      // The slot sits inside the frame's 1px border.
+      setMorph({
+        id: from,
+        from: rectIn(floatingPanelEl, root),
+        to: { top: slot.top + 1, left: slot.left + 1, width: panelWidth, height: slot.height - 2 },
+        phase: 'from',
+      });
+    } else {
+      setMorph(null);
+    }
     closeFlyout();
     setPanelOpen(open);
     onPanelOpenChange?.(open);
+    if (open && from && from !== section) onSectionChange?.(from);
   };
+  const morphDuration = theme.transitions.duration.standard;
+  const fadeDuration = theme.transitions.duration.shorter;
+  // The overlay paints once at the floating panel's place, then grows. Timers mirror the transitions, so a lost
+  // `transitionend` (a hidden tab) can't strand it.
+  useLayoutEffect(() => {
+    if (morph?.phase !== 'from') return;
+    const frame = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setMorph((m) => (m?.phase === 'from' ? { ...m, phase: 'to' } : m))),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [morph?.phase]);
+  useEffect(() => {
+    if (morph?.phase !== 'to') return;
+    const timer = setTimeout(() => setMorph((m) => (m?.phase === 'to' ? { ...m, phase: 'grown' } : m)), morphDuration);
+    return () => clearTimeout(timer);
+  }, [morph?.phase, morphDuration]);
+  // Grown and the page loaded, the overlay fades out over the docked panel, then goes.
+  const fading = morph?.phase === 'grown' && !loading;
+  useEffect(() => {
+    if (!fading) return;
+    const timer = setTimeout(() => setMorph((m) => (m?.phase === 'grown' ? null : m)), fadeDuration);
+    return () => clearTimeout(timer);
+  }, [fading, fadeDuration]);
+
   const resize = (width: number) => {
     const next = clampWidth(width);
     setPanelWidth(next);
     onPanelWidthChange?.(next);
   };
-  const openFlyout = (id: string) => {
-    if (flyoutPinned) return;
-    clearTimeout(closeTimer.current);
-    setFlyout(hasPanel(sections.find((item) => item.id === id)) ? id : null);
+  const resizeAside = (width: number) => {
+    const next = clampAside(width);
+    setAsideWidth(next);
+    onAsideWidthChange?.(next);
   };
-  const keepFlyout = () => clearTimeout(closeTimer.current);
+  // Undocked, rail items open their section's panel on hover instead of a tooltip; a Missing section has no panel.
+  const flies = !panelOpen;
+  const previews = (item: AppShellSection) => flies && hasPanel(item) && !item.missing;
+  const openFlyout = (item: AppShellSection) => {
+    if (flyoutPinned) return;
+    clearTimeout(openTimer.current);
+    clearTimeout(closeTimer.current);
+    if (!previews(item)) {
+      setFlyout(null);
+      return;
+    }
+    // A short rest before the first panel opens; once one is open, the next follows the pointer at once.
+    openTimer.current = setTimeout(() => setFlyout(item.id), flyout ? 0 : flyoutOpenDelay);
+  };
+  const keepFlyout = () => {
+    clearTimeout(openTimer.current);
+    clearTimeout(closeTimer.current);
+  };
   const leaveFlyout = () => {
     if (flyoutPinned) return;
+    clearTimeout(openTimer.current);
     clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => setFlyout(null), flyoutCloseDelay);
   };
@@ -1001,6 +1372,7 @@ export function AppShell({
   const chooseSection = (id: string) => {
     // Undocked, the current section's rail item opens (or closes) its panel instead of reloading the section.
     if (!panelOpen && id === section && hasPanel(current)) {
+      clearTimeout(openTimer.current);
       clearTimeout(closeTimer.current);
       if (flyoutPinned && flyout === id) closeFlyout();
       else {
@@ -1022,45 +1394,36 @@ export function AppShell({
     if (flyoutPinned) flyoutRef.current?.querySelector<HTMLElement>('button, a[href]')?.focus();
   }, [flyoutPinned, flyout]);
 
-  // Undocked, rail items open their section's panel on hover instead of a tooltip.
-  const flies = !panelOpen;
+  const railButton = { width: 48, height: 48, flex: 'none', justifyContent: 'center', borderRadius: 1, p: 0 } as const;
 
   const railItem = (item: AppShellSection) => {
-    const name = item.badge ? `${item.label}, ${item.badge}` : item.label;
-    const flying = flies && hasPanel(item);
-    const glyph =
-      item.initials !== undefined ? (
-        <Avatar
-          sx={{ width: 32, height: 32, bgcolor: 'primary.main', color: 'primary.contrastText', typography: 'caption' }}
-        >
-          {item.initials}
-        </Avatar>
-      ) : (
-        <Icon name={item.icon} />
-      );
+    // A Missing section's tooltip is its name; its accessible name adds that it opens the upgrade page.
+    const name = item.missing
+      ? `${item.label}. Opens the upgrade page`
+      : item.badge
+        ? `${item.label}, ${item.badge}`
+        : item.label;
+    const glyph = <SectionGlyph section={item} />;
     return (
       <ListItem key={item.id} disablePadding>
-        <Tooltip title={flying ? '' : name} placement="right">
+        <Tooltip title={previews(item) ? '' : item.missing ? item.label : name} placement="right">
           <ListItemButton
             aria-label={name}
             aria-current={item.id === section ? 'page' : undefined}
             selected={item.id === section}
             onClick={() => chooseSection(item.id)}
-            onPointerEnter={flies ? () => openFlyout(item.id) : undefined}
+            onPointerEnter={flies ? () => openFlyout(item) : undefined}
             {...(item.href ? { component: 'a', href: item.href } : {})}
             sx={{
-              width: 48,
-              height: 48,
-              flex: 'none',
-              justifyContent: 'center',
-              borderRadius: 1,
-              p: 0,
+              ...railButton,
               // The item whose panel is floating keeps its hover color while the pointer is over the panel.
               ...(item.id === flyout && item.id !== section && { bgcolor: 'action.hover' }),
             }}
           >
             <ListItemIcon sx={{ minWidth: 0, color: item.id === section ? 'text.primary' : 'text.secondary' }}>
-              {item.count ? (
+              {item.missing ? (
+                glyph
+              ) : item.count ? (
                 <Badge badgeContent={item.count} color="secondary" max={99}>
                   {glyph}
                 </Badge>
@@ -1103,11 +1466,54 @@ export function AppShell({
         page={flyoutSection.id === section ? page : undefined}
         width={flyoutWidth}
         toggle={{ label: 'Dock navigation', icon: 'left_panel_open', onClick: () => togglePanel(true) }}
-        onSearch={() => {
-          closeFlyout();
-          showSearch();
-        }}
         onChoose={(id) => choosePage(id, flyoutSection.id)}
+      />
+    </Paper>
+  );
+
+  // The docking panel's overlay: the floating panel carried on from where it floated into the docked slot. Purely
+  // visual (the docked panel under it is the live one), so it takes no pointer events and is hidden from readers.
+  const morphSection = sections.find((item) => item.id === morph?.id);
+  const morphPanel = morph && hasPanel(morphSection) && (
+    <Paper
+      // Elevation 2 is the floating panel's (level2, shadowed), 0 the docked panel's (level1, flat): changing it on one
+      // element lets the background and shadow transition with the rest.
+      elevation={morph.phase === 'from' ? 2 : 0}
+      aria-hidden
+      sx={(t) => {
+        const at = morph.phase === 'from' ? morph.from : morph.to;
+        const corner = 'calc(2 * var(--mui-shape-borderRadius) - 1px)';
+        return {
+          position: 'absolute',
+          zIndex: 'drawer',
+          display: 'flex',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          top: at.top,
+          left: at.left,
+          width: at.width,
+          height: at.height,
+          // The frame's inner corners on the left, square on the right where the page continues.
+          borderRadius: morph.phase === 'from' ? 1 : `${corner} 0 0 ${corner}`,
+          opacity: fading ? 0 : 1,
+          transition:
+            t.transitions.create(
+              ['top', 'left', 'width', 'height', 'background-color', 'box-shadow', 'border-radius'],
+              {
+                duration: morphDuration,
+                easing: t.transitions.easing.easeInOut,
+              },
+            ) + `, opacity ${fadeDuration}ms ${t.transitions.easing.easeOut}`,
+        };
+      }}
+    >
+      <SectionPanel
+        key={morphSection.id}
+        section={morphSection}
+        page={morphSection.id === section ? page : undefined}
+        width="100%"
+        toggle={{ label: 'Collapse navigation', icon: 'left_panel_close', onClick: () => {} }}
+        onChoose={() => {}}
       />
     </Paper>
   );
@@ -1123,18 +1529,23 @@ export function AppShell({
       <Tooltip title={company.name} placement="right">
         <IconButton
           aria-label={`Switch company: ${company.name}`}
-          aria-haspopup={switchable ? 'menu' : undefined}
-          aria-expanded={switchable ? Boolean(companyAnchor) : undefined}
-          onClick={switchable ? (event) => setCompanyAnchor(event.currentTarget) : undefined}
+          aria-haspopup="menu"
+          aria-expanded={Boolean(companyAnchor)}
+          onClick={(event) => setCompanyAnchor(event.currentTarget)}
+          onPointerEnter={flies && !flyoutPinned ? closeFlyout : undefined}
           sx={{
             width: 48,
             height: 48,
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
-            '&:hover': { bgcolor: 'primary.dark' },
+            p: 0,
+            ...(!company.logo && {
+              bgcolor: 'primary.main',
+              color: 'primary.contrastText',
+              typography: 'subtitle2',
+              '&:hover': { bgcolor: 'primary.dark' },
+            }),
           }}
         >
-          <Icon name="bolt" />
+          {company.logo ? <CompanyMark company={company} size={48} /> : initialsOf(company.name)}
         </IconButton>
       </Tooltip>
       <List
@@ -1144,59 +1555,29 @@ export function AppShell({
         {sections.filter((item) => item.placement !== 'end').map(railItem)}
       </List>
       <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {/* The app-wide Search, in the rail's foot above Notifications, so it's one move away from any page. */}
+        <ListItem disablePadding>
+          <Tooltip title="Search" placement="right">
+            <ListItemButton
+              aria-label="Search"
+              aria-haspopup="dialog"
+              aria-expanded={searchOpen}
+              onClick={() => {
+                closeFlyout();
+                showSearch();
+              }}
+              onPointerEnter={flies && !flyoutPinned ? closeFlyout : undefined}
+              sx={railButton}
+            >
+              <ListItemIcon sx={{ minWidth: 0, color: 'text.secondary' }}>
+                <Icon name="search" />
+              </ListItemIcon>
+            </ListItemButton>
+          </Tooltip>
+        </ListItem>
         {sections.filter((item) => item.placement === 'end').map(railItem)}
       </List>
     </Stack>
-  );
-
-  const onSeparatorKey = (event: KeyboardEvent) => {
-    const step = { ArrowLeft: -8, ArrowRight: 8 }[event.key];
-    if (step) {
-      event.preventDefault();
-      resize(panelWidth + step);
-    } else if (event.key === 'Home') {
-      event.preventDefault();
-      resize(minPanelWidth);
-    } else if (event.key === 'End') {
-      event.preventDefault();
-      resize(maxPanelWidth);
-    }
-  };
-  const onSeparatorMove = (event: PointerEvent) => {
-    const left = panelRef.current?.getBoundingClientRect().left;
-    if (left !== undefined && event.currentTarget.hasPointerCapture(event.pointerId)) resize(event.clientX - left);
-  };
-
-  const separator = (
-    <Box
-      role="separator"
-      aria-label="Resize navigation"
-      aria-orientation="vertical"
-      aria-valuenow={panelWidth}
-      aria-valuemin={minPanelWidth}
-      aria-valuemax={maxPanelWidth}
-      tabIndex={0}
-      onKeyDown={onSeparatorKey}
-      onPointerDown={(event) => event.currentTarget.setPointerCapture(event.pointerId)}
-      onPointerMove={onSeparatorMove}
-      sx={{
-        position: 'relative',
-        width: '1px',
-        flexShrink: 0,
-        bgcolor: 'divider',
-        cursor: 'col-resize',
-        touchAction: 'none',
-        outline: 'none',
-        // A 24px hit area around the 1px line, mostly over the page's padding rather than the panel's rows.
-        '&::after': { content: '""', position: 'absolute', insetBlock: 0, left: -4, right: -19, zIndex: 1 },
-        // Hovered, focused or dragged, the line takes the primary color, softened at both ends to halfway
-        // toward the divider, so it reads as a handle without a hard-edged bar.
-        '&:hover, &:focus-visible, &:active': {
-          backgroundImage:
-            'linear-gradient(to bottom, color-mix(in srgb, var(--mui-palette-primary-main) 50%, var(--mui-palette-divider)), var(--mui-palette-primary-main) 30%, var(--mui-palette-primary-main) 70%, color-mix(in srgb, var(--mui-palette-primary-main) 50%, var(--mui-palette-divider)))',
-        },
-      }}
-    />
   );
 
   if (!wide) {
@@ -1217,6 +1598,7 @@ export function AppShell({
           onPageChange,
           companies,
           onCompanyChange,
+          onAddCompany,
         }}
       >
         {children}
@@ -1224,9 +1606,12 @@ export function AppShell({
     );
   }
 
+  const asideBesidePage = Boolean(aside && asideOpen && asideBeside && asideDocked);
+
   return (
     // On wide screens the frame fills the window and only `main` scrolls.
     <Box
+      ref={rootRef}
       sx={{
         position: 'relative',
         display: 'flex',
@@ -1240,6 +1625,7 @@ export function AppShell({
       {skipLink}
       {rail}
       <Box
+        ref={frameRef}
         sx={{
           display: 'flex',
           flex: 1,
@@ -1254,51 +1640,104 @@ export function AppShell({
       >
         {docked && hasPanel(current) && (
           <>
-            <Box ref={panelRef} sx={{ display: 'flex', minHeight: 0 }}>
+            {/* Docking from the floating panel, the slot opens from nothing to the panel's width, pushing the page over
+                while the overlay grows into it; the panel inside keeps its full width, so nothing reflows. */}
+            <Box
+              ref={panelRef}
+              sx={{
+                display: 'flex',
+                minHeight: 0,
+                overflow: 'hidden',
+                flexShrink: 0,
+                width: morph?.phase === 'from' ? 0 : panelWidth,
+                transition: morph
+                  ? theme.transitions.create('width', {
+                      duration: morphDuration,
+                      easing: theme.transitions.easing.easeInOut,
+                    })
+                  : 'none',
+              }}
+            >
               <SectionPanel
                 key={current.id}
                 section={current}
                 page={page}
                 width={panelWidth}
                 toggle={{ label: 'Collapse navigation', icon: 'left_panel_close', onClick: () => togglePanel(false) }}
-                onSearch={showSearch}
                 onChoose={(id) => choosePage(id, current.id)}
               />
             </Box>
-            {separator}
+            <ResizeEdge
+              label="Resize navigation"
+              value={panelWidth}
+              min={minPanelWidth}
+              max={maxPanelWidth}
+              page="right"
+              onResize={resize}
+              widthAt={(x) => {
+                const left = panelRef.current?.getBoundingClientRect().left;
+                return left === undefined ? undefined : x - left;
+              }}
+            />
           </>
         )}
         <Stack sx={{ flex: 1, minWidth: 0 }}>
-          <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Toolbar sx={{ gap: 1, px: 3 }}>
-              {/* Dock navigation and Search live in the panel (docked or floating), so the header's room goes to the scope. */}
-              <Box sx={{ flex: 1, minWidth: 0 }}>{headerStart}</Box>
-              {headerEnd}
-            </Toolbar>
-          </AppBar>
+          {!hideHeader && (
+            // No line under the header: it sits on the frame's surface, and the page's own content starts below it.
+            <AppBar position="static" color="transparent" elevation={0}>
+              {/* The page's 24px gutter on the sides and top, so the scope sits in line with the page's title. */}
+              <Toolbar
+                disableGutters
+                sx={{ gap: 1, px: 3, pt: 3, pb: 0.5, minHeight: { md: 0 }, alignItems: 'stretch' }}
+              >
+                {/* Dock navigation lives in the panel and Search in the rail, so the header's room goes to the scope. */}
+                <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>{headerStart}</Box>
+                {headerEnd}
+              </Toolbar>
+            </AppBar>
+          )}
           <Box
             component="main"
             id="main"
             tabIndex={-1}
-            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 4, outline: 'none' }}
+            sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3, outline: 'none' }}
           >
             {children}
           </Box>
         </Stack>
-        {aside && asideOpen && asideBeside && (
-          <Box
-            component="aside"
-            aria-label={asideLabel}
-            sx={{ width: asideWidth, flexShrink: 0, minHeight: 0, borderLeft: 1, borderColor: 'divider' }}
-          >
-            {aside}
-          </Box>
+        {asideBesidePage && (
+          <>
+            <ResizeEdge
+              label={`Resize ${asideLabel}`}
+              value={asideWidth}
+              min={minAsideWidth}
+              max={maxAsideWidth}
+              page="left"
+              onResize={resizeAside}
+              widthAt={(x) => {
+                const right = frameRef.current?.getBoundingClientRect().right;
+                return right === undefined ? undefined : right - 1 - x;
+              }}
+            />
+            <Box
+              component="aside"
+              aria-label={asideLabel}
+              sx={{ width: asideWidth, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+            >
+              {aside}
+            </Box>
+          </>
         )}
       </Box>
+      {morphPanel}
       {flies &&
         floatingPanel &&
         // Pinned, a click outside closes it. Mounted only then, so the click that pins it doesn't count.
-        (flyoutPinned ? <ClickAwayListener onClickAway={() => dismissFlyout(false)}>{floatingPanel}</ClickAwayListener> : floatingPanel)}
+        (flyoutPinned ? (
+          <ClickAwayListener onClickAway={() => dismissFlyout(false)}>{floatingPanel}</ClickAwayListener>
+        ) : (
+          floatingPanel
+        ))}
       <SearchDialog
         open={searchOpen}
         sections={sections}
@@ -1306,19 +1745,56 @@ export function AppShell({
         onClose={() => hideSearch()}
         onChoose={(id, sectionId) => hideSearch(() => choosePage(id, sectionId))}
       />
-      {switchable && (
-        <CompanyMenu
-          anchorEl={companyAnchor}
-          open={Boolean(companyAnchor)}
-          company={company}
-          companies={companies}
-          placement="right"
-          onClose={() => setCompanyAnchor(null)}
-          onChoose={(id) => {
+      <CompanyMenu
+        anchorEl={companyAnchor}
+        open={Boolean(companyAnchor)}
+        company={company}
+        companies={companies}
+        placement="right"
+        onClose={() => setCompanyAnchor(null)}
+        onChoose={(id) => {
+          setCompanyAnchor(null);
+          if (id !== company.id) onCompanyChange?.(id);
+        }}
+        onAdd={
+          onAddCompany &&
+          (() => {
             setCompanyAnchor(null);
-            if (id !== company.id) onCompanyChange?.(id);
+            onAddCompany();
+          })
+        }
+      />
+      {asideFloats && (
+        // Undocked on a large screen, the aside floats over the page at the bottom right, at its column's width and a
+        // contained height, above the page and the floating panel. Its content's drag handle (its header) moves it.
+        <Paper
+          ref={floatRef}
+          component="aside"
+          elevation={0}
+          aria-label={asideLabel}
+          {...dragHandlers}
+          sx={{
+            position: 'fixed',
+            right: floatPosition.right,
+            bottom: floatPosition.bottom,
+            width: asideWidth,
+            maxWidth: 'calc(100vw - 32px)',
+            height: 'min(640px, calc(100dvh - 32px))',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 'modal',
+            // A floating layer: its own edge and a shadow, raised further while it's dragged.
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 2,
+            boxShadow: dragging ? 16 : 8,
+            overflow: 'hidden',
+            userSelect: dragging ? 'none' : undefined,
+            '& [data-drag-handle]': { cursor: dragging ? 'grabbing' : 'grab' },
           }}
-        />
+        >
+          {aside}
+        </Paper>
       )}
       {aside && !asideBeside && (
         <AsideSheet open={asideOpen} label={asideLabel} onClose={onAsideClose}>

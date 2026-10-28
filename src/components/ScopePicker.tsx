@@ -63,6 +63,12 @@ export type ScopePickerProps = {
   onChange: (scope: Scope) => void;
   /** The user's recent scopes, newest first, shown above the columns. Default none. */
   recent?: Scope[];
+  /**
+   * Fixes the scope, for an item that keeps its own properties (a report, a plan): one crumb naming `value`, with a
+   * lock in place of the level's icon and no chevron or close button. `type` is the line over the name ("Report
+   * scope"); `reason` says why it's fixed, in the crumb's tooltip. Default none: the scope can change.
+   */
+  locked?: { type: string; reason: string };
 };
 
 const levelIcon = { portfolio: 'account_tree', group: 'folder_open', property: 'apartment' } satisfies Record<Scope['level'], IconName>;
@@ -205,17 +211,52 @@ function PropertyAvatar({ property }: { property: ScopeProperty }) {
 }
 
 /**
+ * The locked state: one crumb drawn as the portfolio crumb is, with a lock where the level's icon goes and
+ * nothing to open. It's a status, not a control, but focusable, so the keyboard reaches the tooltip's reason.
+ */
+function LockedCrumb({ type, name, reason }: { type: string; name: string; reason: string }) {
+  return (
+    // `describeChild`: the reason describes the crumb; its name stays the scope.
+    <Tooltip title={reason} describeChild>
+      <Stack
+        direction="row"
+        role="group"
+        tabIndex={0}
+        aria-label={`${type} ${name}, locked`}
+        sx={{
+          ...crumbFrame,
+          alignItems: 'center',
+          minWidth: 0,
+          width: 'fit-content',
+          maxWidth: '100%',
+          p: 1,
+          pr: 2,
+          pl: { xs: 1.5, sm: 1 },
+          bgcolor: 'background.level2',
+          // Not a ButtonBase, so it draws the theme's focus ring itself (`focus-ring`).
+          '&:focus-visible': { outline: '2px solid', outlineColor: 'control.focus', outlineOffset: 2 },
+        }}
+      >
+        <CrumbContent lead={<Box sx={{ color: 'text.secondary', display: 'flex' }}><CrumbIcon name="lock" /></Box>}>
+          <CrumbLabel type={type} name={name} />
+        </CrumbContent>
+      </Stack>
+    </Tooltip>
+  );
+}
+
+/**
  * The scope control for AppShell's `headerStart`: at most two crumbs, the portfolio (all properties or
  * one group) and, at property scope, the property. Each crumb is a split button: its name sets that
  * level as the scope, and its chevron opens the Change scope dialog at that level, on the groups or on
  * the portfolio's properties. One close button after the active crumb goes up a level: from a property
  * to its portfolio, from a group to all properties. A single-property account shows the property and
- * opens nothing.
+ * opens nothing, and `locked` fixes the scope for an item that keeps its own: one crumb with a lock.
  *
  * @summary The global scope as split-button breadcrumbs, with a dialog to search and browse groups and properties.
  * @import import { ScopePicker } from 'src/components/ScopePicker';
  */
-export function ScopePicker({ groups, properties, value, onChange, recent = [] }: ScopePickerProps) {
+export function ScopePicker({ groups, properties, value, onChange, recent = [], locked }: ScopePickerProps) {
   // The level the dialog opens at, or null while it's closed.
   const [step, setStep] = useState<DialogStep | null>(null);
   const theme = useTheme();
@@ -228,6 +269,14 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [] }
     setStep(null);
     if (!sameScope(scope, value)) onChange(scope);
   };
+
+  if (locked) {
+    const name =
+      value.level === 'portfolio'
+        ? 'All properties'
+        : ((value.level === 'group' ? groupById.get(value.id) : propertyById.get(value.id))?.name ?? '');
+    return <LockedCrumb type={locked.type} name={name} reason={locked.reason} />;
+  }
 
   if (properties.length === 1) {
     return (

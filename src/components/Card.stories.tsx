@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
@@ -11,11 +12,14 @@ import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { axisUnit, tooltipNumberFormat } from 'src/charts/theme';
 import { useChart, type ChartContext } from 'src/charts/useChart';
+import { SourceFigure, type FigureSource } from 'src/components/SourceFigure';
 import { TruncatedText } from 'src/components/TruncatedText';
 import { Icon } from 'src/icons';
 
@@ -237,27 +241,95 @@ export const TitleOnly: Story = {
   ),
 };
 
+/** Where the period's energy use comes from, as the metric's source dialog lists it. */
+const energySource: FigureSource = {
+  source: 'Interval meter data from the main switchgear',
+  period: 'September 1–30, 2026',
+  calculation: 'The sum of the daily readings, in kWh',
+  scope: 'The whole building, every metered floor',
+  coverage: 'Readings for all 30 days',
+  updated: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeZone: 'UTC' }).format(Date.UTC(2026, 9, 1)),
+};
+const comparison = `${change.format(difference)} ${difference < 0 ? 'less' : 'more'} than the previous 30 days.`;
+
 /**
- * A headline number: the title says what's measured, and the unit sits right after the number,
- * smaller and in `text.secondary`, after a no-break space so the two never split.
+ * A headline number at the card's foot: `SourceFigure` sets it in `h2` with tabular numerals, the unit after it,
+ * and opens its source; what would be a caption under it is its `note`. The card has a 160px floor.
  */
 export const Metric: Story = {
   render: (args) => (
-    <Card {...args} variant="outlined" sx={{ maxWidth: 360 }}>
+    <Card {...args} variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
       <CardHeader title={<TruncatedText>Energy Use</TruncatedText>} action={options} />
-      <CardContent sx={{ pt: 0 }}>
-        <Typography variant="h2" component="p" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-          {kWh.format(sum('current'))}
-          <Typography component="span" variant="body1" sx={{ color: 'text.secondary' }}>
-            {'\u00a0'}kWh
-          </Typography>
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-          {change.format(difference)} {difference < 0 ? 'less' : 'more'} than the previous 30 days
-        </Typography>
+      <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <SourceFigure title="Energy Use" value={kWh.format(sum('current'))} unit="kWh" note={comparison} source={energySource} />
       </CardContent>
     </Card>
   ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use$/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Energy Use' });
+    await waitFor(() => expect(within(dialog).getByText(comparison)).toBeVisible());
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  },
+};
+
+/** Stands in for the highlight's menu actions; the Highlight story's play function checks one. */
+const downloadData = fn();
+
+/** The highlight's More button and its menu, in the header's `action` like any card's options. */
+function HighlightActions({ title }: { title: string }) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const close = () => setAnchor(null);
+  return (
+    <>
+      <IconButton aria-label={`More, ${title}`} aria-haspopup="menu" aria-expanded={Boolean(anchor)} onClick={(event) => setAnchor(event.currentTarget)}>
+        <Icon name="more_horiz" fontSize="inherit" />
+      </IconButton>
+      <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={close}>
+        <MenuItem
+          onClick={() => {
+            close();
+            downloadData();
+          }}
+        >
+          Download Data
+        </MenuItem>
+        <MenuItem onClick={close}>Share</MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+/**
+ * The card a page leads with: an outlined card like every other, its title in `h5`, one step above other card
+ * titles, a More menu in the header's `action`, and its metric above the chart.
+ */
+export const Highlight: Story = {
+  render: (args) => (
+    <Card {...args} variant="outlined" sx={{ maxWidth: 640 }}>
+      <CardHeader
+        title={<TruncatedText>Energy Use</TruncatedText>}
+        slotProps={{ title: { variant: 'h5', component: 'h2' } }}
+        action={<HighlightActions title="Energy Use" />}
+      />
+      <CardContent sx={{ pt: 0, display: 'flex', flexDirection: 'column' }}>
+        <SourceFigure title="Energy Use" value={kWh.format(sum('current'))} unit="kWh" note={comparison} source={energySource} />
+      </CardContent>
+      <Box component="figure" aria-label={summary} sx={{ m: 0, px: 2, pb: 2 }}>
+        <EnergyUseChart />
+      </Box>
+    </Card>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    downloadData.mockClear();
+    await expect(canvas.getByRole('heading', { level: 2, name: 'Energy Use' })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'More, Energy Use' }));
+    const menu = await screen.findByRole('menu');
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'Download Data' }));
+    await expect(downloadData).toHaveBeenCalledOnce();
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+  },
 };
 
 /** A title too long for the card: it truncates to one line, with the full text in a tooltip. */

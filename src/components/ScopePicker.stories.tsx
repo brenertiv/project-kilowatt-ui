@@ -193,6 +193,18 @@ export const SingleProperty: Story = {
   },
 };
 
+/** A fixed scope, for a report or plan that keeps its own properties: one crumb with a lock, nothing to open, and why in its tooltip. */
+export const Locked: Story = {
+  args: { value: { level: 'group', id: 'west' }, locked: { type: 'Report scope', reason: 'This report keeps the properties it was written for.' } },
+  play: async ({ canvas, userEvent }) => {
+    const crumb = canvas.getByRole('group', { name: 'Report scope West Region, locked' });
+    await expect(within(crumb).queryByRole('button')).toBeNull();
+    await userEvent.tab();
+    await expect(crumb).toHaveFocus();
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('This report keeps the properties it was written for.');
+  },
+};
+
 /** On phones the dialog fills the screen and shows one column at a time: the property's chevron opens on its portfolio's properties, with a way back to the groups. */
 export const Phone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },

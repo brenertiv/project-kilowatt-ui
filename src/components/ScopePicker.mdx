@@ -46,6 +46,7 @@ Pass only the groups and properties the user can access. `value` is controlled: 
 - **Phones:** the dialog fills the screen and shows Portfolios, then the browsed portfolio's Properties, one at a time.
 - **Narrow header:** the crumbs stay on one line and their names truncate with an ellipsis, the portfolio's first, down to about six characters; a cut-off name's tooltip leads with the full name. The chevrons and the close button never shrink. Below `sm` the crumbs drop their icon and photo, and the name moves in to 12px from the crumb's edge, matching the chevron half.
 - **Single property:** the property's crumb with its photo and name, and nothing to open.
+- **Locked:** for an item that keeps its own properties (a report, a plan), `locked={{ type: 'Report scope', reason: '…' }}` shows one crumb in the picker's place, drawn as the portfolio crumb is, with a lock where the level's icon goes and no chevron or close button: nothing here changes the scope. Its name is the scope in `value` (a group's or property's name, or All properties), and the `reason` says why it's fixed, in the crumb's tooltip.
 
 ## Do and don't
 
@@ -87,6 +88,7 @@ Theme-wide departures (the palette, the type scale, the corner radius) apply too
 - The current scope's row is marked with a check, so it doesn't depend on color. In the Portfolios column the selected style marks the portfolio being browsed.
 - Each portfolio row's chevron is named for what it browses: "Browse West Region", "Browse all properties".
 - A truncated crumb name is cut off only visually; screen readers read it in full.
+- The locked crumb is a group named for its scope and that it's locked ("Report scope West Region, locked"), with the reason as its description. It's in the tab order so the keyboard reaches the tooltip, and shows the theme's focus ring; it isn't a button, since it does nothing.
 
 ## Related
 
