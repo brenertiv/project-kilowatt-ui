@@ -205,7 +205,7 @@ export function SiteMap({ sites, unit, summary, height = 320, onSelect, sized = 
         // MapLibre's attribution box, on the card surface in the caption style (the `map-attribution` departure).
         '& .maplibregl-ctrl-attrib': {
           ...theme.typography.caption,
-          bgcolor: 'background.level2',
+          bgcolor: 'background.level3',
           color: 'text.secondary',
         },
         '& .maplibregl-ctrl-attrib a': { color: 'inherit' },

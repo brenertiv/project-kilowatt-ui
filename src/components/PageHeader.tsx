@@ -57,7 +57,7 @@ export function PageHeader({ title, actions, filters }: PageHeaderProps) {
           px: inset,
           // The band covers the header's foot only once it's pinned; until then clicks reach the header under it.
           pointerEvents: pinned ? 'auto' : 'none',
-          bgcolor: pinned ? 'background.level1' : 'transparent',
+          bgcolor: pinned ? 'background.level2' : 'transparent',
           borderBottom: pinned ? 1 : 0,
           borderColor: 'divider',
         }}

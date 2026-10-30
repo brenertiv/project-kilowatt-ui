@@ -30,7 +30,7 @@ export type ChartThemeContext = {
   mui: Theme;
   /** A palette color as a solid amCharts color, blended over the card surface when it's translucent. */
   color: (value: string) => am5.Color;
-  /** The card surface charts sit on (`background.level2`). */
+  /** The card surface charts sit on (`background.level3`). */
   card: string;
   /** Whether the user asks for reduced motion. */
   reducedMotion: boolean;
@@ -91,10 +91,10 @@ export const chartDepartures: ChartDeparture[] = [
         primaryButtonActive: color(palette.primary.dark),
         primaryButtonText: color(palette.primary.contrastText),
         primaryButtonStroke: color(palette.primary.main),
-        secondaryButton: color(palette.background.level3),
-        secondaryButtonHover: color(palette.background.level4),
-        secondaryButtonDown: color(palette.background.level4),
-        secondaryButtonActive: color(palette.background.level4),
+        secondaryButton: color(palette.background.level4),
+        secondaryButtonHover: color(palette.background.level5),
+        secondaryButtonDown: color(palette.background.level5),
+        secondaryButtonActive: color(palette.background.level5),
         secondaryButtonText: color(palette.text.primary),
         secondaryButtonStroke: color(palette.border.level1),
       });
@@ -126,12 +126,12 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'chart-tooltips',
     kind: 'theme',
     title: 'Tooltips on the menu surface',
-    why: "amCharts fills a tooltip with its series' color and picks a text color to match. amCharts fills an axis's tooltip (the cursor's date or value) dark and square. Kilowatt shows every tooltip, an axis's included, on the menu surface (`background.level3`) with `text.primary`, outlined in `border.level1` and rounded with the theme radius, like a menu, so tooltips read the same on every series and axis.",
+    why: "amCharts fills a tooltip with its series' color and picks a text color to match. amCharts fills an axis's tooltip (the cursor's date or value) dark and square. Kilowatt shows every tooltip, an axis's included, on the menu surface (`background.level4`) with `text.primary`, outlined in `border.level1` and rounded with the theme radius, like a menu, so tooltips read the same on every series and axis.",
     charts: all,
     apply: ({ theme, mui, color }) => {
       theme.rule('Tooltip').setAll({ getFillFromSprite: false, getStrokeFromSprite: false, autoTextColor: false });
       const surface = {
-        fill: color(mui.palette.background.level3),
+        fill: color(mui.palette.background.level4),
         fillOpacity: 1,
         stroke: color(mui.palette.border.level1),
         strokeOpacity: 1,

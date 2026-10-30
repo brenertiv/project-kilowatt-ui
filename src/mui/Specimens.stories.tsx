@@ -69,9 +69,9 @@ export const Color: Story = {
           </Stack>
         ))}
         <Stack spacing={1}>
-          <Typography variant="subtitle2">surfaces, level0 (page) to level4</Typography>
+          <Typography variant="subtitle2">surfaces, level0 (background) to level5</Typography>
           <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
-            {['level0', 'level1', 'level2', 'level3', 'level4'].map((level) => (
+            {['level0', 'level1', 'level2', 'level3', 'level4', 'level5'].map((level) => (
               <Swatch key={level} color={`background.${level}`} label={level} />
             ))}
           </Stack>
@@ -79,7 +79,7 @@ export const Color: Story = {
         <Stack spacing={1}>
           <Typography variant="subtitle2">borders, level0 (faintest) to level3 (strongest, for outlines on interactive elements), on each surface</Typography>
           <Stack spacing={1}>
-            {['level0', 'level1', 'level2', 'level3', 'level4'].map((surface) => (
+            {['level0', 'level1', 'level2', 'level3', 'level4', 'level5'].map((surface) => (
               <Stack key={surface} direction="row" spacing={2} sx={{ bgcolor: `background.${surface}`, p: 1.5, borderRadius: 1, alignItems: 'center' }}>
                 <Typography variant="caption" color="text.secondary" sx={{ width: 56 }}>
                   {surface}
@@ -104,7 +104,7 @@ export const Color: Story = {
   ),
 };
 
-const surfaces = ['level0', 'level1', 'level2', 'level3', 'level4'] as const;
+const surfaces = ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const;
 
 /** Each intent as text and as a contained button on every surface level. The story's axe check holds every pair to 4.5:1. */
 export const IntentsOnSurfaces: Story = {

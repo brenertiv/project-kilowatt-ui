@@ -272,7 +272,7 @@ function LockedCrumb({ type, name, reason }: { type: string; name: string; reaso
           p: 1,
           pr: 2,
           pl: { xs: 1.5, sm: 1 },
-          bgcolor: 'background.level2',
+          bgcolor: 'background.level3',
           // Not a ButtonBase, so it draws the theme's focus ring itself (`focus-ring`).
           '&:focus-visible': { outline: '2px solid', outlineColor: 'control.focus', outlineOffset: 2 },
         }}
@@ -323,7 +323,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
 
   if (properties.length === 1) {
     return (
-      <Crumb surface="background.level4" label={`Property ${properties[0].name}`}>
+      <Crumb surface="background.level5" label={`Property ${properties[0].name}`}>
         <Box sx={{ p: 1, pl: { xs: 1.5, sm: 1 } }}>
           <CrumbContent lead={<PropertyAvatar property={properties[0]} />}>
             <CrumbLabel type="Property" name={properties[0].name} />
@@ -363,7 +363,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
   // Icon only: its accessible name says where it goes. The fill (the portfolio crumb's surface) sits on a
   // wrapper, so the button's own hover color still shows on top of it.
   const upButton = up && (
-    <Box sx={{ flexShrink: 0, bgcolor: 'background.level2', borderRadius: 1 }}>
+    <Box sx={{ flexShrink: 0, bgcolor: 'background.level3', borderRadius: 1 }}>
       <IconButton aria-label={up.label} onClick={() => choose(up.scope)}>
         <Icon name="close_small" />
       </IconButton>
@@ -378,8 +378,8 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
   );
 
   const portfolioCrumb = (
-    // A step above the header's surface (level1), with the faintest border to frame it.
-    <Crumb surface="background.level2" label={`Portfolio ${group ? group.name : 'All properties'}`}>
+    // A step above the header's surface (level2), with the faintest border to frame it.
+    <Crumb surface="background.level3" label={`Portfolio ${group ? group.name : 'All properties'}`}>
       <CrumbButton
         lead={<CrumbIcon name={portfolioIcon} />}
         type="Portfolio"
@@ -393,7 +393,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
   );
   const propertyCrumb = property && (
     // The highest surface, so the property in scope stands out from its portfolio.
-    <Crumb surface="background.level4" label={`Property ${property.name}`}>
+    <Crumb surface="background.level5" label={`Property ${property.name}`}>
       <CrumbButton
         lead={<PropertyAvatar property={property} />}
         type="Property"
@@ -645,8 +645,8 @@ function ScopeFilterView({ properties, value, onChange, compact }: ScopeFilterVi
           aria-labelledby={captionId}
           sx={(theme) => ({
             '& .MuiTableCell-stickyHeader': {
-              backgroundColor: (theme.vars ?? theme).palette.background.level4,
-              ...theme.applyStyles('dark', { backgroundColor: (theme.vars ?? theme).palette.background.level1 }),
+              backgroundColor: (theme.vars ?? theme).palette.background.level5,
+              ...theme.applyStyles('dark', { backgroundColor: (theme.vars ?? theme).palette.background.level2 }),
             },
           })}
         >

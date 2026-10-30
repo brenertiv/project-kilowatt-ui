@@ -83,8 +83,8 @@ describe('basemap theme', () => {
     const style = basemapTheme(cartoStyle, scheme);
     const textColor = paintedColors(style).find(({ property }) => property === 'text-color')!.value;
     const allowed = new Set([
-      palette.background.level1,
       palette.background.level2,
+      palette.background.level3,
       palette.border.level2,
       palette.map.land,
       palette.map.water,
@@ -144,7 +144,7 @@ describe('map data colors', () => {
     const { series, neutral } = mapColors(scheme);
     const css = ([r, g, b]: number[]) => `rgb(${r}, ${g}, ${b})`;
     for (const color of [...series, neutral]) {
-      for (const surface of [palette.map.land, palette.background.level1, palette.border.level2, palette.map.water]) {
+      for (const surface of [palette.map.land, palette.background.level2, palette.border.level2, palette.map.water]) {
         expect(getContrastRatio(css(color), surface), `${css(color)} on ${surface}`).toBeGreaterThanOrEqual(3);
       }
     }

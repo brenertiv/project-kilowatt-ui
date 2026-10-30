@@ -61,7 +61,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** MUI's basic card: content, then text-button actions. It sits on surface level2, a step above the frame, with MUI's elevation 1 shadow. */
+/** MUI's basic card: content, then text-button actions. It sits on surface level3, a step above the frame, with MUI's elevation 1 shadow. */
 export const Basic: Story = {};
 
 /** `variant="outlined"`: a border instead of a shadow, for cards in a dense grid or on a surface that already has depth. */

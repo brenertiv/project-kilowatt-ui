@@ -596,7 +596,7 @@ function CompanyMark({ company, size }: { company: AppShellCompany; size: number
       sx={{
         width: size,
         height: size,
-        bgcolor: 'background.level3',
+        bgcolor: 'background.level4',
         color: 'text.primary',
         typography: 'caption',
         borderRadius: 1,
@@ -887,14 +887,14 @@ function PhoneShell({
   );
 
   return (
-    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.level1' }}>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.level2' }}>
       {skipLink}
       <AppBar
         ref={measureHeader}
         position="sticky"
         color="inherit"
         elevation={0}
-        sx={{ top: 0, bgcolor: 'background.level1', borderBottom: 1, borderColor: 'divider' }}
+        sx={{ top: 0, bgcolor: 'background.level2', borderBottom: 1, borderColor: 'divider' }}
       >
         {/* The page's 16px inset; the icon buttons at either end overhang it by their 8px padding, so their glyphs sit on the content's edge. */}
         <Toolbar disableGutters sx={{ gap: 0.5, px: 2 }}>
@@ -1403,7 +1403,7 @@ export function AppShell({
 
   // Floats inside the frame, 8px in from its edges (its 1px border included), so the corners are
   // concentric: the frame's 16px is the panel's theme radius (8px) plus the gap. Elevation 2 puts it on
-  // level2, a step below the menu surface, with the lowest shadow that still lifts it off the page.
+  // level3, a step below the menu surface, with the lowest shadow that still lifts it off the page.
   const floatingPanel = hasPanel(flyoutSection) && (
     <Paper
       elevation={2}
@@ -1438,14 +1438,16 @@ export function AppShell({
   const morphSection = sections.find((item) => item.id === morph?.id);
   const morphPanel = morph && hasPanel(morphSection) && (
     <Paper
-      // Elevation 2 is the floating panel's (level2, shadowed), 0 the docked panel's (level1, flat): changing it on one
-      // element lets the background and shadow transition with the rest.
+      // Elevation 2 is the floating panel's (level3, shadowed), 0 flat: changing it on one element lets the shadow
+      // transition with the rest, and the background goes to the docked panel's level1.
       elevation={morph.phase === 'from' ? 2 : 0}
       aria-hidden
       sx={(t) => {
         const at = morph.phase === 'from' ? morph.from : morph.to;
         const corner = 'calc(2 * var(--mui-shape-borderRadius) - 1px)';
         return {
+          // Settled, two classes, to outrank the flat Paper's level2 (as the theme's Card does).
+          ...(morph.phase !== 'from' && { '&.MuiPaper-root': { bgcolor: 'background.level1' } }),
           position: 'absolute',
           zIndex: 'drawer',
           display: 'flex',
@@ -1593,7 +1595,7 @@ export function AppShell({
           flex: 1,
           minWidth: 0,
           overflow: 'hidden',
-          bgcolor: 'background.level1',
+          bgcolor: 'background.level2',
           // The frame rounds at the card radius, so the panel's rows, 8px in, keep concentric corners.
           border: 1,
           borderColor: 'divider',
@@ -1607,6 +1609,7 @@ export function AppShell({
             <Box
               ref={panelRef}
               sx={{
+                bgcolor: 'background.level1',
                 display: 'flex',
                 minHeight: 0,
                 overflow: 'hidden',
@@ -1685,7 +1688,7 @@ export function AppShell({
             <Box
               component="aside"
               aria-label={asideLabel}
-              sx={{ width: asideWidth, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+              sx={{ width: asideWidth, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: 'background.level1' }}
             >
               {aside}
             </Box>
@@ -1737,6 +1740,8 @@ export function AppShell({
           aria-label={asideLabel}
           {...dragHandlers}
           sx={{
+            // Two classes, to outrank the elevation's surface (as the theme's Card does): the docked column's level1.
+            '&.MuiPaper-root': { bgcolor: 'background.level1' },
             position: 'fixed',
             right: floatPosition.right,
             bottom: floatPosition.bottom,

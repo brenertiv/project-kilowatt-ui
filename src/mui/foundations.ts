@@ -80,7 +80,7 @@ export function colorMarkdown() {
     'The theme carries MUI\'s light and dark palettes as color schemes. Components read the palette of the active scheme, so a component never picks a color per scheme itself. Switch the scheme with `useColorScheme().setMode`.',
     '## Intents',
     'Each intent has `main`, `light`, `dark` and `contrastText`. Pass the intent to a component (`color="primary"`, `severity="error"`) rather than a color.',
-    "Every `main` passes 4.5:1 as text on all five surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. Warning uses Kilowatt's orange (light) and yellow (dark) ramps. For error, info and success, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`). MUI derives `light` and `dark` from `main`:",
+    "Every `main` passes 4.5:1 as text on all six surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. Warning uses Kilowatt's orange (light) and yellow (dark) ramps. For error, info and success, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`). MUI derives `light` and `dark` from `main`:",
     table(
       ['Intent', 'Light', 'Dark'],
       intents.map((intent) => {
@@ -103,7 +103,7 @@ export function colorMarkdown() {
     '## Text',
     table(schemeHead, schemeRows(['primary', 'secondary', 'disabled'].map((key) => `palette.text.${key}`))),
     '## Surfaces',
-    "Five surfaces by elevation. level0 is the page and the darkest; each level above it is lighter, in both schemes. `background.default` is level0 and `background.paper` is level1, so MUI's components use them without being told. Paper picks its level from its elevation (see Elevation); elsewhere, set one with `sx={{ bgcolor: 'background.level2' }}`.",
+    "Six surfaces. level0 is the background and rail, and the darkest; each level above it is lighter, in both schemes. level1 is the docked panels, a step darker than the frame and page on level2. `background.default` is level0 and `background.paper` is level2, so MUI's components use them without being told. Paper picks its level from its elevation (see Elevation); elsewhere, set one with `sx={{ bgcolor: 'background.level3' }}`.",
     table(
       ['Level', 'Theme path', 'Light', 'Dark', 'Used by', 'Source'],
       (Object.keys(surfaceSteps.light) as (keyof typeof surfaceSteps.light)[]).map((level) => [
@@ -111,7 +111,7 @@ export function colorMarkdown() {
         code(`palette.background.${level}`),
         `${code(slate[surfaceSteps.light[level]])} slate ${surfaceSteps.light[level]}`,
         `${code(navy[surfaceSteps.dark[level]])} navy ${surfaceSteps.dark[level]}`,
-        level === 'level0' ? 'The page (`background.default`)' : (elevationSurfaces.find((entry) => entry.level === level)?.uses ?? ''),
+        level === 'level0' ? 'The background and rail (`background.default`)' : level === 'level1' ? 'The docked section panel, the assistant' : (elevationSurfaces.find((entry) => entry.level === level)?.uses ?? ''),
         sourceOf(`palette.background.${level}`),
       ]),
     ),

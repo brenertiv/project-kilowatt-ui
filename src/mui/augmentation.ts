@@ -5,8 +5,8 @@
 
 import type { CSSProperties } from 'react';
 
-/** Surfaces by elevation: level0 is the page (darkest), level4 the highest surface (lightest). */
-type SurfaceLevels = { level0: string; level1: string; level2: string; level3: string; level4: string };
+/** Surfaces: level0 is the background (darkest), level1 the docked panels, level2 the frame and page, level5 the highest surface (lightest). */
+type SurfaceLevels = { level0: string; level1: string; level2: string; level3: string; level4: string; level5: string };
 
 /**
  * Surface borders by contrast, in both schemes, for separators and frames: level0 is the
@@ -61,7 +61,7 @@ declare module '@mui/material/Typography' {
 }
 
 declare module '@mui/material/Paper' {
-  /** `variant="soft"`: a raised composer's level1 surface with the soft shadow (`soft-shadow`). */
+  /** `variant="soft"`: a raised composer's level2 surface with the soft shadow (`soft-shadow`). */
   interface PaperPropsVariantOverrides {
     soft: true;
   }
