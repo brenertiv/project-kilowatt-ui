@@ -78,7 +78,7 @@ Kilowatt has no package. An app gets it by installing MUI and copying the theme 
    ```
 
 3. **Copy the theme.** These files, unchanged and in the same folders: `src/mui/theme.ts`, `src/mui/departures.ts`, `src/mui/colors.ts`, `src/mui/augmentation.ts`, `src/mui/MuiProvider.tsx` and `src/icons.tsx`. They import only each other and MUI.
-4. **Wrap the app in `MuiProvider`.** It applies the theme and MUI's `CssBaseline`. Switch light and dark with MUI's `useColorScheme().setMode`.
+4. **Wrap the app in `MuiProvider`.** It applies the theme and MUI's `CssBaseline`. Switch light and dark with MUI's `useColorScheme().setMode`. Guides → Host setup lists what else an app provides for charts, maps and server rendering.
 
    ```tsx
    import { MuiProvider } from './mui/MuiProvider';
