@@ -539,7 +539,7 @@ export const departures: Departure[] = [
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
     title: 'Paper takes its surface from its elevation',
-    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4. Cards, outlined or raised, sit on level2, a step above the level1 frame they're laid out on, so a card reads as a surface on the page rather than only its border. In the dark scheme the overlays (menus, popovers, drawers and dialogs) sit on level1 instead, with the `divider` as their edge: level3 and level4 read pale against the dark page, and level1 with the divider is the frame's own surface and edge, so an overlay matches the frame it opens over. Level1 rather than level2 because the dark divider is close to level2's step, so a bordered level2 overlay would show almost no edge. The light scheme keeps the elevation's level and MUI's shadows.",
+    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4. Cards, outlined or raised, sit on level2, a step above the level1 frame they're laid out on, so a card reads as a surface on the page rather than only its border. In the dark scheme the overlays (menus, popovers, drawers and dialogs) sit on level1 instead, with the `divider` as their edge: level3 and level4 read pale against the dark page, and level1 with the divider is the frame's own surface and edge, so an overlay matches the frame it opens over. Level1 rather than level2 because the dark divider is close to level2's step, so a bordered level2 overlay would show almost no edge. The light scheme keeps the elevation's level and MUI's shadows. A snackbar's text takes `text.primary`: MUI colors it for its own inverted surface, which would be white on white on these levels.",
     options: () => ({
       components: {
         MuiPaper: {
@@ -559,6 +559,8 @@ export const departures: Departure[] = [
         },
         // Two classes, to outrank the elevation rules above, which a raised card also matches.
         MuiCard: { styleOverrides: { root: { '&.MuiPaper-root': { backgroundColor: 'var(--mui-palette-background-level2)' } } } },
+        // Two classes, to outrank MUI's own rule.
+        MuiSnackbarContent: { styleOverrides: { root: { '&.MuiPaper-root': { color: 'var(--mui-palette-text-primary)' } } } },
         // The dark scheme's selector, as `theme.applyStyles('dark')` writes it for the `class` selector, with the paper's
         // class three times to outrank the elevation rules (two classes) without `!important`.
         ...Object.fromEntries(
