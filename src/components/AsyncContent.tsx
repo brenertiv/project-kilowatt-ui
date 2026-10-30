@@ -26,8 +26,8 @@ export type AsyncContentProps = {
 
 /**
  * The view of every `AsyncState` in the space the data will take. `loading` shows a `Skeleton`;
- * `fetching` keeps the data on screen under a thin `LinearProgress`; `empty` and `idle` say why
- * there's nothing to show; `error` shows an `Alert` with the message and a Retry button when the state has
+ * `fetching` keeps the data on screen under a thin `LinearProgress`, with `children` still mounted,
+ * so focus, scroll position and charts survive a refetch; `empty` and `idle` say why there's nothing to show; `error` shows an `Alert` with the message and a Retry button when the state has
  * `onRetry`; `forbidden` shows an `Alert` saying the account doesn't include the data. Each state
  * holds `height` and pads itself by `inset`, like a chart, so a card keeps its size and alignment from loading
  * to loaded. Changes are announced politely.
@@ -79,14 +79,6 @@ export function AsyncContent({
     case 'loading':
       view = space(<Skeleton variant="rounded" role="progressbar" aria-label={loadingLabel} sx={{ flex: 1, height: 'auto', minHeight: 120 }} />);
       break;
-    case 'fetching':
-      view = (
-        <Box sx={{ position: 'relative' }}>
-          <LinearProgress aria-label={loadingLabel} sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />
-          {children}
-        </Box>
-      );
-      break;
     case 'empty':
       view = message(emptyText);
       break;
@@ -103,8 +95,10 @@ export function AsyncContent({
       view = children;
   }
 
+  // `ready` and `fetching` share this tree, so `children` stay mounted when only the bar comes and goes.
   return (
-    <Box aria-live="polite" aria-busy={busy}>
+    <Box aria-live="polite" aria-busy={busy} sx={{ position: 'relative' }}>
+      {status === 'fetching' && <LinearProgress aria-label={loadingLabel} sx={{ position: 'absolute', top: 0, left: 0, right: 0 }} />}
       {view}
     </Box>
   );

@@ -44,7 +44,7 @@ Set `height` to what the content takes, its inset included: a 240px chart with i
 
 - **Ready.** `children` render as they are.
 - **Loading.** The first load: a rounded `Skeleton` fills the space, announced as a progress bar named by `loadingLabel`.
-- **Fetching.** Newer data is on its way: the current data stays on screen under a thin `LinearProgress`, so the card doesn't blank out when the period changes.
+- **Fetching.** Newer data is on its way: the current data stays on screen under a thin `LinearProgress`, so the card doesn't blank out when the period changes. `children` stay mounted between `ready` and `fetching`, so focus, scroll position and local state survive a refetch, and a chart isn't rebuilt unless its data changes.
 - **Empty.** The request succeeded with nothing in it: `emptyText` says what has no data. Never draw zeros or an empty axis for missing data.
 - **Idle.** Nothing has been asked yet, because something must be chosen first: `idleText` says what to choose.
 - **Error.** The request failed: an error `Alert` with the state's message, and a Retry button when the state has `onRetry`.
