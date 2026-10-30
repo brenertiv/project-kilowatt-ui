@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5hierarchy from '@amcharts/amcharts5/hierarchy';
 import Box from '@mui/material/Box';
-import { useColorScheme } from '@mui/material/styles';
 import { createSchemeTheme } from '../mui/theme';
 import { seriesColors, seriesSlots, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
@@ -72,10 +71,8 @@ function parts(data: TreemapNode[], otherLabel: string) {
  * @import import { Treemap } from 'src/charts/Treemap';
  */
 export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 160, inset = 2 }: TreemapProps) {
-  const { mode, systemMode } = useColorScheme();
-  const scheme = (mode === 'system' ? systemMode : mode) === 'dark' ? 'dark' : 'light';
   const build = useCallback(
-    ({ root, colors }: ChartContext) => {
+    ({ root, scheme, colors }: ChartContext) => {
       const series = root.container.children.push(
         am5hierarchy.Treemap.new(root, {
           valueField: 'value',
@@ -122,7 +119,7 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 16
       ]);
       series.set('selectedDataItem', series.dataItems[0]);
     },
-    [data, unit, otherLabel, scheme],
+    [data, unit, otherLabel],
   );
   const ref = useChart(build);
 
