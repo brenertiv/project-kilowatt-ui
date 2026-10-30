@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -9,6 +12,7 @@ import { useTheme } from '@mui/material/styles';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, screen, waitFor, within } from 'storybook/test';
 import { AppShell, type AppShellCompany, type AppShellSection } from 'src/components/AppShell';
+import { useContentUp } from 'src/components/contentWidth';
 import { ScopePicker, type Scope, type ScopeGroup, type ScopeProperty } from 'src/components/ScopePicker';
 import { Icon } from 'src/icons';
 import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
@@ -283,14 +287,16 @@ const meta = {
         asideLabel="Ask Enertiv"
         onAsideClose={() => setAssistantOpen(false)}
       >
-        <Box sx={{ maxWidth: '65ch' }}>
-          <Typography variant="h3" component="h1" gutterBottom>
-            {title}
-          </Typography>
-          <Typography color="text.secondary">
-            Placeholder for the {title} page at {company.name}.
-          </Typography>
-        </Box>
+        {args.children ?? (
+          <Box sx={{ maxWidth: '65ch' }}>
+            <Typography variant="h3" component="h1" gutterBottom>
+              {title}
+            </Typography>
+            <Typography color="text.secondary">
+              Placeholder for the {title} page at {company.name}.
+            </Typography>
+          </Box>
+        )}
       </AppShell>
     );
   },
@@ -476,6 +482,37 @@ export const AssistantFloating: Story = {
     await expect(args.onAsidePositionChange).toHaveBeenLastCalledWith(null);
     await userEvent.click(within(aside).getByRole('button', { name: 'Dock Ask Enertiv' }));
     await expect(canvas.getByRole('separator', { name: 'Resize Ask Enertiv' })).toBeVisible();
+  },
+};
+
+/** Three cards across while the page, not the window, is at least `md` wide: what `useContentUp` answers for a page beside docked panels. */
+function CardsByPageWidth() {
+  const across = useContentUp('md');
+  return (
+    <Grid container spacing={2}>
+      {['Energy Use', 'Energy Cost', 'Emissions'].map((title) => (
+        <Grid key={title} size={across ? 4 : 12}>
+          <Card variant="outlined">
+            <CardHeader title={title} />
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
+
+/** A page beside docked panels sizes its columns by the page's width: `useContentUp` reads `main`, so opening the assistant stacks these cards while the window stays the same. */
+export const ColumnsByPageWidth: Story = {
+  args: { children: <CardsByPageWidth /> },
+  play: async ({ canvas, userEvent }) => {
+    const first = canvas.getByText('Energy Use').closest<HTMLElement>('.MuiCard-root')!;
+    const second = canvas.getByText('Energy Cost').closest<HTMLElement>('.MuiCard-root')!;
+    const sameRow = () => first.getBoundingClientRect().top === second.getBoundingClientRect().top;
+    const before = sameRow();
+    await userEvent.click(canvas.getByRole('button', { name: 'Ask Enertiv' }));
+    await waitFor(() => expect(sameRow()).toBe(false));
+    await userEvent.click(canvas.getByRole('button', { name: 'Close Ask Enertiv' }));
+    await waitFor(() => expect(sameRow()).toBe(before));
   },
 };
 

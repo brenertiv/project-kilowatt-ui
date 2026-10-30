@@ -38,6 +38,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useColorScheme, useTheme } from '@mui/material/styles';
+import { useContentWidth } from './contentWidth';
 import { Icon, type IconName } from '../icons';
 
 /** A page within a section, listed in the section panel. */
@@ -724,6 +725,7 @@ function PhoneShell({
   // The section whose pages the menu shows; `null` shows the sections.
   const [level, setLevel] = useState<string | null>(null);
   const [titleButton, setTitleButton] = useState<HTMLElement | null>(null);
+  const { measure: measureContent, provide: provideContent } = useContentWidth<HTMLElement>();
 
   const current = sections.find((item) => item.id === section);
   const account = sections.find((item) => item.initials !== undefined);
@@ -925,13 +927,14 @@ function PhoneShell({
         </Toolbar>
       </AppBar>
       <Box
+        ref={measureContent}
         component="main"
         id="main"
         tabIndex={-1}
         sx={{ p: 2, pb: 'calc(var(--mui-spacing) * 2 + env(safe-area-inset-bottom))', outline: 'none' }}
       >
         {headerStart && <Box sx={{ mb: 2 }}>{headerStart}</Box>}
-        {children}
+        {provideContent(children)}
       </Box>
       {hasPanel(current) && (
         <Menu
@@ -1246,6 +1249,7 @@ export function AppShell({
   // Docking from the floating panel: the floating panel stays as an overlay that grows from where it floated into the
   // docked slot while the slot opens and pushes the page over, and fades only once the page behind it has loaded.
   const [morph, setMorph] = useState<Morph | null>(null);
+  const { measure: measureContent, provide: provideContent } = useContentWidth<HTMLElement>();
   const asideFloats = Boolean(aside && asideOpen && asideBeside && !asideDocked);
   const {
     ref: floatRef,
@@ -1697,12 +1701,13 @@ export function AppShell({
             </AppBar>
           )}
           <Box
+            ref={measureContent}
             component="main"
             id="main"
             tabIndex={-1}
             sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3, outline: 'none' }}
           >
-            {children}
+            {provideContent(children)}
           </Box>
         </Stack>
         {asideBesidePage && (

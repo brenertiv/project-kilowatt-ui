@@ -68,6 +68,24 @@ Each section carries its own `panel`, so the undocked panel and the phone menu c
 
 On phones, add `viewport-fit=cover` to the app's viewport meta tag, so the shell's safe-area padding takes effect (Variants → Phones).
 
+### Columns by the page's width
+
+MUI's `Grid` reads the window, and the docked panel and aside don't change the window, so a page beside them can be left a fraction of what its breakpoints think it has. `AppShell` measures `main`'s content box, and `useContentUp` answers as `useMediaQuery(theme.breakpoints.up(key))` would, against that width. `Grid` still lays the cards out; only the twelfths it's given change:
+
+```tsx
+import Grid from '@mui/material/Grid';
+import { useContentUp } from 'src/components/contentWidth';
+
+const across = useContentUp('md');
+
+<Grid container spacing={2}>
+  <Grid size={across ? 4 : 12}>…</Grid>
+  <Grid size={across ? 8 : 12}>…</Grid>
+</Grid>
+```
+
+Reach for it when a page's columns would crowd beside docked panels; otherwise size `Grid` by breakpoint (Rules → Content and layout). Outside `AppShell`, `useContentUp` reads the window. `useContentWidth` is the measuring half, for a frame that isn't `AppShell`: pass its `measure` as the element's `ref` and wrap the pages in its `provide`.
+
 ## Variants
 
 - **With a panel:** a section with pages. Rows show an icon and a label, and optionally a second line (the item's type) or a count (open issues). The panel is MUI's `dense` list: rows have 4px of vertical padding and `body2` text, compact for a sidebar. The phone menu keeps full-height rows, for touch.
