@@ -126,6 +126,13 @@ describe('createKilowattTheme', () => {
     expect(baseline['@media (prefers-reduced-motion: reduce)']['*, *::before, *::after'].transitionDuration).toBe('0.01ms !important');
   });
 
+  it('draws table rows in `divider`, sticks headers to the card surface, and leaves the last row unlined', () => {
+    const { MuiTable, MuiTableCell } = createKilowattTheme().components ?? {};
+    expect(MuiTableCell?.styleOverrides?.root).toMatchObject({ borderBottomColor: 'var(--mui-palette-divider)' });
+    expect(MuiTableCell?.styleOverrides?.stickyHeader).toMatchObject({ backgroundColor: 'var(--mui-palette-background-level2)' });
+    expect(Object.values(MuiTable?.styleOverrides?.root as Record<string, unknown>)).toContainEqual({ borderBottom: 0 });
+  });
+
   it('puts each Paper elevation on its surface level', () => {
     const root = createKilowattTheme().components?.MuiPaper?.styleOverrides?.root as Record<string, { backgroundColor: string }>;
     expect(root['&.MuiPaper-elevation1'].backgroundColor).toBe('var(--mui-palette-background-level1)');
