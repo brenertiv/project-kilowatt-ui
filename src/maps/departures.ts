@@ -224,6 +224,19 @@ export const mapDepartures: MapDeparture[] = [
     check: /cooperativeGestures: true/,
   },
   {
+    id: 'map-stacking',
+    kind: 'convention',
+    title: "The map's layers keep to the map",
+    why: "MapLibre's CSS puts its cooperative gestures screen, the \"use ⌘ + scroll\" message, at z-index 99999, so it rises over anything a page pins above the map, such as `PageHeader`'s band as the map scrolls under it. Kilowatt's maps set `isolation: isolate` on their `figure`, so everything MapLibre stacks stays inside the map. Tooltips are portalled, so they still show above the page.",
+    maps: all,
+    convention: {
+      cartoDefault: "MapLibre's z-indexes compete with the page's",
+      kilowatt: '`isolation: isolate` on the `figure`',
+      where: 'Every map',
+    },
+    check: /isolation: 'isolate'/,
+  },
+  {
     id: 'map-attribution',
     kind: 'convention',
     title: 'Compact attribution',

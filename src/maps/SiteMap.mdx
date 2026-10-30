@@ -79,6 +79,7 @@ How this map differs from stock CARTO and MapLibre, from `src/maps/departures.ts
 - `map-card`: the map fills the `figure` below the card's header, with no padding.
 - `map-controls`: zoom in, zoom out and show all sites are `IconButton`s on an outlined `Paper`.
 - `map-scroll-zoom`: cooperative gestures are on, so zoom takes Ctrl or ⌘ with the wheel.
+- `map-stacking`: the `figure` isolates MapLibre's layers, so its gestures message can't rise over a pinned page header.
 - `map-attribution`: CARTO's and OpenStreetMap's credit is kept, as MapLibre's compact button on the card surface.
 - `map-data-colors`: sites take their colors from `mapColors`.
 - `map-tooltips`: every site has a tooltip on the menu surface with its name and full value.
