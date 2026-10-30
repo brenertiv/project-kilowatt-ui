@@ -329,6 +329,36 @@ export const departures: Departure[] = [
     options: () => ({ components: { MuiCard: { styleOverrides: { root: { borderRadius: 'calc(2 * var(--mui-shape-borderRadius))' } } } } }),
   },
   {
+    id: 'table-cell-border',
+    area: 'Components',
+    components: ['Table'],
+    title: 'Table rows divide with `divider`',
+    why: "MUI derives a table's row lines from `divider` by mixing it toward white in light and black in dark. On Kilowatt's surfaces that nearly disappears in light (1.02:1 on a card) and turns darker than the surface in dark, where every other border is lighter. Kilowatt uses `divider` itself, so a table's rows match the card frame around them (Rules → One border per edge).",
+    options: () => ({ components: { MuiTableCell: { styleOverrides: { root: { borderBottomColor: 'var(--mui-palette-divider)' } } } } }),
+  },
+  {
+    id: 'table-sticky-header',
+    area: 'Components',
+    components: ['Table'],
+    title: 'Sticky table headers sit on the card surface',
+    why: "MUI paints a sticky header in `background.default`, the page color, which suits a table sitting on the page. Kilowatt's tables sit in cards, on `background.level2`, so the stock header reads as a band of page color across the card. Kilowatt paints it `background.level2`; rows still pass behind it unseen. A sticky table on any other surface, such as a dialog, sets the header cells' background to that surface.",
+    options: () => ({ components: { MuiTableCell: { styleOverrides: { stickyHeader: { backgroundColor: 'var(--mui-palette-background-level2)' } } } } }),
+  },
+  {
+    id: 'table-last-row',
+    area: 'Components',
+    components: ['Table'],
+    title: "A table's last row has no bottom line",
+    why: "MUI draws a line under every row, so a table's last row lands a line on the edge of the card around it, a double border, and MUI's own demo removes it instance by instance. Kilowatt removes it in the theme, so no table needs that override (Rules → One border per edge). With a `TableFooter`, the last body row keeps its line, which sets the totals apart, and the footer's last row loses it.",
+    options: () => ({
+      components: {
+        MuiTable: {
+          styleOverrides: { root: { '& > :last-child > tr:last-child > td, & > :last-child > tr:last-child > th': { borderBottom: 0 } } },
+        },
+      },
+    }),
+  },
+  {
     id: 'regular-weight',
     area: 'Typography',
     title: 'Every type style at regular weight',
