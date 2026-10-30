@@ -131,7 +131,7 @@ export type AppShellProps = {
   section: string;
   /** The id of the current page in the current section's panel. */
   page?: string;
-  /** Header content at the start, after the panel toggle: the scope button. On phones it moves to the top of the page, under the header. */
+  /** Header content at the start, after the panel toggle: the scope button. On phones it fills the header between the menu button and `headerEnd`. */
   headerStart?: ReactNode;
   /** Header content at the end: actions such as Ask Enertiv. On phones there's room for an icon button, not a labelled one. */
   headerEnd?: ReactNode;
@@ -694,8 +694,8 @@ type PhoneShellProps = Pick<
 
 /**
  * The shell below the `md` breakpoint, built for a phone's browser. The page scrolls the document, so the
- * browser's toolbars can shrink, under a sticky header: the menu button, the page's title (a menu of the
- * section's pages) and page-wide actions. The menu is one column that drills from the sections to a
+ * browser's toolbars can shrink, under a sticky header: the menu button, the scope (`headerStart`) and
+ * page-wide actions. The menu is one column that drills from the sections to a
  * section's pages, with My account and the company pinned at its foot. Nothing is pinned to the bottom of
  * the page, where Safari keeps its own toolbar.
  */
@@ -721,10 +721,8 @@ function PhoneShell({
   const [companiesOpen, showCompanies, hideCompanies] = useBackToClose();
   const [searchOpen, showSearch, hideSearch] = useBackToClose();
   const [companyButton, setCompanyButton] = useState<HTMLElement | null>(null);
-  const [pagesOpen, showPages, hidePages] = useBackToClose();
   // The section whose pages the menu shows; `null` shows the sections.
   const [level, setLevel] = useState<string | null>(null);
-  const [titleButton, setTitleButton] = useState<HTMLElement | null>(null);
   const { measure: measureContent, provide: provideContent } = useContentWidth<HTMLElement>();
 
   const current = sections.find((item) => item.id === section);
@@ -735,7 +733,6 @@ function PhoneShell({
     ...sections.filter((item) => item.placement !== 'end'),
   ].filter((item) => !item.hideOnPhone);
   const levelSection = sections.find((item) => item.id === level);
-  const title = current?.panel?.items.find((item) => item.id === page)?.label ?? current?.label ?? '';
   const news = sections.filter((item) => item.count).map((item) => item.badge ?? `${item.label}, ${item.count}`);
   const menuLabel = ['Open menu', ...news].join(', ');
 
@@ -779,7 +776,7 @@ function PhoneShell({
       <Typography variant="h5" component="h2" noWrap sx={{ flex: 1 }}>
         {heading}
       </Typography>
-      {/* Search sits in the menu's header, as it does in the panel's on wide screens, leaving the top bar to the page's title. */}
+      {/* Search sits in the menu's header, as it does in the panel's on wide screens, leaving the top bar to the scope. */}
       <IconButton aria-label="Search" onClick={() => hideMenu(showSearch)}>
         <Icon name="search" />
       </IconButton>
@@ -903,26 +900,8 @@ function PhoneShell({
               <Icon name="menu" />
             </Badge>
           </IconButton>
-          {hasPanel(current) ? (
-            <Button
-              ref={setTitleButton}
-              color="inherit"
-              endIcon={<Icon name="expand_more" />}
-              aria-haspopup="menu"
-              aria-expanded={pagesOpen}
-              onClick={showPages}
-              sx={{ minWidth: 0, typography: 'subtitle1' }}
-            >
-              <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {title}
-              </Box>
-            </Button>
-          ) : (
-            <Typography variant="subtitle1" component="p" noWrap sx={{ px: 1 }}>
-              {title}
-            </Typography>
-          )}
-          <Box sx={{ flex: 1 }} />
+          {/* The scope fills the header between the two buttons. The menu opens on the section's pages, and each page names itself. */}
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', ml: 0.5, '& > *': { flex: 1, minWidth: 0 } }}>{headerStart}</Box>
           <Box sx={{ display: 'flex', mr: -1 }}>{headerEnd}</Box>
         </Toolbar>
       </AppBar>
@@ -933,31 +912,8 @@ function PhoneShell({
         tabIndex={-1}
         sx={{ p: 2, pb: 'calc(var(--mui-spacing) * 2 + env(safe-area-inset-bottom))', outline: 'none' }}
       >
-        {headerStart && <Box sx={{ mb: 2 }}>{headerStart}</Box>}
         {provideContent(children)}
       </Box>
-      {hasPanel(current) && (
-        <Menu
-          anchorEl={titleButton}
-          open={pagesOpen}
-          onClose={() => hidePages()}
-          slotProps={{
-            paper: { sx: { maxHeight: '70dvh', overscrollBehavior: 'contain' } },
-            list: { 'aria-label': current.label },
-          }}
-        >
-          {current.panel.items.map((item) => (
-            <MenuItem
-              key={item.id}
-              selected={item.id === page}
-              aria-current={item.id === page ? 'page' : undefined}
-              onClick={() => hidePages(() => onPageChange?.(item.id, current.id))}
-            >
-              {pageRow(item)}
-            </MenuItem>
-          ))}
-        </Menu>
-      )}
       <Drawer
         open={menuOpen}
         onClose={() => hideMenu()}
@@ -1197,7 +1153,7 @@ function ResizeEdge({ label, value, min, max, page, onResize, widthAt }: ResizeE
  * rail item is hovered, so another section's pages are one move away. A Search button beside the
  * panel's toggle, on every page, opens one search dialog that finds a page in any section. Below the
  * `md` breakpoint it switches to a layout for a phone's browser: the document scrolls under a sticky
- * header whose page title is a menu of the section's pages, and the menu button opens a one-column
+ * header that holds the scope, and the menu button opens a one-column
  * menu that slides between the sections and a section's pages, with My account and the company
  * pinned at its foot, and the side column opens as a bottom sheet. It holds no routes: it
  * reports choices through its callbacks, and items with an `href` render as links.

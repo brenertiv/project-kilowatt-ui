@@ -27,7 +27,7 @@ Below `md` the shell switches to a layout built for a phone's browser: a sticky 
 
 - Use it once, at the root of the app, around every page.
 - Use the panel for a section's own pages. For actions on the current page, use the page's header or toolbar, not the panel.
-- For page-wide context (the portfolio or property, the period), use `headerStart`; for page-wide actions, `headerEnd`.
+- For the scope (the portfolio or property), use `headerStart`; for page-wide actions, `headerEnd`.
 - For details of one item, open a `Drawer` from the page rather than the aside; the aside is for a tool that stays open across pages, like the assistant.
 
 ## Usage
@@ -105,11 +105,11 @@ Reach for it when a page's columns would crowd beside docked panels; otherwise s
 A phone's browser keeps its own toolbars on screen: Safari's sits at the bottom by default (iOS 26), Chrome's at the top. So below `md` the shell puts nothing at the bottom of the page and lets the browser's toolbars shrink:
 
 - **The document scrolls** under a sticky header, rather than inside a fixed frame, so the browser can shrink its toolbars as people scroll.
-- **Header:** the menu button (with a dot for unread notifications), the page's title and `headerEnd` (an icon button; there's no room for a label). The title is a menu of the current section's pages, so a neighbouring page is one tap away. `headerStart` (the scope) moves to the top of the page.
+- **Header:** the menu button (with a dot for unread notifications), `headerStart` (the scope) filling the header between it and `headerEnd`, and `headerEnd` (an icon button; there's no room for a label). The scope stays in view as the page scrolls. There's no page title: the menu opens on the current section's pages, and each page names itself in its own header. Where scope doesn't apply, leave `headerStart` empty and the header's middle stays empty.
 - **Menu:** one column, not the rail and panel side by side. It opens on the current section's pages, with All sections to go up a level; there, Notifications leads, and sections with pages drill in. The menu's header (the back arrow, the level's title, Search and the close button) stays put while the list slides: in from the right when drilling in, from the left when going back, over 300ms (`duration.standard`, `easeOut`).
 - **Pinned to the foot of the menu,** on both levels: My account, which drills into its pages and the appearance control, and the company button, an outlined button with the company's mark and name that opens the company menu, whatever the count. Choosing a company closes both menus, then calls `onCompanyChange`; so does Add company, then calls `onAddCompany`.
 - **Header gutter:** the header takes the page's 16px inset, and the menu and page-action buttons at either end overhang it by their own 8px, so their glyphs sit on the content's edge.
-- **Back closes it.** The menu, the title's menu and the company menu each take a step in the browser's history while open, so the browser's Back button or back swipe closes the top one rather than leaving the page.
+- **Back closes it.** The menu and the company menu each take a step in the browser's history while open, so the browser's Back button or back swipe closes the top one rather than leaving the page.
 - **Left out on phones:** sections with `hideOnPhone`, the panel's `filter`, `actions` and `headerAction` (put a section's New action, filters and settings in its page too), docking, resizing, the floating aside, hover and tooltips.
 - **Safe areas:** `main`, the menu and the sheets pad by `env(safe-area-inset-bottom)`, which needs `viewport-fit=cover` in the app's viewport meta tag; without it the inset is 0.
 - **Heights** use `dvh`, which follows the browser's toolbars as they show and hide. Menus and sheets use `overscroll-behavior: contain`, so scrolling to their end doesn't scroll the page behind.
@@ -143,7 +143,7 @@ Test the phone layout on a real iPhone (with Safari's toolbar at the bottom and 
 
 ## MUI departures
 
-- `paper-surface-levels`: the drawers, the floating panel, the menus and the header take their surface from their elevation: the floating panel is on level2, the title's and company menus on the menu surface (level3), the phone menu on level4, and the header is transparent, on the frame's level1 (on phones, set to level1 so the page scrolls under it). In the dark scheme the menus, the phone menu, the bottom sheet and the search dialog sit on level1 with the divider as their edge, the frame's own surface. The floating aside is `elevation={0}` (level1) with the divider and a shadow in both schemes, the docked column's surface lifted off the page.
+- `paper-surface-levels`: the drawers, the floating panel, the menus and the header take their surface from their elevation: the floating panel is on level2, the company menu on the menu surface (level3), the phone menu on level4, and the header is transparent, on the frame's level1 (on phones, set to level1 so the page scrolls under it). In the dark scheme the menus, the phone menu, the bottom sheet and the search dialog sit on level1 with the divider as their edge, the frame's own surface. The floating aside is `elevation={0}` (level1) with the divider and a shadow in both schemes, the docked column's surface lifted off the page.
 - `soft-shadow`: not used by the shell; its floating layers keep `theme.shadows`. A composer in the aside takes a raised surface framed in the `divider`, with no shadow.
 - `selected-fills-icons`: the current section and page show their icons filled.
 - `icon-button-radius`: the rail's and header's icon buttons round at the theme radius.
@@ -164,7 +164,7 @@ Theme-wide departures (surfaces, borders, radius, type, reduced motion) apply to
 - A Skip to Content link is the first thing in the tab order and appears on focus.
 - The current section and page carry `aria-current="page"`.
 - Every icon-only button has an accessible name and a tooltip: sections by label, with their `badge` words ("Notifications, 10 unread"); on phones the menu button includes them too ("Open menu, 10 unread").
-- The company button is named "Switch company: {name}" and says it opens a menu (`aria-haspopup`, `aria-expanded`), and so does the page title on phones. The company menu is named Switch company; its companies are radio items (`menuitemradio`), and the current one is `aria-checked`. Marks are decorative; Add company is a plain menu item.
+- The company button is named "Switch company: {name}" and says it opens a menu (`aria-haspopup`, `aria-expanded`). The company menu is named Switch company; its companies are radio items (`menuitemradio`), and the current one is `aria-checked`. Marks are decorative; Add company is a plain menu item.
 - Search in the rail is named Search, says it opens a dialog, and has its tooltip. A Missing section's tooltip is its name, and its accessible name adds that it opens the upgrade page ("Maintenance. Opens the upgrade page").
 - The appearance control is a `ToggleButtonGroup` labelled Appearance; each icon button is named System, Light or Dark (with a matching tooltip), and the chosen one is `aria-pressed`.
 - The search dialog is named Search and opens with its field focused; its result count or no-match message is a polite `status`, and MUI's `Dialog` traps focus and closes on Escape. The filter button says it opens a menu, and its options are radio items (`menuitemradio`) with the chosen one `aria-checked`.

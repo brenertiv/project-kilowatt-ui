@@ -558,18 +558,19 @@ export const PhoneSections: Story = {
   },
 };
 
-/** The page title is a menu of the section's pages, so a neighbouring page is one tap away without the menu. */
-export const PhonePageMenu: Story = {
+/** The scope sits in the header, one button between the menu and Ask Enertiv, so it stays in view as the page scrolls; it opens Change scope. */
+export const PhoneScope: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Reporting readiness' }));
-    await userEvent.click(await screen.findByRole('menuitem', { name: /^Decarbonization plan/ }));
-    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
-    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Decarbonization plan');
+    const header = canvas.getByRole('banner');
+    await userEvent.click(within(header).getByRole('button', { name: 'Portfolio All properties. Change scope' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(within(dialog).getByRole('button', { name: /^East Region/ }));
+    await waitFor(() => expect(within(header).getByRole('button', { name: 'Portfolio East Region. Change scope' })).toBeVisible());
   },
 };
 
-/** On a phone, Search sits in the menu's header, beside Close, and opens the same search, filling the screen. The top bar keeps the menu button and the page's title. */
+/** On a phone, Search sits in the menu's header, beside Close, and opens the same search, filling the screen. The top bar keeps the menu button and the scope. */
 export const PhoneSearch: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {

@@ -252,6 +252,8 @@ function LockedCrumb({ type, name, reason }: { type: string; name: string; reaso
  * the portfolio's properties. One close button after the active crumb goes up a level: from a property
  * to its portfolio, from a group to all properties. A single-property account shows the property and
  * opens nothing, and `locked` fixes the scope for an item that keeps its own: one crumb with a lock.
+ * Below `md` the crumbs are one button naming the current level, for AppShell's phone header, and the
+ * close button's job is the dialog's first row.
  *
  * @summary The global scope as split-button breadcrumbs, with a dialog to search and browse groups and properties.
  * @import import { ScopePicker } from 'src/components/ScopePicker';
@@ -295,6 +297,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
   const group = value.level === 'group' ? groupById.get(value.id) : value.level === 'property' && value.groupId ? groupById.get(value.groupId) : undefined;
   const groupScope: Scope = group ? { level: 'group', id: group.id } : { level: 'portfolio' };
   const portfolioIsCurrent = value.level !== 'property';
+  const portfolioIcon = group ? levelIcon.group : levelIcon.portfolio;
   // Up a level, from the active crumb: a property to its portfolio, a group to all properties.
   const up: { scope: Scope; label: string } | undefined = property
     ? { scope: groupScope, label: group ? `Back to ${group.name}` : 'Back to all properties' }
@@ -335,7 +338,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
     // A step above the header's surface (level1), with the faintest border to frame it.
     <Crumb surface="background.level2" label={`Portfolio ${group ? group.name : 'All properties'}`}>
       <CrumbButton
-        lead={<CrumbIcon name={group ? levelIcon.group : levelIcon.portfolio} />}
+        lead={<CrumbIcon name={portfolioIcon} />}
         type="Portfolio"
         name={group ? group.name : 'All properties'}
         action={portfolioIsCurrent ? 'Change portfolio' : `Set ${group?.name ?? 'all properties'} as the scope`}
@@ -359,6 +362,52 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
       {chevron('properties', 'Change property')}
     </Crumb>
   );
+
+  // What the phone's button and the dialog's compact header name: the current level, its type, and at property scope
+  // the portfolio it was chosen through.
+  const here = property
+    ? { type: 'Property', name: property.name, icon: levelIcon.property, lead: <PropertyAvatar property={property} />, parent: group?.name }
+    : { type: 'Portfolio', name: group ? group.name : 'All properties', icon: portfolioIcon, lead: <CrumbIcon name={portfolioIcon} />, parent: undefined };
+
+  const dialog = (
+    <ScopeDialog
+      open={step !== null}
+      step={step ?? 'groups'}
+      fullScreen={phone}
+      groups={groups}
+      properties={properties}
+      value={value}
+      recent={recent}
+      here={phone ? { icon: here.icon, name: here.name, detail: here.parent ? `${here.type} in ${here.parent}` : here.type } : undefined}
+      up={phone ? up : undefined}
+      onClose={() => setStep(null)}
+      onChoose={choose}
+    />
+  );
+
+  // On phones the scope is one button in the header naming the current level, which opens Change scope at that level.
+  // No path of crumbs and no close button: going up a level is the dialog's first row.
+  if (phone) {
+    return (
+      <>
+        <Button
+          color="inherit"
+          aria-label={`${here.type} ${here.name}${here.parent ? `, in ${here.parent}` : ''}. Change scope`}
+          aria-haspopup="dialog"
+          aria-expanded={step !== null}
+          onClick={() => setStep(property ? 'properties' : 'groups')}
+          endIcon={<Icon name="expand_all" />}
+          // The crumb's frame without its fill, across the header's middle, the chevron at its end.
+          sx={{ ...crumbFrame, flex: 1, justifyContent: 'space-between', p: 1, pl: { xs: 1.5, sm: 1 }, pr: 1.5, minWidth: 0, maxWidth: '100%', '& .MuiButton-endIcon': { ml: 1.5 } }}
+        >
+          <CrumbContent lead={here.lead}>
+            <CrumbLabel type={here.type} name={here.name} />
+          </CrumbContent>
+        </Button>
+        {dialog}
+      </>
+    );
+  }
 
   return (
     <>
@@ -389,17 +438,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
         {propertyCrumb ? portfolioCrumb : upButton ? withUp(portfolioCrumb) : portfolioCrumb}
         {propertyCrumb && withUp(propertyCrumb)}
       </Breadcrumbs>
-      <ScopeDialog
-        open={step !== null}
-        step={step ?? 'groups'}
-        fullScreen={phone}
-        groups={groups}
-        properties={properties}
-        value={value}
-        recent={recent}
-        onClose={() => setStep(null)}
-        onChoose={choose}
-      />
+      {dialog}
     </>
   );
 }
@@ -415,12 +454,16 @@ type ScopeDialogProps = {
   properties: ScopeProperty[];
   value: Scope;
   recent: Scope[];
+  /** On phones, the current scope the dialog's compact header names. */
+  here?: { icon: IconName; name: string; detail: string };
+  /** On phones, the level above the current scope, the compact header's Back row. */
+  up?: { scope: Scope; label: string };
   onClose: () => void;
   onChoose: (scope: Scope) => void;
 };
 
 /** Change scope: search, recent scopes, then Portfolios and Properties side by side, or one at a time on phones, starting at `step`. */
-function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent, onClose, onChoose }: ScopeDialogProps) {
+function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent, here, up, onClose, onChoose }: ScopeDialogProps) {
   const [query, setQuery] = useState('');
   // The portfolio browsed in the Portfolios column: a group, or null for all properties.
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
@@ -576,6 +619,29 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
           <Icon name="close" />
         </IconButton>
       </Stack>
+      {/* On phones a compact header names the current scope, with its check as the columns mark it, and the level above
+          it as the first row, which goes up as the desktop crumb's close button does. */}
+      {here && (
+        <List aria-label="Current scope" sx={{ px: 1, py: 0 }}>
+          <ListItem sx={{ px: 2 }}>
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              <Icon name={here.icon} />
+            </ListItemIcon>
+            <ListItemText primary={here.name} secondary={here.detail} />
+            <Icon name="check" />
+          </ListItem>
+          {up && (
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => onChoose(up.scope)} sx={{ borderRadius: 1 }}>
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <Icon name="arrow_upward" />
+                </ListItemIcon>
+                <ListItemText primary={up.label} />
+              </ListItemButton>
+            </ListItem>
+          )}
+        </List>
+      )}
       {/* pt leaves room for the search field's floating label, which the scroll area would clip. */}
       <Stack sx={{ px: 3, pt: 1, pb: 3, gap: 2, minHeight: 0, overflowY: 'auto' }}>
         <TextField

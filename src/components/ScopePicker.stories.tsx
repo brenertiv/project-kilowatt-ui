@@ -205,16 +205,32 @@ export const Locked: Story = {
   },
 };
 
-/** On phones the dialog fills the screen and shows one column at a time: the property's chevron opens on its portfolio's properties, with a way back to the groups. */
+/** On phones the scope is one button, for AppShell's header, naming the current level. It opens Change scope at that level; the dialog fills the screen and shows one column at a time. */
 export const Phone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { value: { level: 'property', id: 'highpoint-1', groupId: 'west' } },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change property' }));
+    await expect(canvas.queryByRole('navigation', { name: 'Scope' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Property Highpoint 1, in West Region. Change scope' }));
     const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
     await waitFor(() => expect(within(dialog).getByRole('list', { name: 'West Region' })).toBeVisible());
     await userEvent.click(within(dialog).getByRole('button', { name: 'Back to portfolios' }));
     await waitFor(() => expect(within(dialog).getByRole('list', { name: 'Portfolios' })).toBeVisible());
+  },
+};
+
+/** On phones a compact header in the dialog names the current scope, and its Back row goes up a level, as the desktop crumb's close button does. */
+export const PhoneBack: Story = {
+  name: 'Phone back row',
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  args: { value: { level: 'property', id: 'highpoint-1', groupId: 'west' }, onChange: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /Change scope$/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    const current = within(dialog).getByRole('list', { name: 'Current scope' });
+    await waitFor(() => expect(within(current).getByText('Property in West Region')).toBeVisible());
+    await userEvent.click(within(current).getByRole('button', { name: 'Back to West Region' }));
+    await expect(args.onChange).toHaveBeenCalledWith({ level: 'group', id: 'west' });
   },
 };
 
