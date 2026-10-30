@@ -206,8 +206,8 @@ const meta = {
     const [page, setPage] = useState(firstPage(args.section));
     const [assistantOpen, setAssistantOpen] = useState(args.asideOpen ?? false);
     const [assistantDocked, setAssistantDocked] = useState(args.asideDocked ?? true);
-    // The aside docks or floats only beside the page, at `lg` and up; below it, it's a bottom sheet.
-    const large = useMediaQuery(useTheme().breakpoints.up('lg'));
+    // The aside docks or floats beside the page, at `md` and up; on phones it's a bottom sheet.
+    const wide = useMediaQuery(useTheme().breakpoints.up('md'));
     const [company, setCompany] = useState(args.company);
     const [scope, setScope] = useState<Scope>({ level: 'portfolio' });
     // On phones the header has room for an icon, not the label.
@@ -257,19 +257,19 @@ const meta = {
             {/* Floating, the header is the drag handle. */}
             <Stack
               direction="row"
-              data-drag-handle={large && !assistantDocked ? '' : undefined}
+              data-drag-handle={wide && !assistantDocked ? '' : undefined}
               sx={{ alignItems: 'center', justifyContent: 'space-between', p: 2, pr: 1 }}
             >
               <Typography variant="h5" component="h2">
                 Ask Enertiv
               </Typography>
               <Stack direction="row">
-                {large && (
+                {wide && (
                   <IconButton
                     aria-label={assistantDocked ? 'Undock Ask Enertiv' : 'Dock Ask Enertiv'}
                     onClick={() => setAssistantDocked(!assistantDocked)}
                   >
-                    <Icon name={assistantDocked ? 'picture_in_picture_small' : 'dock_to_right'} />
+                    <Icon name={assistantDocked ? 'zoom_out_map' : 'zoom_in_map'} />
                   </IconButton>
                 )}
                 <IconButton aria-label="Close Ask Enertiv" onClick={() => setAssistantOpen(false)}>
@@ -453,7 +453,7 @@ export const PanelResize: Story = {
   },
 };
 
-/** A side column for the assistant, opened from the header, whose left edge resizes it (280px to 560px). Below the `lg` breakpoint it opens as a bottom sheet. */
+/** A side column for the assistant, opened from the header, whose left edge resizes it (280px to 560px). It sits beside the page from `md`; on phones it opens as a bottom sheet. */
 export const AssistantOpen: Story = {
   args: { asideOpen: true },
   play: async ({ canvas, userEvent }) => {
@@ -467,7 +467,7 @@ export const AssistantOpen: Story = {
   },
 };
 
-/** Undocked at `lg` and up, the assistant floats at the bottom right; its header drags it, and a double-click puts it back in the corner. */
+/** Undocked, at `md` and up, the assistant floats at the bottom right; its header drags it, and a double-click puts it back in the corner. */
 export const AssistantFloating: Story = {
   args: { asideOpen: true, asideDocked: false, onAsidePositionChange: fn() },
   play: async ({ args, canvas, userEvent }) => {

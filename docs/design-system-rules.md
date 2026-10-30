@@ -112,7 +112,7 @@ Foundations → Typography lists every variant's computed size, weight, line hei
 - **Wrapping.** Headings balance their lines and body text avoids a lone last word (the `text-wrap` departure). Don't override `textWrap` per instance.
 - **One weight for type styles.** Every `Typography` variant is regular (400, the `regular-weight` departure); size and color carry hierarchy. Don't set `fontWeight` on a variant to emphasize it; pick another variant, or use `strong` (`fontWeightBold`) for emphasis within text.
 - **No faux styles.** Roboto is loaded at 300, 400, 500 and 700, with no italics, and the browser doesn't fake the rest (the `font-synthesis` departure). Use only the theme's weights (`fontWeightLight` to `fontWeightBold`). Don't rely on italic for emphasis; use weight or wording.
-- **Inputs stay at 16px.** MUI's inputs use `body1` (16px), which keeps Safari on iOS from zooming the page when a field is focused. Don't set a smaller type style on an input, and never cap zoom with `maximum-scale` in the viewport tag.
+- **Inputs stay at 16px.** MUI's inputs use `body1` (16px), which keeps Safari on iOS from zooming the page when a field is focused. Don't set a smaller type style on an input, and never cap zoom with `maximum-scale` in the viewport tag. The one exception is a composer: its input may be set in `body2` from `md`, so what's typed matches the thread it joins. Phones keep 16px.
 
 ## Content and layout
 

@@ -590,7 +590,7 @@ export const departures: Departure[] = [
     convention: {
       muiDefault: 'Paper takes `elevation` (a shadow from `theme.shadows`) or `variant="outlined"`',
       kilowatt: 'A raised composer is `<Paper variant="soft">`: level1 with the soft shadow. Everything else keeps `elevation`',
-      where: 'Composers that float over the frame, such as the assistant’s message box',
+      where: 'Composers that float over the frame, above the content they write into',
     },
     options: () => {
       // The shadow's color is the palette's black at a strength per scheme, so no raw color enters the override.

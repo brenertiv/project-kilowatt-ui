@@ -135,11 +135,11 @@ export type AppShellProps = {
   headerStart?: ReactNode;
   /** Header content at the end: actions such as Ask Enertiv. On phones there's room for an icon button, not a labelled one. */
   headerEnd?: ReactNode;
-  /** A side column at the end, such as the assistant. Shown while `asideOpen`; below the `lg` breakpoint it opens as a bottom sheet. */
+  /** A side column at the end, such as the assistant. Shown while `asideOpen`; on phones (below `md`) it opens as a bottom sheet. */
   aside?: ReactNode;
   /** Whether `aside` is shown. Default `false`. */
   asideOpen?: boolean;
-  /** At `lg` and up, whether the aside is a column beside the page (`true`) or floats over it at the bottom right (`false`), where its header drags it. Put the Dock and Undock control in the aside's own header. Default `true`. */
+  /** At `md` and up, whether the aside is a column beside the page (`true`) or floats over it at the bottom right (`false`), where its header drags it. Put the Dock and Undock control in the aside's own header. Default `true`. */
   asideDocked?: boolean;
   /** The aside column's starting width in pixels, between 280 and 560; the floating aside takes it too. Default `344`. */
   defaultAsideWidth?: number;
@@ -487,7 +487,7 @@ function SectionGlyph({ section }: { section: AppShellSection }) {
   );
 }
 
-/** The side column as a bottom sheet, below the `lg` breakpoint. */
+/** The side column as a bottom sheet, on phones. */
 function AsideSheet({
   open,
   label,
@@ -1199,7 +1199,7 @@ function ResizeEdge({ label, value, min, max, page, onResize, widthAt }: ResizeE
  * `md` breakpoint it switches to a layout for a phone's browser: the document scrolls under a sticky
  * header whose page title is a menu of the section's pages, and the menu button opens a one-column
  * menu that slides between the sections and a section's pages, with My account and the company
- * pinned at its foot. Below `lg` the side column opens as a bottom sheet. It holds no routes: it
+ * pinned at its foot, and the side column opens as a bottom sheet. It holds no routes: it
  * reports choices through its callbacks, and items with an `href` render as links.
  *
  * @summary The app frame: section rail, dockable section panel, header and main area; a drill-down menu on phones.
@@ -1236,7 +1236,6 @@ export function AppShell({
 }: AppShellProps) {
   const theme = useTheme();
   const wide = useMediaQuery(theme.breakpoints.up('md'), { noSsr: true });
-  const asideBeside = useMediaQuery(theme.breakpoints.up('lg'), { noSsr: true });
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
   const [panelOpen, setPanelOpen] = useState(defaultPanelOpen);
   const [panelWidth, setPanelWidth] = useState(() => clampWidth(defaultPanelWidth));
@@ -1250,7 +1249,7 @@ export function AppShell({
   // docked slot while the slot opens and pushes the page over, and fades only once the page behind it has loaded.
   const [morph, setMorph] = useState<Morph | null>(null);
   const { measure: measureContent, provide: provideContent } = useContentWidth<HTMLElement>();
-  const asideFloats = Boolean(aside && asideOpen && asideBeside && !asideDocked);
+  const asideFloats = Boolean(aside && asideOpen && wide && !asideDocked);
   const {
     ref: floatRef,
     position: floatPosition,
@@ -1610,7 +1609,7 @@ export function AppShell({
     );
   }
 
-  const asideBesidePage = Boolean(aside && asideOpen && asideBeside && asideDocked);
+  const asideBesidePage = Boolean(aside && asideOpen && asideDocked);
 
   return (
     // On wide screens the frame fills the window and only `main` scrolls.
@@ -1770,7 +1769,7 @@ export function AppShell({
         }
       />
       {asideFloats && (
-        // Undocked on a large screen, the aside floats over the page at the bottom right, at its column's width and a
+        // Undocked, the aside floats over the page at the bottom right, at its column's width and a
         // contained height, above the page and the floating panel. Its content's drag handle (its header) moves it.
         <Paper
           ref={floatRef}
@@ -1800,11 +1799,6 @@ export function AppShell({
         >
           {aside}
         </Paper>
-      )}
-      {aside && !asideBeside && (
-        <AsideSheet open={asideOpen} label={asideLabel} onClose={onAsideClose}>
-          {aside}
-        </AsideSheet>
       )}
     </Box>
   );
