@@ -60,6 +60,7 @@ export const storyDeps = [
   '@mui/material/Divider',
   '@mui/material/Drawer',
   '@mui/material/Fab',
+  '@mui/material/Fade',
   '@mui/material/FormControl',
   '@mui/material/FormControlLabel',
   '@mui/material/FormGroup',

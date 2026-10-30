@@ -15,7 +15,7 @@ On wide screens (`md` and up), from left to right:
 - **Rail.** The company button at the top (the company's mark, or its initials without one), which opens the company menu; one icon per section; then, at the bottom, Search and the sections placed at the `end`: Notifications and My account. It sits on the page surface, outside the frame.
 - **Section panel.** The current section's title with its header buttons (a filter when the panel has one, the panel's `headerAction`, and Collapse navigation), optional actions (a New button) and its pages. It resizes from its edge (220px to 380px) and undocks from its header. Undocked, resting on a section in the rail floats that section's panel over the page, so another section's pages are one move away; Dock navigation, in the header or the floating panel, docks it again. Sections with no pages of their own have no panel.
 - **Header.** The scope (`headerStart`) at the start and page-wide actions (`headerEnd`) at the end, nothing else, so the scope has the room. It has no line under it, and the page's 24px gutter on its sides and top, so the scope sits in line with the page's title. `hideHeader` leaves it out, for a page with no scope and no page-wide actions.
-- **Main.** The page, padded 24px. The frame fills the window and only `main` scrolls.
+- **Main.** The page, padded 24px. The frame fills the window and only `main` scrolls. A `PageHeader` in the page pins there.
 - **Aside.** An optional column at the end, for the assistant, whose left edge resizes it (280px to 560px). `asideDocked={false}` floats it over the page instead, and its header drags it. It's beside the page wherever the rail shows; the bottom sheet is the phone shell's alone.
 - **Search.** One search dialog for the whole app, opened from Search in the rail's foot, above Notifications, on every page. On phones it's in the menu's header, beside Close, and fills the screen. It finds a page in any section by name and goes to it.
 
@@ -104,7 +104,7 @@ Reach for it when a page's columns would crowd beside docked panels; otherwise s
 
 A phone's browser keeps its own toolbars on screen: Safari's sits at the bottom by default (iOS 26), Chrome's at the top. So below `md` the shell puts nothing at the bottom of the page and lets the browser's toolbars shrink:
 
-- **The document scrolls** under a sticky header, rather than inside a fixed frame, so the browser can shrink its toolbars as people scroll.
+- **The document scrolls** under a sticky header, rather than inside a fixed frame, so the browser can shrink its toolbars as people scroll. A `PageHeader` pins under that header.
 - **Header:** the menu button (with a dot for unread notifications), `headerStart` (the scope) filling the header between it and `headerEnd`, and `headerEnd` (an icon button; there's no room for a label). The scope stays in view as the page scrolls. There's no page title: the menu opens on the current section's pages, and each page names itself in its own header. Where scope doesn't apply, leave `headerStart` empty and the header's middle stays empty.
 - **Menu:** one column, not the rail and panel side by side. It opens on the current section's pages, with All sections to go up a level; there, Notifications leads, and sections with pages drill in. The menu's header (the back arrow, the level's title, Search and the close button) stays put while the list slides: in from the right when drilling in, from the left when going back, over 300ms (`duration.standard`, `easeOut`).
 - **Pinned to the foot of the menu,** on both levels: My account, which drills into its pages and the appearance control, and the company button, an outlined button with the company's mark and name that opens the company menu, whatever the count. Choosing a company closes both menus, then calls `onCompanyChange`; so does Add company, then calls `onAddCompany`.
@@ -176,6 +176,7 @@ Theme-wide departures (surfaces, borders, radius, type, reduced motion) apply to
 ## Related
 
 - `Drawer`, `Menu`, `List` and `AppBar` in MUI's docs, for the parts.
+- `PageHeader`, the page's title, which pins where the shell says.
 - Rules → One border per edge and Concentric corners, which the frame and the floating panel follow.
 
 <Stories includePrimary={false} />

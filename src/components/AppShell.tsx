@@ -39,6 +39,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useColorScheme, useTheme } from '@mui/material/styles';
 import { useContentWidth } from './contentWidth';
+import { PageScrollProvider, useElementHeight } from './pageScroll';
 import { Icon, type IconName } from '../icons';
 
 /** A page within a section, listed in the section panel. */
@@ -724,6 +725,7 @@ function PhoneShell({
   // The section whose pages the menu shows; `null` shows the sections.
   const [level, setLevel] = useState<string | null>(null);
   const { measure: measureContent, provide: provideContent } = useContentWidth<HTMLElement>();
+  const { measure: measureHeader, height: headerHeight } = useElementHeight<HTMLElement>();
 
   const current = sections.find((item) => item.id === section);
   const account = sections.find((item) => item.initials !== undefined);
@@ -888,6 +890,7 @@ function PhoneShell({
     <Box sx={{ minHeight: '100dvh', bgcolor: 'background.level1' }}>
       {skipLink}
       <AppBar
+        ref={measureHeader}
         position="sticky"
         color="inherit"
         elevation={0}
@@ -912,7 +915,7 @@ function PhoneShell({
         tabIndex={-1}
         sx={{ p: 2, pb: 'calc(var(--mui-spacing) * 2 + env(safe-area-inset-bottom))', outline: 'none' }}
       >
-        {provideContent(children)}
+        {provideContent(<PageScrollProvider value={{ root: null, top: `${headerHeight}px`, edge: headerHeight, inset: 2 }}>{children}</PageScrollProvider>)}
       </Box>
       <Drawer
         open={menuOpen}
@@ -1204,7 +1207,7 @@ export function AppShell({
   // Docking from the floating panel: the floating panel stays as an overlay that grows from where it floated into the
   // docked slot while the slot opens and pushes the page over, and fades only once the page behind it has loaded.
   const [morph, setMorph] = useState<Morph | null>(null);
-  const { measure: measureContent, provide: provideContent } = useContentWidth<HTMLElement>();
+  const { measure: measureContent, provide: provideContent, element: contentElement } = useContentWidth<HTMLElement>();
   const asideFloats = Boolean(aside && asideOpen && wide && !asideDocked);
   const {
     ref: floatRef,
@@ -1662,7 +1665,7 @@ export function AppShell({
             tabIndex={-1}
             sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3, outline: 'none' }}
           >
-            {provideContent(children)}
+            {provideContent(<PageScrollProvider value={{ root: contentElement, top: theme.spacing(-3), edge: 0, inset: 3 }}>{children}</PageScrollProvider>)}
           </Box>
         </Stack>
         {asideBesidePage && (
