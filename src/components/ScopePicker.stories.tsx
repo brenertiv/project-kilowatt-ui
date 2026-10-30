@@ -299,7 +299,8 @@ export const SaveAsPortfolio: Story = {
     await waitFor(() => expect(name).toHaveFocus());
     await userEvent.click(within(naming).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Save as portfolio' })).toBeNull());
-    await expect(await within(dialog).findByRole('list', { name: 'Office properties in Austin, TX' })).toBeVisible();
+    const saved = await within(dialog).findByRole('list', { name: 'Office properties in Austin, TX' });
+    await waitFor(() => expect(saved).toBeVisible());
   },
 };
 
