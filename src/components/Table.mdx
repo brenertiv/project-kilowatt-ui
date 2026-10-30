@@ -1,0 +1,145 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as TableStories from './Table.stories';
+
+<Meta
+  of={TableStories}
+  summary="MUI's Table for rows of the same fields that people read, compare, sort or select; straight in an outlined Card, with text left, numbers right, and a dash for a missing reading."
+/>
+
+# Table
+
+A table sets out rows of the same fields so people can read across and compare down. Kilowatt uses MUI's `Table`, `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`, `TableFooter` and `TableSortLabel` from `@mui/material` (Material UI v9) with no wrapper; the theme differs from stock MUI only as listed under MUI departures below. Props are MUI's: see the [Table API](https://mui.com/material-ui/api/table/), [TableContainer API](https://mui.com/material-ui/api/table-container/), [TableRow API](https://mui.com/material-ui/api/table-row/), [TableCell API](https://mui.com/material-ui/api/table-cell/), [TableFooter API](https://mui.com/material-ui/api/table-footer/) and [TableSortLabel API](https://mui.com/material-ui/api/table-sort-label/).
+
+<Canvas of={TableStories.Basic} />
+
+## When to use
+
+- Use a table for rows of the same fields that people compare, sort or select: buildings, meters, bills, work orders.
+- Use a table as the text alternative to a chart or map, or in place of a chart with more than six series.
+- For a short list of one kind of thing with no columns to compare, use `List`.
+- For one self-contained subject with its own actions, use `Card`.
+- For a single headline number, use `SourceFigure` in a metric card.
+
+## Usage
+
+Put the table in a `TableContainer`, straight in an outlined `Card` under a `CardHeader`, with no `CardContent`. Its rows run edge to edge, and each cell's 16px padding lines the text up with the card's title.
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import { TruncatedText } from 'src/components/TruncatedText';
+
+<Card variant="outlined">
+  <CardHeader title={<TruncatedText>Building Energy</TruncatedText>} />
+  <TableContainer>
+    <Table aria-label="Building energy">
+      <TableHead>
+        <TableRow>
+          <TableCell>Property</TableCell>
+          <TableCell align="right">Energy (kWh)</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        <TableRow>
+          <TableCell component="th" scope="row">
+            120 Broadway
+          </TableCell>
+          <TableCell align="right">61,240</TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  </TableContainer>
+</Card>
+```
+
+### Content
+
+- **Text left, numbers right.** Set `align="right"` on a number's header and cells, so digits line up by place. The theme sets tabular figures on every cell.
+- **Format every value with `Intl`.** One number of decimals per column, so the column lines up.
+- **Units sit in the header.** “Energy (kWh)” in the header and bare numbers in the cells, unless the units differ by row.
+- **A missing reading is a dash.** Show “–”, never 0, and keep it last when sorting: it has no place in the order.
+- **Headers are sentence case**, and name what's in the column.
+
+## Variants
+
+- **Sortable.** Put `TableSortLabel` in the header and set `sortDirection` on its `TableCell`. The arrow shows on the active column, and on hover for the others.
+
+<Canvas of={TableStories.Sortable} />
+
+- **Selectable.** Put a `Checkbox` in a `padding="checkbox"` cell, set `selected` on the row, and give the header checkbox `indeterminate` when some rows are chosen. Use it when a bulk action follows.
+
+<Canvas of={TableStories.Selectable} />
+
+- **Sticky header.** Set `stickyHeader` on the `Table` and a height on the `TableContainer`, for a long list in a fixed space.
+
+<Canvas of={TableStories.StickyHeader} />
+
+- **Wide.** With more columns than fit, the `TableContainer` scrolls sideways inside the card. To keep each row on one line, set `whiteSpace: 'nowrap'` on the cells (`'& .MuiTableCell-root'`), not on the table: cells set their own wrapping (`text-wrap`), so they don't inherit it.
+
+<Canvas of={TableStories.Wide} />
+
+- **Totals.** Put the sum in a `TableFooter`, with `variant="head"` on its cells so it reads at full size rather than in MUI's small footer type. Say in the page if a total leaves out buildings with missing readings.
+
+<Canvas of={TableStories.Totals} />
+
+## States
+
+- **Load more.** Lists from the API are cursor paged. Add rows with `useInfiniteQuery`, show the running count in a `role="status"` line, and put a text `Button` under the table, with `loading` while the next page arrives. Keep `AsyncContent`'s state `ready` during that fetch: the button shows the progress, and the `fetching` view would remount the table and lose focus. When the last page arrives the button goes, so move focus to the table.
+
+<Canvas of={TableStories.LoadMore} />
+
+- **Loading, empty, failed.** Wrap the table in `AsyncContent`, with `height` set to the table's space, so the card holds its size. `fetching` keeps the rows on screen under a thin progress bar. Don't draw a table of blank rows.
+
+<Canvas of={TableStories.Loading} />
+
+## Do and don't
+
+- Do put a table straight in an outlined `Card`, with no `CardContent`, so its rows run edge to edge.
+- Don't use MUI's `component={Paper}` on `TableContainer` inside a card; that's a frame in a frame. Leave it off.
+- Do align numbers right, in the header too, and format them with `Intl`.
+- Don't center numbers or mix decimal places in a column; align them right with one number of decimals.
+- Do show a dash for a missing reading and keep it last when sorting.
+- Don't show 0 for a reading that doesn't exist; 0 is a value, and a dash means there isn't one.
+- Do leave `size` off; tables are `medium` like every other component.
+- Don't set `size="small"` for a whole screen to fit more in; drop a column or let the table scroll, and keep `small` for a one-off with a comment saying why.
+- Do use `hover` on a row only when clicking the row does something.
+- Don't make a row clickable without a link or button inside it; a keyboard can't reach a row, so give it a control as well.
+- Do let the theme draw the row lines.
+- Don't add `'&:last-child td': { border: 0 }` from MUI's demo; the theme already removes the last line (`table-last-row`).
+- Do name a table that scrolls with `role="region"`, an `aria-label` and `tabIndex={0}`, so a keyboard can scroll it.
+- Don't let a wide table widen the page; keep it in a `TableContainer`, which scrolls inside the card.
+
+## MUI departures
+
+- `medium-size`: tables stay at `medium`, MUI's default, so leave `size` off; `small` is for a one-off instance.
+- `tabular-numerals`: every table cell uses tabular digits, so a column of figures lines up.
+- `table-cell-border`: row lines use `divider` instead of MUI's mix of it with white or black, so they show on a card and match its frame.
+- `table-sticky-header`: a sticky header sits on `background.level2`, the card surface, instead of `background.default`, the page color.
+- `table-last-row`: the last row has no bottom line, so it doesn't double the card's edge; with a `TableFooter`, the last body row keeps its line and the footer's last row loses it.
+
+Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text and intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- `Table` renders a real `table`, with its rows, cells and headers, so screen readers can move by row and column.
+- Name every table, with `aria-label` or `aria-labelledby` pointing at a heading.
+- Mark each row's first cell `component="th"` and `scope="row"`, so a cell reads with its row's name.
+- `TableSortLabel` is a button, with keyboard activation and the Kilowatt focus ring. Set `sortDirection` on its cell, which sets `aria-sort`.
+- Give each row's `Checkbox` a label that names the row: “Select 120 Broadway”.
+- A `TableContainer` that scrolls needs `role="region"`, an `aria-label` and `tabIndex={0}`, or a keyboard can't scroll it.
+- Results that arrive on their own are announced: `AsyncContent` announces its states, and a load-more count sits in a `role="status"` line.
+
+## Related
+
+- `Card` for the frame around a table.
+- `AsyncContent` for loading, empty and failed tables.
+- `Checkbox` for selecting rows.
+- Rules → One border per edge for how a table meets its card.
+
+<Stories includePrimary={false} />
