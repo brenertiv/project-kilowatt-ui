@@ -1,4 +1,7 @@
+import Button from '@mui/material/Button';
+import CardContent from '@mui/material/CardContent';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { LineChart } from 'src/charts/LineChart';
 import { AsyncContent } from 'src/components/AsyncContent';
@@ -49,6 +52,42 @@ export const Fetching: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('progressbar', { name: 'Loading energy use' })).toBeVisible();
     await expect(canvas.getByRole('figure', { name: summary })).toBeVisible();
+  },
+};
+
+/** A refetch from inside the data: `children` stay mounted from `ready` to `fetching` and back, so the control keeps focus and the chart isn't rebuilt. */
+export const Refetching: Story = {
+  render: function Render(args) {
+    const [status, setStatus] = useState<'ready' | 'fetching'>('ready');
+    return (
+      <AsyncContent {...args} state={{ status }}>
+        {args.children}
+        <CardContent sx={{ pt: 0 }}>
+          <Button variant="outlined" onClick={() => setStatus(status === 'ready' ? 'fetching' : 'ready')}>
+            {status === 'ready' ? 'Refresh' : 'Finish refresh'}
+          </Button>
+        </CardContent>
+      </AsyncContent>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    const figure = canvas.getByRole('figure', { name: summary });
+    await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
+    const drawn = figure.querySelector('canvas');
+    const button = canvas.getByRole('button', { name: 'Refresh' });
+
+    await userEvent.click(button);
+    await expect(canvas.getByRole('progressbar', { name: 'Loading energy use' })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Finish refresh' })).toBe(button);
+    await expect(button).toHaveFocus();
+    await expect(figure.querySelector('canvas')).toBe(drawn);
+
+    await userEvent.click(button);
+    await expect(canvas.queryByRole('progressbar', { name: 'Loading energy use' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Refresh' })).toBe(button);
+    await expect(button).toHaveFocus();
+    await expect(canvas.getByRole('figure', { name: summary })).toBe(figure);
+    await expect(figure.querySelector('canvas')).toBe(drawn);
   },
 };
 

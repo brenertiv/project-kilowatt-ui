@@ -90,7 +90,7 @@ import { TruncatedText } from 'src/components/TruncatedText';
 
 ## States
 
-- **Load more.** Lists from the API are cursor paged. Add rows with `useInfiniteQuery`, show the running count in a `role="status"` line, and put a text `Button` under the table, with `loading` while the next page arrives. Keep `AsyncContent`'s state `ready` during that fetch: the button shows the progress, and the `fetching` view would remount the table and lose focus. When the last page arrives the button goes, so move focus to the table.
+- **Load more.** Lists from the API are cursor paged. Add rows with `useInfiniteQuery`, show the running count in a `role="status"` line, and put a text `Button` under the table, with `loading` while the next page arrives. `fromQuery` gives `fetching` during that fetch, and `AsyncContent` keeps the table mounted, so its rows and scroll position stay put. When the last page arrives the button goes, so move focus to the table.
 
 <Canvas of={TableStories.LoadMore} />
 

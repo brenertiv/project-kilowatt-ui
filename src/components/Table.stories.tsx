@@ -15,7 +15,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { fetchList } from 'src/api/queries';
-import { fromQuery, ready } from 'src/api/state';
+import { fromQuery } from 'src/api/state';
 import { AsyncContent } from 'src/components/AsyncContent';
 import { inCard } from 'src/stories/decorators';
 
@@ -357,8 +357,7 @@ function LoadMoreTable() {
     getNextPageParam: ({ next }) => (next ? (new URL(next, window.location.origin).searchParams.get('cursor') ?? undefined) : undefined),
   });
   const rows = query.data?.pages.flatMap(({ results }) => results) ?? [];
-  // The button shows a next page's progress. AsyncContent's `fetching` view would remount the table and lose focus.
-  const state = query.isFetchingNextPage ? ready : fromQuery(query, { isEmpty: ({ pages }) => pages[0].results.length === 0 });
+  const state = fromQuery(query, { isEmpty: ({ pages }) => pages[0].results.length === 0 });
   const loadMore = async () => {
     const { hasNextPage } = await query.fetchNextPage();
     // The button goes with the last page; keep keyboard focus in the table rather than losing it.
@@ -407,11 +406,13 @@ export const LoadMore: Story = {
   render: () => <LoadMoreTable />,
   play: async ({ canvas }) => {
     const button = await canvas.findByRole('button', { name: 'Load More' });
+    const region = canvas.getByRole('region', { name: 'Buildings, scrollable' });
     await expect(canvas.getByRole('status')).toHaveTextContent('Showing 5 buildings');
     await userEvent.click(button);
     await waitFor(() => expect(canvas.getByRole('status')).not.toHaveTextContent('Showing 5 buildings'));
     await waitFor(() => expect(canvas.getAllByRole('row').length).toBeGreaterThan(6));
-    await waitFor(() => expect(canvas.getByRole('region', { name: 'Buildings, scrollable' })).toHaveFocus());
+    await waitFor(() => expect(region).toHaveFocus());
+    await expect(canvas.getByRole('region', { name: 'Buildings, scrollable' })).toBe(region);
   },
 };
 
