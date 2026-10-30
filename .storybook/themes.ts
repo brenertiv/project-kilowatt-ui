@@ -49,7 +49,7 @@ function storybookTheme(scheme: Scheme) {
     colorSecondary: accent[scheme],
 
     // The sidebar and toolbar are a card surface on the page; stories and docs sit on the page itself.
-    appBg: background.level1,
+    appBg: background.level2,
     appContentBg: background.level0,
     appPreviewBg: background.level0,
     appHoverBg: palette.action.hover,
@@ -62,17 +62,17 @@ function storybookTheme(scheme: Scheme) {
     textInverseColor: inverse.palette.text.primary,
     textMutedColor: text.secondary,
 
-    barBg: background.level1,
+    barBg: background.level2,
     barTextColor: text.secondary,
     barHoverColor: accent[scheme],
     barSelectedColor: accent[scheme],
 
-    buttonBg: background.level2,
+    buttonBg: background.level3,
     buttonBorder: frameBorder,
     booleanBg: background.level0,
-    booleanSelectedBg: background.level4,
+    booleanSelectedBg: background.level5,
 
-    inputBg: background.level2,
+    inputBg: background.level3,
     inputBorder: frameBorder,
     inputTextColor: text.primary,
     inputBorderRadius: radius,

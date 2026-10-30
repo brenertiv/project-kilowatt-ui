@@ -43,12 +43,25 @@ Set `height` to what the content takes, its inset included: a 240px chart with i
 ## States
 
 - **Ready.** `children` render as they are.
-- **Loading.** The first load: a rounded `Skeleton` fills the space, announced as a progress bar named by `loadingLabel`.
+- **Loading.** The first load: a rounded `Skeleton` fills the space, announced as a progress bar named by `loadingLabel`. A region that knows what's coming may show a skeleton in the content's shape instead (below).
 - **Fetching.** Newer data is on its way: the current data stays on screen under a thin `LinearProgress`, so the card doesn't blank out when the period changes. `children` stay mounted between `ready` and `fetching`, so focus, scroll position and local state survive a refetch, and a chart isn't rebuilt unless its data changes.
 - **Empty.** The request succeeded with nothing in it: `emptyText` says what has no data. Never draw zeros or an empty axis for missing data.
 - **Idle.** Nothing has been asked yet, because something must be chosen first: `idleText` says what to choose.
 - **Error.** The request failed: an error `Alert` with the state's message, and a Retry button when the state has `onRetry`.
 - **Forbidden.** The API answered 403, because the user's account doesn't include this data: an info `Alert` with the state's message and no Retry, since asking again won't help.
+
+### A skeleton in the content's shape
+
+A loading region may show the shape of what's coming rather than one block: MUI's `Skeleton`, inside the same card frames the content arrives in, so nothing moves when it lands. Show it while the state is `loading`, and pass the rest to `AsyncContent`, which then handles the other states:
+
+- A `text` skeleton inside the `Typography` it stands in for takes that variant's height: `<Typography variant="h2" component="div"><Skeleton width="40%" /></Typography>`.
+- A `rounded` skeleton holds a chart's, map's or image's space, inset 16px as a chart pads itself.
+- A table keeps its header and takes a skeleton row per row it will show, up to a page.
+- The whole shape is decorative: one wrapper with `role="progressbar"`, `aria-busy` and an `aria-label` names the wait. The wrapper replaces `loadingLabel`, which is `AsyncContent`'s own.
+
+These are compositions, not components: each page's shape is its own, so Kilowatt holds the convention and no skeleton pieces.
+
+<Canvas of={AsyncContentStories.LoadingInShape} />
 
 ## Do and don't
 
@@ -59,6 +72,7 @@ Set `height` to what the content takes, its inset included: a 240px chart with i
 - Do pass `onRetry` (from `fromQuery`) for failures a retry can fix.
 - Don't offer Retry for no access; `fromQuery` turns a 403 into `forbidden`, which has none.
 - Do name what's loading in `loadingLabel` ("Loading energy use"), since several cards load at once.
+- Don't put a skeleton in a frame of its own; use the card the content arrives in, so nothing moves when it lands.
 - Don't nest `AsyncContent` inside another for the same data; one state per request.
 
 ## MUI departures

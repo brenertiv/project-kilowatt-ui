@@ -201,11 +201,13 @@ export function SiteMap({ sites, unit, summary, height = 320, onSelect, sized = 
       sx={(theme) => ({
         m: 0,
         position: 'relative',
+        // MapLibre's layers keep to the map (the `map-stacking` departure).
+        isolation: 'isolate',
         height,
         // MapLibre's attribution box, on the card surface in the caption style (the `map-attribution` departure).
         '& .maplibregl-ctrl-attrib': {
           ...theme.typography.caption,
-          bgcolor: 'background.level2',
+          bgcolor: 'background.level3',
           color: 'text.secondary',
         },
         '& .maplibregl-ctrl-attrib a': { color: 'inherit' },

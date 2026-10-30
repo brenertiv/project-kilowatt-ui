@@ -61,7 +61,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** MUI's basic card: content, then text-button actions. It sits on surface level2, a step above the frame, with MUI's elevation 1 shadow. */
+/** MUI's basic card: content, then text-button actions. It sits on surface level3, a step above the frame, with MUI's elevation 1 shadow. */
 export const Basic: Story = {};
 
 /** `variant="outlined"`: a border instead of a shadow, for cards in a dense grid or on a surface that already has depth. */
@@ -269,7 +269,7 @@ export const Metric: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use$/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Energy Use' });
     await waitFor(() => expect(within(dialog).getByText(comparison)).toBeVisible());
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   },
 };

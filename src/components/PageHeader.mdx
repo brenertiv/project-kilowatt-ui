@@ -1,0 +1,76 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as PageHeaderStories from './PageHeader.stories';
+
+<Meta
+  of={PageHeaderStories}
+  summary="Kilowatt's PageHeader, a page's title that shrinks on scroll: the full title scrolls away, and a one-line condensed title pins at the top of the page with the page's filters under it."
+/>
+
+# PageHeader
+
+`PageHeader` is a page's title, set to shrink as the page scrolls. The full header scrolls away with the page, and as it goes a one-line condensed title pins at the top of the page, with the page's own controls at its right and the page's `FilterBar` under it. It's Kilowatt's own component, composed from MUI's `Typography` and `Fade` (`@mui/material`, Material UI v9; MUI documents their props) and `usePinned` from `src/components/pageScroll`.
+
+<Canvas of={PageHeaderStories.WithFilters} />
+
+## When to use
+
+- Use it at the top of a page that scrolls and has filters or controls people need as they read.
+- Use it inside `AppShell`, which says what scrolls the page: `main` from `md`, the window on phones.
+- For a short page that never scrolls, a plain `h1` in `Typography` is enough.
+- For a card's title, use `CardHeader`.
+
+## Usage
+
+```tsx
+import { FilterBar } from 'src/components/FilterBar';
+import { PageHeader } from 'src/components/PageHeader';
+
+<PageHeader
+  title="Energy and Emissions Summary"
+  actions={<Button variant="outlined">Share</Button>}
+  filters={<FilterBar filters={filters} period={period} view={view} />}
+/>
+<Grid container spacing={2}>…</Grid>
+```
+
+Put it first in the page, directly in `main`, with the content after it. The condensed line reads the title; `actions` shows in both places, so keep them to a few controls.
+
+### Building your own
+
+`usePinned(sentinel, overlap)` is the part that travels, for a band that doesn't suit `PageHeader`. Put an empty element where the band starts as `sentinel` and pass the line's element as `overlap`; it answers `true` once the band has reached the line pinned content sits on. Read that line from `usePageScroll`: `top` for the band's sticky position, `inset` for how far it reaches across `main`'s padding. It's an `IntersectionObserver`, so it follows the layout as well as the scroll, and it never feeds back into what it measures.
+
+## States
+
+- **At rest:** the title in `h3`, as the page's `h1`, with `actions` at its right. The filters sit under it.
+- **Pinned:** the title has gone, and the condensed line sits at the top in `subtitle1`, truncated with `TruncatedText`, with `actions` at its right and the filters under it. The band takes the frame's surface and a `divider` under it, so the page passes behind it. It fades in with MUI's `Fade`.
+- **Phones:** the window scrolls, and the band pins under AppShell's sticky header.
+
+## Do and don't
+
+- Do let the title stand alone, with nothing under it (Rules → Content and layout).
+- Don't add a line of description under the title; put it in the content it explains.
+- Do pass the page's `FilterBar` as `filters`, so it pins with the title.
+- Don't put a second sticky row under the header; everything that pins shares one band.
+- Do put `PageHeader` directly in `main`, so the band can reach across its padding.
+- Don't wrap it in a `Card` or a box with its own overflow; a sticky band stops at its nearest scrolling ancestor.
+
+## MUI departures
+
+None of Kilowatt's departures change `Typography` or `Fade` directly.
+
+Theme-wide departures (the palette, the type scale) apply too; see Foundations → MUI departures. Under reduced motion the fade finishes at once (`reduced-motion`).
+
+## Accessibility
+
+- The title is the page's `h1`. The condensed line is a paragraph, not a second heading.
+- While it's hidden, the line's `actions` are hidden with it (MUI's `Fade` sets `visibility: hidden`), so the keyboard meets one set of controls at a time.
+- The line's title truncates with `TruncatedText`, which shows the full title in a tooltip while it's cut off.
+- The band takes pointer events only once it's pinned, so until then clicks reach the header under it.
+
+## Related
+
+- `FilterBar` for the page's filters.
+- `AppShell`, which says what scrolls the page.
+- `TruncatedText` for the condensed line.
+
+<Stories includePrimary={false} />

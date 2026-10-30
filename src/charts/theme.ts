@@ -34,7 +34,7 @@ function solid(color: string, surface: string): string {
  */
 export function chartThemes(root: am5.Root, scheme: ColorScheme, reducedMotion = false): am5.Theme[] {
   const mui = themes[scheme];
-  const card = mui.palette.background.level2;
+  const card = mui.palette.background.level3;
   const theme = am5.Theme.new(root);
   const context: ChartThemeContext = {
     root,
@@ -54,13 +54,13 @@ export function chartThemes(root: am5.Root, scheme: ColorScheme, reducedMotion =
 /** The palette's chart colors for one scheme, as amCharts colors, for a series that takes a slot rather than the next color in order. */
 export function chartColors(scheme: ColorScheme) {
   const { palette } = themes[scheme];
-  const card = palette.background.level2;
+  const card = palette.background.level3;
   const color = (value: string) => am5.color(solid(value, card));
   return {
     series: palette.chart.series.map(color),
     neutral: color(palette.chart.neutral),
     sequential: palette.chart.sequential.map(color),
-    /** The card surface the chart sits on (background.level2), for a mark that shows the surface through it, such as a striped column. */
+    /** The card surface the chart sits on (background.level3), for a mark that shows the surface through it, such as a striped column. */
     surface: color(card),
     /** Range bands (weekends, schedules): action.hover over the card. */
     band: color(palette.action.hover),

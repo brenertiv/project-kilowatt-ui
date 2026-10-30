@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -9,6 +12,7 @@ import { useTheme } from '@mui/material/styles';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, screen, waitFor, within } from 'storybook/test';
 import { AppShell, type AppShellCompany, type AppShellSection } from 'src/components/AppShell';
+import { useContentUp } from 'src/components/contentWidth';
 import { ScopePicker, type Scope, type ScopeGroup, type ScopeProperty } from 'src/components/ScopePicker';
 import { Icon } from 'src/icons';
 import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
@@ -30,8 +34,8 @@ const scopeGroups: ScopeGroup[] = [
 const sections: AppShellSection[] = [
   {
     id: 'workspace',
-    label: 'Workspace',
-    icon: 'table_rows',
+    label: 'Home',
+    icon: 'home',
     panel: {
       actions: (
         <Button variant="outlined" fullWidth startIcon={<Icon name="add" />} sx={{ justifyContent: 'flex-start' }}>
@@ -202,8 +206,8 @@ const meta = {
     const [page, setPage] = useState(firstPage(args.section));
     const [assistantOpen, setAssistantOpen] = useState(args.asideOpen ?? false);
     const [assistantDocked, setAssistantDocked] = useState(args.asideDocked ?? true);
-    // The aside docks or floats only beside the page, at `lg` and up; below it, it's a bottom sheet.
-    const large = useMediaQuery(useTheme().breakpoints.up('lg'));
+    // The aside docks or floats beside the page, at `md` and up; on phones it's a bottom sheet.
+    const wide = useMediaQuery(useTheme().breakpoints.up('md'));
     const [company, setCompany] = useState(args.company);
     const [scope, setScope] = useState<Scope>({ level: 'portfolio' });
     // On phones the header has room for an icon, not the label.
@@ -253,19 +257,19 @@ const meta = {
             {/* Floating, the header is the drag handle. */}
             <Stack
               direction="row"
-              data-drag-handle={large && !assistantDocked ? '' : undefined}
+              data-drag-handle={wide && !assistantDocked ? '' : undefined}
               sx={{ alignItems: 'center', justifyContent: 'space-between', p: 2, pr: 1 }}
             >
               <Typography variant="h5" component="h2">
                 Ask Enertiv
               </Typography>
               <Stack direction="row">
-                {large && (
+                {wide && (
                   <IconButton
                     aria-label={assistantDocked ? 'Undock Ask Enertiv' : 'Dock Ask Enertiv'}
                     onClick={() => setAssistantDocked(!assistantDocked)}
                   >
-                    <Icon name={assistantDocked ? 'picture_in_picture_small' : 'dock_to_right'} />
+                    <Icon name={assistantDocked ? 'zoom_out_map' : 'zoom_in_map'} />
                   </IconButton>
                 )}
                 <IconButton aria-label="Close Ask Enertiv" onClick={() => setAssistantOpen(false)}>
@@ -283,14 +287,16 @@ const meta = {
         asideLabel="Ask Enertiv"
         onAsideClose={() => setAssistantOpen(false)}
       >
-        <Box sx={{ maxWidth: '65ch' }}>
-          <Typography variant="h3" component="h1" gutterBottom>
-            {title}
-          </Typography>
-          <Typography color="text.secondary">
-            Placeholder for the {title} page at {company.name}.
-          </Typography>
-        </Box>
+        {args.children ?? (
+          <Box sx={{ maxWidth: '65ch' }}>
+            <Typography variant="h3" component="h1" gutterBottom>
+              {title}
+            </Typography>
+            <Typography color="text.secondary">
+              Placeholder for the {title} page at {company.name}.
+            </Typography>
+          </Box>
+        )}
       </AppShell>
     );
   },
@@ -373,7 +379,7 @@ export const Missing: Story = {
 export const PanelUndocked: Story = {
   args: { defaultPanelOpen: false },
   play: async ({ canvas, userEvent }) => {
-    await expect(canvas.queryByRole('navigation', { name: 'Workspace' })).toBeNull();
+    await expect(canvas.queryByRole('navigation', { name: 'Home' })).toBeNull();
     await userEvent.hover(canvas.getByRole('button', { name: 'Property Info' }));
     const panel = await canvas.findByRole('navigation', { name: 'Property Info' });
     await userEvent.click(within(panel).getByRole('button', { name: 'Meters' }));
@@ -394,13 +400,13 @@ export const PanelUndockedKeyboard: Story = {
   name: 'Panel undocked, keyboard',
   args: { defaultPanelOpen: false },
   play: async ({ canvas, userEvent }) => {
-    const item = canvas.getByRole('button', { name: 'Workspace' });
+    const item = canvas.getByRole('button', { name: 'Home' });
     item.focus();
     await userEvent.keyboard('{Enter}');
-    const panel = await canvas.findByRole('navigation', { name: 'Workspace' });
+    const panel = await canvas.findByRole('navigation', { name: 'Home' });
     await waitFor(() => expect(panel).toContainElement(document.activeElement as HTMLElement));
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(canvas.queryByRole('navigation', { name: 'Workspace' })).toBeNull());
+    await waitFor(() => expect(canvas.queryByRole('navigation', { name: 'Home' })).toBeNull());
     await expect(item).toHaveFocus();
   },
 };
@@ -418,12 +424,12 @@ export const Search: Story = {
   },
 };
 
-/** Workspace's filter button narrows its items to one type; a dot on the button shows a filter is on. */
+/** Home's filter button narrows its workspaces to one type; a dot on the button shows a filter is on. */
 export const PanelFilter: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Filter by type' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: 'Reports' }));
-    const panel = canvas.getByRole('navigation', { name: 'Workspace' });
+    const panel = canvas.getByRole('navigation', { name: 'Home' });
     await expect(within(panel).getByRole('button', { name: /^Energy and ESG summary/ })).toBeVisible();
     await expect(within(panel).queryByRole('button', { name: /^Reporting readiness/ })).toBeNull();
     await expect(canvas.getByRole('button', { name: 'Filter by type: Reports' })).toBeVisible();
@@ -447,7 +453,7 @@ export const PanelResize: Story = {
   },
 };
 
-/** A side column for the assistant, opened from the header, whose left edge resizes it (280px to 560px). Below the `lg` breakpoint it opens as a bottom sheet. */
+/** A side column for the assistant, opened from the header, whose left edge resizes it (280px to 560px). It sits beside the page from `md`; on phones it opens as a bottom sheet. */
 export const AssistantOpen: Story = {
   args: { asideOpen: true },
   play: async ({ canvas, userEvent }) => {
@@ -461,7 +467,7 @@ export const AssistantOpen: Story = {
   },
 };
 
-/** Undocked at `lg` and up, the assistant floats at the bottom right; its header drags it, and a double-click puts it back in the corner. */
+/** Undocked, at `md` and up, the assistant floats at the bottom right; its header drags it, and a double-click puts it back in the corner. */
 export const AssistantFloating: Story = {
   args: { asideOpen: true, asideDocked: false, onAsidePositionChange: fn() },
   play: async ({ args, canvas, userEvent }) => {
@@ -476,6 +482,37 @@ export const AssistantFloating: Story = {
     await expect(args.onAsidePositionChange).toHaveBeenLastCalledWith(null);
     await userEvent.click(within(aside).getByRole('button', { name: 'Dock Ask Enertiv' }));
     await expect(canvas.getByRole('separator', { name: 'Resize Ask Enertiv' })).toBeVisible();
+  },
+};
+
+/** Three cards across while the page, not the window, is at least `md` wide: what `useContentUp` answers for a page beside docked panels. */
+function CardsByPageWidth() {
+  const across = useContentUp('md');
+  return (
+    <Grid container spacing={2}>
+      {['Energy Use', 'Energy Cost', 'Emissions'].map((title) => (
+        <Grid key={title} size={across ? 4 : 12}>
+          <Card variant="outlined">
+            <CardHeader title={title} />
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
+
+/** A page beside docked panels sizes its columns by the page's width: `useContentUp` reads `main`, so opening the assistant stacks these cards while the window stays the same. */
+export const ColumnsByPageWidth: Story = {
+  args: { children: <CardsByPageWidth /> },
+  play: async ({ canvas, userEvent }) => {
+    const first = canvas.getByText('Energy Use').closest<HTMLElement>('.MuiCard-root')!;
+    const second = canvas.getByText('Energy Cost').closest<HTMLElement>('.MuiCard-root')!;
+    const sameRow = () => first.getBoundingClientRect().top === second.getBoundingClientRect().top;
+    const before = sameRow();
+    await userEvent.click(canvas.getByRole('button', { name: 'Ask Enertiv' }));
+    await waitFor(() => expect(sameRow()).toBe(false));
+    await userEvent.click(canvas.getByRole('button', { name: 'Close Ask Enertiv' }));
+    await waitFor(() => expect(sameRow()).toBe(before));
   },
 };
 
@@ -496,7 +533,7 @@ export const Phone: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
-    await expect(within(menu).getByRole('heading', { name: 'Workspace' })).toBeVisible();
+    await expect(within(menu).getByRole('heading', { name: 'Home' })).toBeVisible();
     await userEvent.click(within(menu).getByRole('button', { name: /^Emissions and energy/ }));
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Emissions and energy');
@@ -521,18 +558,19 @@ export const PhoneSections: Story = {
   },
 };
 
-/** The page title is a menu of the section's pages, so a neighbouring page is one tap away without the menu. */
-export const PhonePageMenu: Story = {
+/** The scope sits in the header, one button between the menu and Ask Enertiv, so it stays in view as the page scrolls; it opens Change scope. */
+export const PhoneScope: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Reporting readiness' }));
-    await userEvent.click(await screen.findByRole('menuitem', { name: /^Decarbonization plan/ }));
-    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
-    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Decarbonization plan');
+    const header = canvas.getByRole('banner');
+    await userEvent.click(within(header).getByRole('button', { name: 'Portfolio All properties. Change scope' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(within(dialog).getByRole('button', { name: /^East Region/ }));
+    await waitFor(() => expect(within(header).getByRole('button', { name: 'Portfolio East Region. Change scope' })).toBeVisible());
   },
 };
 
-/** On a phone, Search sits in the menu's header, beside Close, and opens the same search, filling the screen. The top bar keeps the menu button and the page's title. */
+/** On a phone, Search sits in the menu's header, beside Close, and opens the same search, filling the screen. The top bar keeps the menu button and the scope. */
 export const PhoneSearch: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {

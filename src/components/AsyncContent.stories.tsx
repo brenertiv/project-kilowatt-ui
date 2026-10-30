@@ -1,5 +1,8 @@
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CardContent from '@mui/material/CardContent';
+import Skeleton from '@mui/material/Skeleton';
+import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
@@ -41,6 +44,25 @@ export const Ready: Story = {
 /** First load, nothing to show yet: a skeleton holds the chart's space, named for screen readers by `loadingLabel`. */
 export const Loading: Story = {
   args: { state: { status: 'loading' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('progressbar', { name: 'Loading energy use' })).toBeVisible();
+  },
+};
+
+/** A region that knows what's coming shows its shape: `Skeleton` inside the card the content arrives in, a `text` one in the figure's `Typography` and a `rounded` one in the chart's space. */
+export const LoadingInShape: Story = {
+  render: () => (
+    <Box role="progressbar" aria-label="Loading energy use" aria-busy>
+      <CardContent sx={{ pt: 0 }}>
+        <Typography variant="h2" component="div">
+          <Skeleton width="40%" />
+        </Typography>
+      </CardContent>
+      <Box sx={{ px: 2, pb: 2 }}>
+        <Skeleton variant="rounded" height={240} />
+      </Box>
+    </Box>
+  ),
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('progressbar', { name: 'Loading energy use' })).toBeVisible();
   },

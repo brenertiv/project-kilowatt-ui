@@ -40,10 +40,10 @@ export type Departure = {
   components?: string[];
 };
 
-/** Surfaces by elevation, per scheme: the ramp step each level uses. level0 is the page (darkest), level4 the highest (lightest). */
+/** Surfaces, per scheme: the ramp step each level uses. level0 is the background (darkest), level1 the docked panels, level2 the frame and page, and level5 the highest (lightest). */
 export const surfaceSteps = {
-  light: { level0: 300, level1: 200, level2: 100, level3: 50, level4: 50 },
-  dark: { level0: 950, level1: 900, level2: 700, level3: 600, level4: 600 },
+  light: { level0: 300, level1: 200, level2: 100, level3: 50, level4: 50, level5: 50 },
+  dark: { level0: 950, level1: 900, level2: 800, level3: 700, level4: 600, level5: 600 },
 } as const satisfies Record<ColorScheme, Record<string, number>>;
 
 /** Surface borders by contrast, per scheme: level0 the faintest, level3 the strongest. `divider` is level1. Control outlines are separate (`control-outlines`). */
@@ -59,15 +59,15 @@ function levels<T extends Record<string, number>>(scheme: ColorScheme, steps: T)
   return Object.fromEntries(Object.entries(steps).map(([level, step]) => [level, ramp[step]])) as Record<keyof T, string>;
 }
 
-/** The surface level each Paper elevation sits on: flat surfaces, app bars and snackbars, menus, drawers and dialogs. Cards sit on level2 at any elevation (`paper-surface-levels`). */
+/** The surface level each Paper elevation sits on: flat surfaces, app bars and snackbars, menus, drawers and dialogs. Cards sit on level3 at any elevation (`paper-surface-levels`). */
 export const elevationSurfaces: { elevations: [number, number]; level: keyof typeof surfaceSteps.light; uses: string }[] = [
-  { elevations: [0, 1], level: 'level1', uses: 'Paper, Accordion' },
-  { elevations: [2, 6], level: 'level2', uses: 'AppBar, Snackbar, and every Card' },
-  { elevations: [7, 12], level: 'level3', uses: 'Menu, Popover (light; level1 in dark)' },
-  { elevations: [13, 24], level: 'level4', uses: 'Drawer, Dialog (light; level1 in dark)' },
+  { elevations: [0, 1], level: 'level2', uses: 'The frame and page, flat Paper, Accordion' },
+  { elevations: [2, 6], level: 'level3', uses: 'AppBar, Snackbar, and every Card' },
+  { elevations: [7, 12], level: 'level4', uses: 'Menu, Popover (light; level2 in dark)' },
+  { elevations: [13, 24], level: 'level5', uses: 'Drawer, Dialog (light; level2 in dark)' },
 ];
 
-/** The overlays that sit on level1 with the divider as their edge in the dark scheme, by their MUI component and Paper slot (`paper-surface-levels`). */
+/** The overlays that sit on level2 with the divider as their edge in the dark scheme, by their MUI component and Paper slot (`paper-surface-levels`). */
 const darkOverlays = ['MuiDialog', 'MuiDrawer', 'MuiMenu', 'MuiPopover'] as const;
 
 type Intent = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
@@ -214,11 +214,11 @@ export const departures: Departure[] = [
     id: 'surfaces-and-borders',
     area: 'Palette',
     title: 'Surface and border levels',
-    why: "Five surfaces by elevation and four borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider, so each raised surface steps lighter in both schemes and a separator can be as faint or as strong as its job needs. The top two levels share a step in both schemes: light runs out of steps above white, and dark stops at navy 600 because a lighter step (navy 500) would drop the secondary color and border level3 below their contrast. `background.default` is level0 and `background.paper` level1, so MUI's components pick them up; `divider` is border level1.",
+    why: "Six surfaces and four borders by contrast, from the slate (light) and navy (dark) ramps, in place of MUI's white or #121212 surfaces and single divider, so each raised surface steps lighter in both schemes and a separator can be as faint or as strong as its job needs. level0 is the background and rail, level1 the docked panels, a step darker than the frame they sit in, and level2 the frame and page. The top levels share a step: light runs out of steps above white, so cards, menus and dialogs are all white and stand apart by their shadows, and dark's top two stop at navy 600 because a lighter step (navy 500) would drop the secondary color and border level3 below their contrast. `background.default` is level0 and `background.paper` level2, so MUI's components pick them up; `divider` is border level1.",
     options: (scheme) => {
       const surfaces = levels(scheme, surfaceSteps[scheme]);
       const border = levels(scheme, borderSteps[scheme]);
-      return { palette: { background: { ...surfaces, default: surfaces.level0, paper: surfaces.level1 }, border, divider: border.level1 } };
+      return { palette: { background: { ...surfaces, default: surfaces.level0, paper: surfaces.level2 }, border, divider: border.level1 } };
     },
   },
   {
@@ -341,8 +341,8 @@ export const departures: Departure[] = [
     area: 'Components',
     components: ['Table'],
     title: 'Sticky table headers sit on the card surface',
-    why: "MUI paints a sticky header in `background.default`, the page color, which suits a table sitting on the page. Kilowatt's tables sit in cards, on `background.level2`, so the stock header reads as a band of page color across the card. Kilowatt paints it `background.level2`; rows still pass behind it unseen. A sticky table on any other surface, such as a dialog, sets the header cells' background to that surface.",
-    options: () => ({ components: { MuiTableCell: { styleOverrides: { stickyHeader: { backgroundColor: 'var(--mui-palette-background-level2)' } } } } }),
+    why: "MUI paints a sticky header in `background.default`, the page color, which suits a table sitting on the page. Kilowatt's tables sit in cards, on `background.level3`, so the stock header reads as a band of page color across the card. Kilowatt paints it `background.level3`; rows still pass behind it unseen. A sticky table on any other surface, such as a dialog, sets the header cells' background to that surface.",
+    options: () => ({ components: { MuiTableCell: { styleOverrides: { stickyHeader: { backgroundColor: 'var(--mui-palette-background-level3)' } } } } }),
   },
   {
     id: 'table-last-row',
@@ -539,7 +539,7 @@ export const departures: Departure[] = [
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
     title: 'Paper takes its surface from its elevation',
-    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level1, app bars on level2, menus on level3, drawers and dialogs on level4. Cards, outlined or raised, sit on level2, a step above the level1 frame they're laid out on, so a card reads as a surface on the page rather than only its border. In the dark scheme the overlays (menus, popovers, drawers and dialogs) sit on level1 instead, with the `divider` as their edge: level3 and level4 read pale against the dark page, and level1 with the divider is the frame's own surface and edge, so an overlay matches the frame it opens over. Level1 rather than level2 because the dark divider is close to level2's step, so a bordered level2 overlay would show almost no edge. The light scheme keeps the elevation's level and MUI's shadows.",
+    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level2, app bars on level3, menus on level4, drawers and dialogs on level5. Cards, outlined or raised, sit on level3, a step above the level2 frame they're laid out on, so a card reads as a surface on the page rather than only its border. In the dark scheme the overlays (menus, popovers, drawers and dialogs) sit on level2 instead, with the `divider` as their edge: level4 and level5 read pale against the dark page, and level2 with the divider is the frame's own surface and edge, so an overlay matches the frame it opens over. Level2 rather than level3 because the dark divider is close to level3's step, so a bordered level3 overlay would show almost no edge. The light scheme keeps the elevation's level and MUI's shadows. A snackbar's text takes `text.primary`: MUI colors it for its own inverted surface, which would be white on white on these levels.",
     options: () => ({
       components: {
         MuiPaper: {
@@ -558,7 +558,9 @@ export const departures: Departure[] = [
           },
         },
         // Two classes, to outrank the elevation rules above, which a raised card also matches.
-        MuiCard: { styleOverrides: { root: { '&.MuiPaper-root': { backgroundColor: 'var(--mui-palette-background-level2)' } } } },
+        MuiCard: { styleOverrides: { root: { '&.MuiPaper-root': { backgroundColor: 'var(--mui-palette-background-level3)' } } } },
+        // Two classes, to outrank MUI's own rule.
+        MuiSnackbarContent: { styleOverrides: { root: { '&.MuiPaper-root': { color: 'var(--mui-palette-text-primary)' } } } },
         // The dark scheme's selector, as `theme.applyStyles('dark')` writes it for the `class` selector, with the paper's
         // class three times to outrank the elevation rules (two classes) without `!important`.
         ...Object.fromEntries(
@@ -568,7 +570,7 @@ export const departures: Departure[] = [
               styleOverrides: {
                 paper: {
                   '*:where(.dark) &&&': {
-                    backgroundColor: 'var(--mui-palette-background-level1)',
+                    backgroundColor: 'var(--mui-palette-background-level2)',
                     border: '1px solid var(--mui-palette-divider)',
                   },
                 },
@@ -584,11 +586,11 @@ export const departures: Departure[] = [
     components: ['Paper'],
     area: 'Components',
     title: 'A soft shadow for raised composers',
-    why: "MUI's shadows (`theme.shadows`, Paper's `elevation`) are tight and dark, tuned for surfaces stacking on the page; Kilowatt keeps them as its elevation scale. A composer that floats on the frame (a message box that stays above the content it writes into) needs a wider, fainter lift that doesn't read as a menu. Kilowatt adds one Paper variant, `variant=\"soft\"`: the level1 surface with a wide, low-strength shadow, stronger in the dark scheme so it still reads on navy. It's the only shadow outside `theme.shadows`; don't build other shadows in `sx`.",
+    why: "MUI's shadows (`theme.shadows`, Paper's `elevation`) are tight and dark, tuned for surfaces stacking on the page; Kilowatt keeps them as its elevation scale. A composer that floats on the frame (a message box that stays above the content it writes into) needs a wider, fainter lift that doesn't read as a menu. Kilowatt adds one Paper variant, `variant=\"soft\"`: the level2 surface with a wide, low-strength shadow, stronger in the dark scheme so it still reads on navy. It's the only shadow outside `theme.shadows`; don't build other shadows in `sx`.",
     convention: {
       muiDefault: 'Paper takes `elevation` (a shadow from `theme.shadows`) or `variant="outlined"`',
-      kilowatt: 'A raised composer is `<Paper variant="soft">`: level1 with the soft shadow. Everything else keeps `elevation`',
-      where: 'Composers that float over the frame, such as the assistant’s message box',
+      kilowatt: 'A raised composer is `<Paper variant="soft">`: level2 with the soft shadow. Everything else keeps `elevation`',
+      where: 'Composers that float over the frame, above the content they write into',
     },
     options: () => {
       // The shadow's color is the palette's black at a strength per scheme, so no raw color enters the override.
@@ -678,6 +680,17 @@ export const departures: Departure[] = [
         },
       };
     },
+  },
+  {
+    id: 'brand-type',
+    area: 'Typography',
+    title: 'A serif for branded moments',
+    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Roboto Serif at regular (400, like every style, `regular-weight`), 40px with a line height of 1.2, and 32px below `sm`, where 40px would break a short heading over four lines. It's for branded moments only, such as a first login's headings: a screen asks for `variant=\"brand\"`, sets the element with `component`, and no component takes it by default. Everything else stays Roboto.",
+    options: () => ({
+      typography: {
+        brand: { fontFamily: '"Roboto Serif", serif', fontWeight: 400, fontSize: '2rem', lineHeight: 1.2, '@media (min-width:600px)': { fontSize: '2.5rem' } },
+      },
+    }),
   },
   {
     id: 'text-wrap',

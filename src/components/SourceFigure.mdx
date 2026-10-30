@@ -3,19 +3,19 @@ import * as SourceFigureStories from './SourceFigure.stories';
 
 <Meta
   of={SourceFigureStories}
-  summary="Kilowatt's SourceFigure, ExplainedFigure and PlainFigure for a card's headline number: a figure that needs explaining is a button that opens a dialog with its source or note, and one that doesn't is plain text in the same type."
+  summary="Kilowatt's SourceFigure, ExplainedFigure, FigureExplanation and PlainFigure for a card's headline number: a figure that needs explaining is a button that opens a dialog with its description, calculation and sources, and one that doesn't is plain text in the same type."
 />
 
 # SourceFigure
 
-`SourceFigure` sets a card's headline number and lets people see where it comes from. The number is a button, with a faint underline under the number and the hover tint, and it opens MUI's `Dialog` (`@mui/material`, Material UI v9), titled with the card's title, that lists the figure's source, period, calculation, scope, coverage and last update. `ExplainedFigure` is the same button and dialog with any explanation inside, and `PlainFigure` sets a number with nothing to explain in the same type, as text. They're Kilowatt's own components, built from MUI's `ButtonBase`, `Dialog`, `Tooltip` and `Typography`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/) and [Dialog API](https://mui.com/material-ui/api/dialog/).
+`SourceFigure` sets a card's headline number and lets people see where it comes from. The number is a button, with a faint underline under the number and the hover tint, and it opens MUI's `Dialog` (`@mui/material`, Material UI v9), titled with the card's title, that reads the same way for every figure: a description, then Calculation and Sources as outlined, collapsed accordions, each left out when empty. `ExplainedFigure` is the same button and dialog with any explanation inside, `FigureExplanation` is that description and those accordions for a figure that isn't a `SourceFigure`, and `PlainFigure` sets a number with nothing to explain in the same type, as text. They're Kilowatt's own components, built from MUI's `Accordion`, `ButtonBase`, `Dialog`, `Tooltip` and `Typography`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/), [Dialog API](https://mui.com/material-ui/api/dialog/) and [Accordion API](https://mui.com/material-ui/api/accordion/).
 
 <Canvas of={SourceFigureStories.WithSource} />
 
 ## When to use
 
 - Use `SourceFigure` for a headline number people may need to trust or check: an intensity, a total, a score, anything worked out from data.
-- Use `ExplainedFigure` for a number that needs a line of explanation that isn't its source (what it counts, how sure it is), in place of a caption under it.
+- Use `ExplainedFigure` with a `FigureExplanation` for a number that needs explaining but has no full source (what it counts, how sure it is), in place of a caption under it.
 - Use `PlainFigure` for a headline number with nothing to explain, so every figure on a page reads in the same type.
 - For a number inside a sentence or a table, use plain text with tabular numerals; these are for a card's one headline figure.
 - For the chart under a metric, use a chart in the same card, below the figure (Card → Metric).
@@ -53,28 +53,33 @@ const intensity = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, max
 
 Pass the card's title as `title`: it titles the dialog and names the button. Format `value` with `Intl.NumberFormat` before passing it, and pass the unit on its own. The dialog's lines are each one short sentence; format `updated` with `Intl.DateTimeFormat`.
 
-For a number that needs a note but no source, put the note in an `ExplainedFigure`:
+For a number that isn't a `SourceFigure`, put a `FigureExplanation` in an `ExplainedFigure`. Whatever is empty stays out:
 
 ```tsx
-import Typography from '@mui/material/Typography';
-import { ExplainedFigure } from 'src/components/SourceFigure';
+import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure';
 
 <ExplainedFigure title="Properties Reporting" value="42">
-  <Typography variant="body2">Properties with a full year of bills or meter data.</Typography>
+  <FigureExplanation
+    description="Properties with a full year of bills or meter data."
+    calculation="Properties with twelve months of data, out of the 45 in scope."
+    sources={[{ label: 'Utility bills', href: '/sources/bills' }]}
+  />
 </ExplainedFigure>
 ```
 
 ## Variants
 
 - **`PlainFigure`:** the number in `h2` with tabular numerals and the unit after it in `body1`, `text.secondary`. Not a control.
-- **`SourceFigure`:** the same type, as a button. Its dialog has the optional `note` first, one line per entry, then the source as a description list (`dl`).
-- **With View Sources:** pass `onViewSources`, and the dialog adds View Sources beside Done, for a page that has a sources view. It closes the dialog first.
-- **`ExplainedFigure`:** the same button and dialog with your own content in `children`.
+- **`SourceFigure`:** the same type, as a button. Its dialog has the optional `note` as its description, one line per entry, then Calculation (How, Period, Scope and Coverage, as a description list, `dl`) and Sources (`source.source` with its last update).
+- **With source links:** pass `sources` to list where the data comes from as links, each with an optional line under it. The last update moves under Calculation.
+- **With View Sources:** pass `onViewSources`, and the dialog gets a View Sources action, for a page that has a sources view. It closes the dialog first. Without it the dialog has no actions: the close button and Escape close it.
+- **`ExplainedFigure`:** the same button and dialog with your own content in `children`, usually a `FigureExplanation`.
+- **`FigureExplanation`:** `description`, `calculation` and `sources`, each left out when empty. `calculation` is a sentence or your own content.
 - **A long value:** a value longer than 14 characters (a phrase such as “4 on track, 2 at risk”) steps down to `h4`, so it still fits on one or two lines.
 
 ## Do and don't
 
-- Do put what would have been a caption under the number into `note`, or into an `ExplainedFigure`, so the card shows one figure and nothing under it.
+- Do put what would have been a caption under the number into `note`, or into a `FigureExplanation`, so the card shows one figure and nothing under it.
 - Don't add a line of explanation under a source figure; the dialog is where it goes.
 - Do use `PlainFigure` for a number with nothing to explain, so it reads the same as the figures beside it.
 - Don't make a number a control when the dialog would have nothing to say; a button with nothing behind it costs a tab stop.
@@ -83,11 +88,12 @@ import { ExplainedFigure } from 'src/components/SourceFigure';
 - Do format the value and dates with `Intl`, and write the source lines with real punctuation (“ ” ’ – —).
 - Don't style the figure with `sx` or a different variant; the h2-to-h4 step is the one size change.
 - Do keep the dialog's lines to one short sentence each, about the figure on screen.
+- Don't write your own dialog content for a figure with a calculation or sources; `FigureExplanation` keeps every figure's dialog reading the same way.
 
 ## MUI departures
 
 - `focus-ring`: the figure is a `ButtonBase`, so keyboard focus is the theme's 2px ring in `palette.control.focus`, 2px outside the figure's rounded hover area. The component adds no focus style of its own.
-- `paper-surface-levels`: the dialog sits on its elevation's surface level, as every `Dialog` does, in place of MUI's white light surface and its dark-scheme overlay.
+- `paper-surface-levels`: the dialog sits on its elevation's surface level, as every `Dialog` does, in place of MUI's white light surface and its dark-scheme overlay. Calculation and Sources take the flat `Accordion` surface in their outlined variant.
 
 The figure's underline (`border.level2`), its hover tint (`action.hover`) and its type (`h2` and `h4` on the compact heading scale, `type-scale`) are existing theme roles. Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
 
@@ -96,7 +102,7 @@ The figure's underline (`border.level2`), its hover tint (`action.hover`) and it
 - The figure is a `button` (`aria-haspopup="dialog"`) named for its value and the card: “64.2 kBtu/ft², view source for Energy Use Intensity”. The value leads the name, so people using speech input can say what they see. A tooltip repeats “View source: {title}” on hover and focus.
 - The underline and the hover tint are visual cues only; the button role and its name tell screen readers the number opens something.
 - MUI's `Dialog` moves focus into the dialog, traps it there, closes on Escape and returns focus to the figure. The dialog is labelled by its title (`aria-labelledby`), and the close button is named Close.
-- The source is a description list, so screen readers read each label with its line.
+- Calculation and Sources are MUI's `Accordion`s: each summary is a button that says whether it's expanded, inside a heading. Calculation's lines are a description list, so screen readers read each label with its line, and Sources is a list named Sources.
 - The hover tint fades in over the theme's shortest duration, which CssBaseline stills under reduced motion (`reduced-motion`).
 
 ## Related

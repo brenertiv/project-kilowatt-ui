@@ -70,15 +70,15 @@ describe('createKilowattTheme', () => {
     const theme = createKilowattTheme();
     // MUI's Theme type leaves out the per-scheme palettes it carries.
     const { light, dark } = (theme as unknown as { colorSchemes: Record<ColorScheme, { palette: typeof theme.palette }> }).colorSchemes;
-    expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level4]).toEqual([slate[300], slate[200], slate[50]]);
-    expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level4]).toEqual([navy[950], navy[900], navy[600]]);
+    expect([light.palette.background.default, light.palette.background.paper, light.palette.background.level5]).toEqual([slate[300], slate[100], slate[50]]);
+    expect([dark.palette.background.default, dark.palette.background.paper, dark.palette.background.level5]).toEqual([navy[950], navy[800], navy[600]]);
     expect(light.palette.divider).toBe(light.palette.border.level1);
     expect(dark.palette.border).toEqual({ level0: navy[600], level1: navy[500], level2: navy[400], level3: navy[200] });
   });
 
   it.each(schemes)('gives the %s scheme intents that pass 4.5:1 on every surface, with contrast text that passes on them', (scheme) => {
     const { palette } = createSchemeTheme(scheme);
-    const surfaces = (['level0', 'level1', 'level2', 'level3', 'level4'] as const).map((level) => palette.background[level]);
+    const surfaces = (['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const).map((level) => palette.background[level]);
     for (const intent of ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const) {
       const { main, contrastText } = palette[intent];
       for (const surface of surfaces) expect(getContrastRatio(main, surface), `${intent}.main on ${surface}`).toBeGreaterThanOrEqual(text);
@@ -95,7 +95,7 @@ describe('createKilowattTheme', () => {
       const alpha = fg[3] ?? 1;
       return `rgb(${[0, 1, 2].map((i) => Math.round(fg[i] * alpha + bg[i] * (1 - alpha))).join(', ')})`;
     };
-    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const) {
       const surface = palette.background[level];
       for (const icon of [palette.action.active, palette.text.secondary]) {
         expect(getContrastRatio(over(icon, surface), surface), `${icon} on ${level}`).toBeGreaterThanOrEqual(graphic);
@@ -107,7 +107,7 @@ describe('createKilowattTheme', () => {
     const { palette } = createSchemeTheme(scheme);
     const { values: fg } = decomposeColor(palette.text.secondary);
     const alpha = fg[3] ?? 1;
-    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const) {
       const surface = palette.background[level];
       const { values: bg } = decomposeColor(surface);
       const blended = `rgb(${[0, 1, 2].map((i) => Math.round(fg[i] * alpha + bg[i] * (1 - alpha))).join(', ')})`;
@@ -127,7 +127,7 @@ describe('createKilowattTheme', () => {
       filled: FilledInput.bg,
       'filled hover': FilledInput.hoverBg,
     };
-    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const) {
       const surface = palette.background[level];
       for (const [name, tint] of Object.entries(tints)) {
         const { values: fg } = decomposeColor(tint);
@@ -141,7 +141,7 @@ describe('createKilowattTheme', () => {
 
   it.each(schemes)('gives the %s-scheme focus color 4.5:1 on every surface, as a focused input label', (scheme) => {
     const { palette } = createSchemeTheme(scheme);
-    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const) {
       expect(getContrastRatio(palette.control.focus, palette.background[level]), `control.focus on ${level}`).toBeGreaterThanOrEqual(text);
     }
   });
@@ -158,15 +158,15 @@ describe('createKilowattTheme', () => {
   it('draws table rows in `divider`, sticks headers to the card surface, and leaves the last row unlined', () => {
     const { MuiTable, MuiTableCell } = createKilowattTheme().components ?? {};
     expect(MuiTableCell?.styleOverrides?.root).toMatchObject({ borderBottomColor: 'var(--mui-palette-divider)' });
-    expect(MuiTableCell?.styleOverrides?.stickyHeader).toMatchObject({ backgroundColor: 'var(--mui-palette-background-level2)' });
+    expect(MuiTableCell?.styleOverrides?.stickyHeader).toMatchObject({ backgroundColor: 'var(--mui-palette-background-level3)' });
     expect(Object.values(MuiTable?.styleOverrides?.root as Record<string, unknown>)).toContainEqual({ borderBottom: 0 });
   });
 
   it('puts each Paper elevation on its surface level', () => {
     const root = createKilowattTheme().components?.MuiPaper?.styleOverrides?.root as Record<string, { backgroundColor: string }>;
-    expect(root['&.MuiPaper-elevation1'].backgroundColor).toBe('var(--mui-palette-background-level1)');
-    expect(root['&.MuiPaper-elevation8'].backgroundColor).toBe('var(--mui-palette-background-level3)');
-    expect(root['&.MuiPaper-elevation24'].backgroundColor).toBe('var(--mui-palette-background-level4)');
+    expect(root['&.MuiPaper-elevation1'].backgroundColor).toBe('var(--mui-palette-background-level2)');
+    expect(root['&.MuiPaper-elevation8'].backgroundColor).toBe('var(--mui-palette-background-level4)');
+    expect(root['&.MuiPaper-elevation24'].backgroundColor).toBe('var(--mui-palette-background-level5)');
   });
 });
 
@@ -204,7 +204,7 @@ describe('chart palette', () => {
     const { palette } = createSchemeTheme(scheme);
     const { series, neutral } = palette.chart;
     expect(series).toHaveLength(6);
-    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4'] as const) {
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const) {
       for (const color of [...series, neutral]) {
         expect(getContrastRatio(color, palette.background[level]), `${color} on ${level}`).toBeGreaterThanOrEqual(graphic);
       }
@@ -221,7 +221,7 @@ describe('chart palette', () => {
 
   it.each(schemes)('runs the %s-scheme sequential ramp from the surface outward, ending at 3:1', (scheme) => {
     const { palette } = createSchemeTheme(scheme);
-    const surface = palette.background.level1;
+    const surface = palette.background.level2;
     const contrasts = palette.chart.sequential.map((color) => getContrastRatio(color, surface));
     contrasts.slice(1).forEach((contrast, i) => expect(contrast, `step ${i + 1}`).toBeGreaterThan(contrasts[i]));
     expect(contrasts.at(-1)).toBeGreaterThanOrEqual(graphic);

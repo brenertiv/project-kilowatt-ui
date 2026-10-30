@@ -85,7 +85,7 @@ A metric card leads with one headline number. Set it with `SourceFigure`, `Expla
 - **The figure is `h2` with tabular numerals.** The unit follows it in `body1` and `text.secondary`, and the value is formatted with `Intl.NumberFormat`. A value that's a phrase rather than a number (longer than 14 characters, such as “4 on track, 2 at risk”) steps down to `h4`, so it still fits.
 - **The figure sits at the card's foot, with a 160px floor.** Give the card `minHeight: (theme) => theme.spacing(20)` (20 spacing units) as a flex column, and its `CardContent` `mt: 'auto'`, so single-figure cards in a row hold one height and their figures line up along the bottom.
 - **The metric sits above any chart.** When a card has both, the figure comes first, in `CardContent`, and the chart follows, straight in the card.
-- **No caption under the figure.** A figure that needs clarifying opens its explanation instead: `SourceFigure` opens a dialog with where it comes from, with what would have been the caption as its `note`, and `ExplainedFigure` opens one with a note alone. A figure with nothing to explain is a `PlainFigure`, not a control.
+- **No caption under the figure.** A figure that needs clarifying opens its explanation instead: `SourceFigure` opens a dialog with its calculation and sources, with what would have been the caption as its `note`, and `ExplainedFigure` opens one with a `FigureExplanation`. A figure with nothing to explain is a `PlainFigure`, not a control.
 
 ```tsx
 import { SourceFigure } from 'src/components/SourceFigure';
@@ -127,7 +127,7 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 
 ## Variants
 
-- `variant="elevation"` (MUI's default): the card sits on surface level2 with MUI's elevation 1 shadow. Use it for cards on the page background.
+- `variant="elevation"` (MUI's default): the card sits on surface level3 with MUI's elevation 1 shadow. Use it for cards on the page background.
 - `variant="outlined"`: a border (`divider`) instead of a shadow. Use it for cards in a dense grid, on a surface that already has depth, and for every chart card.
 
 `CardHeader` sets a title, a `subheader` and an `action` (an icon button or menu) in one row. `CardContent` pads the content, and `CardActions` lays out text buttons along the bottom. `CardActionArea` turns the whole card into one button, for a card that only opens its subject.
@@ -165,7 +165,7 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 - `card-header-layout`: a `CardHeader` action is pulled out 8px at the top, right and bottom instead of MUI's 4px and 8px, so its icon sits level with a one-line title and 16px from the right edge; contents align to the top instead of the center, so a title keeps its place with or without a subtitle; titles and subtitles stay on one line and truncate.
 - `card-content-padding`: `CardContent` is 16px on every side instead of 24px at the bottom of the last one.
 - `card-radius`: cards round at twice the theme radius, 16px instead of MUI's one radius, because their header action and `CardActions` buttons sit 8px from the corners.
-- `paper-surface-levels`: a card, outlined or raised, sits on surface `background.level2` in both schemes, a step above the level1 frame it's laid out on, in place of MUI's white light surface and its dark-scheme white overlay.
+- `paper-surface-levels`: a card, outlined or raised, sits on surface `background.level3` in both schemes, a step above the level2 frame it's laid out on, in place of MUI's white light surface and its dark-scheme white overlay.
 - `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the control, instead of MUI's background tint alone. A clickable card's `CardActionArea` shows it.
 
 How the charts inside cards differ from stock amCharts (an outlined card, the 16px inset, units above axes) is listed on each chart's page and in Foundations → amCharts departures. Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text and intent colors) apply too; see Foundations → MUI departures.

@@ -1,0 +1,119 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as FilterBarStories from './FilterBar.stories';
+
+<Meta
+  of={FilterBarStories}
+  summary="Kilowatt's FilterBar, the one filters bar every page uses: filters on the left, the period on the right, the view to its right, folding into one Filters field by the page's width."
+/>
+
+# FilterBar
+
+`FilterBar` is the one bar for a page's filters: filters on the left, the period on the right, and the view to the right of the period. It's Kilowatt's own component, composed from MUI's `TextField`, `IconButton`, `Menu`, `Drawer` and `Tooltip` (`@mui/material`, Material UI v9; MUI documents their props) and Kilowatt's `PeriodPicker`. Where the controls no longer fit on one row it folds rather than wraps, by the page's width, not the window's.
+
+<Canvas of={FilterBarStories.Full} />
+
+## When to use
+
+- Use it for every filter set on a page, so filters read the same way everywhere.
+- Use it for a page's period and its view (Cards, Table) as well, even with no filters beside them.
+- For narrowing the scope itself, use `ScopePicker`; a filter narrows what a page shows and never sets the scope.
+- For switching between a page's sub-lists, use `Tabs`, not a filter.
+- For a setting of a chart or a card, such as a unit, keep the control with the chart.
+
+## Usage
+
+```tsx
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import { FilterBar, filterWidth } from 'src/components/FilterBar';
+
+<FilterBar
+  filters={{
+    count: 1,
+    set: type === 'all' ? 0 : 1,
+    render: (fullWidth) => (
+      <TextField
+        select
+        size="small"
+        label="Property Type"
+        value={type}
+        onChange={(event) => setType(event.target.value)}
+        fullWidth={fullWidth}
+        sx={fullWidth ? undefined : { minWidth: filterWidth }}
+      >
+        <MenuItem value="all">All</MenuItem>
+        <MenuItem value="office">Office</MenuItem>
+      </TextField>
+    ),
+    onClear: () => setType('all'),
+  }}
+  period={{ presets, value: period, onChange: setPeriod, firstMonth, lastMonth }}
+  view={{
+    value: view,
+    options: [
+      { value: 'cards', label: 'Cards', icon: 'grid_view' },
+      { value: 'table', label: 'Table', icon: 'table_rows' },
+    ],
+    onChange: setView,
+  }}
+/>
+```
+
+Every part is optional. `count` is how many filter controls `render` draws, which sets the width the bar needs; `set` is how many differ from their default. Draw the filters at the small size, and give each `filterWidth` as its `minWidth` on the bar's row, or take the full width in the sheet. The bar sets 24px under itself, and `PageHeader` takes it as `filters`, so it pins with the page's title.
+
+Inside `AppShell` the bar reads the page's width through `useContentUp` (AppShell → Columns by the page's width). Outside it, it reads the window's width when it renders, and doesn't follow a resize.
+
+## Variants
+
+- **Full:** filters, period and view on one row. The filters take the free width, so the period and the view stay at the right.
+- **Filters only:** they stay on the left.
+- **Period and view:** they stay on the right. With no view, the period sits at the right.
+- **View:** an icon button showing the chosen view's icon, with the tooltip and name “View: Cards”, which opens a menu of every view, each with its icon and the chosen one selected. A menu rather than a toggle, so there can be more than two.
+
+## States
+
+- **One row:** while every control fits: each filter at 220px or more, the 260px period, the view's 40px button and the 16px gaps.
+- **Folded:** below that, the bar shows the period, one Filters field saying how many are set (“None”, “2 set”) and the view. The field opens the filters in a bottom sheet with Clear All and Done. Changes apply as they're made; Done only closes the sheet.
+- **Period on its own row:** below about 412px of page, the period takes the row at full width, and the Filters field grows into the row under it.
+
+## Do and don't
+
+- Do set every control in the bar at the small size, together (Rules → Component size).
+- Don't mix sizes in the bar; it stays one height, 40px.
+- Do keep one bar per page, above what it filters.
+- Don't build a second row of filters; past what fits, the bar folds into the Filters field.
+- Do pass `count` for every control `render` draws, so the bar folds before anything is squeezed.
+- Don't wrap the bar in your own flex row; it lays out its own parts.
+- Do show the view as this menu, so a third view has somewhere to go.
+- Don't use a `ToggleButtonGroup` for the view; it can't take a third without growing.
+
+## MUI departures
+
+- `button-text-case`: Clear All and Done are written in Title Case.
+- `button-text-weight`: their labels are at the regular weight.
+- `control-outlines`: the fields are outlined in the control color.
+- `flat-buttons`: Done is contained and flat.
+- `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the control, instead of MUI's background tint alone.
+- `icon-button-radius`: the view button and the sheet's close button take the theme radius.
+- `icons`: every icon is a Material Symbol through `Icon`.
+- `medium-size`: the fields are small, the one pattern that takes it (Rules → Component size). The view's icon button stays at medium, which is the same 40px.
+- `paper-surface-levels`: the menu and the sheet take their surface from their elevation.
+- `selected-fills-icons`: the chosen view's icon is filled in the menu.
+
+Theme-wide departures (the palette, the type scale, the corner radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The bar is a `group` named by `label`.
+- The Filters field is read-only and says it opens a dialog (`aria-haspopup`); Enter, Space and the down arrow open it, as a click does. Its value says how many filters are set.
+- The sheet is MUI's `Drawer`, named by its heading. It traps focus, closes on Escape and returns focus to the field.
+- The view button's name says what's chosen (“View: Cards”), says it opens a menu, and has its tooltip. MUI's `Menu` moves focus into the menu and closes on Escape.
+
+## Related
+
+- `PageHeader`, which pins the bar with the page's title.
+- `PeriodPicker` for the period.
+- `AppShell`, whose measured page width the bar folds by.
+- Rules → Component size on a filter bar's small size.
+
+<Stories includePrimary={false} />

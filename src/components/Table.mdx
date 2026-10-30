@@ -64,7 +64,7 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - **Format every value with `Intl`.** One number of decimals per column, so the column lines up.
 - **Units sit in the header.** “Energy (kWh)” in the header and bare numbers in the cells, unless the units differ by row.
 - **A missing reading is a dash.** Show “–”, never 0, and keep it last when sorting: it has no place in the order.
-- **Headers are sentence case**, and name what's in the column.
+- **Headers are sentence case**, and name what's in the column. Set each in `HeaderLabel`, so it stays on one line, truncated with a tooltip, and its column is at least its longest word.
 
 ## Variants
 
@@ -84,13 +84,25 @@ import { TruncatedText } from 'src/components/TruncatedText';
 
 <Canvas of={TableStories.Wide} />
 
+- **Tinted cells.** A cell tinted by its value, for when every number must show: the `Heatmap` chart keeps its numbers in tooltips, and this stays readable at a glance and in print. It takes `heatmap-scale`'s roles. For a deviation from a midpoint, `success` under it and `error` over it, at 12, 22, 33 and 44% in four equal steps up to a cap, and `action.hover` under 1%, which is no change. Keep the tints at 44% or under, so `text.primary` holds 4.5:1 on every one. Pick the cap for the data: pass it as a prop, and say it in a line under the table along with the neutral band. A cell with nothing to compare stays a dash on the bare surface, and every cell takes a `Tooltip` with its full statement, which is also its accessible name.
+
+<Canvas of={TableStories.TintedCells} />
+
+- **Tinted by magnitude.** For a value with no midpoint, `chart.sequential`, in equal-width steps across the range, so two values in one color are never more than a step apart. Say the step in the line under the table. The text takes the role that holds 4.5:1 on each step: `text.primary` on the two nearest the surface, `common.black` on the middle one and `background.level0` on the two furthest.
+
+<Canvas of={TableStories.TintedByMagnitude} />
+
 - **Totals.** Put the sum in a `TableFooter`, with `variant="head"` on its cells so it reads at full size rather than in MUI's small footer type. Say in the page if a total leaves out buildings with missing readings.
 
 <Canvas of={TableStories.Totals} />
 
 ## States
 
-- **Load more.** Lists from the API are cursor paged. Add rows with `useInfiniteQuery`, show the running count in a `role="status"` line, and put a text `Button` under the table, with `loading` while the next page arrives. `fromQuery` gives `fetching` during that fetch, and `AsyncContent` keeps the table mounted, so its rows and scroll position stay put. When the last page arrives the button goes, so move focus to the table.
+- **Paged in the client.** When every row is in hand, page them with `usePagedRows` (`src/components/usePagedRows`): 10, 25 or 50 rows a page, MUI's `TablePagination` after the `TableContainer`, shown only past ten rows. It returns the rows on the current page and the pager.
+
+<Canvas of={TableStories.Paged} />
+
+- **Load more.** Lists from the API are cursor paged, so they take this rather than the pager. Add rows with `useInfiniteQuery`, show the running count in a `role="status"` line, and put a text `Button` under the table, with `loading` while the next page arrives. `fromQuery` gives `fetching` during that fetch, and `AsyncContent` keeps the table mounted, so its rows and scroll position stay put. When the last page arrives the button goes, so move focus to the table.
 
 <Canvas of={TableStories.LoadMore} />
 
@@ -104,12 +116,18 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - Don't use MUI's `component={Paper}` on `TableContainer` inside a card; that's a frame in a frame. Leave it off.
 - Do align numbers right, in the header too, and format them with `Intl`.
 - Don't center numbers or mix decimal places in a column; align them right with one number of decimals.
+- Do set headers in `HeaderLabel`, so the header row stays one line.
+- Don't let a long header wrap or set a column's width to fit it; `HeaderLabel` truncates it, with the full text in a tooltip.
+- Do page rows you already hold with `usePagedRows`, and a cursor-paged list with Load More.
+- Don't mix the two in one table, or show a pager at ten rows or fewer.
 - Do show a dash for a missing reading and keep it last when sorting.
 - Don't show 0 for a reading that doesn't exist; 0 is a value, and a dash means there isn't one.
 - Do leave `size` off; tables are `medium` like every other component.
 - Don't set `size="small"` for a whole screen to fit more in; drop a column or let the table scroll, and keep `small` for a one-off with a comment saying why.
 - Do use `hover` on a row only when clicking the row does something.
 - Don't make a row clickable without a link or button inside it; a keyboard can't reach a row, so give it a control as well.
+- Do show a tinted cell's number as well as its tint, and state the scale in words, so no cell rests on color.
+- Don't tint past 44% or build a scale from your own colors; stay on `heatmap-scale`'s roles.
 - Do let the theme draw the row lines.
 - Don't add `'&:last-child td': { border: 0 }` from MUI's demo; the theme already removes the last line (`table-last-row`).
 - Do name a table that scrolls with `role="region"`, an `aria-label` and `tabIndex={0}`, so a keyboard can scroll it.
@@ -120,7 +138,7 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - `medium-size`: tables stay at `medium`, MUI's default, so leave `size` off; `small` is for a one-off instance.
 - `tabular-numerals`: every table cell uses tabular digits, so a column of figures lines up.
 - `table-cell-border`: row lines use `divider` instead of MUI's mix of it with white or black, so they show on a card and match its frame.
-- `table-sticky-header`: a sticky header sits on `background.level2`, the card surface, instead of `background.default`, the page color.
+- `table-sticky-header`: a sticky header sits on `background.level3`, the card surface, instead of `background.default`, the page color.
 - `table-last-row`: the last row has no bottom line, so it doesn't double the card's edge; with a `TableFooter`, the last body row keeps its line and the footer's last row loses it.
 
 Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text and intent colors) apply too; see Foundations → MUI departures.
@@ -128,6 +146,7 @@ Theme-wide departures (CSS variables, the theme radius, surface and border level
 ## Accessibility
 
 - `Table` renders a real `table`, with its rows, cells and headers, so screen readers can move by row and column.
+- `TablePagination` labels its controls and says which rows show; its count is in `tabular-numerals`.
 - Name every table, with `aria-label` or `aria-labelledby` pointing at a heading.
 - Mark each row's first cell `component="th"` and `scope="row"`, so a cell reads with its row's name.
 - `TableSortLabel` is a button, with keyboard activation and the Kilowatt focus ring. Set `sortDirection` on its cell, which sets `aria-sort`.
@@ -139,7 +158,9 @@ Theme-wide departures (CSS variables, the theme radius, surface and border level
 
 - `Card` for the frame around a table.
 - `AsyncContent` for loading, empty and failed tables.
+- `Heatmap` for a grid read by color, with its numbers in tooltips.
 - `Checkbox` for selecting rows.
+- `HeaderLabel` for a column header's text.
 - Rules → One border per edge for how a table meets its card.
 
 <Stories includePrimary={false} />

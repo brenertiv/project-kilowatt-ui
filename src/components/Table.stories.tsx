@@ -10,13 +10,18 @@ import TableFooter from '@mui/material/TableFooter';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { fetchList } from 'src/api/queries';
 import { fromQuery } from 'src/api/state';
 import { AsyncContent } from 'src/components/AsyncContent';
+import { HeaderLabel } from 'src/components/HeaderLabel';
+import { usePagedRows } from 'src/components/usePagedRows';
+import { monthlyUseGrid, monthlyVariance, monthNames, varianceBuildings } from 'src/fixtures/charts';
 import { inCard } from 'src/stories/decorators';
 
 type Building = { name: string; city: string; state: string; area: number; energy: number | null; cost: number | null; emissions: number | null };
@@ -57,7 +62,7 @@ const meta = {
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
   parameters: {
-    muiComponents: ['Table', 'TableContainer', 'TableHead', 'TableBody', 'TableRow', 'TableCell', 'TableFooter', 'TableSortLabel'],
+    muiComponents: ['Table', 'TableContainer', 'TableHead', 'TableBody', 'TableRow', 'TableCell', 'TableFooter', 'TableSortLabel', 'TablePagination'],
     card: { title: 'Building Energy' },
   },
   decorators: [inCard],
@@ -300,6 +305,135 @@ export const Wide: Story = {
   },
 };
 
+const tintedBuildings = varianceBuildings.slice(5);
+const tintedMonths = monthNames.slice(4, 10);
+const signed = new Intl.NumberFormat('en-US', { signDisplay: 'exceptZero', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** The tints of steps 1 to 4, low enough that `text.primary` holds 4.5:1 on each in both schemes. */
+const strengths = [0.12, 0.22, 0.33, 0.44];
+/** Under this distance from 0 a change is no change: noise, not a signal. */
+const neutral = 1;
+
+/** A cell's tint: `action.hover` under `neutral`, then `success` under 0 or `error` over it, in four equal steps up to `cap`. */
+function changeTint(change: number, cap: number): SxProps<Theme> {
+  if (Math.abs(change) < neutral) return { bgcolor: 'action.hover' };
+  const step = Math.min(4, Math.ceil((Math.abs(change) / cap) * 4));
+  const intent = change < 0 ? 'success' : 'error';
+  return { bgcolor: (theme) => `rgba(${theme.vars!.palette[intent].mainChannel} / ${strengths[step - 1]})` };
+}
+
+/** Change on a year earlier, a row per building and a column per month. `cap` is where the tint stops growing, in percent. */
+function VarianceTable({ cap }: { cap: number }) {
+  return (
+    <>
+      <TableContainer role="region" aria-label="Energy use change, scrollable" tabIndex={0}>
+        <Table aria-label="Energy use change on a year earlier" sx={{ '& .MuiTableCell-root': { whiteSpace: 'nowrap' } }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Property</TableCell>
+              {tintedMonths.map((month) => (
+                <TableCell key={month} align="right">
+                  {month}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {tintedBuildings.map((name) => (
+              <TableRow key={name}>
+                <TableCell component="th" scope="row">
+                  {name}
+                </TableCell>
+                {tintedMonths.map((month) => {
+                  const change = monthlyVariance.find(({ row, column }) => row === name && column === month)?.value;
+                  return (
+                    <Tooltip key={month} title={`${name}, ${month}: ${change === undefined ? 'nothing to compare' : `${signed.format(change)}% on a year earlier`}`}>
+                      <TableCell align="right" sx={change === undefined ? undefined : changeTint(change, cap)}>
+                        {change === undefined ? '–' : `${signed.format(change)}%`}
+                      </TableCell>
+                    </Tooltip>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <CardActions>
+        <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
+          {`Green is less than a year earlier, red more, strongest at ${cap}% or further. Under ${neutral}% is no change.`}
+        </Typography>
+      </CardActions>
+    </>
+  );
+}
+
+/** Every number must show: a cell tinted by its change, in `success` and `error` at four strengths up to a cap, with `action.hover` under 1%. */
+export const TintedCells: Story = {
+  parameters: { card: { title: 'Change on a Year Earlier' } },
+  render: () => <VarianceTable cap={20} />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByRole('rowheader')).toHaveLength(tintedBuildings.length);
+    await expect(canvas.getByRole('table', { name: 'Energy use change on a year earlier' })).toBeVisible();
+  },
+};
+
+/** The text on each `chart.sequential` step, nearest the surface first: the role that holds 4.5:1 on it in both schemes. */
+const stepText = ['text.primary', 'text.primary', 'common.black', 'background.level0', 'background.level0'];
+const useRows = tintedBuildings.map((name) => tintedMonths.map((month) => monthlyUseGrid.find(({ row, column }) => row === name && column === month)!.value));
+const lowestUse = Math.min(...useRows.flat());
+const stepWidth = (Math.max(...useRows.flat()) - lowestUse) / stepText.length;
+
+/** A value with no midpoint: `chart.sequential` in equal-width steps, and the line under the table says how wide a step is. */
+export const TintedByMagnitude: Story = {
+  parameters: { card: { title: 'Energy Use' } },
+  render: () => (
+    <>
+      <TableContainer role="region" aria-label="Energy use, scrollable" tabIndex={0}>
+        <Table aria-label="Energy use by month" sx={{ '& .MuiTableCell-root': { whiteSpace: 'nowrap' } }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Property</TableCell>
+              {tintedMonths.map((month) => (
+                <TableCell key={month} align="right">
+                  {`${month} (MWh)`}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {tintedBuildings.map((name, row) => (
+              <TableRow key={name}>
+                <TableCell component="th" scope="row">
+                  {name}
+                </TableCell>
+                {useRows[row].map((value, month) => {
+                  const step = Math.min(stepText.length - 1, Math.floor((value - lowestUse) / stepWidth));
+                  return (
+                    <Tooltip key={tintedMonths[month]} title={`${name}, ${tintedMonths[month]}: ${number.format(value)} MWh`}>
+                      <TableCell align="right" sx={{ bgcolor: (theme) => theme.vars!.palette.chart.sequential[step], color: stepText[step] }}>
+                        {number.format(value)}
+                      </TableCell>
+                    </Tooltip>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <CardActions>
+        <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
+          {`Each step is ${number.format(Math.round(stepWidth))} MWh.`}
+        </Typography>
+      </CardActions>
+    </>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('table', { name: 'Energy use by month' })).toBeVisible();
+  },
+};
+
 const totalEnergy = buildings.slice(0, 5).reduce((sum, { energy }) => sum + (energy ?? 0), 0);
 const totalCost = buildings.slice(0, 5).reduce((sum, { cost }) => sum + (cost ?? 0), 0);
 
@@ -345,6 +479,50 @@ export const Totals: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('rowheader', { name: 'Total' })).toBeVisible();
     await expect(canvas.getByRole('cell', { name: number.format(totalEnergy) })).toBeVisible();
+  },
+};
+
+/** Every row in hand: `usePagedRows` gives the page's rows and the pager, and each header sits in `HeaderLabel`. */
+function PagedTable() {
+  const { shown, pager } = usePagedRows(buildings);
+  return (
+    <>
+      <TableContainer>
+        <Table aria-label="Building energy">
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <HeaderLabel>Property</HeaderLabel>
+              </TableCell>
+              <TableCell align="right">
+                <HeaderLabel>Energy (kWh)</HeaderLabel>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {shown.map(({ name, energy }) => (
+              <TableRow key={name}>
+                <TableCell component="th" scope="row">
+                  {name}
+                </TableCell>
+                <TableCell align="right">{reading(energy)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {pager}
+    </>
+  );
+}
+
+/** Rows already in hand: 10, 25 or 50 a page, the pager shown only past ten rows, and each header on one line in `HeaderLabel`. */
+export const Paged: Story = {
+  render: () => <PagedTable />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByRole('rowheader')).toHaveLength(10);
+    await userEvent.click(canvas.getByRole('button', { name: /next page/i }));
+    await waitFor(() => expect(canvas.getAllByRole('rowheader')).toHaveLength(2));
   },
 };
 

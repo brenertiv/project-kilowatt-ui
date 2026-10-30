@@ -70,8 +70,8 @@ Theme-wide departures (the surface levels the card and basemap use, the theme ra
 
 How this map differs from stock CARTO and MapLibre, from `src/maps/departures.ts`; Foundations → CARTO departures has the reasons.
 
-- `basemap-surfaces`: the land is `map.land`, a step past the page; land use `background.level1`, buildings `border.level2`, water `map.water`.
-- `basemap-roads`: roads are filled with `background.level2` and edged in `map.road`.
+- `basemap-surfaces`: the land is `map.land`, a step past the page; land use `background.level2`, buildings `border.level2`, water `map.water`.
+- `basemap-roads`: roads are filled with `background.level3` and edged in `map.road`.
 - `basemap-boundaries`: boundaries are drawn in `map.boundary`, a pixel wide at the least.
 - `basemap-low-zoom`: state lines, motorways and trunk roads and land cover draw from zoom 3, and rivers a pixel wide at the least, so a zoomed-out map shows structure.
 - `basemap-labels`: labels are `text.secondary`, haloed in the land color.
@@ -79,6 +79,7 @@ How this map differs from stock CARTO and MapLibre, from `src/maps/departures.ts
 - `map-card`: the map fills the `figure` below the card's header, with no padding.
 - `map-controls`: zoom in, zoom out and show all sites are `IconButton`s on an outlined `Paper`.
 - `map-scroll-zoom`: cooperative gestures are on, so zoom takes Ctrl or ⌘ with the wheel.
+- `map-stacking`: the `figure` isolates MapLibre's layers, so its gestures message can't rise over a pinned page header.
 - `map-attribution`: CARTO's and OpenStreetMap's credit is kept, as MapLibre's compact button on the card surface.
 - `map-data-colors`: sites take their colors from `mapColors`.
 - `map-tooltips`: every site has a tooltip on the menu surface with its name and full value.

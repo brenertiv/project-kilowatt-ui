@@ -40,6 +40,7 @@ const twoUnits = [
 const fahrenheit = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 const target = [{ value: 1100, label: 'Daily target' }];
 const overTarget = dailyUse.filter((row) => row.current > 1100).length;
+const nightLoad = [{ from: Date.UTC(2026, 8, 14), to: Date.UTC(2026, 8, 18), label: 'High night load' }];
 const projected = [{ field: 'emissions', name: 'Emissions', projectedFrom: emissionsProjectedFrom }];
 const month = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 const lastMonth = monthlyEmissions[monthlyEmissions.length - 1];
@@ -154,6 +155,20 @@ export const Target: Story = {
     series: single,
     references: target,
     summary: `Daily use went over the 1,100 kWh target on ${overTarget} of 30 days, all of them weekdays.`,
+  },
+};
+
+/** A stretch of time the line is read in, such as the window a finding is about: `ranges` draws it as a band in `action.hover`, named inside at the top right. */
+export const TimeRanges: Story = {
+  parameters: { card: { title: 'Energy Use' } },
+  args: {
+    series: single,
+    ranges: nightLoad,
+    summary: `Daily use through September, with a high night load marked from ${day.format(nightLoad[0].from)} to ${day.format(nightLoad[0].to)}.`,
+  },
+  play: async ({ canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /high night load marked/ });
+    await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
   },
 };
 

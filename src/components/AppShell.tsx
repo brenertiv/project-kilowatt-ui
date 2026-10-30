@@ -38,6 +38,8 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useColorScheme, useTheme } from '@mui/material/styles';
+import { useContentWidth } from './contentWidth';
+import { PageScrollProvider, useElementHeight } from './pageScroll';
 import { Icon, type IconName } from '../icons';
 
 /** A page within a section, listed in the section panel. */
@@ -68,7 +70,7 @@ export type AppShellPanel = {
   footer?: ReactNode;
   /** Shows the System, Light and Dark appearance control under the list, as My account does. Default `false`. */
   colorScheme?: boolean;
-  /** A filter button in the panel's header that narrows the pages to one `kind`, such as Workspace's item types. `label` names the button and its menu; each option's `value` matches the items' `kind`. */
+  /** A filter button in the panel's header that narrows the pages to one `kind`, such as Home's workspace types. `label` names the button and its menu; each option's `value` matches the items' `kind`. */
   filter?: { label: string; options: { value: string; label: string }[] };
   /** One icon button in the panel's header, before its collapse control, for a section-wide action such as Notifications' preferences. Left out of the phone menu, so put the same action in the page too. */
   headerAction?: { label: string; icon: IconName; onClick: () => void };
@@ -130,15 +132,15 @@ export type AppShellProps = {
   section: string;
   /** The id of the current page in the current section's panel. */
   page?: string;
-  /** Header content at the start, after the panel toggle: the scope button. On phones it moves to the top of the page, under the header. */
+  /** Header content at the start, after the panel toggle: the scope button. On phones it fills the header between the menu button and `headerEnd`. */
   headerStart?: ReactNode;
   /** Header content at the end: actions such as Ask Enertiv. On phones there's room for an icon button, not a labelled one. */
   headerEnd?: ReactNode;
-  /** A side column at the end, such as the assistant. Shown while `asideOpen`; below the `lg` breakpoint it opens as a bottom sheet. */
+  /** A side column at the end, such as the assistant. Shown while `asideOpen`; on phones (below `md`) it opens as a bottom sheet. */
   aside?: ReactNode;
   /** Whether `aside` is shown. Default `false`. */
   asideOpen?: boolean;
-  /** At `lg` and up, whether the aside is a column beside the page (`true`) or floats over it at the bottom right (`false`), where its header drags it. Put the Dock and Undock control in the aside's own header. Default `true`. */
+  /** At `md` and up, whether the aside is a column beside the page (`true`) or floats over it at the bottom right (`false`), where its header drags it. Put the Dock and Undock control in the aside's own header. Default `true`. */
   asideDocked?: boolean;
   /** The aside column's starting width in pixels, between 280 and 560; the floating aside takes it too. Default `344`. */
   defaultAsideWidth?: number;
@@ -486,7 +488,7 @@ function SectionGlyph({ section }: { section: AppShellSection }) {
   );
 }
 
-/** The side column as a bottom sheet, below the `lg` breakpoint. */
+/** The side column as a bottom sheet, on phones. */
 function AsideSheet({
   open,
   label,
@@ -594,7 +596,7 @@ function CompanyMark({ company, size }: { company: AppShellCompany; size: number
       sx={{
         width: size,
         height: size,
-        bgcolor: 'background.level3',
+        bgcolor: 'background.level4',
         color: 'text.primary',
         typography: 'caption',
         borderRadius: 1,
@@ -693,8 +695,8 @@ type PhoneShellProps = Pick<
 
 /**
  * The shell below the `md` breakpoint, built for a phone's browser. The page scrolls the document, so the
- * browser's toolbars can shrink, under a sticky header: the menu button, the page's title (a menu of the
- * section's pages) and page-wide actions. The menu is one column that drills from the sections to a
+ * browser's toolbars can shrink, under a sticky header: the menu button, the scope (`headerStart`) and
+ * page-wide actions. The menu is one column that drills from the sections to a
  * section's pages, with My account and the company pinned at its foot. Nothing is pinned to the bottom of
  * the page, where Safari keeps its own toolbar.
  */
@@ -720,10 +722,10 @@ function PhoneShell({
   const [companiesOpen, showCompanies, hideCompanies] = useBackToClose();
   const [searchOpen, showSearch, hideSearch] = useBackToClose();
   const [companyButton, setCompanyButton] = useState<HTMLElement | null>(null);
-  const [pagesOpen, showPages, hidePages] = useBackToClose();
   // The section whose pages the menu shows; `null` shows the sections.
   const [level, setLevel] = useState<string | null>(null);
-  const [titleButton, setTitleButton] = useState<HTMLElement | null>(null);
+  const { measure: measureContent, provide: provideContent } = useContentWidth<HTMLElement>();
+  const { measure: measureHeader, height: headerHeight } = useElementHeight<HTMLElement>();
 
   const current = sections.find((item) => item.id === section);
   const account = sections.find((item) => item.initials !== undefined);
@@ -733,7 +735,6 @@ function PhoneShell({
     ...sections.filter((item) => item.placement !== 'end'),
   ].filter((item) => !item.hideOnPhone);
   const levelSection = sections.find((item) => item.id === level);
-  const title = current?.panel?.items.find((item) => item.id === page)?.label ?? current?.label ?? '';
   const news = sections.filter((item) => item.count).map((item) => item.badge ?? `${item.label}, ${item.count}`);
   const menuLabel = ['Open menu', ...news].join(', ');
 
@@ -777,7 +778,7 @@ function PhoneShell({
       <Typography variant="h5" component="h2" noWrap sx={{ flex: 1 }}>
         {heading}
       </Typography>
-      {/* Search sits in the menu's header, as it does in the panel's on wide screens, leaving the top bar to the page's title. */}
+      {/* Search sits in the menu's header, as it does in the panel's on wide screens, leaving the top bar to the scope. */}
       <IconButton aria-label="Search" onClick={() => hideMenu(showSearch)}>
         <Icon name="search" />
       </IconButton>
@@ -886,13 +887,14 @@ function PhoneShell({
   );
 
   return (
-    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.level1' }}>
+    <Box sx={{ minHeight: '100dvh', bgcolor: 'background.level2' }}>
       {skipLink}
       <AppBar
+        ref={measureHeader}
         position="sticky"
         color="inherit"
         elevation={0}
-        sx={{ top: 0, bgcolor: 'background.level1', borderBottom: 1, borderColor: 'divider' }}
+        sx={{ top: 0, bgcolor: 'background.level2', borderBottom: 1, borderColor: 'divider' }}
       >
         {/* The page's 16px inset; the icon buttons at either end overhang it by their 8px padding, so their glyphs sit on the content's edge. */}
         <Toolbar disableGutters sx={{ gap: 0.5, px: 2 }}>
@@ -901,60 +903,20 @@ function PhoneShell({
               <Icon name="menu" />
             </Badge>
           </IconButton>
-          {hasPanel(current) ? (
-            <Button
-              ref={setTitleButton}
-              color="inherit"
-              endIcon={<Icon name="expand_more" />}
-              aria-haspopup="menu"
-              aria-expanded={pagesOpen}
-              onClick={showPages}
-              sx={{ minWidth: 0, typography: 'subtitle1' }}
-            >
-              <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {title}
-              </Box>
-            </Button>
-          ) : (
-            <Typography variant="subtitle1" component="p" noWrap sx={{ px: 1 }}>
-              {title}
-            </Typography>
-          )}
-          <Box sx={{ flex: 1 }} />
+          {/* The scope fills the header between the two buttons. The menu opens on the section's pages, and each page names itself. */}
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', ml: 0.5, '& > *': { flex: 1, minWidth: 0 } }}>{headerStart}</Box>
           <Box sx={{ display: 'flex', mr: -1 }}>{headerEnd}</Box>
         </Toolbar>
       </AppBar>
       <Box
+        ref={measureContent}
         component="main"
         id="main"
         tabIndex={-1}
         sx={{ p: 2, pb: 'calc(var(--mui-spacing) * 2 + env(safe-area-inset-bottom))', outline: 'none' }}
       >
-        {headerStart && <Box sx={{ mb: 2 }}>{headerStart}</Box>}
-        {children}
+        {provideContent(<PageScrollProvider value={{ root: null, top: `${headerHeight}px`, edge: headerHeight, inset: 2 }}>{children}</PageScrollProvider>)}
       </Box>
-      {hasPanel(current) && (
-        <Menu
-          anchorEl={titleButton}
-          open={pagesOpen}
-          onClose={() => hidePages()}
-          slotProps={{
-            paper: { sx: { maxHeight: '70dvh', overscrollBehavior: 'contain' } },
-            list: { 'aria-label': current.label },
-          }}
-        >
-          {current.panel.items.map((item) => (
-            <MenuItem
-              key={item.id}
-              selected={item.id === page}
-              aria-current={item.id === page ? 'page' : undefined}
-              onClick={() => hidePages(() => onPageChange?.(item.id, current.id))}
-            >
-              {pageRow(item)}
-            </MenuItem>
-          ))}
-        </Menu>
-      )}
       <Drawer
         open={menuOpen}
         onClose={() => hideMenu()}
@@ -1194,9 +1156,9 @@ function ResizeEdge({ label, value, min, max, page, onResize, widthAt }: ResizeE
  * rail item is hovered, so another section's pages are one move away. A Search button beside the
  * panel's toggle, on every page, opens one search dialog that finds a page in any section. Below the
  * `md` breakpoint it switches to a layout for a phone's browser: the document scrolls under a sticky
- * header whose page title is a menu of the section's pages, and the menu button opens a one-column
+ * header that holds the scope, and the menu button opens a one-column
  * menu that slides between the sections and a section's pages, with My account and the company
- * pinned at its foot. Below `lg` the side column opens as a bottom sheet. It holds no routes: it
+ * pinned at its foot, and the side column opens as a bottom sheet. It holds no routes: it
  * reports choices through its callbacks, and items with an `href` render as links.
  *
  * @summary The app frame: section rail, dockable section panel, header and main area; a drill-down menu on phones.
@@ -1233,7 +1195,6 @@ export function AppShell({
 }: AppShellProps) {
   const theme = useTheme();
   const wide = useMediaQuery(theme.breakpoints.up('md'), { noSsr: true });
-  const asideBeside = useMediaQuery(theme.breakpoints.up('lg'), { noSsr: true });
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
   const [panelOpen, setPanelOpen] = useState(defaultPanelOpen);
   const [panelWidth, setPanelWidth] = useState(() => clampWidth(defaultPanelWidth));
@@ -1246,7 +1207,8 @@ export function AppShell({
   // Docking from the floating panel: the floating panel stays as an overlay that grows from where it floated into the
   // docked slot while the slot opens and pushes the page over, and fades only once the page behind it has loaded.
   const [morph, setMorph] = useState<Morph | null>(null);
-  const asideFloats = Boolean(aside && asideOpen && asideBeside && !asideDocked);
+  const { measure: measureContent, provide: provideContent, element: contentElement } = useContentWidth<HTMLElement>();
+  const asideFloats = Boolean(aside && asideOpen && wide && !asideDocked);
   const {
     ref: floatRef,
     position: floatPosition,
@@ -1441,7 +1403,7 @@ export function AppShell({
 
   // Floats inside the frame, 8px in from its edges (its 1px border included), so the corners are
   // concentric: the frame's 16px is the panel's theme radius (8px) plus the gap. Elevation 2 puts it on
-  // level2, a step below the menu surface, with the lowest shadow that still lifts it off the page.
+  // level3, a step below the menu surface, with the lowest shadow that still lifts it off the page.
   const floatingPanel = hasPanel(flyoutSection) && (
     <Paper
       elevation={2}
@@ -1476,14 +1438,16 @@ export function AppShell({
   const morphSection = sections.find((item) => item.id === morph?.id);
   const morphPanel = morph && hasPanel(morphSection) && (
     <Paper
-      // Elevation 2 is the floating panel's (level2, shadowed), 0 the docked panel's (level1, flat): changing it on one
-      // element lets the background and shadow transition with the rest.
+      // Elevation 2 is the floating panel's (level3, shadowed), 0 flat: changing it on one element lets the shadow
+      // transition with the rest, and the background goes to the docked panel's level1.
       elevation={morph.phase === 'from' ? 2 : 0}
       aria-hidden
       sx={(t) => {
         const at = morph.phase === 'from' ? morph.from : morph.to;
         const corner = 'calc(2 * var(--mui-shape-borderRadius) - 1px)';
         return {
+          // Settled, two classes, to outrank the flat Paper's level2 (as the theme's Card does).
+          ...(morph.phase !== 'from' && { '&.MuiPaper-root': { bgcolor: 'background.level1' } }),
           position: 'absolute',
           zIndex: 'drawer',
           display: 'flex',
@@ -1606,7 +1570,7 @@ export function AppShell({
     );
   }
 
-  const asideBesidePage = Boolean(aside && asideOpen && asideBeside && asideDocked);
+  const asideBesidePage = Boolean(aside && asideOpen && asideDocked);
 
   return (
     // On wide screens the frame fills the window and only `main` scrolls.
@@ -1631,7 +1595,7 @@ export function AppShell({
           flex: 1,
           minWidth: 0,
           overflow: 'hidden',
-          bgcolor: 'background.level1',
+          bgcolor: 'background.level2',
           // The frame rounds at the card radius, so the panel's rows, 8px in, keep concentric corners.
           border: 1,
           borderColor: 'divider',
@@ -1645,6 +1609,7 @@ export function AppShell({
             <Box
               ref={panelRef}
               sx={{
+                bgcolor: 'background.level1',
                 display: 'flex',
                 minHeight: 0,
                 overflow: 'hidden',
@@ -1697,12 +1662,13 @@ export function AppShell({
             </AppBar>
           )}
           <Box
+            ref={measureContent}
             component="main"
             id="main"
             tabIndex={-1}
             sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3, outline: 'none' }}
           >
-            {children}
+            {provideContent(<PageScrollProvider value={{ root: contentElement, top: theme.spacing(-3), edge: 0, inset: 3 }}>{children}</PageScrollProvider>)}
           </Box>
         </Stack>
         {asideBesidePage && (
@@ -1722,7 +1688,7 @@ export function AppShell({
             <Box
               component="aside"
               aria-label={asideLabel}
-              sx={{ width: asideWidth, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+              sx={{ width: asideWidth, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: 'background.level1' }}
             >
               {aside}
             </Box>
@@ -1765,7 +1731,7 @@ export function AppShell({
         }
       />
       {asideFloats && (
-        // Undocked on a large screen, the aside floats over the page at the bottom right, at its column's width and a
+        // Undocked, the aside floats over the page at the bottom right, at its column's width and a
         // contained height, above the page and the floating panel. Its content's drag handle (its header) moves it.
         <Paper
           ref={floatRef}
@@ -1774,6 +1740,8 @@ export function AppShell({
           aria-label={asideLabel}
           {...dragHandlers}
           sx={{
+            // Two classes, to outrank the elevation's surface (as the theme's Card does): the docked column's level1.
+            '&.MuiPaper-root': { bgcolor: 'background.level1' },
             position: 'fixed',
             right: floatPosition.right,
             bottom: floatPosition.bottom,
@@ -1795,11 +1763,6 @@ export function AppShell({
         >
           {aside}
         </Paper>
-      )}
-      {aside && !asideBeside && (
-        <AsideSheet open={asideOpen} label={asideLabel} onClose={onAsideClose}>
-          {aside}
-        </AsideSheet>
       )}
     </Box>
   );

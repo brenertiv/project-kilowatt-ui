@@ -87,13 +87,13 @@ export const mapDepartures: MapDeparture[] = [
     id: 'basemap-surfaces',
     kind: 'theme',
     title: 'Land, water and buildings from the surfaces',
-    why: "CARTO's basemaps use their own warm grays. Kilowatt's land is `map.land`, a step of the surface ramp past the page, so the map sits recessed in its card, apart from every app surface; parks, land cover and residential areas take `background.level1`, a step lighter than the land, so towns and parks show as patches when zoomed out; buildings take `border.level2`, a step past the land the other way; and water is `map.water`, a step of the same ramp past the land.",
+    why: "CARTO's basemaps use their own warm grays. Kilowatt's land is `map.land`, a step of the surface ramp past the page, so the map sits recessed in its card, apart from every app surface; parks, land cover and residential areas take `background.level2`, a step lighter than the land, so towns and parks show as patches when zoomed out; buildings take `border.level2`, a step past the land the other way; and water is `map.water`, a step of the same ramp past the land.",
     maps: all,
     apply: (context) => {
       const { layers, mui, land } = context;
       for (const layer of layers('land')) fillWith(context, layer, land);
       // Land use a step lighter than the land, buildings a step past it, for structure without text.
-      for (const layer of layers('landuse')) fillWith(context, layer, mui.palette.background.level1);
+      for (const layer of layers('landuse')) fillWith(context, layer, mui.palette.background.level2);
       for (const layer of layers('building')) fillWith(context, layer, mui.palette.border.level2);
       for (const layer of layers('water')) fillWith(context, layer, mui.palette.map.water);
     },
@@ -102,10 +102,10 @@ export const mapDepartures: MapDeparture[] = [
     id: 'basemap-roads',
     kind: 'theme',
     title: 'Roads from the surfaces and borders',
-    why: 'CARTO draws roads, rail and runways in grays of its own. Kilowatt fills them with the highest surface (`background.level2`), the lightest tone on a light map, and edges them in `map.road`, a step past the water, so streets read as structure without competing with data. At low zoom CARTO draws only the casings of motorways and trunk roads, so `map.road` is what makes a zoomed-out map show its roads.',
+    why: 'CARTO draws roads, rail and runways in grays of its own. Kilowatt fills them with the highest surface (`background.level3`), the lightest tone on a light map, and edges them in `map.road`, a step past the water, so streets read as structure without competing with data. At low zoom CARTO draws only the casings of motorways and trunk roads, so `map.road` is what makes a zoomed-out map show its roads.',
     maps: all,
     apply: (context) => {
-      for (const layer of context.layers('road')) fillWith(context, layer, context.mui.palette.background.level2);
+      for (const layer of context.layers('road')) fillWith(context, layer, context.mui.palette.background.level3);
       // Casings in the map's own road role, which reaches past the water.
       for (const layer of context.layers('roadCasing')) fillWith(context, layer, context.mui.palette.map.road);
     },
@@ -222,6 +222,19 @@ export const mapDepartures: MapDeparture[] = [
       where: 'Every map',
     },
     check: /cooperativeGestures: true/,
+  },
+  {
+    id: 'map-stacking',
+    kind: 'convention',
+    title: "The map's layers keep to the map",
+    why: "MapLibre's CSS puts its cooperative gestures screen, the \"use ⌘ + scroll\" message, at z-index 99999, so it rises over anything a page pins above the map, such as `PageHeader`'s band as the map scrolls under it. Kilowatt's maps set `isolation: isolate` on their `figure`, so everything MapLibre stacks stays inside the map. Tooltips are portalled, so they still show above the page.",
+    maps: all,
+    convention: {
+      cartoDefault: "MapLibre's z-indexes compete with the page's",
+      kilowatt: '`isolation: isolate` on the `figure`',
+      where: 'Every map',
+    },
+    check: /isolation: 'isolate'/,
   },
   {
     id: 'map-attribution',

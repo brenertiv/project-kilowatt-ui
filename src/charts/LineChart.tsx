@@ -49,6 +49,16 @@ export type LineSeries = SeriesColor & {
   bands?: StatusBand[];
 };
 
+/** A stretch of time to mark on the plot, such as the window a finding is about: a band in `action.hover` with its name. */
+export type TimeRange = {
+  /** Where the band starts, as a UTC timestamp on the date axis. */
+  from: number;
+  /** Where the band ends, as a UTC timestamp on the date axis. */
+  to: number;
+  /** What the band marks, written inside it at the top: `Possible leak`. Say it in the chart's `summary` too. */
+  label: string;
+};
+
 export type LineChartProps = {
   /** The rows to plot, oldest first, each with a UTC timestamp in `dateField` and a number per series. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
   data: Record<string, number>[];
@@ -60,6 +70,8 @@ export type LineChartProps = {
   rightUnit?: string;
   /** Targets and benchmarks on the value axis in `unit`, each a dashed line labeled with its name and value. Keep it stable, like `data`. Default none. */
   references?: ReferenceLine[];
+  /** Stretches of time to mark as bands behind the lines (Rules → Charts: range bands are `action.hover`), each named inside at the top right. Keep it stable, like `data`. Default none. */
+  ranges?: TimeRange[];
   /** One sentence on what the chart shows, with the numbers that matter. It isn't shown: it's the figure's accessible name, the chart's text alternative for screen readers. */
   summary: string;
   /** The field in each row that holds the UTC timestamp. Default `'date'`. */
@@ -76,6 +88,7 @@ export type LineChartProps = {
 
 const dash = [4, 4];
 const noReferences: ReferenceLine[] = [];
+const noRanges: TimeRange[] = [];
 
 /** Draws an axis range's own grid and label only when asked: a series range uses the range to mask its strokes, not to mark the axis. */
 function quietRange(item: am5.DataItem<am5xy.IAxisDataItem>) {
@@ -90,8 +103,8 @@ function quietRange(item: am5.DataItem<am5xy.IAxisDataItem>) {
  * fixed `slot`; `neutral` lines (a baseline, the previous period) take `chart.neutral`. The
  * chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  * Two units at most: lines marked `right` plot on a second value axis in `rightUnit`.
- * Targets are dashed `references`; a forecast continues its line dashed from `projectedFrom`;
- * a score takes the intents band by band through `bands`.
+ * Targets are dashed `references`; stretches of time are named `ranges`; a forecast continues its line
+ * dashed from `projectedFrom`; a score takes the intents band by band through `bands`.
  *
  * @summary A line chart of values over time, themed from the palette, named by a one-line summary for screen readers.
  * @import import { LineChart } from 'src/charts/LineChart';
@@ -102,6 +115,7 @@ export function LineChart({
   unit,
   rightUnit,
   references = noReferences,
+  ranges = noRanges,
   summary,
   dateField = 'date',
   interval = 'day',
@@ -140,6 +154,21 @@ export function LineChart({
 
       // Targets and benchmarks: dashed lines in text.secondary, labeled at the plot's left edge.
       referenceLines(root, chart, yAxis, references, unit, colors);
+
+      // Marked stretches of time: a band in action.hover behind the lines, its name inside it at the top in text.secondary.
+      for (const { from, to, label } of ranges) {
+        const item = xAxis.makeDataItem({ value: from, endValue: to });
+        xAxis.createAxisRange(item);
+        item.get('axisFill')?.setAll({ fill: colors.band, fillOpacity: 1, visible: true });
+        item.get('grid')?.set('forceHidden', true);
+        item.get('tick')?.set('forceHidden', true);
+        // The name sits at the top of the band, against its right edge, so a band that ends at the plot's edge keeps its
+        // name inside the plot rather than over the value axis; a name wider than its band runs left over the plot.
+        // An inside label hangs from its own foot (amCharts' `inside` rule), so it comes down by its height.
+        const name = item.get('label');
+        name?.setAll({ text: label, fill: colors.reference, inside: true, location: 1, centerX: am5.p100, paddingRight: 8, paddingTop: 4, rotation: 0 });
+        name?.adapters.add('y', () => name.height() - chart.plotContainer.height());
+      }
 
       const last = data.length ? data[data.length - 1][dateField] : 0;
       const strokes = seriesColors(series, colors);
@@ -208,7 +237,7 @@ export function LineChart({
       if (lines.length > 1) chart.children.push(legend(root)).data.setAll(lines);
       for (const line of lines) line.data.setAll(data);
     },
-    [data, series, unit, rightUnit, references, dateField, interval, max],
+    [data, series, unit, rightUnit, references, ranges, dateField, interval, max],
   );
   const ref = useChart(build);
 
