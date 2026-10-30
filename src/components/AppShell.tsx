@@ -70,7 +70,7 @@ export type AppShellPanel = {
   footer?: ReactNode;
   /** Shows the System, Light and Dark appearance control under the list, as My account does. Default `false`. */
   colorScheme?: boolean;
-  /** A filter button in the panel's header that narrows the pages to one `kind`, such as Workspace's item types. `label` names the button and its menu; each option's `value` matches the items' `kind`. */
+  /** A filter button in the panel's header that narrows the pages to one `kind`, such as Home's workspace types. `label` names the button and its menu; each option's `value` matches the items' `kind`. */
   filter?: { label: string; options: { value: string; label: string }[] };
   /** One icon button in the panel's header, before its collapse control, for a section-wide action such as Notifications' preferences. Left out of the phone menu, so put the same action in the page too. */
   headerAction?: { label: string; icon: IconName; onClick: () => void };

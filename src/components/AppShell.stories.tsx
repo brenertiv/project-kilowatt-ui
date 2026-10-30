@@ -34,8 +34,8 @@ const scopeGroups: ScopeGroup[] = [
 const sections: AppShellSection[] = [
   {
     id: 'workspace',
-    label: 'Workspace',
-    icon: 'table_rows',
+    label: 'Home',
+    icon: 'home',
     panel: {
       actions: (
         <Button variant="outlined" fullWidth startIcon={<Icon name="add" />} sx={{ justifyContent: 'flex-start' }}>
@@ -379,7 +379,7 @@ export const Missing: Story = {
 export const PanelUndocked: Story = {
   args: { defaultPanelOpen: false },
   play: async ({ canvas, userEvent }) => {
-    await expect(canvas.queryByRole('navigation', { name: 'Workspace' })).toBeNull();
+    await expect(canvas.queryByRole('navigation', { name: 'Home' })).toBeNull();
     await userEvent.hover(canvas.getByRole('button', { name: 'Property Info' }));
     const panel = await canvas.findByRole('navigation', { name: 'Property Info' });
     await userEvent.click(within(panel).getByRole('button', { name: 'Meters' }));
@@ -400,13 +400,13 @@ export const PanelUndockedKeyboard: Story = {
   name: 'Panel undocked, keyboard',
   args: { defaultPanelOpen: false },
   play: async ({ canvas, userEvent }) => {
-    const item = canvas.getByRole('button', { name: 'Workspace' });
+    const item = canvas.getByRole('button', { name: 'Home' });
     item.focus();
     await userEvent.keyboard('{Enter}');
-    const panel = await canvas.findByRole('navigation', { name: 'Workspace' });
+    const panel = await canvas.findByRole('navigation', { name: 'Home' });
     await waitFor(() => expect(panel).toContainElement(document.activeElement as HTMLElement));
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(canvas.queryByRole('navigation', { name: 'Workspace' })).toBeNull());
+    await waitFor(() => expect(canvas.queryByRole('navigation', { name: 'Home' })).toBeNull());
     await expect(item).toHaveFocus();
   },
 };
@@ -424,12 +424,12 @@ export const Search: Story = {
   },
 };
 
-/** Workspace's filter button narrows its items to one type; a dot on the button shows a filter is on. */
+/** Home's filter button narrows its workspaces to one type; a dot on the button shows a filter is on. */
 export const PanelFilter: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Filter by type' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: 'Reports' }));
-    const panel = canvas.getByRole('navigation', { name: 'Workspace' });
+    const panel = canvas.getByRole('navigation', { name: 'Home' });
     await expect(within(panel).getByRole('button', { name: /^Energy and ESG summary/ })).toBeVisible();
     await expect(within(panel).queryByRole('button', { name: /^Reporting readiness/ })).toBeNull();
     await expect(canvas.getByRole('button', { name: 'Filter by type: Reports' })).toBeVisible();
@@ -533,7 +533,7 @@ export const Phone: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
-    await expect(within(menu).getByRole('heading', { name: 'Workspace' })).toBeVisible();
+    await expect(within(menu).getByRole('heading', { name: 'Home' })).toBeVisible();
     await userEvent.click(within(menu).getByRole('button', { name: /^Emissions and energy/ }));
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Emissions and energy');

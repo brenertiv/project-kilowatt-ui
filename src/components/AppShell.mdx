@@ -42,8 +42,8 @@ import { AppShell } from 'src/components/AppShell';
   sections={[
     {
       id: 'workspace',
-      label: 'Workspace',
-      icon: 'table_rows',
+      label: 'Home',
+      icon: 'home',
       panel: { items: [{ id: 'reporting-readiness', label: 'Reporting readiness', secondary: 'Dashboard', icon: 'table_rows' }] },
     },
     { id: 'maintenance', label: 'Maintenance', icon: 'tune', hideOnPhone: true },
@@ -89,7 +89,7 @@ Reach for it when a page's columns would crowd beside docked panels; otherwise s
 ## Variants
 
 - **With a panel:** a section with pages. Rows show an icon and a label, and optionally a second line (the item's type) or a count (open issues). The panel is MUI's `dense` list: rows have 4px of vertical padding and `body2` text, compact for a sidebar. The phone menu keeps full-height rows, for touch.
-- **Filter:** a panel's `filter` adds a filter button to its header, whose menu narrows the pages to one `kind`: Workspace filters its items by type (Dashboards, Reports, Plans). A dot on the button shows a filter is on, and the button's name says which.
+- **Filter:** a panel's `filter` adds a filter button to its header, whose menu narrows the pages to one `kind`: Home filters its workspaces by type (Dashboards, Reports, Plans). A dot on the button shows a filter is on, and the button's name says which.
 - **No panel:** leave a section's `panel` out when it has no pages of its own. Hovering it shows its tooltip, not a panel.
 - **Missing:** `missing: true` marks a section the account doesn't have but can upgrade to. It shows one circled plus in the disabled color in place of its icon, quieter than the sections the account has, with its name as its tooltip, no badge and no panel; choosing it calls `onSectionChange`, so the app opens its upgrade page. To hide a Missing section (when the person has chosen to), leave it out of `sections`.
 - **Header action:** a panel's `headerAction` adds one icon button to its header, before Collapse navigation, for a section-wide action: Notifications' preferences. It's left out of the phone menu, so put the same action in the page too.
