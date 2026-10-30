@@ -49,15 +49,18 @@ const series = [
 <LineChart data={readings} series={series} unit="kWh" rightUnit="°F" summary="…" />
 ```
 
-`data` is rows of numbers with a UTC timestamp in `date`. Keep `data`, `series` and `references` stable (constants or `useMemo`), since the chart is rebuilt when they change.
+`data` is rows of numbers with a UTC timestamp in `date`. Keep `data`, `series`, `references` and `ranges` stable (constants or `useMemo`), since the chart is rebuilt when they change.
 
-Targets, projections and scores read against bands:
+Targets, marked stretches of time, projections and scores read against bands:
 
 ```tsx
 import { scoreBands } from 'src/charts/meanings';
 
 // A target or benchmark: a dashed line labeled with its name and full value.
 <LineChart data={readings} series={series} unit="kWh" references={[{ value: 1100, label: 'Daily target' }]} summary="…" />
+
+// A stretch of time: a band in action.hover, named inside at the top right.
+<LineChart data={readings} series={series} unit="kWh" ranges={[{ from: Date.UTC(2026, 8, 14), to: Date.UTC(2026, 8, 18), label: 'High night load' }]} summary="…" />
 
 // Measured, then projected: one line, dashed from the first projected month.
 <LineChart data={emissions} series={[{ field: 'emissions', name: 'Emissions', projectedFrom: Date.UTC(2026, 10, 1) }]} unit="tCO₂e" interval="month" summary="…" />
@@ -76,6 +79,7 @@ Product meanings take their color from `src/charts/meanings`: spread `meaningCol
 - **Aligned with content.** A chart under a `CardContent` (a headline number): its default 16px inset lines it up with the content above.
 - **Two units.** A measure on the left axis and what it's read against on the right (`right`, `rightUnit`), each axis labeled with its unit. Draw the context line `neutral`.
 - **Target.** A goal or benchmark the line is read against: `references`, a dashed line in `text.secondary` labeled with its name and full value inside the plot. Set `labelBelow` on a reference whose label would cover the data just above its line.
+- **Time ranges.** A stretch of time the line is read in, such as the window a finding is about: `ranges`, a band in `action.hover` behind the lines (Rules → Charts), named inside at the top right in `text.secondary`. A name wider than its band runs left over the plot.
 - **Projected.** One line measured up to a date and projected after it: `projectedFrom` continues the line dashed in its own hue, and the tooltip says "projected". For a stretch that's provisional rather than projected (a month still being billed), set `projectedNote` to what the tooltip should say instead: `incomplete`.
 - **Score bands.** A score colored by status, band by band (`bands`, usually `scoreBands`), with the band named in the tooltip; `markers: 'last'` marks the latest reading. A chart colored by status has no other colored line. Set `max={100}` for a score or a percentage, so the axis always runs to the ceiling.
 - **Pathways.** Scenarios years ahead against a pathway (`interval="year"`): each scenario in a series color, the pathway `neutral`. Keep to one neutral line, so the legend tells every line apart. Rows can also be a `quarter` apart.
@@ -137,7 +141,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the legend and data points.
 - Lines are told apart by color and by name in the legend and tooltip; a dashed line is told apart by pattern too.
-- A projected stretch is dashed and its tooltip says "projected"; a banded score's tooltip names its band; a reference line is labeled in text. None of them rests on color alone. Say the target, the projection or the band in `summary` when it matters.
+- A projected stretch is dashed and its tooltip says "projected"; a banded score's tooltip names its band; a reference line and a time range are labeled in text. None of them rests on color alone. Say the target, the range, the projection or the band in `summary` when it matters.
 - With two units, each legend name carries its unit ("Energy use (kWh)"), so which axis a line reads against doesn't depend on color. Say both units in `summary`.
 - For detailed values, offer the data as a table beside the chart.
 
