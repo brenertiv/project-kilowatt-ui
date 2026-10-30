@@ -60,13 +60,16 @@ export const iconNames = [
   'fit_screen',
   'folder',
   'folder_open',
+  'folder_special',
   'format_list_bulleted',
+  'grid_view',
   'fullscreen',
   'fullscreen_exit',
   'group',
   'handyman',
   'help',
   'history',
+  'home',
   'home_work',
   'image',
   'inbox',
@@ -123,6 +126,8 @@ export const iconNames = [
   'warning',
   'web_traffic',
   'workspace_premium',
+  'zoom_in_map',
+  'zoom_out_map',
 ] as const;
 
 export type IconName = (typeof iconNames)[number];
