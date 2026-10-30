@@ -269,7 +269,7 @@ export const Metric: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use$/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Energy Use' });
     await waitFor(() => expect(within(dialog).getByText(comparison)).toBeVisible());
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   },
 };

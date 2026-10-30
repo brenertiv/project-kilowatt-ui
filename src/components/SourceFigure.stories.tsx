@@ -3,7 +3,7 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
-import { PlainFigure, SourceFigure, type FigureSource } from 'src/components/SourceFigure';
+import { ExplainedFigure, FigureExplanation, PlainFigure, SourceFigure, type FigureSource } from 'src/components/SourceFigure';
 import { TruncatedText } from 'src/components/TruncatedText';
 
 const intensity = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -19,6 +19,12 @@ const source: FigureSource = {
   updated: updated.format(Date.UTC(2026, 9, 27)),
 };
 
+/** The places a figure's data comes from, as links. */
+const sources = [
+  { label: 'Utility bills', detail: `Last updated ${source.updated}`, href: '#utility-bills' },
+  { label: 'Interval meter data', href: '#meter-data' },
+];
+
 /** Stands in for the page's sources view; the View Sources story's play function checks it. */
 const viewSources = fn();
 
@@ -32,7 +38,7 @@ const meta = {
   component: SourceFigure,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
-  parameters: { muiComponents: ['ButtonBase', 'Dialog', 'Tooltip', 'Typography'] },
+  parameters: { muiComponents: ['Accordion', 'ButtonBase', 'Dialog', 'Tooltip', 'Typography'] },
   args: { title: 'Energy Use Intensity', value: intensity.format(64.2), unit: 'kBtu/ft²', source },
   render: (args) => (
     <Card variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
@@ -63,20 +69,26 @@ export const Plain: Story = {
   },
 };
 
-/** The figure opens its source: a faint underline under the number, the hover tint, and a dialog titled with the card's title. */
+/** The figure opens its source: a faint underline under the number, the hover tint, and a dialog titled with the card's title, Calculation and Sources collapsed. */
 export const WithSource: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: '64.2 kBtu/ft², view source for Energy Use Intensity' }));
     const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
+    const calculation = await within(dialog).findByRole('button', { name: 'Calculation' });
+    await expect(calculation).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(calculation);
     await waitFor(() => expect(within(dialog).getByText('Coverage')).toBeVisible());
     await waitFor(() => expect(within(dialog).getByText(source.period)).toBeVisible());
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Sources' }));
+    await waitFor(() => expect(within(dialog).getByText(source.source)).toBeVisible());
     await expect(within(dialog).queryByRole('button', { name: 'View Sources' })).toBeNull();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    await expect(within(dialog).queryByRole('button', { name: 'Done' })).toBeNull();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   },
 };
 
-/** What would have been a caption under the number goes in `note`, at the top of the dialog, one line per entry. */
+/** What would have been a caption under the number goes in `note`: the dialog's description, at the top, one line per entry. */
 export const WithNote: Story = {
   args: {
     note: ['Down 4% from 2024, weather-normalized.', 'Estimated for 3 properties whose December bills are still to come.'],
@@ -87,6 +99,38 @@ export const WithNote: Story = {
     await waitFor(() => expect(within(dialog).getByText('Down 4% from 2024, weather-normalized.')).toBeVisible());
     await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  },
+};
+
+/** `sources` lists where the data comes from as links, in place of `source.source`; the last update moves under Calculation. */
+export const WithSourceLinks: Story = {
+  args: { sources },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use Intensity/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
+    await userEvent.click(await within(dialog).findByRole('button', { name: 'Sources' }));
+    await waitFor(() => expect(within(dialog).getByRole('link', { name: 'Utility bills' })).toBeVisible());
+    await expect(within(dialog).getByRole('link', { name: 'Interval meter data' })).toHaveAttribute('href', '#meter-data');
+  },
+};
+
+/** A figure that isn't a `SourceFigure`: an `ExplainedFigure` holding a `FigureExplanation`. Whatever is empty stays out, here Sources. */
+export const WithExplanation: Story = {
+  render: (args) => (
+    <Card variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+      <CardHeader title={<TruncatedText>Properties Reporting</TruncatedText>} />
+      <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <ExplainedFigure title="Properties Reporting" value="42" onViewSources={args.onViewSources}>
+          <FigureExplanation description="Properties with a full year of bills or meter data." calculation="Properties with twelve months of data, out of the 45 in scope." />
+        </ExplainedFigure>
+      </CardContent>
+    </Card>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /view source for Properties Reporting/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Properties Reporting' });
+    await within(dialog).findByRole('button', { name: 'Calculation' });
+    await expect(within(dialog).queryByRole('button', { name: 'Sources' })).toBeNull();
   },
 };
 

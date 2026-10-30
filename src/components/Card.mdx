@@ -85,7 +85,7 @@ A metric card leads with one headline number. Set it with `SourceFigure`, `Expla
 - **The figure is `h2` with tabular numerals.** The unit follows it in `body1` and `text.secondary`, and the value is formatted with `Intl.NumberFormat`. A value that's a phrase rather than a number (longer than 14 characters, such as “4 on track, 2 at risk”) steps down to `h4`, so it still fits.
 - **The figure sits at the card's foot, with a 160px floor.** Give the card `minHeight: (theme) => theme.spacing(20)` (20 spacing units) as a flex column, and its `CardContent` `mt: 'auto'`, so single-figure cards in a row hold one height and their figures line up along the bottom.
 - **The metric sits above any chart.** When a card has both, the figure comes first, in `CardContent`, and the chart follows, straight in the card.
-- **No caption under the figure.** A figure that needs clarifying opens its explanation instead: `SourceFigure` opens a dialog with where it comes from, with what would have been the caption as its `note`, and `ExplainedFigure` opens one with a note alone. A figure with nothing to explain is a `PlainFigure`, not a control.
+- **No caption under the figure.** A figure that needs clarifying opens its explanation instead: `SourceFigure` opens a dialog with its calculation and sources, with what would have been the caption as its `note`, and `ExplainedFigure` opens one with a `FigureExplanation`. A figure with nothing to explain is a `PlainFigure`, not a control.
 
 ```tsx
 import { SourceFigure } from 'src/components/SourceFigure';
