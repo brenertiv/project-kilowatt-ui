@@ -134,7 +134,7 @@ export const IntentsOnSurfaces: Story = {
 /** The same pairs in the dark scheme, so the story tests check both. */
 export const IntentsOnSurfacesDark: Story = { ...IntentsOnSurfaces, globals: { scheme: 'dark' } };
 
-const variants = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline'] as const;
+const variants = ['brand', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline'] as const;
 
 /** Every Typography variant, each labelled with its name. */
 export const Typography_: Story = {

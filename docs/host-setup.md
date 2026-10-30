@@ -9,6 +9,7 @@ Start with Introduction → Set up MUI in an app, which installs MUI and copies 
 | `MuiProvider` around the tree        | Everything                      | MUI's default theme; charts and maps never draw          |
 | A wait for the color scheme          | Rebuilt charts and maps         | Dark charts and maps build once in light, then rebuild   |
 | Roboto and Material Symbols Outlined | Everything                      | The fallback font; icons show their names as text        |
+| Roboto Serif                         | The `brand` type style          | Branded headings fall back to the browser's serif        |
 | The map fonts, and their URL         | Rebuilt maps                    | Map labels don't draw                                    |
 | `InitColorSchemeScript`              | Hosts that render on the server | Dark viewers see the page in light until the client runs |
 
@@ -46,12 +47,13 @@ Don't default to light with `scheme ?? 'light'` or `scheme === 'dark' ? 'dark' :
 
 ## Load the fonts
 
-The theme names Roboto and the `Icon` component uses Material Symbols Outlined, but neither is bundled. In this repository they load from `.storybook/preview-head.html`, which an app doesn't get. Put these in the page's `<head>`, Roboto at the four weights the theme uses (300, 400, 500, 700):
+The theme names Roboto and Roboto Serif and the `Icon` component uses Material Symbols Outlined, but none is bundled. In this repository they load from `.storybook/preview-head.html`, which an app doesn't get. Put these in the page's `<head>`, Roboto at the four weights the theme uses (300, 400, 500, 700) and Roboto Serif at regular, with its optical-size axis so a heading takes the display cut for its size. An app that never uses the `brand` type style can leave Roboto Serif out:
 
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Serif:opsz,wght@8..144,400&display=swap" rel="stylesheet" />
 <link
   href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
   rel="stylesheet"

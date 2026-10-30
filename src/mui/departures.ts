@@ -682,6 +682,17 @@ export const departures: Departure[] = [
     },
   },
   {
+    id: 'brand-type',
+    area: 'Typography',
+    title: 'A serif for branded moments',
+    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Roboto Serif at regular (400, like every style, `regular-weight`), 40px with a line height of 1.2, and 32px below `sm`, where 40px would break a short heading over four lines. It's for branded moments only, such as a first login's headings: a screen asks for `variant=\"brand\"`, sets the element with `component`, and no component takes it by default. Everything else stays Roboto.",
+    options: () => ({
+      typography: {
+        brand: { fontFamily: '"Roboto Serif", serif', fontWeight: 400, fontSize: '2rem', lineHeight: 1.2, '@media (min-width:600px)': { fontSize: '2.5rem' } },
+      },
+    }),
+  },
+  {
     id: 'text-wrap',
     area: 'Typography',
     title: 'Balanced headings, pretty body text',

@@ -150,10 +150,11 @@ export function colorMarkdown() {
   ].join('\n\n');
 }
 
-const variants = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline'] as const;
+const variants = ['brand', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline'] as const;
 
 /** The element `Typography` renders for each variant by default (its `variantMapping` prop). */
 const variantElements: Record<(typeof variants)[number], string> = {
+  brand: 'span',
   h1: 'h1',
   h2: 'h2',
   h3: 'h3',
@@ -183,9 +184,9 @@ export function typographyMarkdown() {
         sourceOf(`typography.${key}`),
       ]),
     ),
-    'Roboto loads from Google Fonts at 300, 400, 500 and 700, as MUI\'s installation guide does.',
+    'Roboto loads from Google Fonts at 300, 400, 500 and 700, as MUI\'s installation guide does. Roboto Serif loads at 400 with its optical-size axis, for the `brand` variant only.',
     '## Variants',
-    'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`.',
+    'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`. `brand` is Kilowatt\'s own, in Roboto Serif, for branded moments only: 40px from `sm` up (the size below is under `sm`), and no component takes it by default.',
     table(
       ['Variant', 'Element', 'Size', 'Weight', 'Line height', 'Letter spacing', 'Case', 'Source'],
       variants.map((variant) => {
@@ -196,7 +197,7 @@ export function typographyMarkdown() {
           `${code(style.fontSize)} (${px(style.fontSize)})`,
           code(style.fontWeight),
           code(style.lineHeight),
-          code(style.letterSpacing),
+          style.letterSpacing ? code(style.letterSpacing) : '—',
           style.textTransform ? code(style.textTransform) : '—',
           sourceOf(`typography.${variant}.fontSize`),
         ];
@@ -333,7 +334,7 @@ export const foundationPages: { name: string; lead: string; specimen?: string; e
   },
   {
     name: 'Typography',
-    lead: "MUI's type scale: Roboto, four weights and thirteen variants, set through Typography's `variant`. The headings `h1` to `h6` depart to a compact scale, 32px down to 16px, and every style, `button` included, is regular weight; button labels are shown as written.",
+    lead: "MUI's type scale: Roboto, four weights and thirteen variants, set through Typography's `variant`. The headings `h1` to `h6` depart to a compact scale, 32px down to 16px, and every style, `button` included, is regular weight; button labels are shown as written. A fourteenth variant, `brand`, sets branded moments in Roboto Serif.",
     specimen: 'Typography_',
     markdown: typographyMarkdown,
   },
