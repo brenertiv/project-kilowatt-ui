@@ -263,10 +263,10 @@ export const Filter: Story = {
     dialog = await screen.findByRole('dialog', { name: 'Filter properties' });
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Harbor Tower' }));
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Elm Plaza' }));
-    await expect(within(dialog).getByText('2 picked')).toBeVisible();
+    await waitFor(() => expect(within(dialog).getByText('2 picked')).toBeVisible());
     await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
     dialog = await screen.findByRole('dialog', { name: 'Change scope' });
-    await expect(within(dialog).getByRole('button', { name: 'Filter · 2' })).toBeVisible();
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Filter · 2' })).toBeVisible());
     await expect(within(dialog).getByRole('status')).toHaveTextContent('Filtered to 2 of 6 properties');
   },
 };
