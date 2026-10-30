@@ -3,12 +3,12 @@ import * as ScopePickerStories from './ScopePicker.stories';
 
 <Meta
   of={ScopePickerStories}
-  summary="Kilowatt's ScopePicker for AppShell's headerStart: the global scope (portfolio, group or property) as breadcrumbs of split buttons, and a Change scope dialog with search, recent scopes, and Portfolios and Properties columns."
+  summary="Kilowatt's ScopePicker for AppShell's headerStart: the global scope (portfolio, group, saved portfolio or property) as breadcrumbs of split buttons, one button on phones, and a Change scope dialog with search, a filter, recent scopes, and Portfolios and Properties columns."
 />
 
 # ScopePicker
 
-`ScopePicker` sets the global scope every section works in: the whole portfolio, one group of properties or one property. It's Kilowatt's own component, composed from MUI's `Breadcrumbs`, `Divider`, `Button`, `IconButton`, `Avatar`, `Tooltip`, `Dialog`, `TextField`, `List`, `ListItemButton` and `Chip` (`@mui/material`, Material UI v9; MUI documents their props). It sits in AppShell's `headerStart`.
+`ScopePicker` sets the global scope every section works in: the whole portfolio, one group of properties, one of the user's saved portfolios or one property. It's Kilowatt's own component, composed from MUI's `Breadcrumbs`, `Divider`, `Button`, `IconButton`, `Avatar`, `Tooltip`, `Dialog`, `TextField`, `List`, `ListItemButton`, `Chip`, `Autocomplete`, `Select`, `Table`, `Checkbox` and `Menu` (`@mui/material`, Material UI v9; MUI documents their props). It sits in AppShell's `headerStart`.
 
 The scope's path shows as breadcrumbs, separated by a thin vertical `Divider` (`border.level2`) that leans like a slash. Each crumb is a fill a step above the header's surface, framed by the faintest border (`border.level0`) and rounded at 16px, concentric with the 8px photo inside it. It's split flush into a text button and an icon button, each the crumb's full height (48px), so the half under the pointer fills on hover. The type above each name is in `text.secondary` and the `caption` style, so the name leads. There are at most two crumbs: the portfolio (all properties or one group) and, at property scope, the property, on the highest surface with the building's photo. A crumb's name sets that level as the scope; its chevron opens the Change scope dialog at that level, the portfolio's on the groups and the property's on the portfolio's properties. One icon-only close button after the active crumb, on the portfolio crumb's surface (`background.level2`), goes up a level: from a property to its portfolio, from a group to all properties.
 
@@ -17,7 +17,7 @@ The scope's path shows as breadcrumbs, separated by a thin vertical `Divider` (`
 ## When to use
 
 - Use it once, in AppShell's `headerStart`, for the scope the whole app works in.
-- For narrowing a list or a chart within a page, use a filter in the page's toolbar (`Select`, `Autocomplete`, `ToggleButton`), never the scope picker.
+- For narrowing a list or a chart within a page, use a filter in the page's toolbar (`Select`, `Autocomplete`, `ToggleButton`), never the scope picker. The picker's own filter narrows what the dialog shows, to find a scope.
 - For the buildings a report or plan covers, use the report's own controls; the global scope doesn't change them.
 - For switching Company, use AppShell's company button; the picker shows only the current Company's portfolio.
 
@@ -33,6 +33,29 @@ const [scope, setScope] = useState<Scope>({ level: 'portfolio' });
 />
 ```
 
+To let people narrow the navigator and keep what they find, add the filter and saved portfolios. Give each property what the filter narrows by (`state`, `type`, `area`):
+
+```tsx
+import { emptyFilter } from 'src/components/scopeFilterModel';
+
+const [filter, setFilter] = useState(emptyFilter);
+
+<ScopePicker
+  groups={groups}
+  properties={properties}
+  value={scope}
+  onChange={setScope}
+  portfolios={portfolios}
+  filter={filter}
+  onFilterChange={setFilter}
+  onSavePortfolio={savePortfolio}
+  onUpdatePortfolio={updatePortfolio}
+  onDeletePortfolio={deletePortfolio}
+/>
+```
+
+`onSavePortfolio` returns the new portfolio's id, so the dialog can browse it. Keep `filter` for the browser session, per user and Company, and never in the URL: it isn't the scope. Keep `portfolios` per user and Company, narrowed to what the user can still access when they're read. A property chosen through a saved portfolio carries it as `groupId`, as with a group. If `onDeletePortfolio` removes the portfolio in scope, or the one the property in scope was chosen through, move the scope up to all properties.
+
 Pass only the groups and properties the user can access. `value` is controlled: put the scope in the URL and pass it back, and keep `recent` (newest first) per user and per Company. A property chosen through a group carries that group as `groupId`, and the portfolio crumb shows that group; without one it shows All properties, never a guessed group.
 
 ## States
@@ -45,6 +68,10 @@ Pass only the groups and properties the user can access. `value` is controlled: 
 - **Searching:** the columns give way to results, groups first, a property in two groups once per group with its path; no match says so in words.
 - **Phones:** below `md` the crumbs give way to one button in AppShell's header: the crumb's frame with no fill, filling the header between the menu button and `headerEnd`, the type over the current level's name, and the chevron at its end, so names aren't cut short. There's no parent crumb and no close button. It opens Change scope at that level, which fills the screen and shows Portfolios, then the browsed portfolio's Properties, one at a time. Under its title a compact header names the current scope with its check, its type and its parent ("Property in West Region"), then the level above it as a row, "Back to West Region" or "Back to all properties", which sets that scope as the desktop close button does. There's no Back row at all properties.
 - **Narrow header:** the crumbs stay on one line and their names truncate with an ellipsis, the portfolio's first, down to about six characters; a cut-off name's tooltip leads with the full name. The chevrons and the close button never shrink.
+- **Filter:** with `onFilterChange`, a Filter button sits beside the search, as tall as it. It opens a table of properties in the same dialog, which grows to `lg` wide and the window's height: Location (states and cities, grouped), Type and Area bounds in ft² over a sortable table with a checkbox per row. The filter's set is the properties picked by hand when any are, whatever the criteria now show, and otherwise every property the criteria keep. Changes apply as they're made; Done or the back button returns to browsing with the filter on. On phones the Location and Type columns fold under the property's name.
+- **Filtered:** the button reads "Filter · 2", and a line under the search says "Filtered to 2 of 6 properties", with Save as Portfolio, Edit and Clear Filter. Portfolio rows count "2 of 4 properties", the Properties column and search results show only the filter's properties, and a portfolio with none of them stays listed, disabled. Recent scopes aren't filtered. A filter narrows what the dialog shows and never sets the scope: choosing a group while filtered sets the whole group.
+- **Save as Portfolio:** opens a small dialog with the name field focused and a suggested name selected, so typing replaces it and Enter saves it. The name says what the saved properties share: their type, their place, and an area bound when one is set and every property meets it ("Office properties in Austin, TX"), or the first property and a count when they share nothing that narrows the portfolio ("Harbor Tower and 3 others"). A taken name gets a number. Saving clears the filter and leaves the dialog browsing the new portfolio.
+- **Saved portfolios:** Your portfolios lead the Portfolios column, with Company portfolios over the groups once there are any. Each row chooses or browses like a group, shows in the same crumb with a `folder_special` icon and the type "Portfolio", and is searched and kept in recents. More actions has Edit properties (the filter view on a draft, with Cancel and Save Changes), Rename and Delete, which asks first. A saved portfolio is a fixed list of properties, the user's own, not a Company group.
 - **Single property:** the property's crumb with its photo and name, and nothing to open.
 - **Locked:** for an item that keeps its own properties (a report, a plan), `locked={{ type: 'Report scope', reason: '…' }}` shows one crumb in the picker's place, drawn as the portfolio crumb is, with a lock where the level's icon goes and no chevron or close button: nothing here changes the scope. Its name is the scope in `value` (a group's or property's name, or All properties), and the `reason` says why it's fixed, in the crumb's tooltip.
 
@@ -59,6 +86,10 @@ Pass only the groups and properties the user can access. `value` is controlled: 
 - Don't pass groups or properties the user can't open; the picker would offer scopes they can't reach.
 - Do keep the scope in the URL and pass it back as `value`.
 - Don't change the scope silently from a page, such as when the user opens a building; change it only through the picker or an action that names the change.
+- Do word the dialog's filter as a filter ("Filtered to 2 of 6 properties"), since it never sets the scope.
+- Don't put the filter in the URL or treat it as the scope; choosing a group while filtered sets the whole group.
+- Do keep a saved portfolio to the user who saved it.
+- Don't offer one as a Company group or a shared list; a saved portfolio is one person's fixed list.
 - Do keep `recent` per user and per Company.
 - Don't share recent scopes across Companies; they'd show buildings from another portfolio.
 
@@ -70,10 +101,13 @@ Pass only the groups and properties the user can access. `value` is controlled: 
 - `control-outlines`: the search field takes the control outline. The crumbs are text buttons on a surface fill (`background.level2`, and `level4` for the property), so they have none.
 - `icon-button-radius`: the close button after the crumbs and the dialog's close and back buttons take the theme radius; the crumbs' chevrons round at the crumb's 16px.
 - `medium-size`: every control is at the default medium size.
-- `paper-surface-levels`: the dialog picks its surface from its elevation.
+- `paper-surface-levels`: the dialog and the More actions menu pick their surface from their elevation.
 - `icons`: the level icons, chevrons and close buttons are Material Symbols.
 - `selected-fills-icons`: the open group and the current scope's row fill their icons.
-- `tabular-numerals`: recent-scope chips use tabular figures.
+- `tabular-numerals`: recent-scope chips and the filter table's cells use tabular figures.
+- `table-cell-border`: the filter table's rows divide with `divider`.
+- `table-sticky-header`: the filter table's header stays in view as it scrolls, set to the dialog's own surface rather than the card surface the departure gives it.
+- `table-last-row`: the filter table's last row has no bottom line.
 - `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the control, instead of MUI's background tint alone.
 
 Theme-wide departures (the palette, the type scale, the corner radius) apply too; see Foundations → MUI departures.
@@ -85,7 +119,10 @@ Theme-wide departures (the palette, the type scale, the corner radius) apply too
 - On phones the one button's name gives the path: "Property Highpoint 1, in West Region. Change scope", with `aria-haspopup="dialog"` and `aria-expanded`. It has no tooltip and sits in no breadcrumb landmark; the path is in its name and the dialog.
 - The chevrons are named "Change portfolio" and "Change property", with `aria-haspopup="dialog"` and `aria-expanded`. The close button shows no text; its accessible name says where it goes, "Back to West Region" or "Back to all properties".
 - The dialog is named "Change scope", focuses the search field when it opens, closes on Escape and returns focus to the chevron (MUI's `Dialog`).
-- The result count is a status region, so screen readers hear it as the user types.
+- The result count is a status region, so screen readers hear it as the user types, and so are the "Filtered to" lines.
+- The filter view's title names the dialog while it shows, and its table is named by its caption. Each row's checkbox is named by the property; the whole row toggles it, as in MUI's selectable table. Sort buttons set `aria-sort` on their column.
+- A disabled portfolio row shows why in its count ("0 of 4 properties"), so it doesn't rest on the dimmed text.
+- More actions is named for the portfolio ("More actions for Austin offices") and says it opens a menu. The name dialog focuses its field and selects the name; the delete dialog names the portfolio and asks first.
 - The current scope's row is marked with a check, so it doesn't depend on color. In the Portfolios column the selected style marks the portfolio being browsed.
 - Each portfolio row's chevron is named for what it browses: "Browse West Region", "Browse all properties".
 - A truncated crumb name is cut off only visually; screen readers read it in full.
@@ -94,5 +131,6 @@ Theme-wide departures (the palette, the type scale, the corner radius) apply too
 ## Related
 
 - `AppShell`, whose `headerStart` holds the picker.
+- `Table`, for the filter view's table and its selectable rows.
 
 <Stories includePrimary={false} />
