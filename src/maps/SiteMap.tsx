@@ -9,9 +9,9 @@ import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { useColorScheme } from '@mui/material/styles';
 import { visuallyHidden } from '@mui/utils';
 import { Icon } from '../icons';
+import { useResolvedScheme } from '../mui/useResolvedScheme';
 import { basemapStyle, mapColors } from './theme';
 
 /** One site on the map: where it is, its name, and optionally a value and how it takes its color. */
@@ -91,8 +91,7 @@ export function SiteMap({ sites, unit, summary, height = 320, onSelect, sized = 
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [overlay, setOverlay] = useState<MapboxOverlay | null>(null);
   const [hover, setHover] = useState<{ site: MapSite; left: number; top: number } | null>(null);
-  const { mode, systemMode } = useColorScheme();
-  const scheme = (mode === 'system' ? systemMode : mode) === 'dark' ? 'dark' : 'light';
+  const scheme = useResolvedScheme();
   const bounds = useMemo(() => siteBounds(sites), [sites]);
   const format = useMemo(() => new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }), []);
   const reading = (site: MapSite) =>
@@ -118,7 +117,7 @@ export function SiteMap({ sites, unit, summary, height = 320, onSelect, sized = 
 
   // The basemap for the active scheme. MapLibre swaps styles in place, keeping the camera.
   useEffect(() => {
-    if (!map) return;
+    if (!map || !scheme) return;
     let live = true;
     basemapStyle(scheme)
       .then((style) => live && map.setStyle(style))
@@ -135,7 +134,7 @@ export function SiteMap({ sites, unit, summary, height = 320, onSelect, sized = 
   }, [map, bounds]);
 
   useEffect(() => {
-    if (!overlay) return;
+    if (!overlay || !scheme) return;
     const colors = mapColors(scheme);
     // A site's color: neutral, its status intent, or its series slot.
     const colorOf = ({ slot = 0, neutral, status }: MapSite) =>

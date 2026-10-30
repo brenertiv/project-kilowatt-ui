@@ -5,7 +5,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from '@mui/material/Typography';
-import { rgbToHex, useColorScheme } from '@mui/material/styles';
+import { rgbToHex } from '@mui/material/styles';
 import { createSchemeTheme } from '../mui/theme';
 import { seriesColors, seriesSlots, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
@@ -107,12 +107,8 @@ export function DonutChart({
   const total = data.reduce((sum, part) => sum + part.value, 0);
   const share = (value: number) => (total ? percent.format(value / total) : '–');
   const slots = seriesSlots(parts);
-  const { mode, systemMode } = useColorScheme();
-  const scheme = (mode === 'system' ? systemMode : mode) === 'dark' ? 'dark' : 'light';
-  // The canvas takes the resolved color; the HTML (the total, the swatches) takes `fill` as it is, through `sx`.
-  const solidFill = fill ? resolveFill(fill, scheme) : undefined;
   const build = useCallback(
-    ({ root, colors }: ChartContext) => {
+    ({ root, scheme, colors }: ChartContext) => {
       const chart = root.container.children.push(am5percent.PieChart.new(root, { innerRadius: am5.percent(innerRadius) }));
       const series = chart.series.push(am5percent.PieSeries.new(root, { categoryField: 'category', valueField: 'value', alignLabels: false }));
       // The legend under the ring names the parts, so the slices carry no labels or ticks.
@@ -136,7 +132,8 @@ export function DonutChart({
         });
       }
       // One color for every slice, stepped down in opacity; otherwise slices with a slot keep it, so a meaning is one color on every chart, and the rest take the free slots, largest first.
-      const mono = solidFill ? am5.color(solidFill) : undefined;
+      // The canvas takes the resolved color; the HTML (the total, the swatches) takes `fill` as it is, through `sx`.
+      const mono = fill ? am5.color(resolveFill(fill, scheme)) : undefined;
       const fills = seriesColors(parts, colors);
       series.data.setAll(
         parts.map(({ category, value }, i) => ({
@@ -147,7 +144,7 @@ export function DonutChart({
         })),
       );
     },
-    [data, unit, solidFill, innerRadius, otherLabel, onSelect, pickedKey],
+    [data, unit, fill, innerRadius, otherLabel, onSelect, pickedKey],
   );
   const ref = useChart(build);
 

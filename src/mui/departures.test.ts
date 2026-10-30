@@ -16,6 +16,12 @@ const margin = 0.05;
 const text = 4.5 + margin;
 const graphic = 3 + margin;
 
+/** The dotted path of every value in theme options. An array is one value, because merging replaces it whole. */
+function valuePaths(value: unknown, path = ''): string[] {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return [path];
+  return Object.entries(value).flatMap(([key, child]) => valuePaths(child, path ? `${path}.${key}` : key));
+}
+
 describe('departures', () => {
   it.each(schemes)('account for every way the %s theme differs from stock MUI', (scheme) => {
     const claimed = new Set(departures.flatMap((departure) => departureChanges(departure, scheme).map((change) => change.path)));
@@ -33,6 +39,29 @@ describe('departures', () => {
   it('have unique ids and a reason', () => {
     expect(new Set(departures.map((departure) => departure.id)).size).toBe(departures.length);
     for (const departure of departures) expect(departure.why.trim(), departure.id).not.toBe('');
+  });
+
+  it('differ between schemes only in the palette, the one part the theme keeps per scheme', () => {
+    for (const { id, options } of departures) {
+      if (!options) continue;
+      expect(
+        { ...options('dark'), palette: undefined },
+        `${id} varies outside the palette, which createKilowattTheme drops for dark. Scope dark-only CSS with '*:where(.dark) &'`,
+      ).toEqual({ ...options('light'), palette: undefined });
+    }
+  });
+
+  it.each(schemes)('set each %s theme value once, so their order never decides the theme', (scheme) => {
+    const setBy = new Map<string, string>();
+    const overlaps: string[] = [];
+    for (const { id, options } of departures) {
+      if (!options) continue;
+      for (const path of valuePaths(options(scheme))) {
+        if (setBy.has(path)) overlaps.push(`${path}: ${setBy.get(path)} and ${id}`);
+        setBy.set(path, id);
+      }
+    }
+    expect(overlaps, 'theme values set by two departures; merge them into one entry').toEqual([]);
   });
 });
 
