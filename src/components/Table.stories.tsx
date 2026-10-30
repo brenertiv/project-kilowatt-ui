@@ -19,6 +19,8 @@ import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { fetchList } from 'src/api/queries';
 import { fromQuery } from 'src/api/state';
 import { AsyncContent } from 'src/components/AsyncContent';
+import { HeaderLabel } from 'src/components/HeaderLabel';
+import { usePagedRows } from 'src/components/usePagedRows';
 import { monthlyUseGrid, monthlyVariance, monthNames, varianceBuildings } from 'src/fixtures/charts';
 import { inCard } from 'src/stories/decorators';
 
@@ -60,7 +62,7 @@ const meta = {
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
   parameters: {
-    muiComponents: ['Table', 'TableContainer', 'TableHead', 'TableBody', 'TableRow', 'TableCell', 'TableFooter', 'TableSortLabel'],
+    muiComponents: ['Table', 'TableContainer', 'TableHead', 'TableBody', 'TableRow', 'TableCell', 'TableFooter', 'TableSortLabel', 'TablePagination'],
     card: { title: 'Building Energy' },
   },
   decorators: [inCard],
@@ -477,6 +479,50 @@ export const Totals: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('rowheader', { name: 'Total' })).toBeVisible();
     await expect(canvas.getByRole('cell', { name: number.format(totalEnergy) })).toBeVisible();
+  },
+};
+
+/** Every row in hand: `usePagedRows` gives the page's rows and the pager, and each header sits in `HeaderLabel`. */
+function PagedTable() {
+  const { shown, pager } = usePagedRows(buildings);
+  return (
+    <>
+      <TableContainer>
+        <Table aria-label="Building energy">
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <HeaderLabel>Property</HeaderLabel>
+              </TableCell>
+              <TableCell align="right">
+                <HeaderLabel>Energy (kWh)</HeaderLabel>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {shown.map(({ name, energy }) => (
+              <TableRow key={name}>
+                <TableCell component="th" scope="row">
+                  {name}
+                </TableCell>
+                <TableCell align="right">{reading(energy)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {pager}
+    </>
+  );
+}
+
+/** Rows already in hand: 10, 25 or 50 a page, the pager shown only past ten rows, and each header on one line in `HeaderLabel`. */
+export const Paged: Story = {
+  render: () => <PagedTable />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByRole('rowheader')).toHaveLength(10);
+    await userEvent.click(canvas.getByRole('button', { name: /next page/i }));
+    await waitFor(() => expect(canvas.getAllByRole('rowheader')).toHaveLength(2));
   },
 };
 

@@ -100,6 +100,7 @@ export const storyDeps = [
   '@mui/material/TableContainer',
   '@mui/material/TableFooter',
   '@mui/material/TableHead',
+  '@mui/material/TablePagination',
   '@mui/material/TableRow',
   '@mui/material/TableSortLabel',
   '@mui/material/TextField',

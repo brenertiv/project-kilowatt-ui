@@ -36,6 +36,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { Icon, type IconName } from '../icons';
+import { HeaderLabel } from './HeaderLabel';
 import { emptyFilter, filterSet, hasCriteria, isFilterActive, matchesCriteria, suggestName, type ScopeFilter } from './scopeFilterModel';
 
 export type { ScopeFilter } from './scopeFilterModel';
@@ -586,7 +587,7 @@ function ScopeFilterView({ properties, value, onChange, compact }: ScopeFilterVi
   const header = (key: SortKey, label: string, align?: 'right') => (
     <TableCell align={align} sortDirection={sort?.key === key ? sort.direction : false}>
       <TableSortLabel active={sort?.key === key} direction={sort?.key === key ? sort.direction : 'asc'} onClick={() => sortBy(key)}>
-        {label}
+        <HeaderLabel inButton>{label}</HeaderLabel>
       </TableSortLabel>
     </TableCell>
   );

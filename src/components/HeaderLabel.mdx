@@ -1,0 +1,69 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as HeaderLabelStories from './HeaderLabel.stories';
+
+<Meta
+  of={HeaderLabelStories}
+  summary="Kilowatt's HeaderLabel for a table column header's text: one line that truncates with a tooltip, with each column at least its longest word."
+/>
+
+# HeaderLabel
+
+`HeaderLabel` keeps a table column header on one line. It truncates with an ellipsis rather than wrapping, and shows the full text in MUI's `Tooltip` (`@mui/material`, Material UI v9) when it's cut off. It's Kilowatt's own component: a hidden copy of the text, wrapping and with no height, sits in the same grid cell as the one-line text and gives the column its minimum, so the table's automatic layout keeps every column the width it would have had, and a header that would have taken two lines takes one and ends in an ellipsis. The text inherits the cell's type and alignment.
+
+<Canvas of={HeaderLabelStories.Truncated} />
+
+## When to use
+
+- Use it for every column header in a table, so one long header doesn't make the header row two lines tall.
+- For a card title or any other one-line label, use `TruncatedText`.
+- For a row's cells, let the text wrap, or set `whiteSpace: 'nowrap'` for a table that scrolls sideways (Table → Wide).
+
+## Usage
+
+```tsx
+import TableCell from '@mui/material/TableCell';
+import { HeaderLabel } from 'src/components/HeaderLabel';
+
+<TableCell align="right">
+  <HeaderLabel>Energy (kWh)</HeaderLabel>
+</TableCell>
+```
+
+Inside `TableSortLabel`, add `inButton`:
+
+```tsx
+<TableSortLabel active={active} direction={direction} onClick={sort}>
+  <HeaderLabel inButton>Energy (kWh)</HeaderLabel>
+</TableSortLabel>
+```
+
+## States
+
+- **Fits:** plain text, with no tooltip and no tab stop.
+- **Truncated:** one line and an ellipsis, with the full text in a tooltip on hover and keyboard focus. It's focusable while it's cut off, so the keyboard can open the tooltip.
+- **In a sort label:** `inButton`: it doesn't turn focusable, since a button can't hold a focusable element, and the button's name is already the full text.
+
+## Do and don't
+
+- Do use it in every column of a table, so the header row stays one line.
+- Don't set your own width on a column to make a header fit; the label sizes it.
+- Do pass `inButton` inside `TableSortLabel`.
+- Don't nest a focusable label in a button; it breaks keyboard order and the accessible name.
+
+## MUI departures
+
+None of Kilowatt's departures change `Tooltip` or `Typography`.
+
+Theme-wide departures (the type scale) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- A cut-off header is cut off only visually; screen readers read it in full. The hidden copy is `aria-hidden`, so they read it once.
+- While cut off it's in the tab order, so the keyboard reaches the tooltip, except inside a sort label, whose button already carries the full name.
+
+## Related
+
+- `Table`, whose headers it sets.
+- `TruncatedText` for one-line text outside a table's header.
+
+<Stories includePrimary={false} />
