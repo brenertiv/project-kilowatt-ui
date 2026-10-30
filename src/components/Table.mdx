@@ -84,6 +84,14 @@ import { TruncatedText } from 'src/components/TruncatedText';
 
 <Canvas of={TableStories.Wide} />
 
+- **Tinted cells.** A cell tinted by its value, for when every number must show: the `Heatmap` chart keeps its numbers in tooltips, and this stays readable at a glance and in print. It takes `heatmap-scale`'s roles. For a deviation from a midpoint, `success` under it and `error` over it, at 12, 22, 33 and 44% in four equal steps up to a cap, and `action.hover` under 1%, which is no change. Keep the tints at 44% or under, so `text.primary` holds 4.5:1 on every one. Pick the cap for the data: pass it as a prop, and say it in a line under the table along with the neutral band. A cell with nothing to compare stays a dash on the bare surface, and every cell takes a `Tooltip` with its full statement, which is also its accessible name.
+
+<Canvas of={TableStories.TintedCells} />
+
+- **Tinted by magnitude.** For a value with no midpoint, `chart.sequential`, in equal-width steps across the range, so two values in one color are never more than a step apart. Say the step in the line under the table. The text takes the role that holds 4.5:1 on each step: `text.primary` on the two nearest the surface, `common.black` on the middle one and `background.level0` on the two furthest.
+
+<Canvas of={TableStories.TintedByMagnitude} />
+
 - **Totals.** Put the sum in a `TableFooter`, with `variant="head"` on its cells so it reads at full size rather than in MUI's small footer type. Say in the page if a total leaves out buildings with missing readings.
 
 <Canvas of={TableStories.Totals} />
@@ -110,6 +118,8 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - Don't set `size="small"` for a whole screen to fit more in; drop a column or let the table scroll, and keep `small` for a one-off with a comment saying why.
 - Do use `hover` on a row only when clicking the row does something.
 - Don't make a row clickable without a link or button inside it; a keyboard can't reach a row, so give it a control as well.
+- Do show a tinted cell's number as well as its tint, and state the scale in words, so no cell rests on color.
+- Don't tint past 44% or build a scale from your own colors; stay on `heatmap-scale`'s roles.
 - Do let the theme draw the row lines.
 - Don't add `'&:last-child td': { border: 0 }` from MUI's demo; the theme already removes the last line (`table-last-row`).
 - Do name a table that scrolls with `role="region"`, an `aria-label` and `tabIndex={0}`, so a keyboard can scroll it.
@@ -139,6 +149,7 @@ Theme-wide departures (CSS variables, the theme radius, surface and border level
 
 - `Card` for the frame around a table.
 - `AsyncContent` for loading, empty and failed tables.
+- `Heatmap` for a grid read by color, with its numbers in tooltips.
 - `Checkbox` for selecting rows.
 - Rules → One border per edge for how a table meets its card.
 
