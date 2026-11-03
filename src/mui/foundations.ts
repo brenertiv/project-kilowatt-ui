@@ -1,5 +1,5 @@
 import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
-import { aquaverde, brand, navy, orange, parchment, slate, yellow } from './colors';
+import { aquaverde, brand, navy, orange, parchment, slate, violet, yellow } from './colors';
 import { borderSteps, departures, elevationSurfaces, intentSteps, primarySteps, secondarySteps, surfaceSteps, type ColorScheme } from './departures';
 import { mergeOptions } from './theme';
 import { diffThemes, stockTheme } from './themeDiff';
@@ -131,12 +131,12 @@ export function colorMarkdown() {
     '## Ramps',
     "The primitives the surface and border levels, the intents and the chart colors are read from, in MUI's color-object shape (`src/mui/colors.ts`). Components never use a ramp step directly; they use a level, an intent or a chart role.",
     table(
-      ['Step', 'Slate (light surfaces)', 'Navy (dark surfaces, primary)', 'Brand (secondary)', 'Orange (light warning)', 'Yellow (dark warning)', 'Parchment (chart series)', 'Aquaverde (chart series)'],
-      [...new Set([slate, navy, brand, orange, yellow, parchment, aquaverde].flatMap((ramp) => Object.keys(ramp)).map(Number))]
+      ['Step', 'Slate (light surfaces)', 'Navy (dark surfaces, primary)', 'Brand (secondary)', 'Orange (light warning)', 'Yellow (dark warning)', 'Parchment (chart series)', 'Aquaverde (chart series)', 'Violet (chart series)'],
+      [...new Set([slate, navy, brand, orange, yellow, parchment, aquaverde, violet].flatMap((ramp) => Object.keys(ramp)).map(Number))]
         .sort((a, b) => a - b)
         .map((step) => [
           code(step),
-          ...[slate, navy, brand, orange, yellow, parchment, aquaverde].map((ramp) => (step in ramp ? code((ramp as Record<number, string>)[step]) : '—')),
+          ...[slate, navy, brand, orange, yellow, parchment, aquaverde, violet].map((ramp) => (step in ramp ? code((ramp as Record<number, string>)[step]) : '—')),
         ]),
     ),
     '## Action',
