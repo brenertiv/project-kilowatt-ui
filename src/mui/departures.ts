@@ -3,7 +3,7 @@ import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
 import { green, purple, red } from '@mui/material/colors';
-import { aquaverde, brand, navy, orange, parchment, slate, yellow } from './colors';
+import { aquaverde, brand, navy, orange, parchment, slate, violet, yellow } from './colors';
 
 /**
  * Every way Kilowatt departs from stock Material UI, and nothing else.
@@ -125,19 +125,21 @@ export const secondarySteps: Record<ColorScheme, { main: keyof typeof brand; lig
 };
 
 /**
- * Chart colors, per scheme (Rules → Charts), from four ramps only: brand, aquaverde, parchment and
- * navy. Red, yellow and green are signals (error, warning, success) and reach a chart only through
- * the intents. `series` is six colors in a fixed order: the first three are one step each of brand,
- * aquaverde and parchment, the fourth is navy (light) or a pale brand (dark), and the last two are
- * second steps of aquaverde and of parchment or brand. Each reaches 3:1 on every surface level, and
- * every pair stays apart under normal vision and simulated protanopia, deuteranopia and tritanopia
- * (departures.test.ts); with two low-chroma neutrals, that means the same step of aquaverde and
- * parchment never sit together, and lightness does much of the work. `neutral` is a mid step of the
- * neutral ramp not in the series (aquaverde in light, parchment in dark), at 3:1 and apart from the six.
+ * Chart colors, per scheme (Rules → Charts), from five ramps only: brand, aquaverde, parchment,
+ * navy and violet. Red, yellow and green are signals (error, warning, success) and reach a chart
+ * only through the intents. `series` is six colors in a fixed order: the first three are one step
+ * each of brand, aquaverde and parchment, the fourth is navy (light) or a pale brand (dark), the
+ * fifth a second step of aquaverde, and the sixth violet, the one hue with real chroma beside
+ * brand, so a chart that reaches six series gets the most separation where it needs it most. Each
+ * reaches 3:1 on every surface level, and every pair stays apart under normal vision and simulated
+ * protanopia, deuteranopia and tritanopia (departures.test.ts); with two low-chroma neutrals, that
+ * means the same step of aquaverde and parchment never sit together, and lightness does much of the
+ * work. `neutral` is a mid step of the neutral ramp not in the series (aquaverde in light,
+ * parchment in dark), at 3:1 and apart from the six.
  * `sequential` is the brand ramp, from the step nearest the surface to the one furthest from it,
  * so it runs light to dark in light and dark to light in dark.
  */
-const chartRamps = { brand, aquaverde, parchment, navy } as const;
+const chartRamps = { brand, aquaverde, parchment, navy, violet } as const;
 type ChartRamp = keyof typeof chartRamps;
 type ChartStep = { ramp: ChartRamp; step: string };
 
@@ -149,7 +151,7 @@ export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: Cha
       { ramp: 'parchment', step: '600' },
       { ramp: 'navy', step: '200' },
       { ramp: 'aquaverde', step: '500' },
-      { ramp: 'parchment', step: '800' },
+      { ramp: 'violet', step: '500' },
     ],
     neutral: { ramp: 'aquaverde', step: '700' },
     sequential: ['100', '300', '500', '700', '900'].map((step) => ({ ramp: 'brand', step })),
@@ -161,7 +163,7 @@ export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: Cha
       { ramp: 'parchment', step: '500' },
       { ramp: 'brand', step: '50' },
       { ramp: 'aquaverde', step: '400' },
-      { ramp: 'brand', step: '600' },
+      { ramp: 'violet', step: '300' },
     ],
     neutral: { ramp: 'parchment', step: '300' },
     sequential: ['900', '700', '500', '300', '100'].map((step) => ({ ramp: 'brand', step })),
@@ -526,7 +528,7 @@ export const departures: Departure[] = [
     id: 'chart-palette',
     area: 'Palette',
     title: 'Chart colors',
-    why: "MUI's palette has no colors for data. Charts get three roles, all from four ramps (brand, aquaverde, parchment and navy): `chart.series`, six colors in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: deviation and status reuse the intents, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color.",
+    why: "MUI's palette has no colors for data. Charts get three roles, all from five ramps (brand, aquaverde, parchment, navy and violet): `chart.series`, six colors in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: deviation and status reuse the intents, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color.",
     options: (scheme) => {
       const { series, neutral, sequential } = chartSteps[scheme];
       return { palette: { chart: { series: series.map(chartColor), neutral: chartColor(neutral), sequential: sequential.map(chartColor) } } };

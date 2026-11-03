@@ -129,3 +129,21 @@ export const aquaverde = {
   900: '#273432',
   950: '#182322',
 } as const;
+
+/**
+ * Violet, a saturated blue-violet: lavender at 50 to a deep blue-violet at 900, with no 950.
+ * The one chart ramp with real chroma beside brand, for the series slot that needs the most
+ * separation from the neutrals (`chart-palette`).
+ */
+export const violet = {
+  50: '#f0e7fc',
+  100: '#d5c3f6',
+  200: '#b99cf1',
+  300: '#9b72eb',
+  400: '#8351e7',
+  500: '#6a2ee1',
+  600: '#5e29da',
+  700: '#4d21d2',
+  800: '#3a19cc',
+  900: '#0405c3',
+} as const;
