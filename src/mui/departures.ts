@@ -2,8 +2,8 @@ import type { ThemeOptions } from '@mui/material/styles';
 import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
-import { green, purple, red } from '@mui/material/colors';
-import { aquaverde, brand, navy, orange, parchment, slate, violet, yellow } from './colors';
+import { purple, red } from '@mui/material/colors';
+import { aquaverde, brand, green, navy, orange, parchment, slate, violet, yellow } from './colors';
 
 /**
  * Every way Kilowatt departs from stock Material UI, and nothing else.
@@ -74,8 +74,8 @@ type Intent = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
 
 /**
  * The intents Kilowatt moves off MUI's default, per scheme: a step from a color ramp (MUI's
- * own, or Kilowatt's orange and yellow for warning) that passes 4.5:1 as text on every surface level, with its contrast
- * text also at 4.5:1 or better. Intents not listed keep MUI's default, which
+ * own for error and info; Kilowatt's orange and yellow for warning and green for success) that
+ * passes 4.5:1 as text on every surface level, with its contrast text also at 4.5:1 or better. Intents not listed keep MUI's default, which
  * already passes. MUI derives `light` and `dark` from `main`.
  */
 export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: string; step: string; main: string }>>> = {
@@ -83,7 +83,7 @@ export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: str
     error: { ramp: 'red', step: '800', main: red[800] },
     warning: { ramp: 'orange', step: '700', main: orange[700] },
     info: { ramp: 'purple', step: '500', main: purple[500] },
-    success: { ramp: 'green', step: '900', main: green[900] },
+    success: { ramp: 'green', step: '700', main: green[700] },
   },
   dark: {
     error: { ramp: 'red', step: '100', main: red[100] },
@@ -232,7 +232,7 @@ export const departures: Departure[] = [
     id: 'intents-on-surfaces',
     area: 'Palette',
     title: 'Intent colors that pass on every surface',
-    why: "MUI's intents are tuned for a white or #121212 background, and several fall below 4.5:1 as text on the surface levels. These take a nearby step from MUI's own color ramps that passes on every level in its scheme; the intents that already pass stay as MUI ships them. Warning uses Kilowatt's own ramps: orange 700 in light (clearly apart from error's red) and yellow 400 in dark.",
+    why: "MUI's intents are tuned for a white or #121212 background, and several fall below 4.5:1 as text on the surface levels. Error and info take a nearby step from MUI's own color ramps that passes on every level in its scheme; the intents that already pass stay as MUI ships them. Warning and success use Kilowatt's own ramps: orange 700 in light (clearly apart from error's red) and yellow 400 in dark for warning, and Enertiv's jade green for success, 700 in light and 300 in dark.",
     options: (scheme) => ({
       palette: Object.fromEntries(
         Object.entries(intentSteps[scheme]).map(([intent, { main }]) => [intent, { main, contrastText: intentContrastText[scheme] }]),
