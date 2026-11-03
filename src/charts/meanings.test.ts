@@ -21,7 +21,7 @@ describe('meanings', () => {
   it('cover every utility type and work-order status the API serves', () => {
     for (const { name } of utilityBillTypes) expect(utilitySlots, name).toHaveProperty([name]);
     for (const { name } of actionStatuses) expect(workOrderStatusIntents, name).toHaveProperty([name]);
-    // Survey, the seventh, is drawn neutral: the palette has six hues.
+    // Survey, the seventh, is drawn neutral: the palette has six series slots.
     expect(actionTypes.filter(({ name }) => !(name in workOrderTypeSlots)).map(({ name }) => name)).toEqual(['Survey']);
   });
 

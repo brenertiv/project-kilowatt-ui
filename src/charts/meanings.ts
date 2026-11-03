@@ -20,7 +20,7 @@ export const utilitySlots: Record<string, number> = {
 };
 
 /**
- * A work-order type's series slot, by its API name. The API has seven types and the palette six hues,
+ * A work-order type's series slot, by its API name. The API has seven types and the palette six series slots,
  * so Survey, the rarest, is drawn `neutral`; a chart of all seven groups the smallest into "Other".
  */
 export const workOrderTypeSlots: Record<string, number> = {

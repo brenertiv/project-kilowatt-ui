@@ -1,6 +1,6 @@
 import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
 import { aquaverde, brand, navy, orange, parchment, slate, violet, yellow } from './colors';
-import { borderSteps, departures, elevationSurfaces, intentSteps, primarySteps, secondarySteps, surfaceSteps, type ColorScheme } from './departures';
+import { borderSteps, chartSteps, departures, elevationSurfaces, intentSteps, primarySteps, secondarySteps, surfaceSteps, type ColorScheme } from './departures';
 import { mergeOptions } from './theme';
 import { diffThemes, stockTheme } from './themeDiff';
 
@@ -70,6 +70,11 @@ function schemeRows(paths: string[]) {
 
 const schemeHead = ['Theme path', 'Light', 'Dark', 'Source'];
 
+/** The ramps the chart roles read from, by the names `chartSteps` uses. */
+const chartRamps: Record<string, Record<string, string>> = { brand, aquaverde, parchment, navy, violet };
+/** A chart role's cell: the ramp step and its value, as the intent table shows them. */
+const chartCell = ({ ramp, step }: { ramp: string; step: string }) => `${ramp} ${step} ${code(chartRamps[ramp][step])}`;
+
 const intents = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const;
 const intentKeys = ['main', 'light', 'dark', 'contrastText'] as const;
 
@@ -138,6 +143,16 @@ export function colorMarkdown() {
           code(step),
           ...[slate, navy, brand, orange, yellow, parchment, aquaverde, violet].map((ramp) => (step in ramp ? code((ramp as Record<number, string>)[step]) : '—')),
         ]),
+    ),
+    '## Chart colors',
+    "The data roles (Rules → Charts), set by the `chart-palette` departure from five ramps: brand, aquaverde, parchment, navy and violet. `chart.series` is six colors in a fixed order, the first three one step each of brand, aquaverde and parchment and the sixth violet, for the separation a six-series chart needs; `chart.neutral` is for what isn't the focus; `chart.sequential` is the brand ramp from the surface outward. Red, yellow and green are signals and reach a chart only through the intents. Every series color and the neutral reach 3:1 on every surface level and stay apart under simulated color-vision deficiencies.",
+    table(
+      ['Role', 'Light', 'Dark'],
+      [
+        ...chartSteps.light.series.map((_, i) => [code(`palette.chart.series[${i}]`), chartCell(chartSteps.light.series[i]), chartCell(chartSteps.dark.series[i])]),
+        [code('palette.chart.neutral'), chartCell(chartSteps.light.neutral), chartCell(chartSteps.dark.neutral)],
+        ...chartSteps.light.sequential.map((_, i) => [code(`palette.chart.sequential[${i}]`), chartCell(chartSteps.light.sequential[i]), chartCell(chartSteps.dark.sequential[i])]),
+      ],
     ),
     '## Action',
     'The overlays MUI lays over components for hover, selected, focus and disabled states.',
@@ -327,7 +342,7 @@ export function motionMarkdown() {
 export const foundationPages: { name: string; lead: string; specimen?: string; extraSpecimens?: string[]; markdown: () => string }[] = [
   {
     name: 'Color',
-    lead: "The palette in its light and dark schemes: the intents (a navy primary that turns light neutral in dark, a brand-blue secondary, a purple info, and MUI's other intents where they pass on every surface), text, action overlays, greys, the surface and border levels, and the ramps they come from.",
+    lead: "The palette in its light and dark schemes: the intents (a navy primary that turns light neutral in dark, a brand-blue secondary, a purple info, and MUI's other intents where they pass on every surface), text, action overlays, greys, the surface and border levels, the chart colors, and the ramps they come from.",
     specimen: 'Color',
     extraSpecimens: ['IntentsOnSurfaces'],
     markdown: colorMarkdown,
