@@ -1,5 +1,5 @@
 import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
-import { aquaverde, brand, navy, orange, parchment, slate, violet, yellow } from './colors';
+import { aquaverde, brand, green, navy, orange, parchment, slate, violet, yellow } from './colors';
 import { borderSteps, chartSteps, departures, elevationSurfaces, intentSteps, primarySteps, secondarySteps, surfaceSteps, type ColorScheme } from './departures';
 import { mergeOptions } from './theme';
 import { diffThemes, stockTheme } from './themeDiff';
@@ -85,7 +85,7 @@ export function colorMarkdown() {
     'The theme carries MUI\'s light and dark palettes as color schemes. Components read the palette of the active scheme, so a component never picks a color per scheme itself. Switch the scheme with `useColorScheme().setMode`.',
     '## Intents',
     'Each intent has `main`, `light`, `dark` and `contrastText`. Pass the intent to a component (`color="primary"`, `severity="error"`) rather than a color.',
-    "Every `main` passes 4.5:1 as text on all six surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. Warning uses Kilowatt's orange (light) and yellow (dark) ramps. For error, info and success, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`). MUI derives `light` and `dark` from `main`:",
+    "Every `main` passes 4.5:1 as text on all six surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. Warning uses Kilowatt's orange (light) and yellow (dark) ramps, and success Kilowatt's green. For error and info, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`). MUI derives `light` and `dark` from `main`:",
     table(
       ['Intent', 'Light', 'Dark'],
       intents.map((intent) => {
@@ -136,12 +136,12 @@ export function colorMarkdown() {
     '## Ramps',
     "The primitives the surface and border levels, the intents and the chart colors are read from, in MUI's color-object shape (`src/mui/colors.ts`). Components never use a ramp step directly; they use a level, an intent or a chart role.",
     table(
-      ['Step', 'Slate (light surfaces)', 'Navy (dark surfaces, primary)', 'Brand (secondary)', 'Orange (light warning)', 'Yellow (dark warning)', 'Parchment (chart series)', 'Aquaverde (chart series)', 'Violet (chart series)'],
-      [...new Set([slate, navy, brand, orange, yellow, parchment, aquaverde, violet].flatMap((ramp) => Object.keys(ramp)).map(Number))]
+      ['Step', 'Slate (light surfaces)', 'Navy (dark surfaces, primary)', 'Brand (secondary)', 'Orange (light warning)', 'Yellow (dark warning)', 'Green (success)', 'Parchment (chart series)', 'Aquaverde (chart series)', 'Violet (chart series)'],
+      [...new Set([slate, navy, brand, orange, yellow, green, parchment, aquaverde, violet].flatMap((ramp) => Object.keys(ramp)).map(Number))]
         .sort((a, b) => a - b)
         .map((step) => [
           code(step),
-          ...[slate, navy, brand, orange, yellow, parchment, aquaverde, violet].map((ramp) => (step in ramp ? code((ramp as Record<number, string>)[step]) : '—')),
+          ...[slate, navy, brand, orange, yellow, green, parchment, aquaverde, violet].map((ramp) => (step in ramp ? code((ramp as Record<number, string>)[step]) : '—')),
         ]),
     ),
     '## Chart colors',
