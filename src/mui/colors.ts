@@ -93,3 +93,39 @@ export const yellow = {
   800: '#ed7f32',
   900: '#e16a2e',
 } as const;
+
+/**
+ * Parchment, a warm neutral: off-white at 50 to deep brown at 950, low chroma throughout.
+ * Chart series and the dark-scheme chart neutral read from it (`chart-palette`).
+ */
+export const parchment = {
+  50: '#f6f3ee',
+  100: '#f0e4d3',
+  200: '#d4c3ac',
+  300: '#bdae99',
+  400: '#a19381',
+  500: '#897c6c',
+  600: '#736859',
+  700: '#5e5446',
+  800: '#4a4135',
+  900: '#383025',
+  950: '#271f16',
+} as const;
+
+/**
+ * Aquaverde, a muted blue-green: pale at 50 to near-black at 950, low chroma throughout.
+ * Chart series and the light-scheme chart neutral read from it (`chart-palette`).
+ */
+export const aquaverde = {
+  50: '#ebf2f1',
+  100: '#d7e3e2',
+  200: '#bacdcb',
+  300: '#98b2b0',
+  400: '#829997',
+  500: '#6e8280',
+  600: '#5b6d6b',
+  700: '#485957',
+  800: '#374544',
+  900: '#273432',
+  950: '#182322',
+} as const;
