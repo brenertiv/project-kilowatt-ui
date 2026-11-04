@@ -356,14 +356,14 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'heatmap-scale',
     kind: 'convention',
     title: 'Heatmaps color by deviation or magnitude, in steps',
-    why: "amCharts' heat rules blend continuously between two colors of the chart's choosing. Kilowatt's heatmap uses the chart color jobs (Rules → Charts): a deviation from 0 in `success` below and `error` above, in four steps of strength up to a cap, around a neutral midpoint; a magnitude in the steps of `chart.sequential`. Cells with no value take the range-band color and say why in the tooltip, and a legend in words reads the scale, so no cell rests on color alone.",
+    why: "amCharts' heat rules blend continuously between two colors of the chart's choosing. Kilowatt's heatmap uses the chart color jobs (Rules → Charts): a deviation from 0 with the worse side in `error` and the better side in `chart.neutral`, in four steps of strength up to a cap, and no change in the range-band color; a magnitude in the steps of `chart.sequential`. Cells with no value are hatched in `border.level3` and say why in the tooltip, and a legend in words reads the scale, so no cell rests on color alone.",
     charts: ['Heatmap'],
     convention: {
       amchartsDefault: '`heatRules` blending between any two colors, continuously',
-      kilowatt: "`scale=\"diverging\"`: `success`/`error` at 25–100% strength by distance from 0, capped; `scale=\"sequential\"`: `chart.sequential` steps; no data in `action.hover`; a legend in words under the grid",
+      kilowatt: "`scale=\"diverging\"`: `colors.deviation`, the `worse` side in `error` and the other in `chart.neutral`, at 25–100% strength by distance from 0, capped, and 0 in `action.hover`; `scale=\"sequential\"`: `chart.sequential` steps; no data hatched in `border.level3`; a legend in words under the grid",
       where: 'Every heatmap',
     },
-    check: /colors\.status\.success/,
+    check: /colors\.deviation\.worse/,
   },
   {
     id: 'data-grouping',

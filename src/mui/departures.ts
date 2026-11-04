@@ -528,7 +528,7 @@ export const departures: Departure[] = [
     id: 'chart-palette',
     area: 'Palette',
     title: 'Chart colors',
-    why: "MUI's palette has no colors for data. Charts get three roles, all from five ramps (brand, aquaverde, parchment, navy and violet): `chart.series`, six colors in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: deviation and status reuse the intents, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color.",
+    why: "MUI's palette has no colors for data. Charts get three roles, all from five ramps (brand, aquaverde, parchment, navy and violet): `chart.series`, six colors in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: status reuses the intents, a deviation's worse side takes `error` and its better side `chart.neutral`, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color.",
     options: (scheme) => {
       const { series, neutral, sequential } = chartSteps[scheme];
       return { palette: { chart: { series: series.map(chartColor), neutral: chartColor(neutral), sequential: sequential.map(chartColor) } } };

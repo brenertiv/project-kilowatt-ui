@@ -3,6 +3,7 @@ import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { deviationStep, deviationStrengths, type WorseSide } from './deviation';
 import { tooltipNumberFormat, type ChartInset } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
@@ -25,8 +26,10 @@ export type HeatmapProps = {
   columns: string[];
   /** The cells, in any order; a row and column with no cell shows as no data. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
   cells: HeatmapCell[];
-  /** How values map to color. `'diverging'`: a change from a midpoint of 0, below it in `success` and above it in `error`, stronger the further from 0, up to `cap`; for a variance where less is better. `'sequential'`: a magnitude, on `chart.sequential`, light to dark. Default `'diverging'`. */
+  /** How values map to color. `'diverging'`: a deviation from a midpoint of 0, the worse side in `error` and the better side in `chart.neutral`, stronger the further from 0, up to `cap`. `'sequential'`: a magnitude, on `chart.sequential`, light to dark. Default `'diverging'`. */
   scale?: 'diverging' | 'sequential';
+  /** For a diverging scale, which side of 0 is worse: `'above'` where less is better (energy, cost, emissions), `'below'` where more is (occupancy, data coverage). Default `'above'`. */
+  worse?: WorseSide;
   /** For a diverging scale, the distance from 0 at which a cell takes the full color; further values take it too. Default: the largest distance in `cells`. */
   cap?: number;
   /** The unit of the values, shown in the tooltip and the legend: `%`, `kWh`. */
@@ -41,12 +44,6 @@ export type HeatmapProps = {
   inset?: ChartInset;
 };
 
-/** How many steps a diverging scale has on each side of 0: the cell's color at 25%, 50%, 75% and 100% strength. */
-const steps = 4;
-
-/** A value's strength on a diverging scale: 1 to `steps`, by its distance from 0 against `cap`. */
-const strength = (value: number, cap: number) => Math.min(steps, Math.max(1, Math.ceil((Math.abs(value) / cap) * steps)));
-
 const states = { noData: 'No data', pending: 'Loading' } as const;
 
 /** A number with its unit: `%` sits against the number, every other unit after a space. */
@@ -55,12 +52,12 @@ const withUnit = (number: string, unit: string) => (unit === '%' ? `${number}%` 
 /**
  * A heatmap of values across two dimensions, such as buildings by month, in Kilowatt's chart theme
  * (Rules → Charts): a reference implementation that Enertiv's app rebuilds. A diverging scale shows
- * deviation from 0 in `success` and `error` either side of it, in four steps of strength; a sequential
- * scale shows magnitude on `chart.sequential`. Cells with no value take the range-band color and say
- * why in their tooltip. Every cell has a tooltip with its row, column and full value, and a legend
+ * deviation from 0, the worse side in `error` and the better side in `chart.neutral`, in four steps of
+ * strength, with no change in the range-band color; a sequential scale shows magnitude on
+ * `chart.sequential`. Cells with no value are hatched and say why in their tooltip. Every cell has a tooltip with its row, column and full value, and a legend
  * under the grid reads the scale in words. The chart sits in a `figure` named by `summary`.
  *
- * @summary A grid of cells colored by value across two dimensions, diverging or sequential, with a legend in words.
+ * @summary A grid of cells colored by value across two dimensions, a deviation or a magnitude, with a legend in words.
  * @import import { Heatmap } from 'src/charts/Heatmap';
  */
 export function Heatmap({
@@ -68,6 +65,7 @@ export function Heatmap({
   columns,
   cells,
   scale = 'diverging',
+  worse = 'above',
   cap,
   unit,
   sides = ['Below', 'Above'],
@@ -95,16 +93,19 @@ export function Heatmap({
       yAxis.data.setAll(rows.map((row) => ({ row })));
       xAxis.data.setAll(columns.map((column) => ({ column })));
 
-      // The fill for a value: a diverging step of success or error, or a step of the sequential ramp.
+      // The fill for a value: a step of the deviation's worse or better side, or a step of the sequential ramp.
       const fill = (value: number) => {
         if (scale === 'sequential') {
           const ramp = colors.sequential;
           const at = high === low ? 0 : (value - low) / (high - low);
-          return { fill: ramp[Math.min(ramp.length - 1, Math.floor(at * ramp.length))], fillOpacity: 1 };
+          return { fill: ramp[Math.min(ramp.length - 1, Math.floor(at * ramp.length))] };
         }
-        if (value === 0) return { fill: colors.neutral, fillOpacity: 0.25 };
-        return { fill: value < 0 ? colors.status.success : colors.status.error, fillOpacity: strength(value, limit) / steps };
+        const { step, worse: isWorse } = deviationStep(value, limit, worse);
+        if (step === 0) return { fill: colors.deviation.midpoint };
+        return { fill: (isWorse ? colors.deviation.worse : colors.deviation.better)[step - 1] };
       };
+      // No data is hatched in border.level3 over the card, so it reads as absent rather than as a value or as no change.
+      const hatch = am5.LinePattern.new(root, { color: colors.hatch, rotation: 45, strokeWidth: 1, gap: 4 });
       const byKey = new Map(cells.map((cell) => [`${cell.row}\u0000${cell.column}`, cell]));
       const data = rows.flatMap((row) =>
         columns.map((column) => {
@@ -117,8 +118,7 @@ export function Heatmap({
             value: value ?? 0,
             // A change is signed, so "+12%" and "−12%" don't rest on the cell's color.
             text: note ?? withUnit(`${scale === 'diverging' && value! > 0 ? '+' : ''}${root.numberFormatter.format(value!, tooltipNumberFormat)}`, unit),
-            // A cell with no value takes the range-band color, so it reads as absent rather than as a value.
-            cellSettings: note ? { fill: colors.band, fillOpacity: 1 } : fill(value!),
+            cellSettings: note ? { fill: colors.surface, fillPattern: hatch } : fill(value!),
           };
         }),
       );
@@ -136,6 +136,8 @@ export function Heatmap({
       );
       series.columns.template.setAll({
         templateField: 'cellSettings',
+        // Every fill is a solid color already blended over the card, so no cell is translucent.
+        fillOpacity: 1,
         width: am5.percent(100),
         height: am5.percent(100),
         // The gap between cells is the card surface showing through.
@@ -150,12 +152,14 @@ export function Heatmap({
       });
       series.data.setAll(data);
     },
-    [rows, columns, cells, scale, limit, low, high, unit],
+    [rows, columns, cells, scale, worse, limit, low, high, unit],
   );
   const ref = useChart(build);
 
   // The legend reads the scale in words under the grid, with swatches in the cells' colors.
   const swatch = (bgcolor: string, opacity = 1) => <Box key={`${bgcolor}${opacity}`} aria-hidden sx={{ width: 16, height: 12, borderRadius: 0.5, bgcolor, opacity }} />;
+  // A side's swatches, weakest first: the worse side's color or the better side's.
+  const side = (isWorse: boolean) => deviationStrengths.map((strength) => swatch(isWorse ? 'error.main' : 'chart.neutral', strength));
   const caption = (text: string) => (
     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
       {text}
@@ -170,9 +174,9 @@ export function Heatmap({
         {scale === 'diverging' ? (
           <>
             {caption(`${sides[0]} (−${number(limit)} or more)`)}
-            {[4, 3, 2, 1].map((step) => swatch('success.main', step / steps))}
-            {swatch('chart.neutral', 0.25)}
-            {[1, 2, 3, 4].map((step) => swatch('error.main', step / steps))}
+            {side(worse === 'below').reverse()}
+            {swatch('action.hover')}
+            {side(worse === 'above')}
             {caption(`${sides[1]} (+${number(limit)} or more)`)}
           </>
         ) : (
@@ -183,7 +187,15 @@ export function Heatmap({
           </>
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
-          {swatch('action.hover')}
+          <Box
+            aria-hidden
+            sx={{
+              width: 16,
+              height: 12,
+              borderRadius: 0.5,
+              backgroundImage: (theme) => `repeating-linear-gradient(-45deg, ${theme.vars!.palette.border.level3} 0 1px, transparent 1px 5px)`,
+            }}
+          />
           {caption('No data')}
         </Box>
       </Box>

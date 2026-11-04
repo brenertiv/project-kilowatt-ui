@@ -145,7 +145,7 @@ export function colorMarkdown() {
         ]),
     ),
     '## Chart colors',
-    "The data roles (Rules → Charts), set by the `chart-palette` departure from five ramps: brand, aquaverde, parchment, navy and violet. `chart.series` is six colors in a fixed order, the first three one step each of brand, aquaverde and parchment and the sixth violet, for the separation a six-series chart needs; `chart.neutral` is for what isn't the focus; `chart.sequential` is the brand ramp from the surface outward. Red, yellow and green are signals and reach a chart only through the intents. Every series color and the neutral reach 3:1 on every surface level and stay apart under simulated color-vision deficiencies.",
+    "The data roles (Rules → Charts), set by the `chart-palette` departure from five ramps: brand, aquaverde, parchment, navy and violet. `chart.series` is six colors in a fixed order, the first three one step each of brand, aquaverde and parchment and the sixth violet, for the separation a six-series chart needs; `chart.neutral` is for what isn't the focus; `chart.sequential` is the brand ramp from the surface outward. A deviation from a midpoint takes `error` on its worse side and `chart.neutral` on its better, each in four steps over the surface, with no change in `action.hover`; these are blends of existing roles, not roles of their own. Red, yellow and green are signals and reach a chart only through the intents. Every series color and the neutral reach 3:1 on every surface level and stay apart under simulated color-vision deficiencies.",
     table(
       ['Role', 'Light', 'Dark'],
       [
