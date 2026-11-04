@@ -147,3 +147,22 @@ export const violet = {
   800: '#3a19cc',
   900: '#0405c3',
 } as const;
+
+/**
+ * Green, Enertiv's jade: a pale mint at 50, the vivid jade at 300, deep teal-greens to 950.
+ * The success intent reads from it (`intents-on-surfaces`): 700 in light, the lightest step
+ * that passes 4.5:1 on every light surface with white text on it, and 300 in dark.
+ */
+export const green = {
+  50: '#e1ffef',
+  100: '#bcfedc',
+  200: '#84f4c1',
+  300: '#00e5a0',
+  400: '#1bc28c',
+  500: '#0fa477',
+  600: '#0a8864',
+  700: '#086d51',
+  800: '#00533e',
+  900: '#033c2d',
+  950: '#09271e',
+} as const;
