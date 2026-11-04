@@ -1,5 +1,6 @@
 import type { LayerSpecification, StyleSpecification } from 'maplibre-gl';
 import { decomposeColor, rgbToHex } from '@mui/material/styles';
+import { deviationSteps } from '../charts/deviation';
 import { createSchemeTheme } from '../mui/theme';
 import type { ColorScheme } from '../mui/departures';
 import { mapDepartures, type BasemapFeature, type BasemapThemeContext, type MapDeparture } from './departures';
@@ -157,9 +158,14 @@ export function mapColors(scheme: ColorScheme) {
     series: palette.chart.series.map(rgba),
     neutral: rgba(palette.chart.neutral),
     sequential: palette.chart.sequential.map(rgba),
-    /** Deviation from a midpoint: below and above. */
-    below: rgba(palette.error.main),
-    above: rgba(palette.success.main),
+    /**
+     * A deviation from a midpoint, as for charts (Rules → Charts → Deviation from a midpoint): the worse side
+     * in `error`, the better side in `chart.neutral`, four steps each from the midpoint outward, blended over
+     * the land, and no change in the range-band color. Pass a side's steps as `colors` to `colorBins`.
+     */
+    deviation: (({ worse, better, midpoint }) => ({ worse: worse.map(rgba), better: better.map(rgba), midpoint: rgba(midpoint) }))(
+      deviationSteps(palette, land),
+    ),
     /** Status, as everywhere else. */
     info: rgba(palette.info.main),
     warning: rgba(palette.warning.main),

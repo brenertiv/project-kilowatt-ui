@@ -1,5 +1,6 @@
 import { alpha, decomposeColor, getContrastRatio, type CssVarsPalette } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
+import { deviationSteps } from '../charts/deviation';
 import { navy, slate } from './colors';
 import { departures, type ColorScheme } from './departures';
 import { createKilowattTheme, createSchemeTheme } from './theme';
@@ -217,6 +218,23 @@ describe('chart palette', () => {
     colors.forEach((a, i) =>
       colors.slice(i + 1).forEach((b) => expect(apart(a, b), `${a} and ${b}`).toBeGreaterThanOrEqual(minSeparation)),
     );
+  });
+
+  it.each(schemes)('keeps a %s-scheme deviation readable: error against the neutral, step by step, apart from no change', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    // The worse and better sides at full strength, under every simulated deficiency.
+    expect(apart(palette.error.main, palette.chart.neutral), 'error and chart.neutral').toBeGreaterThanOrEqual(minSeparation);
+    for (const level of ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const) {
+      const surface = palette.background[level];
+      const { worse, better, midpoint } = deviationSteps(palette, surface);
+      for (const [side, steps] of Object.entries({ worse, better })) {
+        const contrasts = steps.map((color) => getContrastRatio(color, surface));
+        contrasts.slice(1).forEach((contrast, i) => expect(contrast, `${side} step ${i + 2} on ${level}`).toBeGreaterThan(contrasts[i]));
+        expect(contrasts.at(-1), `${side} at full strength on ${level}`).toBeGreaterThanOrEqual(graphic);
+        // The first step stays apart from no change, so a small deviation never reads as none.
+        expect(apart(steps[0], midpoint), `${side} step 1 and no change on ${level}`).toBeGreaterThanOrEqual(minSeparation);
+      }
+    }
   });
 
   it.each(schemes)('runs the %s-scheme sequential ramp from the surface outward, ending at 3:1', (scheme) => {

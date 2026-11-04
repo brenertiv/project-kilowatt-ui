@@ -3,7 +3,7 @@ import * as HeatmapStories from './Heatmap.stories';
 
 <Meta
   of={HeatmapStories}
-  summary="Kilowatt's reference heatmap for values across two dimensions, such as buildings by month: a change from 0 in success and error, or a magnitude on the sequential ramp, with a legend in words."
+  summary="Kilowatt's reference heatmap for values across two dimensions, such as buildings by month: a deviation from 0 with the worse side in error, or a magnitude on the sequential ramp, with a legend in words."
 />
 
 # Heatmap
@@ -40,32 +40,38 @@ import { Heatmap } from 'src/charts/Heatmap';
 </Card>
 ```
 
-Each cell names its `row` and `column`. A cell with no value says why with `state`: `'noData'` for nothing recorded (before metering began, a gap) and `'pending'` while it loads. A row and column with no cell at all show as no data. Keep `cells` stable (a constant or `useMemo`), since the chart is rebuilt when it changes.
+Each cell names its `row` and `column`. A diverging heatmap colors the worse side of 0 in `error` and the better side in `chart.neutral`; set which side is worse with `worse` (Rules → Charts → Deviation from a midpoint). A cell with no value says why with `state`: `'noData'` for nothing recorded (before metering began, a gap) and `'pending'` while it loads. A row and column with no cell at all show as no data. Keep `cells` stable (a constant or `useMemo`), since the chart is rebuilt when it changes.
 
 ## Variants
 
-- **Diverging.** The default: a change from 0, below in `success` and above in `error`, in four steps of strength, full strength from `cap` on. For a variance where less is better (energy, cost, emissions). Name both sides with `sides`.
+- **Diverging.** The default: a deviation from 0, the worse side in `error` and the better side in `chart.neutral`, in four steps of strength, full strength from `cap` on, and 0 in `action.hover`. Above 0 is worse by default, for a variance where less is better (energy, cost, emissions). Name both sides with `sides`.
+
+<Canvas of={HeatmapStories.WorseBelow} />
+
+- **Worse below.** `worse="below"`, for a variance where more is better (occupancy, data coverage): `error` under 0 and `chart.neutral` over it.
 - **Sequential.** `scale="sequential"`: a magnitude on `chart.sequential`, light to dark, with the range in the legend.
 
 ## States
 
-- **No data.** The cell takes the range-band color (`action.hover`), and its tooltip says "No data".
+- **No data.** The cell is hatched in `border.level3`, and its tooltip says "No data". It isn't filled, so it never reads as 0, which takes `action.hover`.
 - **Pending.** The same, with "Loading" in the tooltip, while that cell's data is on its way; the rest show as they arrive.
 
 ## Do and don't
 
 - Do set `cap` to the change that matters (15%), so a few outliers don't wash out every other cell.
 - Don't let one extreme month set the scale for the whole grid.
-- Do use the diverging scale only where one direction is better; say which in `sides`.
-- Don't color a magnitude with success and error; use `scale="sequential"`.
+- Do use the diverging scale only where one direction is worse; set it with `worse`, and say what each side means in `sides`.
+- Don't use the diverging scale where neither side is worse (a change in a building's size); show the size of the change on `scale="sequential"` and its sign in the tooltip.
+- Don't color the better side `success`: only the worse side signals, so the cells that need attention are the only ones in color.
+- Don't color a magnitude with a deviation's colors; use `scale="sequential"`.
 - Do give months before metering began `state: 'noData'`.
 - Don't write 0 for a month with no data; 0 is a value, and it reads as "no change".
 - Do write `summary` with the pattern and the cells that stand out.
 
 ## MUI departures
 
-- `chart-palette`: a sequential heatmap takes `chart.sequential`, and the midpoint of a diverging one `chart.neutral`.
-- `intents-on-surfaces`: a diverging heatmap takes `success` and `error` as they are on the card surface, at four strengths.
+- `chart-palette`: a sequential heatmap takes `chart.sequential`, and the better side of a diverging one `chart.neutral`.
+- `intents-on-surfaces`: a diverging heatmap takes `error` as it is on the card surface, at four strengths, for the worse side.
 
 Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
 
@@ -80,13 +86,14 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `chart-card`: the heatmap sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
 - `full-value-tooltips`: every cell has a tooltip with its row, column and full value and unit, signed for a change.
 - `chart-text-alternative`: the `figure` around the heatmap is named by `summary` (`aria-label`).
-- `heatmap-scale`: deviation in `success` and `error` steps around a neutral midpoint, or magnitude in `chart.sequential` steps; no data in `action.hover`; a legend in words.
+- `heatmap-scale`: deviation in `error` steps on the worse side and `chart.neutral` steps on the better, 0 in `action.hover`, or magnitude in `chart.sequential` steps; no data hatched; a legend in words.
 
 ## Accessibility
 
 - The heatmap draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say the overall pattern and the cells that stand out.
 - Every cell's tooltip names its row and column and gives the full value, signed for a change ("+18%"), or why it has none.
-- The legend under the grid is text: what each side means, the cap, and what the no-data color stands for.
+- The legend under the grid is text: what each side means, the cap, and what the hatched no-data cell stands for.
+- Only the worse side is red, and the better side is the neutral; the two stay apart under simulated color-vision deficiencies, and every cell's tooltip still gives its signed value.
 - For the full table of values, offer it beside the heatmap (a table view).
 
 ## Related

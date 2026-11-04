@@ -314,12 +314,20 @@ const strengths = [0.12, 0.22, 0.33, 0.44];
 /** Under this distance from 0 a change is no change: noise, not a signal. */
 const neutral = 1;
 
-/** A cell's tint: `action.hover` under `neutral`, then `success` under 0 or `error` over it, in four equal steps up to `cap`. */
+/**
+ * A cell's tint (Rules → Charts → Deviation from a midpoint): `action.hover` under `neutral`, then over 0, the
+ * worse side for energy, `error`, and under it `chart.neutral`, in four equal steps up to `cap`.
+ */
 function changeTint(change: number, cap: number): SxProps<Theme> {
   if (Math.abs(change) < neutral) return { bgcolor: 'action.hover' };
   const step = Math.min(4, Math.ceil((Math.abs(change) / cap) * 4));
-  const intent = change < 0 ? 'success' : 'error';
-  return { bgcolor: (theme) => `rgba(${theme.vars!.palette[intent].mainChannel} / ${strengths[step - 1]})` };
+  const strength = strengths[step - 1];
+  return {
+    bgcolor: (theme) =>
+      change > 0
+        ? `rgba(${theme.vars!.palette.error.mainChannel} / ${strength})`
+        : `color-mix(in srgb, ${theme.vars!.palette.chart.neutral} ${strength * 100}%, transparent)`,
+  };
 }
 
 /** Change on a year earlier, a row per building and a column per month. `cap` is where the tint stops growing, in percent. */
@@ -361,14 +369,14 @@ function VarianceTable({ cap }: { cap: number }) {
       </TableContainer>
       <CardActions>
         <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
-          {`Green is less than a year earlier, red more, strongest at ${cap}% or further. Under ${neutral}% is no change.`}
+          {`Red is more than a year earlier and the neutral tint less, each strongest at ${cap}% or further. Under ${neutral}% is no change.`}
         </Typography>
       </CardActions>
     </>
   );
 }
 
-/** Every number must show: a cell tinted by its change, in `success` and `error` at four strengths up to a cap, with `action.hover` under 1%. */
+/** Every number must show: a cell tinted by its change, more in `error` and less in `chart.neutral`, at four strengths up to a cap, with `action.hover` under 1%. */
 export const TintedCells: Story = {
   parameters: { card: { title: 'Change on a Year Earlier' } },
   render: () => <VarianceTable cap={20} />,

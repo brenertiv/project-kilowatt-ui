@@ -253,7 +253,7 @@ export const mapDepartures: MapDeparture[] = [
     id: 'map-data-colors',
     kind: 'convention',
     title: 'Data colors from the chart roles',
-    why: "deck.gl's layers default to their own colors, and CARTO's styling helpers to CARTOColors schemes. Data on a Kilowatt map takes the chart roles, as RGBA arrays from `mapColors`: `series` for categories, `sequential` for magnitude, `success` and `error` for deviation, `neutral` for what isn't the focus (Rules → Charts).",
+    why: "deck.gl's layers default to their own colors, and CARTO's styling helpers to CARTOColors schemes. Data on a Kilowatt map takes the chart roles, as RGBA arrays from `mapColors`: `series` for categories, `sequential` for magnitude, `deviation` for a deviation (`error` steps on the worse side, `chart.neutral` steps on the better), `neutral` for what isn't the focus (Rules → Charts).",
     maps: all,
     convention: {
       cartoDefault: "deck.gl's default colors; CARTOColors schemes in `colorBins` and `colorContinuous`",

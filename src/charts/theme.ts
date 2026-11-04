@@ -5,6 +5,7 @@ import { decomposeColor, rgbToHex } from '@mui/material/styles';
 import { createSchemeTheme } from '../mui/theme';
 import type { ColorScheme } from '../mui/departures';
 import { chartDepartures, type ChartThemeContext } from './departures';
+import { deviationSteps } from './deviation';
 
 /**
  * Kilowatt's amCharts 5 theme (Rules → Charts, Foundations → amCharts departures). amCharts draws
@@ -66,6 +67,16 @@ export function chartColors(scheme: ColorScheme) {
     band: color(palette.action.hover),
     /** Target and reference lines, drawn dashed. */
     reference: color(palette.text.secondary),
+    /** The hatching of a mark with no value (a heatmap cell with no data): border.level3, the strongest surface border, so it shows in both schemes. */
+    hatch: color(palette.border.level3),
+    /**
+     * A deviation from a midpoint (Rules → Charts → Deviation from a midpoint): the worse side in `error`, the
+     * better side in `chart.neutral`, four steps each from the midpoint outward, blended over the card, and
+     * no change in the range-band color. Pick a step with `deviationStep` from `src/charts/deviation`.
+     */
+    deviation: (({ worse, better, midpoint }) => ({ worse: worse.map(color), better: better.map(color), midpoint: color(midpoint) }))(
+      deviationSteps(palette, card),
+    ),
     /** The intents, for a chart colored by status rather than by series (a score in its bands). Never both in one chart. */
     status: {
       success: color(palette.success.main),

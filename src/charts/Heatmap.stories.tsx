@@ -7,6 +7,7 @@ import { inCard } from 'src/stories/decorators';
 const months = monthNames.slice(0, 10);
 const worst = monthlyVariance.reduce((max, cell) => ((cell.value ?? -Infinity) > (max.value ?? -Infinity) ? cell : max));
 const busiest = monthlyUseGrid.reduce((max, cell) => (cell.value > max.value ? cell : max));
+const lowest = monthlyVariance.reduce((min, cell) => ((cell.value ?? Infinity) < (min.value ?? Infinity) ? cell : min));
 
 /**
  * Kilowatt's reference heatmap: amCharts 5 through `useChart`, colored from the palette.
@@ -24,9 +25,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * A change from a midpoint, buildings by month: less energy than last year in `success`, more in `error`,
- * stronger the further from 0, full strength from `cap` on. Cells with no data or still loading take the
- * range-band color and say so in their tooltip.
+ * A deviation from a midpoint, buildings by month: more energy than last year, the worse side, in `error`,
+ * less in `chart.neutral`, stronger the further from 0, full strength from `cap` on. Cells with no data or
+ * still loading are hatched, and say so in their tooltip.
  */
 export const Diverging: Story = {
   parameters: { card: { title: 'Energy Use Against Last Year' } },
@@ -41,6 +42,27 @@ export const Diverging: Story = {
     const figure = canvas.getByRole('figure', { name: /used less energy/ });
     await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
     await expect(canvas.getByText(/Less than 2025/)).toBeVisible();
+  },
+};
+
+/**
+ * Where less is worse, such as occupancy: `worse="below"` puts `error` under 0 and `chart.neutral` over it,
+ * and `sides` still reads left to right, lower to higher.
+ */
+export const WorseBelow: Story = {
+  parameters: { card: { title: 'Occupancy Against Last Year' } },
+  args: {
+    cells: monthlyVariance,
+    unit: '%',
+    cap: 15,
+    worse: 'below',
+    sides: ['Lower than 2025', 'Higher than 2025'],
+    summary: `Most buildings were less occupied than in 2025; ${lowest.row} fell most, ${lowest.value}% in ${lowest.column}.`,
+  },
+  play: async ({ canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /less occupied/ });
+    await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
+    await expect(canvas.getByText(/Lower than 2025/)).toBeVisible();
   },
 };
 
