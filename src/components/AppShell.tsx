@@ -14,6 +14,7 @@ import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Dialog from '@mui/material/Dialog';
 import Divider from '@mui/material/Divider';
@@ -58,6 +59,28 @@ export type AppShellPanelItem = {
   href?: string;
   /** The page's type, matched against the panel's `filter` options, such as `'report'`. */
   kind?: string;
+  /** What the row's icon means, where it carries meaning, such as a workspace's type ("Report"): it names the icon, with a tooltip. Default none: the icon is decorative. */
+  iconLabel?: string;
+  /** Whether the page is being generated: a 16px `CircularProgress` at the row's end, named Generating. Default `false`. */
+  busy?: boolean;
+  /** Whether the row is pinned to the top of its list: a pin on the row, named Pinned. The app orders the items. Default `false`. */
+  pinned?: boolean;
+  /** The row's actions, such as Pin to Top, Archive and Delete, in a More Actions button at the row's end, shown on hover, on focus and while its menu is open, and always on a touch screen. Default none: no button. */
+  actions?: AppShellItemAction[];
+};
+
+/** One action in a panel row's More Actions menu. */
+export type AppShellItemAction = {
+  /** Identifies the action. */
+  id: string;
+  /** The action's name, in Title Case: "Pin to Top". */
+  label: string;
+  /** The icon before the name. */
+  icon: IconName;
+  /** Sets the action in `error.main`, after a divider, as Delete is. List destructive actions last. Default `false`. */
+  destructive?: boolean;
+  /** Called when the action is chosen; the menu closes first. */
+  onClick: () => void;
 };
 
 /** A section's panel: its pages, with search. */
@@ -70,8 +93,13 @@ export type AppShellPanel = {
   footer?: ReactNode;
   /** Shows the System, Light and Dark appearance control under the list, as My account does. Default `false`. */
   colorScheme?: boolean;
-  /** A filter button in the panel's header that narrows the pages to one `kind`, such as Home's workspace types. `label` names the button and its menu; each option's `value` matches the items' `kind`. */
-  filter?: { label: string; options: { value: string; label: string }[] };
+  /**
+   * A filter that narrows the pages to one `kind`, such as Home's workspace types: a button in the panel's header with a
+   * menu. `label` names the button and its menu; each option's `value` matches the items' `kind`. `inline: true` puts it
+   * in words instead: one full-width small select under the panel's actions, All first, in place of the button (default
+   * `false`).
+   */
+  filter?: { label: string; options: { value: string; label: string }[]; inline?: boolean };
   /** One icon button in the panel's header, before its collapse control, for a section-wide action such as Notifications' preferences. Left out of the phone menu, so put the same action in the page too. */
   headerAction?: { label: string; icon: IconName; onClick: () => void };
 };
@@ -150,7 +178,7 @@ export type AppShellProps = {
   defaultAsidePosition?: AppShellAsidePosition | null;
   /** Called with the floating aside's position after it's dragged, or `null` after a double-click on its header puts it back in the corner, so the app can remember it. */
   onAsidePositionChange?: (position: AppShellAsidePosition | null) => void;
-  /** The accessible name of `aside`, such as "Ask Enertiv". Default `'Side panel'`. */
+  /** The accessible name of `aside`, such as "Ask Enertiv". Default `'Side Panel'`. */
   asideLabel?: string;
   /** Called when the bottom sheet's scrim or Escape closes `aside`. */
   onAsideClose?: () => void;
@@ -172,7 +200,7 @@ export type AppShellProps = {
   onPageChange?: (page: string, section: string) => void;
   /** Called with a company's id when it's chosen in the company menu. */
   onCompanyChange?: (company: string) => void;
-  /** Adds an Add company row at the foot of the company menu, which calls this. Default none: no row. */
+  /** Adds an Add Company row at the foot of the company menu, which calls this. Default none: no row. */
   onAddCompany?: () => void;
   /** The page. */
   children: ReactNode;
@@ -211,6 +239,116 @@ const rectIn = (el: Element, root: Element): MorphRect => {
   return { top: a.top - b.top, left: a.left - b.left, width: a.width, height: a.height };
 };
 
+/** A panel row's More Actions button and its menu; a destructive action follows a divider, in `error.main`. */
+function RowActions({ item }: { item: AppShellPanelItem }) {
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const actions = item.actions ?? [];
+  const firstDestructive = actions.findIndex((action) => action.destructive);
+  return (
+    <>
+      <Tooltip title="More Actions">
+        <IconButton
+          className="row-actions"
+          edge="end"
+          aria-label={`More Actions for ${item.label}`}
+          aria-haspopup="menu"
+          aria-expanded={Boolean(anchor)}
+          onClick={(event) => setAnchor(event.currentTarget)}
+          // Shown while its menu is open, whatever the pointer does.
+          sx={anchor ? { opacity: 1 } : undefined}
+        >
+          <Icon name="more_horiz" />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{ list: { 'aria-label': `Actions for ${item.label}` } }}
+      >
+        {actions.flatMap((action, index) => [
+          ...(index === firstDestructive && index > 0 ? [<Divider key={`${action.id}-divider`} />] : []),
+          <MenuItem
+            key={action.id}
+            onClick={() => {
+              setAnchor(null);
+              action.onClick();
+            }}
+            sx={action.destructive ? { color: 'error.main' } : undefined}
+          >
+            <ListItemIcon sx={action.destructive ? { color: 'error.main' } : undefined}>
+              <Icon name={action.icon} />
+            </ListItemIcon>
+            <ListItemText primary={action.label} />
+          </MenuItem>,
+        ])}
+      </Menu>
+    </>
+  );
+}
+
+/** A row with actions hides its More Actions button until hover or focus, except on a touch screen, where it always shows. */
+const actionRowSx = {
+  '& .row-actions': { opacity: 0 },
+  '&:hover .row-actions, &:focus-within .row-actions': { opacity: 1 },
+  '@media (hover: none)': { '& .row-actions': { opacity: 1 } },
+} as const;
+
+/** A panel row's list item: with a More Actions button as its secondary action when the item has actions. */
+const rowItemProps = (item: AppShellPanelItem) =>
+  item.actions?.length
+    ? { sx: { mb: 0.5, ...actionRowSx }, secondaryAction: <RowActions item={item} /> }
+    : { sx: { mb: 0.5 } };
+
+/**
+ * A page's icon (named, with a tooltip, when it carries meaning), name, second line, and at its end the generating
+ * indicator, the pin and the count. `tooltips: false` on phones, where there's no hover.
+ */
+function PageRow({ item, tooltips, secondaryVariant }: { item: AppShellPanelItem; tooltips: boolean; secondaryVariant?: 'caption' }) {
+  const icon = item.iconLabel ? (
+    <Icon name={item.icon} aria-hidden={false} role="img" aria-label={item.iconLabel} />
+  ) : (
+    <Icon name={item.icon} />
+  );
+  return (
+    <>
+      <ListItemIcon sx={{ minWidth: 36 }}>
+        {item.iconLabel && tooltips ? (
+          <Tooltip title={item.iconLabel} placement="left">
+            {icon}
+          </Tooltip>
+        ) : (
+          icon
+        )}
+      </ListItemIcon>
+      <ListItemText
+        primary={item.label}
+        secondary={item.secondary}
+        slotProps={secondaryVariant ? { secondary: { variant: secondaryVariant } } : undefined}
+      />
+      {item.busy && <CircularProgress size={16} aria-label="Generating" sx={{ ml: 1, flexShrink: 0 }} />}
+      {item.pinned && (
+        <Icon
+          name="push_pin"
+          fontSize="small"
+          color="action"
+          aria-hidden={false}
+          role="img"
+          aria-label="Pinned"
+          sx={{ ml: 1, flexShrink: 0 }}
+        />
+      )}
+      {item.count !== undefined && (
+        <Typography variant="caption" color="text.secondary" sx={{ ml: 1, fontVariantNumeric: 'tabular-nums' }}>
+          {new Intl.NumberFormat().format(item.count)}
+        </Typography>
+      )}
+    </>
+  );
+}
+
 type SectionPanelProps = {
   section: AppShellSection & { panel: AppShellPanel };
   page?: string;
@@ -235,7 +373,7 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
         <Typography variant="h5" component="h2" noWrap sx={{ flex: 1 }}>
           {label}
         </Typography>
-        {panel.filter && (
+        {panel.filter && !panel.filter.inline && (
           <>
             <Tooltip title={filterName}>
               <IconButton
@@ -288,10 +426,30 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
         </Tooltip>
       </Stack>
       {panel.actions && <Box sx={{ mx: 2, mb: 2 }}>{panel.actions}</Box>}
+      {panel.filter?.inline && (
+        // The filter in words, one field under the actions, All first, so it fits one row at any panel width. Small,
+        // as a page's filter bar may be, since it narrows the list under it (Rules → Component size).
+        <Box sx={{ px: 2, pb: 2 }}>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label={panel.filter.label}
+            value={kind ?? 'all'}
+            onChange={(event) => setKind(event.target.value === 'all' ? null : event.target.value)}
+          >
+            {[{ value: 'all', label: 'All' }, ...panel.filter.options].map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Box>
+      )}
       {/* MUI's dense list: tighter rows for a desktop sidebar, with body2 text. */}
       <List dense sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 1, py: 0 }}>
         {items.map((item) => (
-          <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+          <ListItem key={item.id} disablePadding {...rowItemProps(item)}>
             <ListItemButton
               selected={item.id === page}
               aria-current={item.id === page ? 'page' : undefined}
@@ -299,19 +457,7 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
               {...(item.href ? { component: 'a', href: item.href } : {})}
               sx={{ borderRadius: 1 }}
             >
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <Icon name={item.icon} />
-              </ListItemIcon>
-              <ListItemText
-                primary={item.label}
-                secondary={item.secondary}
-                slotProps={{ secondary: { variant: 'caption' } }}
-              />
-              {item.count !== undefined && (
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 1, fontVariantNumeric: 'tabular-nums' }}>
-                  {new Intl.NumberFormat().format(item.count)}
-                </Typography>
-              )}
+              <PageRow item={item} tooltips secondaryVariant="caption" />
             </ListItemButton>
           </ListItem>
         ))}
@@ -366,7 +512,7 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchD
         <Typography id={titleId} variant="h5" component="h2" sx={{ flex: 1 }}>
           Search
         </Typography>
-        <IconButton aria-label="Close search" onClick={onClose}>
+        <IconButton aria-label="Close Search" onClick={onClose}>
           <Icon name="close" />
         </IconButton>
       </Stack>
@@ -374,7 +520,7 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchD
         <TextField
           autoFocus
           fullWidth
-          label="Search pages"
+          label="Search Pages"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           slotProps={{
@@ -616,11 +762,11 @@ type CompanyMenuProps = {
   placement: 'right' | 'top';
   onClose: () => void;
   onChoose: (company: string) => void;
-  /** Adds the Add company row at the foot. */
+  /** Adds the Add Company row at the foot. */
   onAdd?: () => void;
 };
 
-/** The companies the person belongs to, each with its mark, the current one checked, and an optional Add company row. */
+/** The companies the person belongs to, each with its mark, the current one checked, and an optional Add Company row. */
 function CompanyMenu({ anchorEl, open, company, companies, placement, onClose, onChoose, onAdd }: CompanyMenuProps) {
   return (
     <Menu
@@ -642,7 +788,7 @@ function CompanyMenu({ anchorEl, open, company, companies, placement, onClose, o
             ...(placement === 'right' && { ml: 1 }),
           },
         },
-        list: { 'aria-label': 'Switch company' },
+        list: { 'aria-label': 'Switch Company' },
       }}
     >
       {companies.map((item) => (
@@ -667,7 +813,7 @@ function CompanyMenu({ anchorEl, open, company, companies, placement, onClose, o
           <ListItemIcon>
             <Icon name="add" />
           </ListItemIcon>
-          <ListItemText primary="Add company" />
+          <ListItemText primary="Add Company" />
         </MenuItem>
       )}
     </Menu>
@@ -736,7 +882,7 @@ function PhoneShell({
   ].filter((item) => !item.hideOnPhone);
   const levelSection = sections.find((item) => item.id === level);
   const news = sections.filter((item) => item.count).map((item) => item.badge ?? `${item.label}, ${item.count}`);
-  const menuLabel = ['Open menu', ...news].join(', ');
+  const menuLabel = ['Open Menu', ...news].join(', ');
 
   // Which way the last drill went, so the new level slides in from that side; `null` when the menu opens.
   const [direction, setDirection] = useState<'in' | 'out' | null>(null);
@@ -753,25 +899,10 @@ function PhoneShell({
     showMenu();
   };
 
-  // A page's icon, name, second line and count, in a menu row.
-  const pageRow = (item: AppShellPanelItem) => (
-    <>
-      <ListItemIcon sx={{ minWidth: 36 }}>
-        <Icon name={item.icon} />
-      </ListItemIcon>
-      <ListItemText primary={item.label} secondary={item.secondary} />
-      {item.count !== undefined && (
-        <Typography variant="caption" color="text.secondary" sx={{ ml: 1, fontVariantNumeric: 'tabular-nums' }}>
-          {new Intl.NumberFormat().format(item.count)}
-        </Typography>
-      )}
-    </>
-  );
-
   const menuHeader = (heading: string, back?: () => void) => (
     <Stack direction="row" sx={{ alignItems: 'center', gap: 1, p: 1, pl: back ? 1 : 2 }}>
       {back && (
-        <IconButton aria-label="All sections" onClick={back}>
+        <IconButton aria-label="All Sections" onClick={back}>
           <Icon name="chevron_left" />
         </IconButton>
       )}
@@ -782,7 +913,7 @@ function PhoneShell({
       <IconButton aria-label="Search" onClick={() => hideMenu(showSearch)}>
         <Icon name="search" />
       </IconButton>
-      <IconButton aria-label="Close menu" onClick={() => hideMenu()}>
+      <IconButton aria-label="Close Menu" onClick={() => hideMenu()}>
         <Icon name="close" />
       </IconButton>
     </Stack>
@@ -815,7 +946,7 @@ function PhoneShell({
         variant="outlined"
         startIcon={<CompanyMark company={company} size={24} />}
         endIcon={<Icon name="unfold_more" />}
-        aria-label={`Switch company: ${company.name}`}
+        aria-label={`Switch Company: ${company.name}`}
         aria-haspopup="menu"
         aria-expanded={companiesOpen}
         onClick={showCompanies}
@@ -867,7 +998,7 @@ function PhoneShell({
         {levelSection.panel.items.map((item) => {
           const selected = levelSection.id === section && item.id === page;
           return (
-            <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+            <ListItem key={item.id} disablePadding {...rowItemProps(item)}>
               <ListItemButton
                 selected={selected}
                 aria-current={selected ? 'page' : undefined}
@@ -875,7 +1006,7 @@ function PhoneShell({
                 {...(item.href ? { component: 'a', href: item.href } : {})}
                 sx={{ borderRadius: 1 }}
               >
-                {pageRow(item)}
+                <PageRow item={item} tooltips={false} />
               </ListItemButton>
             </ListItem>
           );
@@ -1174,7 +1305,7 @@ export function AppShell({
   headerEnd,
   aside,
   asideOpen = false,
-  asideLabel = 'Side panel',
+  asideLabel = 'Side Panel',
   onAsideClose,
   asideDocked = true,
   defaultAsideWidth = 344,
@@ -1202,12 +1333,14 @@ export function AppShell({
   // The section whose panel floats over the page while the panel is undocked.
   const [flyout, setFlyout] = useState<string | null>(null);
   // Whether the floating panel was opened from the rail item (click or Enter) rather than hover, so it
-  // stays until dismissed: the way to it, and to Dock navigation, without hover (keyboard and touch).
+  // stays until dismissed: the way to it, and to Dock Navigation, without hover (keyboard and touch).
   const [flyoutPinned, setFlyoutPinned] = useState(false);
   // Docking from the floating panel: the floating panel stays as an overlay that grows from where it floated into the
   // docked slot while the slot opens and pushes the page over, and fades only once the page behind it has loaded.
   const [morph, setMorph] = useState<Morph | null>(null);
   const { measure: measureContent, provide: provideContent, element: contentElement } = useContentWidth<HTMLElement>();
+  // The header's start, measured as `main` is, so the scope can fit itself to the room it's given (ScopePicker).
+  const { measure: measureHeaderStart, provide: provideHeaderStart } = useContentWidth<HTMLElement>();
   const asideFloats = Boolean(aside && asideOpen && wide && !asideDocked);
   const {
     ref: floatRef,
@@ -1427,7 +1560,7 @@ export function AppShell({
         section={flyoutSection}
         page={flyoutSection.id === section ? page : undefined}
         width={flyoutWidth}
-        toggle={{ label: 'Dock navigation', icon: 'left_panel_open', onClick: () => togglePanel(true) }}
+        toggle={{ label: 'Dock Navigation', icon: 'left_panel_open', onClick: () => togglePanel(true) }}
         onChoose={(id) => choosePage(id, flyoutSection.id)}
       />
     </Paper>
@@ -1476,7 +1609,7 @@ export function AppShell({
         section={morphSection}
         page={morphSection.id === section ? page : undefined}
         width="100%"
-        toggle={{ label: 'Collapse navigation', icon: 'left_panel_close', onClick: () => {} }}
+        toggle={{ label: 'Collapse Navigation', icon: 'left_panel_close', onClick: () => {} }}
         onChoose={() => {}}
       />
     </Paper>
@@ -1492,7 +1625,7 @@ export function AppShell({
     >
       <Tooltip title={company.name} placement="right">
         <IconButton
-          aria-label={`Switch company: ${company.name}`}
+          aria-label={`Switch Company: ${company.name}`}
           aria-haspopup="menu"
           aria-expanded={Boolean(companyAnchor)}
           onClick={(event) => setCompanyAnchor(event.currentTarget)}
@@ -1628,12 +1761,12 @@ export function AppShell({
                 section={current}
                 page={page}
                 width={panelWidth}
-                toggle={{ label: 'Collapse navigation', icon: 'left_panel_close', onClick: () => togglePanel(false) }}
+                toggle={{ label: 'Collapse Navigation', icon: 'left_panel_close', onClick: () => togglePanel(false) }}
                 onChoose={(id) => choosePage(id, current.id)}
               />
             </Box>
             <ResizeEdge
-              label="Resize navigation"
+              label="Resize Navigation"
               value={panelWidth}
               min={minPanelWidth}
               max={maxPanelWidth}
@@ -1650,13 +1783,16 @@ export function AppShell({
           {!hideHeader && (
             // No line under the header: it sits on the frame's surface, and the page's own content starts below it.
             <AppBar position="static" color="transparent" elevation={0}>
-              {/* The page's 24px gutter on the sides and top, so the scope sits in line with the page's title. */}
+              {/* The page's 24px gutter on the sides, and 16px above the scope: a 72px header. */}
               <Toolbar
                 disableGutters
-                sx={{ gap: 1, px: 3, pt: 3, pb: 0.5, minHeight: { md: 0 }, alignItems: 'stretch' }}
+                sx={{ gap: 1, px: 3, pt: 2, pb: 0.5, minHeight: { md: 0 }, alignItems: 'stretch' }}
               >
-                {/* Dock navigation lives in the panel and Search in the rail, so the header's room goes to the scope. */}
-                <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>{headerStart}</Box>
+                {/* Dock Navigation lives in the panel and Search in the rail, so the header's room goes to the scope. Its
+                    width is measured and handed down, so the scope takes one button where its crumbs don't fit. */}
+                <Box ref={measureHeaderStart} sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                  {provideHeaderStart(headerStart)}
+                </Box>
                 {headerEnd}
               </Toolbar>
             </AppBar>

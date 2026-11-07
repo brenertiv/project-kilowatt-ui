@@ -36,6 +36,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { Icon, type IconName } from '../icons';
+import { useContentUp } from './contentWidth';
 import { HeaderLabel } from './HeaderLabel';
 import { emptyFilter, filterSet, hasCriteria, isFilterActive, matchesCriteria, suggestName, type ScopeFilter } from './scopeFilterModel';
 
@@ -97,7 +98,7 @@ export type ScopePickerProps = {
    * scope"); `reason` says why it's fixed, in the crumb's tooltip. Default none: the scope can change.
    */
   locked?: { type: string; reason: string };
-  /** The user's saved portfolios, newest first, listed under Your portfolios at the top of the Portfolios column. Each is a fixed set of properties, shaped as a group. Default none. */
+  /** The user's saved portfolios, newest first, listed under Your Portfolios at the top of the Portfolios column. Each is a fixed set of properties, shaped as a group. Default none. */
   portfolios?: ScopeGroup[];
   /** The filter the dialog browses with (`emptyFilter` from `src/components/scopeFilterModel` when nothing is set). Default none. */
   filter?: ScopeFilter;
@@ -147,6 +148,14 @@ function Crumb({ surface, label, children }: { surface: string; label: string; c
     </Stack>
   );
 }
+
+/**
+ * The header widths, in pixels, below which the scope changes shape: under `crumbsFloor` two crumbs no longer fit at
+ * their floors, so the scope is one button; under `scopeLabelFloor` that button's label has no room, so it's the
+ * level's icon alone. Measured against the width AppShell gives its `headerStart` (the window's outside AppShell).
+ */
+const crumbsFloor = 372;
+const scopeLabelFloor = 140;
 
 /**
  * A crumb button's content: the 32px leading slot, 8px from every edge, then the label. Below `sm` the
@@ -205,6 +214,61 @@ function CrumbButton({ lead, type, name, action, current, onClick }: CrumbButton
         <CrumbContent lead={lead}>
           <CrumbLabel type={type} name={name} nameRef={nameRef} />
         </CrumbContent>
+      </Button>
+    </Tooltip>
+  );
+}
+
+type ScopeButtonProps = {
+  type: string;
+  name: string;
+  /** The portfolio a property was chosen through, in the accessible name. */
+  parent?: string;
+  lead: ReactNode;
+  /** The level's icon alone, where a label has no room. */
+  iconOnly: boolean;
+  /** Names the level in a tooltip while the name is cut off or gone. Off on touch screens (phones). */
+  tooltip: boolean;
+  expanded: boolean;
+  onClick: () => void;
+};
+
+/**
+ * The scope as one button naming the current level, which opens Change Scope at that level: on phones, and in a
+ * header too narrow for the crumbs. While its name is cut off, or gone with only the icon left, a tooltip names it.
+ */
+function ScopeButton({ type, name, parent, lead, iconOnly, tooltip, expanded, onClick }: ScopeButtonProps) {
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const truncated = useTruncated(nameRef, iconOnly ? '' : name);
+  return (
+    <Tooltip title={tooltip && (iconOnly || truncated) ? `${type} ${name}` : ''}>
+      <Button
+        color="inherit"
+        aria-label={`${type} ${name}${parent ? `, in ${parent}` : ''}. Change Scope`}
+        aria-haspopup="dialog"
+        aria-expanded={expanded}
+        onClick={onClick}
+        endIcon={iconOnly ? undefined : <Icon name="expand_all" />}
+        // The crumb's frame without its fill, across the header's middle, the chevron at its end.
+        sx={{
+          ...crumbFrame,
+          flex: iconOnly ? 'none' : 1,
+          justifyContent: 'space-between',
+          p: iconOnly ? 0.5 : 1,
+          pl: iconOnly ? 0.5 : { xs: 1.5, sm: 1 },
+          pr: iconOnly ? 0.5 : 1.5,
+          minWidth: 0,
+          maxWidth: '100%',
+          '& .MuiButton-endIcon': { ml: 1.5 },
+        }}
+      >
+        {iconOnly ? (
+          <Box sx={{ display: 'flex' }}>{lead}</Box>
+        ) : (
+          <CrumbContent lead={lead}>
+            <CrumbLabel type={type} name={name} nameRef={nameRef} />
+          </CrumbContent>
+        )}
       </Button>
     </Tooltip>
   );
@@ -288,12 +352,13 @@ function LockedCrumb({ type, name, reason }: { type: string; name: string; reaso
 /**
  * The scope control for AppShell's `headerStart`: at most two crumbs, the portfolio (all properties or
  * one group) and, at property scope, the property. Each crumb is a split button: its name sets that
- * level as the scope, and its chevron opens the Change scope dialog at that level, on the groups or on
+ * level as the scope, and its chevron opens the Change Scope dialog at that level, on the groups or on
  * the portfolio's properties. One close button after the active crumb goes up a level: from a property
  * to its portfolio, from a group to all properties. A single-property account shows the property and
  * opens nothing, and `locked` fixes the scope for an item that keeps its own: one crumb with a lock.
- * Below `md` the crumbs are one button naming the current level, for AppShell's phone header, and the
- * close button's job is the dialog's first row.
+ * Below `md`, and where the header's start is narrower than the crumbs need (372px), the crumbs are one
+ * button naming the current level, and the close button's job is the dialog's first row; below 140px the
+ * button is the level's icon alone, named in its tooltip.
  *
  * @summary The global scope as split-button breadcrumbs, with a dialog to search and browse groups and properties.
  * @import import { ScopePicker } from 'src/components/ScopePicker';
@@ -303,6 +368,11 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
   const [step, setStep] = useState<DialogStep | null>(null);
   const theme = useTheme();
   const phone = !useMediaQuery(theme.breakpoints.up('md'), { noSsr: true });
+  // A header too narrow for two crumbs at their floors takes the phone's one button, so Change Scope and the way up stay
+  // in reach and the header's buttons are never overlapped; narrower still, the button is its level's icon alone.
+  const fitsCrumbs = useContentUp(crumbsFloor);
+  const fitsLabel = useContentUp(scopeLabelFloor);
+  const compact = phone || !fitsCrumbs;
 
   const groupById = new Map(groups.map((group) => [group.id, group]));
   const savedById = new Map(portfolios.map((portfolio) => [portfolio.id, portfolio]));
@@ -384,11 +454,11 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
         lead={<CrumbIcon name={portfolioIcon} />}
         type="Portfolio"
         name={group ? group.name : 'All properties'}
-        action={portfolioIsCurrent ? 'Change portfolio' : `Set ${group?.name ?? 'all properties'} as the scope`}
+        action={portfolioIsCurrent ? 'Change Portfolio' : `Set ${group?.name ?? 'all properties'} as the scope`}
         current={portfolioIsCurrent}
         onClick={() => (portfolioIsCurrent ? setStep('groups') : choose(groupScope))}
       />
-      {chevron('groups', 'Change portfolio')}
+      {chevron('groups', 'Change Portfolio')}
     </Crumb>
   );
   const propertyCrumb = property && (
@@ -398,11 +468,11 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
         lead={<PropertyAvatar property={property} />}
         type="Property"
         name={property.name}
-        action="Change property"
+        action="Change Property"
         current
         onClick={() => setStep('properties')}
       />
-      {chevron('properties', 'Change property')}
+      {chevron('properties', 'Change Property')}
     </Crumb>
   );
 
@@ -427,32 +497,28 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
       onSavePortfolio={onSavePortfolio}
       onUpdatePortfolio={onUpdatePortfolio}
       onDeletePortfolio={onDeletePortfolio}
-      here={phone ? { icon: here.icon, name: here.name, detail: here.parent ? `${here.type} in ${here.parent}` : here.type } : undefined}
-      up={phone ? up : undefined}
+      here={compact ? { icon: here.icon, name: here.name, detail: here.parent ? `${here.type} in ${here.parent}` : here.type } : undefined}
+      up={compact ? up : undefined}
       onClose={() => setStep(null)}
       onChoose={choose}
     />
   );
 
-  // On phones the scope is one button in the header naming the current level, which opens Change scope at that level.
-  // No path of crumbs and no close button: going up a level is the dialog's first row.
-  if (phone) {
+  // On phones, and where the header can't hold the crumbs, the scope is one button naming the current level, which
+  // opens Change Scope at that level. No path of crumbs and no close button: going up a level is the dialog's first row.
+  if (compact) {
     return (
       <>
-        <Button
-          color="inherit"
-          aria-label={`${here.type} ${here.name}${here.parent ? `, in ${here.parent}` : ''}. Change scope`}
-          aria-haspopup="dialog"
-          aria-expanded={step !== null}
+        <ScopeButton
+          type={here.type}
+          name={here.name}
+          parent={here.parent}
+          lead={here.lead}
+          iconOnly={!phone && !fitsLabel}
+          tooltip={!phone}
+          expanded={step !== null}
           onClick={() => setStep(property ? 'properties' : 'groups')}
-          endIcon={<Icon name="expand_all" />}
-          // The crumb's frame without its fill, across the header's middle, the chevron at its end.
-          sx={{ ...crumbFrame, flex: 1, justifyContent: 'space-between', p: 1, pl: { xs: 1.5, sm: 1 }, pr: 1.5, minWidth: 0, maxWidth: '100%', '& .MuiButton-endIcon': { ml: 1.5 } }}
-        >
-          <CrumbContent lead={here.lead}>
-            <CrumbLabel type={here.type} name={here.name} />
-          </CrumbContent>
-        </Button>
+        />
         {dialog}
       </>
     );
@@ -544,7 +610,7 @@ type ScopeFilterViewProps = {
 };
 
 /**
- * The filter view of the Change scope dialog: criteria (location, type, floor area) over a table of the properties
+ * The filter view of the Change Scope dialog: criteria (location, type, floor area) over a table of the properties
  * the user can access, with a checkbox per row to pick properties by hand. The dialog around it draws the title and
  * the actions. A filter inside the dialog, worded as one ("Filtered to"), never as the scope.
  */
@@ -629,8 +695,8 @@ function ScopeFilterView({ properties, value, onChange, compact }: ScopeFilterVi
             </MenuItem>
           ))}
         </TextField>
-        <AreaField label="Area from" value={value.minArea} onChange={(minArea) => onChange({ ...value, minArea })} />
-        <AreaField label="Area to" value={value.maxArea} onChange={(maxArea) => onChange({ ...value, maxArea })} />
+        <AreaField label="Area From" value={value.minArea} onChange={(minArea) => onChange({ ...value, minArea })} />
+        <AreaField label="Area To" value={value.maxArea} onChange={(maxArea) => onChange({ ...value, maxArea })} />
       </Box>
 
       {/* What the table includes, worded as a filter, not a scope. */}
@@ -675,7 +741,7 @@ function ScopeFilterView({ properties, value, onChange, compact }: ScopeFilterVi
                     <Typography variant="body2" color="textSecondary">
                       No property matches these criteria.
                     </Typography>
-                    <Button onClick={() => onChange({ ...emptyFilter, selected: value.selected })}>Clear criteria</Button>
+                    <Button onClick={() => onChange({ ...emptyFilter, selected: value.selected })}>Clear Criteria</Button>
                   </Stack>
                 </TableCell>
               </TableRow>
@@ -763,7 +829,7 @@ function NameDialog({ open, title, initial, confirmLabel, onCancel, onConfirm }:
       maxWidth="xs"
       aria-labelledby={titleId}
       // Focus and select the name once the dialog is in, so typing replaces it; the dialog's own focus handling would
-      // otherwise leave focus on the paper when it opens over Change scope.
+      // otherwise leave focus on the paper when it opens over Change Scope.
       slotProps={{ transition: { onEnter: () => setName(initial), onEntered: () => inputRef.current?.focus() } }}
     >
       <form
@@ -803,7 +869,7 @@ function countAgainst(propertyIds: string[], allowed: Set<string> | null) {
 }
 
 /**
- * Change scope: search with the Filter button beside it, recent scopes, then Portfolios and Properties side by side, or
+ * Change Scope: search with the Filter button beside it, recent scopes, then Portfolios and Properties side by side, or
  * one at a time on phones, starting at `step`. Filter opens a table of the properties to narrow by criteria or pick by
  * hand; while a filter is on, the columns and results show only its properties (a portfolio with none of them stays,
  * disabled), a line under the search says so, and the result can be saved as a portfolio.
@@ -884,7 +950,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
     if (!onSavePortfolio) return;
     const set = properties.filter((property) => propertyIds.includes(property.id));
     setNaming({
-      title: 'Save as portfolio',
+      title: 'Save as Portfolio',
       initial: suggestName(set, live, properties, takenNames),
       confirmLabel: 'Save',
       confirm: (name) => {
@@ -925,7 +991,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
         secondaryAction={
           <Stack direction="row">
             {saved && (
-              <IconButton aria-label={`More actions for ${name}`} aria-haspopup="menu" onClick={(event) => setMenu({ anchor: event.currentTarget, portfolio: saved })}>
+              <IconButton aria-label={`More Actions for ${name}`} aria-haspopup="menu" onClick={(event) => setMenu({ anchor: event.currentTarget, portfolio: saved })}>
                 <Icon name="more_horiz" />
               </IconButton>
             )}
@@ -955,9 +1021,9 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
         properties.map((property) => property.id),
         null,
       )}
-      {portfolios.length > 0 && <ListSubheader disableSticky>Your portfolios</ListSubheader>}
+      {portfolios.length > 0 && <ListSubheader disableSticky>Your Portfolios</ListSubheader>}
       {portfolios.map((portfolio) => portfolioRow({ level: 'saved', id: portfolio.id }, portfolio.name, portfolio.propertyIds, portfolio.id, portfolio))}
-      {portfolios.length > 0 && groups.length > 0 && <ListSubheader disableSticky>Company portfolios</ListSubheader>}
+      {portfolios.length > 0 && groups.length > 0 && <ListSubheader disableSticky>Company Portfolios</ListSubheader>}
       {groups.map((group) => portfolioRow({ level: 'group', id: group.id }, group.name, group.propertyIds, group.id))}
     </List>
   );
@@ -966,7 +1032,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
     <Stack sx={{ minWidth: 0 }}>
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, px: 2, pt: 1, minHeight: 48 }}>
         {fullScreen && (
-          <IconButton aria-label="Back to portfolios" onClick={() => setShowProperties(false)} sx={{ ml: -1 }}>
+          <IconButton aria-label="Back to Portfolios" onClick={() => setShowProperties(false)} sx={{ ml: -1 }}>
             <Icon name="chevron_left" />
           </IconButton>
         )}
@@ -1021,7 +1087,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
     <>
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, p: 1, pl: 3 }}>
         <Typography id={titleId} variant="h5" component="h2" sx={{ flex: 1 }}>
-          Change scope
+          Change Scope
         </Typography>
         <IconButton aria-label="Close" onClick={onClose}>
           <Icon name="close" />
@@ -1030,7 +1096,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
       {/* On phones a compact header names the current scope, with its check as the columns mark it, and the level above
           it as the first row, which goes up as the desktop crumb's close button does. */}
       {here && (
-        <List aria-label="Current scope" sx={{ px: 1, py: 0 }}>
+        <List aria-label="Current Scope" sx={{ px: 1, py: 0 }}>
           <ListItem sx={{ px: 2 }}>
             <ListItemIcon sx={{ minWidth: 36 }}>
               <Icon name={here.icon} />
@@ -1157,11 +1223,11 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
   const filterView = (
     <>
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, p: 1 }}>
-        <IconButton aria-label={editing ? 'Cancel and go back' : 'Back to browsing'} onClick={leaveFilter}>
+        <IconButton aria-label={editing ? 'Cancel and Go Back' : 'Back to Browsing'} onClick={leaveFilter}>
           <Icon name="arrow_back" />
         </IconButton>
         <Typography id={titleId} variant="h5" component="h2" sx={{ flex: 1, minWidth: 0 }} noWrap>
-          {editing ? `Edit ${editing.portfolio.name}` : 'Filter properties'}
+          {editing ? `Edit ${editing.portfolio.name}` : 'Filter Properties'}
         </Typography>
         <IconButton aria-label="Close" onClick={onClose}>
           <Icon name="close" />
@@ -1252,7 +1318,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
           <ListItemIcon>
             <Icon name="edit" />
           </ListItemIcon>
-          Edit properties
+          Edit Properties
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -1260,7 +1326,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
             setMenu(null);
             if (portfolio)
               setNaming({
-                title: 'Rename portfolio',
+                title: 'Rename Portfolio',
                 initial: portfolio.name,
                 confirmLabel: 'Rename',
                 confirm: (name) => {
@@ -1298,7 +1364,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
       <Dialog open={Boolean(deleting)} onClose={() => setDeleting(null)} maxWidth="xs" fullWidth aria-labelledby={`${titleId}-delete`}>
         <DialogTitle id={`${titleId}-delete`}>Delete {deleting?.name}?</DialogTitle>
         <DialogContent>
-          <DialogContentText>It leaves Your portfolios. Its properties stay where they are.</DialogContentText>
+          <DialogContentText>It leaves Your Portfolios. Its properties stay where they are.</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleting(null)}>Cancel</Button>

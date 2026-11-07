@@ -70,7 +70,7 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 ## Variants
 
 - **`PlainFigure`:** the number in `h2` with tabular numerals and the unit after it in `body1`, `text.secondary`. Not a control.
-- **`SourceFigure`:** the same type, as a button. Its dialog has the optional `note` as its description, one line per entry, then Calculation (How, Period, Scope and Coverage, as a description list, `dl`) and Sources (`source.source` with its last update).
+- **`SourceFigure`:** the same type, as a button. Its dialog has the optional `note` as its description, one line per entry, then Calculation (How, Period, Scope and Includes, as a description list, `dl`) and Sources (`source.source` with its last update).
 - **With source links:** pass `sources` to list where the data comes from as links, each with an optional line under it. The last update moves under Calculation.
 - **With View Sources:** pass `onViewSources`, and the dialog gets a View Sources action, for a page that has a sources view. It closes the dialog first. Without it the dialog has no actions: the close button and Escape close it.
 - **`ExplainedFigure`:** the same button and dialog with your own content in `children`, usually a `FigureExplanation`.

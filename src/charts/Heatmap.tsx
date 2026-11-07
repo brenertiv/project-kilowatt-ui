@@ -3,7 +3,8 @@ import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import { deviationStep, deviationStrengths, type WorseSide } from './deviation';
+import type { Theme } from '@mui/material/styles';
+import type { WorseSide } from './deviation';
 import { tooltipNumberFormat, type ChartInset } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
@@ -26,11 +27,11 @@ export type HeatmapProps = {
   columns: string[];
   /** The cells, in any order; a row and column with no cell shows as no data. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
   cells: HeatmapCell[];
-  /** How values map to color. `'diverging'`: a deviation from a midpoint of 0, the worse side in `error` and the better side in `chart.neutral`, stronger the further from 0, up to `cap`. `'sequential'`: a magnitude, on `chart.sequential`, light to dark. Default `'diverging'`. */
+  /** How values map to color. Every cell is one end color over the card at an opacity of its value, fading to the bare card. `'diverging'`: a distance from a midpoint of 0, stronger the further from 0, full from `cap` on. `'sequential'`: a magnitude, `chart.sequential[3]` at the cell's place between the lowest and highest value. Default `'diverging'`. */
   scale?: 'diverging' | 'sequential';
-  /** For a diverging scale, which side of 0 is worse: `'above'` where less is better (energy, cost, emissions), `'below'` where more is (occupancy, data coverage). Default `'above'`. */
-  worse?: WorseSide;
-  /** For a diverging scale, the distance from 0 at which a cell takes the full color; further values take it too. Default: the largest distance in `cells`. */
+  /** For a diverging scale, which side of 0 is worse: `'above'` where less is better (energy, cost, emissions) and `'below'` where more is (occupancy, data coverage), the worse side in `error` and the better in `chart.neutral`; or `'none'` for a comparison where neither side is worse (this month against a year earlier), on `chart.diverging`, brand blue below and parchment above. Default `'above'`. */
+  worse?: WorseSide | 'none';
+  /** For a diverging scale, the distance from 0 at which a cell takes the full color; further values take it too. Set it to the change that matters. Default: the largest distance in `cells`. */
   cap?: number;
   /** The unit of the values, shown in the tooltip and the legend: `%`, `kWh`. */
   unit: string;
@@ -51,13 +52,16 @@ const withUnit = (number: string, unit: string) => (unit === '%' ? `${number}%` 
 
 /**
  * A heatmap of values across two dimensions, such as buildings by month, in Kilowatt's chart theme
- * (Rules → Charts): a reference implementation that Enertiv's app rebuilds. A diverging scale shows
- * deviation from 0, the worse side in `error` and the better side in `chart.neutral`, in four steps of
- * strength, with no change in the range-band color; a sequential scale shows magnitude on
- * `chart.sequential`. Cells with no value are hatched and say why in their tooltip. Every cell has a tooltip with its row, column and full value, and a legend
- * under the grid reads the scale in words. The chart sits in a `figure` named by `summary`.
+ * (Rules → Charts): a reference implementation that Enertiv's app rebuilds. Every cell is an overlay:
+ * one end color over the card at an opacity of its value, continuous, full from the cap and fading to
+ * the bare card at no change. A diverging scale shows a distance from 0: a deviation, the worse side in
+ * `error` and the better side in `chart.neutral`, or with `worse="none"` a comparison on `chart.diverging`;
+ * a sequential scale shows magnitude on `chart.sequential[3]` against the range. Cells with no value are
+ * hatched and say why in their tooltip. Every cell has a tooltip with its row, column and full value, and a
+ * legend under the grid draws the scale as a gradient with the cap or the range named at its ends. The chart
+ * sits in a `figure` named by `summary`.
  *
- * @summary A grid of cells colored by value across two dimensions, a deviation or a magnitude, with a legend in words.
+ * @summary A grid of cells colored by value across two dimensions, a deviation, a comparison or a magnitude, with a gradient legend.
  * @import import { Heatmap } from 'src/charts/Heatmap';
  */
 export function Heatmap({
@@ -93,16 +97,14 @@ export function Heatmap({
       yAxis.data.setAll(rows.map((row) => ({ row })));
       xAxis.data.setAll(columns.map((column) => ({ column })));
 
-      // The fill for a value: a step of the deviation's worse or better side, or a step of the sequential ramp.
+      // The fill for a value: one end color over the card at an opacity of the value over its cap or range,
+      // blended to a solid color, since the canvas can't blend through CSS. No change is the bare card.
       const fill = (value: number) => {
-        if (scale === 'sequential') {
-          const ramp = colors.sequential;
-          const at = high === low ? 0 : (value - low) / (high - low);
-          return { fill: ramp[Math.min(ramp.length - 1, Math.floor(at * ramp.length))] };
-        }
-        const { step, worse: isWorse } = deviationStep(value, limit, worse);
-        if (step === 0) return { fill: colors.deviation.midpoint };
-        return { fill: (isWorse ? colors.deviation.worse : colors.deviation.better)[step - 1] };
+        if (scale === 'sequential') return { fill: colors.heat.magnitude(high === low ? 0 : (value - low) / (high - low)) };
+        const strength = Math.abs(value) / limit;
+        if (worse === 'none') return { fill: (value < 0 ? colors.heat.below : colors.heat.above)(strength) };
+        const isWorse = worse === 'above' ? value > 0 : value < 0;
+        return { fill: (isWorse ? colors.heat.error : colors.heat.neutral)(strength) };
       };
       // No data is hatched in border.level3 over the card, so it reads as absent rather than as a value or as no change.
       const hatch = am5.LinePattern.new(root, { color: colors.hatch, rotation: 45, strokeWidth: 1, gap: 4 });
@@ -156,10 +158,19 @@ export function Heatmap({
   );
   const ref = useChart(build);
 
-  // The legend reads the scale in words under the grid, with swatches in the cells' colors.
-  const swatch = (bgcolor: string, opacity = 1) => <Box key={`${bgcolor}${opacity}`} aria-hidden sx={{ width: 16, height: 12, borderRadius: 0.5, bgcolor, opacity }} />;
-  // A side's swatches, weakest first: the worse side's color or the better side's.
-  const side = (isWorse: boolean) => deviationStrengths.map((strength) => swatch(isWorse ? 'error.main' : 'chart.neutral', strength));
+  // The legend draws the scale as the cells do, an end color fading to the card (transparent), with its ends in words.
+  type VarsPalette = NonNullable<Theme['vars']>['palette'];
+  const gradient = (stops: (palette: VarsPalette) => string) => (
+    <Box
+      aria-hidden
+      sx={(theme) => ({ width: theme.spacing(18), height: theme.spacing(1.5), borderRadius: 0.5, background: `linear-gradient(to right, ${stops(theme.vars!.palette)})` })}
+    />
+  );
+  // The ends of a diverging scale, left (below 0) to right (above 0).
+  const ends = (palette: VarsPalette): [string, string] => {
+    if (worse === 'none') return [palette.chart.diverging.below, palette.chart.diverging.above];
+    return worse === 'above' ? [palette.chart.neutral, palette.error.main] : [palette.error.main, palette.chart.neutral];
+  };
   const caption = (text: string) => (
     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
       {text}
@@ -174,15 +185,13 @@ export function Heatmap({
         {scale === 'diverging' ? (
           <>
             {caption(`${sides[0]} (−${number(limit)} or more)`)}
-            {side(worse === 'below').reverse()}
-            {swatch('action.hover')}
-            {side(worse === 'above')}
+            {gradient((palette) => `${ends(palette)[0]}, transparent 50%, ${ends(palette)[1]}`)}
             {caption(`${sides[1]} (+${number(limit)} or more)`)}
           </>
         ) : (
           <>
             {caption(number(low))}
-            {[0, 1, 2, 3, 4].map((step) => swatch(`chart.sequential.${step}`))}
+            {gradient((palette) => `transparent, ${palette.chart.sequential[3]}`)}
             {caption(number(high))}
           </>
         )}

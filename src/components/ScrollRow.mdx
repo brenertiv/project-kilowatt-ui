@@ -1,0 +1,78 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ScrollRowStories from './ScrollRow.stories';
+
+<Meta
+  of={ScrollRowStories}
+  summary="Kilowatt's ScrollRow, a row of fixed-width cards that scrolls sideways, with Back and Forward arrows in the row's header, shown only while the row overflows."
+/>
+
+# ScrollRow
+
+`ScrollRow` is a row of cards that scrolls sideways, with arrows in the row's header. The arrows show only while the row is wider than its view, as MUI `Tabs`' `scrollButtons="auto"` does, so a row that fits carries no dead buttons; each is disabled at its end, and a click moves one view less the row's gap, so the card cut off at the edge leads the next view. Under reduced motion the row jumps rather than glides. It's Kilowatt's own component, composed from MUI's `Stack` and `IconButton` (`@mui/material`, Material UI v9; MUI documents their props): `useScrollRow` watches the list, `ScrollArrows` is the pair of arrows, and `ScrollRow` and `ScrollRowItem` are the list and its fixed-width cells.
+
+<Canvas of={ScrollRowStories.Overflowing} />
+
+## When to use
+
+- Use it for a row of cards of one kind that may not fit the page's width, where a glance at the first few is the point: recent workspaces, templates.
+- For cards that must all be seen at once, lay them out on the page's grid (Rules → Content and layout), which wraps.
+- For a long list someone will search or sort, use a table.
+- For switching between views, use `Tabs`.
+
+## Usage
+
+```tsx
+import { ScrollArrows, ScrollRow, ScrollRowItem, useScrollRow } from 'src/components/ScrollRow';
+
+const row = useScrollRow();
+
+<Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+  <Typography variant="h6" component="h2">Recent Reports</Typography>
+  <ScrollArrows row={row} label="Recent Reports" />
+</Stack>
+<ScrollRow row={row} label="Recent Reports">
+  {reports.map((report) => (
+    <ScrollRowItem key={report.id}>
+      <Card variant="outlined">…</Card>
+    </ScrollRowItem>
+  ))}
+</ScrollRow>
+```
+
+`useScrollRow` measures the row on mount, on every scroll, when its box resizes and when its cards change, so the arrows follow the window, a docked panel and a card being added. Each cell is 264px wide (theme spacing 33), so the row reads the same at any width, and snaps to a card.
+
+## States
+
+- **Overflowing:** the arrows show at the header's right. Back is disabled at the start and Forward at the end.
+- **Fits:** no arrows.
+
+## Do and don't
+
+- Do put the arrows in the row's header, at its right, beside the title and after any header action.
+- Don't overlay arrows on the row's edges; they cover the cards and need a surface of their own.
+- Do keep wheel, trackpad, touch and keyboard scrolling: the arrows are an addition, not the only way along.
+- Don't move the row by a fixed number of cards; move one view less the gap, so the cut-off card leads.
+- Do give every card in a row the same height; the row stretches its cells to the tallest.
+
+## MUI departures
+
+- `medium-size`: the arrows stay at `IconButton`'s medium size, the default, beside the row's title.
+- `icon-button-radius`: the arrows take the theme radius (8px) instead of MUI's circle.
+- `icons`: the arrows are `chevron_left` and `chevron_right` from `src/icons` (Material Symbols at weight 300), not `@mui/icons-material`.
+- `focus-ring`: keyboard focus on an arrow is a 2px ring in `palette.control.focus`, the brand blue.
+
+Theme-wide departures (the palette, reduced motion) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The row is a `ul` named by `label`, so screen readers announce it as a list with its count; each card is an `li`.
+- The arrows are a `group` named "Scroll" and the row's name ("Scroll Recent Reports"), each an `IconButton` named Back or Forward. A disabled arrow is skipped by the keyboard, as MUI disables it.
+- The keyboard reaches each card in order, and the browser scrolls the focused card into view, so the arrows aren't needed to get along the row.
+- Under `prefers-reduced-motion` the arrows move the row at once.
+
+## Related
+
+- `Card` for the cards in the row.
+- `Tabs`, whose `scrollButtons="auto"` the arrows follow.
+
+<Stories includePrimary={false} />

@@ -28,7 +28,7 @@ export type FigureSource = {
   calculation: string;
   /** What the figure counts: which properties, meters or areas. */
   scope: string;
-  /** How much of the scope has data, and what is left out. */
+  /** What the figure includes: how much of the scope has data, and what is left out. The dialog labels it Includes. */
   coverage: string;
   /** When the data was last updated, formatted with `Intl.DateTimeFormat`. */
   updated: string;
@@ -266,7 +266,7 @@ export type SourceFigureProps = {
   value: string;
   /** The unit, shown after the value in `body1` and `text.secondary`. Defaults to none. */
   unit?: string;
-  /** Where the figure comes from: the dialog's Calculation shows How, Period, Scope and Coverage, and its Sources the source with its last update. */
+  /** Where the figure comes from: the dialog's Calculation shows How, Period, Scope and Includes, and its Sources the source with its last update. */
   source: FigureSource;
   /** What clarifies the number (what it counts, how sure it is): the dialog's description, at the top; an array shows one line each. Defaults to none. */
   note?: string | string[];
@@ -278,7 +278,7 @@ export type SourceFigureProps = {
 
 /**
  * A headline number that opens its source: an `ExplainedFigure` whose dialog is a `FigureExplanation`,
- * with `note` as the description, Calculation (How, Period, Scope, Coverage) and Sources, and an
+ * with `note` as the description, Calculation (How, Period, Scope, Includes) and Sources, and an
  * optional View Sources action. The card carries no caption under the figure; what would have gone
  * there goes in `note`.
  *
@@ -290,7 +290,7 @@ export function SourceFigure({ title, value, unit, source, note, sources, onView
     ['How', source.calculation],
     ['Period', source.period],
     ['Scope', source.scope],
-    ['Coverage', source.coverage],
+    ['Includes', source.coverage],
     ...(sources ? [['Last updated', source.updated]] : []),
   ];
   return (

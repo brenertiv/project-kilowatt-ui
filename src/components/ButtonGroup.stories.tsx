@@ -1,11 +1,15 @@
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import Menu from '@mui/material/Menu';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Grow from '@mui/material/Grow';
 import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
+import Paper from '@mui/material/Paper';
+import Popper from '@mui/material/Popper';
 import Stack from '@mui/material/Stack';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useRef, useState } from 'react';
-import { expect, screen } from 'storybook/test';
+import { expect, screen, waitFor } from 'storybook/test';
 import { Icon } from 'src/icons';
 
 /**
@@ -73,7 +77,10 @@ export const Sizes: Story = {
 
 const exports = ['Export CSV', 'Export PDF', 'Export XLSX'];
 
-/** A main action with alternatives: a split button, a `Button` beside an icon-only one that opens a `Menu`. */
+/**
+ * A main action with alternatives: a split button, a `Button` beside an icon-only one that opens a
+ * non-modal menu as wide as the group, built as MUI's split-button demo (`Popper`, `Grow`, `Paper`, `MenuList`).
+ */
 export const SplitButton: Story = {
   name: 'Split button',
   render: function Render(args) {
@@ -85,35 +92,58 @@ export const SplitButton: Story = {
         <ButtonGroup {...args} ref={anchor} variant="contained" aria-label="Export">
           <Button>{exports[selected]}</Button>
           <Button
-            aria-label="Choose export format"
+            aria-label="Choose Export Format"
+            aria-controls={open ? 'export-menu' : undefined}
             aria-haspopup="menu"
             aria-expanded={open}
-            onClick={() => setOpen(true)}
+            onClick={() => setOpen((wasOpen) => !wasOpen)}
           >
             <Icon name="expand_more" />
           </Button>
         </ButtonGroup>
-        <Menu anchorEl={anchor.current} open={open} onClose={() => setOpen(false)}>
-          {exports.map((label, index) => (
-            <MenuItem
-              key={label}
-              selected={index === selected}
-              onClick={() => {
-                setSelected(index);
-                setOpen(false);
-              }}
-            >
-              {label}
-            </MenuItem>
-          ))}
-        </Menu>
+        <Popper open={open} anchorEl={anchor.current} placement="bottom-start" transition disablePortal sx={{ zIndex: 'modal', width: anchor.current?.offsetWidth }}>
+          {({ TransitionProps }) => (
+            <Grow {...TransitionProps} style={{ transformOrigin: 'left top' }}>
+              <Paper elevation={8}>
+                <ClickAwayListener onClickAway={(event) => !anchor.current?.contains(event.target as Node) && setOpen(false)}>
+                  <MenuList
+                    id="export-menu"
+                    autoFocusItem
+                    // Escape and Tab close the menu, as MUI's demo does; Escape returns focus to the trigger.
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape' || event.key === 'Tab') {
+                        if (event.key === 'Escape') event.preventDefault();
+                        setOpen(false);
+                        if (event.key === 'Escape') anchor.current?.querySelector<HTMLButtonElement>('[aria-haspopup]')?.focus();
+                      }
+                    }}
+                  >
+                    {exports.map((label, index) => (
+                      <MenuItem
+                        key={label}
+                        selected={index === selected}
+                        onClick={() => {
+                          setSelected(index);
+                          setOpen(false);
+                        }}
+                      >
+                        {label}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </ClickAwayListener>
+              </Paper>
+            </Grow>
+          )}
+        </Popper>
       </>
     );
   },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Choose export format' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Choose Export Format' }));
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Export PDF' }));
     await expect(canvas.getByRole('button', { name: 'Export PDF' })).toBeVisible();
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
   },
 };
 

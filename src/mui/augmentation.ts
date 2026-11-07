@@ -18,11 +18,28 @@ export type BorderLevels = { level0: string; level1: string; level2: string; lev
 export type ControlColors = { border: string; hover: string; focus: string; pressed: string };
 
 /**
- * Chart data colors (Rules → Charts): `series` tells up to six categories apart, in a fixed
- * order; `neutral` is for what isn't the focus (a baseline, the previous period); `sequential`
- * shows magnitude, from the step nearest the surface to the one furthest from it.
+ * A comparison where neither side is worse (Rules → Charts), such as this month against a year earlier:
+ * one end color a side, `below` and `above`, on two ramps with nothing in common, drawn over the surface
+ * at an opacity of the value over its cap; `contrastText` is the text over an end color where
+ * `text.primary` no longer passes.
  */
-export type ChartColors = { series: string[]; neutral: string; sequential: string[] };
+export type DivergingColors = { below: string; above: string; contrastText: string };
+
+/**
+ * Chart data colors (Rules → Charts): `series` tells up to six categories apart, in a fixed
+ * order; `seriesDark` is a darker shade of each slot, for the negative part of a two-part bar
+ * (`undefined` where a slot has none, and the slot's own color stands in); `neutral` is for what
+ * isn't the focus (a baseline, the previous period); `sequential` shows magnitude, from the step
+ * nearest the surface to the one furthest from it; `diverging` shows a comparison where neither
+ * side is worse.
+ */
+export type ChartColors = {
+  series: string[];
+  seriesDark: (string | undefined)[];
+  neutral: string;
+  sequential: string[];
+  diverging: DivergingColors;
+};
 
 /**
  * Basemap colors the surface roles don't cover (Rules → Maps): `land`, a step past the page;

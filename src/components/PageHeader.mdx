@@ -33,6 +33,8 @@ import { PageHeader } from 'src/components/PageHeader';
 <Grid container spacing={2}>…</Grid>
 ```
 
+A report sets its title in the brand serif with `titleVariant="brand"`; every other page keeps the default, `h3`.
+
 Put it first in the page, directly in `main`, with the content after it. The condensed line reads the title; `actions` shows in both places, so keep them to a few controls.
 
 ### Building your own
@@ -42,6 +44,7 @@ Put it first in the page, directly in `main`, with the content after it. The con
 ## States
 
 - **At rest:** the title in `h3`, as the page's `h1`, with `actions` at its right. The filters sit under it.
+- **A report:** the title in `brand`, the serif (`brand-type`), at `h1`'s size and `h2`'s below `sm`, a step under the style's own size so a long report title stays on two lines. The condensed line is unchanged.
 - **Pinned:** the title has gone, and the condensed line sits at the top in `subtitle1`, truncated with `TruncatedText`, with `actions` at its right and the filters under it. The band takes the frame's surface and a `divider` under it, so the page passes behind it. It fades in with MUI's `Fade`.
 - **Phones:** the window scrolls, and the band pins under AppShell's sticky header.
 
@@ -49,6 +52,8 @@ Put it first in the page, directly in `main`, with the content after it. The con
 
 - Do let the title stand alone, with nothing under it (Rules → Content and layout).
 - Don't add a line of description under the title; put it in the content it explains.
+- Do set a report's title in the brand serif (`titleVariant="brand"`), so every report reads as a document.
+- Don't set the serif on a page that isn't a report; pages, dashboards and plans keep `h3`.
 - Do pass the page's `FilterBar` as `filters`, so it pins with the title.
 - Don't put a second sticky row under the header; everything that pins shares one band.
 - Do put `PageHeader` directly in `main`, so the band can reach across its padding.

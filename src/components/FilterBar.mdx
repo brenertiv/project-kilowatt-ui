@@ -105,7 +105,7 @@ Theme-wide departures (the palette, the type scale, the corner radius) apply too
 ## Accessibility
 
 - The bar is a `group` named by `label`.
-- The Filters field is read-only and says it opens a dialog (`aria-haspopup`); Enter, Space and the down arrow open it, as a click does. Its value says how many filters are set.
+- The Filters field is a read-only combobox, as the period's field is, and says it opens a dialog (`aria-haspopup`) and whether that dialog is open (`aria-expanded`); Enter, Space and the down arrow open it, as a click does. Its value says how many filters are set.
 - The sheet is MUI's `Drawer`, named by its heading. It traps focus, closes on Escape and returns focus to the field.
 - The view button's name says what's chosen (“View: Cards”), says it opens a menu, and has its tooltip. MUI's `Menu` moves focus into the menu and closes on Escape.
 

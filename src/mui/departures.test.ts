@@ -237,6 +237,31 @@ describe('chart palette', () => {
     }
   });
 
+  it.each(schemes)('gives each %s-scheme darker series shade 3:1 on the card and 1.5:1 from its slot', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    const card = palette.background.level3;
+    const { series, seriesDark } = palette.chart;
+    expect(seriesDark.length, 'a shade or a gap per slot').toBe(series.length);
+    seriesDark.forEach((shade, slot) => {
+      if (!shade) return;
+      expect(getContrastRatio(shade, card), `seriesDark[${slot}] on the card`).toBeGreaterThanOrEqual(graphic);
+      expect(getContrastRatio(shade, series[slot]), `seriesDark[${slot}] against its slot`).toBeGreaterThanOrEqual(1.5);
+    });
+    // success.dark draws a negative part beside success.main (SegmentedBar's shade: 'dark').
+    expect(getContrastRatio(palette.success.dark, card), 'success.dark on the card').toBeGreaterThanOrEqual(graphic);
+  });
+
+  it.each(schemes)('keeps the %s-scheme comparison scale readable: each end at 3:1, apart, under its contrast text', (scheme) => {
+    const { palette } = createSchemeTheme(scheme);
+    const card = palette.background.level3;
+    const { below, above, contrastText } = palette.chart.diverging;
+    for (const [name, end] of Object.entries({ below, above })) {
+      expect(getContrastRatio(end, card), `chart.diverging.${name} on the card`).toBeGreaterThanOrEqual(graphic);
+      expect(getContrastRatio(contrastText, end), `contrastText on chart.diverging.${name}`).toBeGreaterThanOrEqual(text);
+    }
+    expect(apart(below, above), 'chart.diverging below and above').toBeGreaterThanOrEqual(minSeparation);
+  });
+
   it.each(schemes)('runs the %s-scheme sequential ramp from the surface outward, ending at 3:1', (scheme) => {
     const { palette } = createSchemeTheme(scheme);
     const surface = palette.background.level2;

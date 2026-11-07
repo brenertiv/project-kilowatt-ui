@@ -5,7 +5,7 @@ import { decomposeColor, rgbToHex } from '@mui/material/styles';
 import { createSchemeTheme } from '../mui/theme';
 import type { ColorScheme } from '../mui/departures';
 import { chartDepartures, type ChartThemeContext } from './departures';
-import { deviationSteps } from './deviation';
+import { heatColors, heatEnd } from './deviation';
 
 /**
  * Kilowatt's amCharts 5 theme (Rules → Charts, Foundations → amCharts departures). amCharts draws
@@ -70,13 +70,25 @@ export function chartColors(scheme: ColorScheme) {
     /** The hatching of a mark with no value (a heatmap cell with no data): border.level3, the strongest surface border, so it shows in both schemes. */
     hatch: color(palette.border.level3),
     /**
-     * A deviation from a midpoint (Rules → Charts → Deviation from a midpoint): the worse side in `error`, the
-     * better side in `chart.neutral`, four steps each from the midpoint outward, blended over the card, and
-     * no change in the range-band color. Pick a step with `deviationStep` from `src/charts/deviation`.
+     * A heatmap cell's fill at a strength from 0 to 1 (Rules → Charts → A heatmap cell is an overlay): one
+     * end color over the card at that opacity, blended to a solid color for the canvas. `error` and `neutral`
+     * for a deviation's worse and better sides, `below` and `above` for a comparison on `chart.diverging`,
+     * and `magnitude` (`chart.sequential[3]`) for a value against the range. A strength of 0 is the bare card.
      */
-    deviation: (({ worse, better, midpoint }) => ({ worse: worse.map(color), better: better.map(color), midpoint: color(midpoint) }))(
-      deviationSteps(palette, card),
-    ),
+    heat: (() => {
+      const { text, error, chart } = palette;
+      const end = (value: string) => heatEnd(value, card, text.primary, chart.diverging.contrastText);
+      const ends = {
+        error: end(error.main),
+        neutral: end(chart.neutral),
+        below: end(chart.diverging.below),
+        above: end(chart.diverging.above),
+        magnitude: end(chart.sequential[3]),
+      };
+      return Object.fromEntries(
+        Object.entries(ends).map(([role, heat]) => [role, (strength: number) => am5.color(heatColors(heat, strength).fill)]),
+      ) as Record<keyof typeof ends, (strength: number) => am5.Color>;
+    })(),
     /** The intents, for a chart colored by status rather than by series (a score in its bands). Never both in one chart. */
     status: {
       success: color(palette.success.main),

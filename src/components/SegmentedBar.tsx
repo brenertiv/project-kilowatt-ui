@@ -14,6 +14,12 @@ export type Segment = {
   slot?: number;
   /** An intent, for a bar colored by status (`workOrderStatusIntents` from `src/charts/meanings`), or `neutral` for a part that isn't the focus. */
   status?: ChartStatus | 'neutral';
+  /**
+   * `'dark'` draws the part in a darker shade of its color, for the negative part of a positive-and-negative
+   * pair (Vacant beside Leased) that shares the positive part's color: an intent part in its intent's `dark`,
+   * a slot part in `chart.seriesDark` for that slot, or the slot's own color where the slot has none. Default: the color itself.
+   */
+  shade?: 'dark';
 };
 
 export type SegmentedBarProps = {
@@ -28,15 +34,21 @@ export type SegmentedBarProps = {
 const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 });
 const whole = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 
-/** Each segment's color as a CSS value from the palette, following the chart rules: slots for meanings, the intents for status, `chart.neutral` otherwise. */
+/**
+ * Each segment's color as a CSS value from the palette, following the chart rules: slots for meanings, the intents for status,
+ * `chart.neutral` otherwise, each in its darker shade for `shade: 'dark'`. It reads the palette through `theme.vars`, so the bar and
+ * its legend follow the active color scheme (under CSS variables, `theme.palette` is the default scheme's).
+ */
 function fills(segments: Segment[], theme: Theme): string[] {
-  const { chart } = theme.palette;
+  const palette = theme.vars?.palette ?? theme.palette;
+  const { chart } = palette;
   const taken = new Set(segments.flatMap(({ slot }) => (slot === undefined ? [] : [slot])));
   const free = chart.series.map((_, slot) => slot).filter((slot) => !taken.has(slot));
-  return segments.map(({ slot, status }) => {
+  return segments.map(({ slot, status, shade }) => {
     if (status === 'neutral') return chart.neutral;
-    if (status) return theme.palette[status].main;
-    return chart.series[(slot ?? free.shift() ?? 0) % chart.series.length];
+    if (status) return palette[status][shade === 'dark' ? 'dark' : 'main'];
+    const at = (slot ?? free.shift() ?? 0) % chart.series.length;
+    return (shade === 'dark' && chart.seriesDark?.[at]) || chart.series[at];
   });
 }
 
@@ -44,7 +56,7 @@ function fills(segments: Segment[], theme: Theme): string[] {
  * The parts of one whole as segments of a single bar, with a legend that names each part, its value
  * and its share. Color follows the chart rules (Rules → Charts): a product meaning takes its series
  * `slot`, a status takes its intent, and the rest take `chart.neutral`; color a bar by series or by status,
- * not both. The bar is decorative: the legend is the text everyone reads, so nothing rests on color or length.
+ * not both. A positive part and its negative share one color, the negative in its darker shade (`shade: 'dark'`). The bar is decorative: the legend is the text everyone reads, so nothing rests on color or length.
  *
  * @summary Parts of one whole as segments of a bar, with a legend of values and shares.
  * @import import { SegmentedBar } from 'src/components/SegmentedBar';

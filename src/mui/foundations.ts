@@ -74,6 +74,10 @@ const schemeHead = ['Theme path', 'Light', 'Dark', 'Source'];
 const chartRamps: Record<string, Record<string, string>> = { brand, aquaverde, parchment, navy, violet };
 /** A chart role's cell: the ramp step and its value, as the intent table shows them. */
 const chartCell = ({ ramp, step }: { ramp: string; step: string }) => `${ramp} ${step} ${code(chartRamps[ramp][step])}`;
+/** A darker series shade's cell, or a dash where the slot has none and its own color stands in. */
+const shadeCell = (step: { ramp: string; step: string } | undefined) => (step ? chartCell(step) : '—');
+/** A surface-ramp step's cell (slate or navy), for text on a chart color. */
+const textCell = ({ ramp, step }: { ramp: 'navy' | 'slate'; step: keyof typeof navy & keyof typeof slate }) => `${ramp} ${step} ${code((ramp === 'navy' ? navy : slate)[step])}`;
 
 const intents = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const;
 const intentKeys = ['main', 'light', 'dark', 'contrastText'] as const;
@@ -85,7 +89,7 @@ export function colorMarkdown() {
     'The theme carries MUI\'s light and dark palettes as color schemes. Components read the palette of the active scheme, so a component never picks a color per scheme itself. Switch the scheme with `useColorScheme().setMode`.',
     '## Intents',
     'Each intent has `main`, `light`, `dark` and `contrastText`. Pass the intent to a component (`color="primary"`, `severity="error"`) rather than a color.',
-    "Every `main` passes 4.5:1 as text on all six surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. Warning uses Kilowatt's orange (light) and yellow (dark) ramps, and success Kilowatt's green. For error and info, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`). MUI derives `light` and `dark` from `main`:",
+    "Every `main` passes 4.5:1 as text on all six surface levels in its scheme, and its `contrastText` passes 4.5:1 on it; a test enforces both. Primary is Enertiv navy in light and a light neutral with navy text in dark (the `primary-navy` departure); secondary is the brand blue (the `secondary-brand` departure), on the brand ramp, at the step that passes in each scheme. Warning uses Kilowatt's orange (light) and yellow (dark) ramps, and success Kilowatt's green. For error and info, where MUI's default falls short on the surfaces, Kilowatt uses another step of the same MUI color ramp (`@mui/material/colors`). MUI derives `light` and `dark` from `main`, except success's `dark`, a deeper green for the negative part of a two-part bar (`intents-on-surfaces`):",
     table(
       ['Intent', 'Light', 'Dark'],
       intents.map((intent) => {
@@ -145,13 +149,16 @@ export function colorMarkdown() {
         ]),
     ),
     '## Chart colors',
-    "The data roles (Rules → Charts), set by the `chart-palette` departure from five ramps: brand, aquaverde, parchment, navy and violet. `chart.series` is six colors in a fixed order, the first three one step each of brand, aquaverde and parchment and the sixth violet, for the separation a six-series chart needs; `chart.neutral` is for what isn't the focus; `chart.sequential` is the brand ramp from the surface outward. A deviation from a midpoint takes `error` on its worse side and `chart.neutral` on its better, each in four steps over the surface, with no change in `action.hover`; these are blends of existing roles, not roles of their own. Red, yellow and green are signals and reach a chart only through the intents. Every series color and the neutral reach 3:1 on every surface level and stay apart under simulated color-vision deficiencies.",
+    "The data roles (Rules → Charts), set by the `chart-palette` departure from five ramps: brand, aquaverde, parchment, navy and violet. `chart.series` is six colors in a fixed order, the first three one step each of brand, aquaverde and parchment and the sixth violet, for the separation a six-series chart needs; `chart.neutral` is for what isn't the focus; `chart.sequential` is the brand ramp from the surface outward; `chart.seriesDark` a darker shade of each slot, for the negative part of a two-part bar (a dash where a slot has none and its own color stands in); `chart.diverging` the two ends of a comparison where neither side is worse, with the text over them. A heatmap or table cell is an end color over the surface at an opacity of its value; a deviation takes `error` on its worse side and `chart.neutral` on its better, and a map's deviation steps them in four, with no change in `action.hover`; these are blends of existing roles, not roles of their own. Red, yellow and green are signals and reach a chart only through the intents. Every series color and the neutral reach 3:1 on every surface level and stay apart under simulated color-vision deficiencies.",
     table(
       ['Role', 'Light', 'Dark'],
       [
         ...chartSteps.light.series.map((_, i) => [code(`palette.chart.series[${i}]`), chartCell(chartSteps.light.series[i]), chartCell(chartSteps.dark.series[i])]),
         [code('palette.chart.neutral'), chartCell(chartSteps.light.neutral), chartCell(chartSteps.dark.neutral)],
         ...chartSteps.light.sequential.map((_, i) => [code(`palette.chart.sequential[${i}]`), chartCell(chartSteps.light.sequential[i]), chartCell(chartSteps.dark.sequential[i])]),
+        ...chartSteps.light.seriesDark.map((_, i) => [code(`palette.chart.seriesDark[${i}]`), shadeCell(chartSteps.light.seriesDark[i]), shadeCell(chartSteps.dark.seriesDark[i])]),
+        ...(['below', 'above'] as const).map((end) => [code(`palette.chart.diverging.${end}`), chartCell(chartSteps.light.diverging[end]), chartCell(chartSteps.dark.diverging[end])]),
+        [code('palette.chart.diverging.contrastText'), textCell(chartSteps.light.diverging.contrastText), textCell(chartSteps.dark.diverging.contrastText)],
       ],
     ),
     '## Action',
@@ -201,7 +208,7 @@ export function typographyMarkdown() {
     ),
     'Roboto loads from Google Fonts at 300, 400, 500 and 700, as MUI\'s installation guide does. Roboto Serif loads at 400 with its optical-size axis, for the `brand` variant only.',
     '## Variants',
-    'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`. `brand` is Kilowatt\'s own, in Roboto Serif, for branded moments only: 40px from `sm` up (the size below is under `sm`), and no component takes it by default.',
+    'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`. `brand` is Kilowatt\'s own, in Roboto Serif, for branded moments only: a first login\'s and the upgrade pages\' headings, and report titles, which `PageHeader` sets at `h1`\'s size (`titleVariant="brand"`). It is 40px from `sm` up (the size below is under `sm`), and no component takes it by default.',
     table(
       ['Variant', 'Element', 'Size', 'Weight', 'Line height', 'Letter spacing', 'Case', 'Source'],
       variants.map((variant) => {
