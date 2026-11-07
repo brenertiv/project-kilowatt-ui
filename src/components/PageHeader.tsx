@@ -10,6 +10,8 @@ import { TruncatedText } from './TruncatedText';
 export type PageHeaderProps = {
   /** The page's title, as an `h1`, and the condensed line once the header has scrolled away. */
   title: string;
+  /** The title's type style: `'h3'` for a page, `'brand'` for a report, which sets the serif at `h1`'s size (`h2`'s below `sm`). The condensed line is the same either way. Default `'h3'`. */
+  titleVariant?: 'h3' | 'brand';
   /** The page's own controls: at the header's right, and at the condensed line's right once it's pinned. Default none. */
   actions?: ReactNode;
   /** The page's filters row (`FilterBar`), which pins under the condensed line. Default none. */
@@ -30,17 +32,19 @@ const line = 6;
  * @summary A page's title that shrinks to one pinned line, with the page's filters under it, as the page scrolls.
  * @import import { PageHeader } from 'src/components/PageHeader';
  */
-export function PageHeader({ title, actions, filters }: PageHeaderProps) {
+export function PageHeader({ title, titleVariant = 'h3', actions, filters }: PageHeaderProps) {
   const theme = useTheme();
   const { top, inset } = usePageScroll();
   const [sentinel, setSentinel] = useState<HTMLElement | null>(null);
   const [lineElement, setLineElement] = useState<HTMLElement | null>(null);
   const pinned = usePinned(sentinel, lineElement);
+  // A report's title: the brand serif a step under its own size, at the theme's `h1` size, and `h2`'s on a phone.
+  const titleSize = titleVariant === 'brand' ? { fontSize: { xs: theme.typography.h2.fontSize, sm: theme.typography.h1.fontSize } } : {};
 
   return (
     <>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, alignItems: { sm: 'flex-start' }, justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h3" component="h1" sx={{ minWidth: 0, maxWidth: '65ch' }}>
+        <Typography variant={titleVariant} component="h1" sx={{ minWidth: 0, maxWidth: '65ch', ...titleSize }}>
           {title}
         </Typography>
         {actions && <Stack direction="row" sx={{ gap: 1, flexShrink: 0, flexWrap: 'wrap' }}>{actions}</Stack>}

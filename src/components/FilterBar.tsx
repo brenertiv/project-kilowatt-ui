@@ -60,8 +60,8 @@ const barGap = 16;
 /** Below this page width the period takes a row of its own: the period at its narrowest, the Filters field and the view. */
 const compactRow = 200 + barGap + filtersFieldWidth + barGap + viewWidth;
 
-/** The Filters field: a read-only field, as the period's is, so the row is one height. Its value says how many are set. */
-function FiltersField({ set, onOpen, grow }: { set: number; onOpen: () => void; grow: boolean }) {
+/** The Filters field: a read-only field, as the period's is, so the row is one height. Its value says how many are set, and `aria-expanded` whether its sheet is open. */
+function FiltersField({ set, expanded, onOpen, grow }: { set: number; expanded: boolean; onOpen: () => void; grow: boolean }) {
   return (
     <TextField
       // Small with the rest of the bar (Rules → Component size: a filter bar may take small, together).
@@ -85,7 +85,8 @@ function FiltersField({ set, onOpen, grow }: { set: number; onOpen: () => void; 
           ),
           sx: { cursor: 'pointer' },
         },
-        htmlInput: { 'aria-haspopup': 'dialog', sx: { cursor: 'pointer' } },
+        // A combobox, as the period's field is, so it may say whether its sheet is open.
+        htmlInput: { role: 'combobox', 'aria-haspopup': 'dialog', 'aria-expanded': expanded, sx: { cursor: 'pointer' } },
       }}
       sx={{ width: filtersFieldWidth, flexShrink: 0, flexGrow: grow ? 1 : 0 }}
     />
@@ -172,7 +173,7 @@ export function FilterBar<T extends string = string>({ label = 'Filters', filter
               <PeriodPicker {...period} fullWidth size="small" />
             </Box>
           )}
-          {filters && <FiltersField set={filters.set} onOpen={() => setSheetOpen(true)} grow={periodOwnRow || !period} />}
+          {filters && <FiltersField set={filters.set} expanded={sheetOpen} onOpen={() => setSheetOpen(true)} grow={periodOwnRow || !period} />}
           {viewMenu}
         </Stack>
         {filters && (

@@ -108,6 +108,14 @@ export const WithFilters: Story = {
   args: { filters: <PageFilters /> },
 };
 
+/** A report sets its title in the brand serif (`titleVariant="brand"`), at `h1`'s size; the condensed line is unchanged. */
+export const Report: Story = {
+  args: { title: 'Quarterly Energy Report', titleVariant: 'brand' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('heading', { level: 1, name: 'Quarterly Energy Report' })).toBeVisible();
+  },
+};
+
 /** On a phone the window scrolls, and the band pins under AppShell's sticky header. */
 export const Phone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },

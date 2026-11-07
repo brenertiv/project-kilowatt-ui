@@ -15,7 +15,7 @@ A button group joins related buttons into one control that shares a variant, col
 ## When to use
 
 - Use a button group for two to four related actions of equal weight: Preview, Download, Share.
-- For a main action with alternatives, use a split button: a `Button` beside an icon-only button that opens a `Menu`.
+- For a main action with alternatives, use a split button: a `Button` beside an icon-only button that opens a menu. Build the menu as MUI's split-button demo does, with `Popper`, `Grow`, `Paper`, `MenuList` and `ClickAwayListener`, rather than `Menu`: it's non-modal, so the page stays as it was behind it, and it's as wide as the group.
 - For choosing a view or a value (Day, Week, Month), use `ToggleButtonGroup`; a button group runs actions, it doesn't hold a selection.
 - For unrelated actions, use separate buttons with space between them.
 
@@ -47,6 +47,9 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 - Don't use a button group to show a selected option; use `ToggleButtonGroup`.
 - Do give the group an `aria-label` that names the set.
 - Do give the split button's menu trigger an `aria-label`, `aria-haspopup="menu"` and `aria-expanded`.
+- Do shorten a split button's label to fit (New) and keep the full words in its accessible name (New Workspace), which starts with the visible label.
+- Don't truncate a split button's label with an ellipsis; shorten the words instead.
+- Don't open a split button's menu as a modal `Menu` with a backdrop; use the non-modal `Popper` menu, as wide as the group.
 - Don't add a shadow to a contained group; groups sit flat like buttons.
 
 ## MUI departures
@@ -62,6 +65,7 @@ The buttons inside follow every `Button` departure (Title Case labels at regular
 - MUI renders the group with `role="group"`; name it with `aria-label`.
 - Each button is a native `button` in the tab order.
 - An icon-only button in the group needs its own `aria-label`.
+- A split button's menu takes focus on its first item when it opens (`MenuList`'s `autoFocusItem`); Escape closes it and returns focus to the trigger, and Tab or a click outside closes it.
 
 ## Related
 

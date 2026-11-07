@@ -11,7 +11,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, screen, waitFor, within } from 'storybook/test';
-import { AppShell, type AppShellCompany, type AppShellSection } from 'src/components/AppShell';
+import { AppShell, type AppShellCompany, type AppShellItemAction, type AppShellSection } from 'src/components/AppShell';
 import { useContentUp } from 'src/components/contentWidth';
 import { ScopePicker, type Scope, type ScopeGroup, type ScopeProperty } from 'src/components/ScopePicker';
 import { Icon } from 'src/icons';
@@ -30,8 +30,26 @@ const scopeGroups: ScopeGroup[] = [
   { id: 'west', name: 'West Region', propertyIds: ['highpoint-1', 'mesa-commons'] },
 ];
 
-/** The sections, each with its pages. Tenant Billing and Maintenance are Missing: the account doesn't have them, so no panel; they're left out on phones. */
+/** The sections, each with its pages, in the rail's order: Notifications first, My Account alone at the end. Tenant Billing and Maintenance are Missing: the account doesn't have them, so no panel; they're left out on phones. */
 const sections: AppShellSection[] = [
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    icon: 'notifications',
+    count: 10,
+    badge: '10 unread',
+    panel: {
+      headerAction: { label: 'Notification Preferences', icon: 'settings', onClick: () => {} },
+      items: [
+        { id: 'all', label: 'All Unread', icon: 'inbox' },
+        { id: 'insights', label: 'Insights', icon: 'lightbulb' },
+        { id: 'activity', label: 'Activity', icon: 'schedule' },
+        { id: 'property-alerts', label: 'Property Alerts', icon: 'warning' },
+        { id: 'data-health', label: 'Data Health', icon: 'error' },
+        { id: 'app-updates', label: 'App Updates', icon: 'info' },
+      ],
+    },
+  },
   {
     id: 'workspace',
     label: 'Home',
@@ -43,7 +61,7 @@ const sections: AppShellSection[] = [
         </Button>
       ),
       filter: {
-        label: 'Filter by type',
+        label: 'Filter by Type',
         options: [
           { value: 'dashboard', label: 'Dashboards' },
           { value: 'report', label: 'Reports' },
@@ -53,28 +71,28 @@ const sections: AppShellSection[] = [
       items: [
         {
           id: 'reporting-readiness',
-          label: 'Reporting readiness',
+          label: 'Reporting Readiness',
           secondary: 'Dashboard',
           kind: 'dashboard',
           icon: 'table_rows',
         },
         {
           id: 'energy-esg-summary',
-          label: 'Energy and ESG summary',
+          label: 'Energy and ESG Summary',
           secondary: 'Report',
           kind: 'report',
           icon: 'bar_chart',
         },
         {
           id: 'emissions-energy',
-          label: 'Emissions and energy',
+          label: 'Emissions and Energy',
           secondary: 'Dashboard',
           kind: 'dashboard',
           icon: 'table_rows',
         },
         {
           id: 'decarbonization-plan',
-          label: 'Decarbonization plan',
+          label: 'Decarbonization Plan',
           secondary: 'Plan',
           kind: 'plan',
           icon: 'trending_down',
@@ -83,74 +101,102 @@ const sections: AppShellSection[] = [
     },
   },
   {
-    id: 'property-info',
-    label: 'Property Info',
+    id: 'assets',
+    label: 'Assets',
     icon: 'apartment',
     panel: {
       items: [
-        { id: 'overview', label: 'Overview', icon: 'table_rows' },
-        { id: 'coverage', label: 'Coverage', icon: 'view_column' },
-        { id: 'data-health', label: 'Data Health', icon: 'check_circle', count: 90 },
-        { id: 'sources', label: 'Sources', icon: 'link' },
-        { id: 'bills', label: 'Bills', icon: 'table_rows' },
-        { id: 'properties', label: 'Properties', icon: 'apartment', count: 48 },
+        { id: 'overview', label: 'Overview', icon: 'dashboard' },
+        { id: 'portfolio', label: 'Portfolio', icon: 'apartment', count: 48 },
+        { id: 'areas', label: 'Areas', icon: 'layers' },
         { id: 'equipment', label: 'Equipment', icon: 'devices' },
-        { id: 'meters', label: 'Meters', icon: 'bolt' },
-        { id: 'files', label: 'Files', icon: 'inbox' },
+        { id: 'utilities', label: 'Utilities', icon: 'receipt_long' },
+        { id: 'analysis', label: 'Analysis', icon: 'bar_chart' },
+        { id: 'files', label: 'Files', icon: 'folder' },
+      ],
+    },
+  },
+  {
+    id: 'data-sources',
+    label: 'Data Sources',
+    icon: 'database',
+    panel: {
+      items: [
+        { id: 'overview', label: 'Overview', icon: 'dashboard' },
+        { id: 'meters', label: 'Meters', icon: 'speed' },
+        { id: 'utility-accounts', label: 'Utility Accounts', icon: 'link' },
+        { id: 'sensors', label: 'Sensors', icon: 'sensors' },
+        { id: 'energy-star', label: 'ENERGY STAR', icon: 'verified' },
+        { id: 'weather', label: 'Weather', icon: 'partly_cloudy_day' },
       ],
     },
   },
   {
     id: 'people',
     label: 'People',
-    icon: 'devices',
+    icon: 'group',
     panel: {
       items: [
-        { id: 'team', label: 'Team', icon: 'devices' },
+        { id: 'team', label: 'Team', icon: 'group' },
         { id: 'tenants', label: 'Tenants', icon: 'apartment' },
         { id: 'partners', label: 'Partners', icon: 'link' },
-        { id: 'contacts', label: 'Property contacts', icon: 'inbox' },
+        { id: 'contacts', label: 'Property Contacts', icon: 'contact_page' },
       ],
     },
   },
-  { id: 'tenant-billing', label: 'Tenant Billing', icon: 'bar_chart', missing: true, hideOnPhone: true },
-  { id: 'maintenance', label: 'Maintenance', icon: 'tune', missing: true, hideOnPhone: true },
-  {
-    id: 'notifications',
-    label: 'Notifications',
-    icon: 'inbox',
-    placement: 'end',
-    count: 10,
-    badge: '10 unread',
-    panel: {
-      headerAction: { label: 'Notification preferences', icon: 'settings', onClick: () => {} },
-      items: [
-        { id: 'all', label: 'All unread', icon: 'inbox' },
-        { id: 'insights', label: 'Insights', icon: 'bolt' },
-        { id: 'activity', label: 'Activity', icon: 'schedule' },
-        { id: 'property-alerts', label: 'Property alerts', icon: 'warning' },
-        { id: 'data-alerts', label: 'Data alerts', icon: 'error' },
-        { id: 'app-updates', label: 'App updates', icon: 'info' },
-      ],
-    },
-  },
+  { id: 'tenant-billing', label: 'Tenant Billing', icon: 'receipt_long', missing: true, hideOnPhone: true },
+  { id: 'maintenance', label: 'Maintenance', icon: 'handyman', missing: true, hideOnPhone: true },
   {
     id: 'account',
-    label: 'My account',
+    label: 'My Account',
     initials: 'MC',
     placement: 'end',
     panel: {
       colorScheme: true,
       items: [
-        { id: 'profile', label: 'Profile', icon: 'devices' },
+        { id: 'profile', label: 'Profile', icon: 'person' },
         { id: 'preferences', label: 'Preferences', icon: 'tune' },
-        { id: 'notification-settings', label: 'Notification preferences', icon: 'inbox' },
-        { id: 'entitlements', label: 'Modules and entitlements', icon: 'view_column' },
-        { id: 'help', label: 'Help and support', icon: 'info' },
+        { id: 'notification-settings', label: 'Notification Preferences', icon: 'notifications' },
+        { id: 'entitlements', label: 'Modules and Entitlements', icon: 'view_column' },
+        { id: 'help', label: 'Help and Support', icon: 'help' },
       ],
     },
   },
 ];
+
+/** Home's workspaces as their panel shows them: the type by its named icon, one generating, one pinned, each with its actions. */
+const workspaceActions = (pinned: boolean): AppShellItemAction[] => [
+  pinned
+    ? { id: 'unpin', label: 'Unpin', icon: 'keep_off', onClick: () => {} }
+    : { id: 'pin', label: 'Pin to Top', icon: 'push_pin', onClick: () => {} },
+  { id: 'archive', label: 'Archive', icon: 'archive', onClick: () => {} },
+  { id: 'delete', label: 'Delete', icon: 'delete', destructive: true, onClick: () => {} },
+];
+const homeSections: AppShellSection[] = sections.map((section) =>
+  section.id === 'workspace' && section.panel
+    ? {
+        ...section,
+        panel: {
+          ...section.panel,
+          filter: {
+            label: 'Type',
+            inline: true,
+            options: [
+              { value: 'dashboard', label: 'Dashboards' },
+              { value: 'report', label: 'Reports' },
+              { value: 'plan', label: 'Plans' },
+            ],
+          },
+          items: [
+            { id: 'energy-overview', label: 'Energy Overview', kind: 'dashboard', icon: 'dashboard', iconLabel: 'Dashboard', pinned: true, actions: workspaceActions(true) },
+            { id: 'quarterly-report', label: 'Quarterly Report', kind: 'report', icon: 'description', iconLabel: 'Report', busy: true, actions: workspaceActions(false) },
+            { id: 'emissions-tracker', label: 'Emissions Tracker', kind: 'dashboard', icon: 'dashboard', iconLabel: 'Dashboard', actions: workspaceActions(false) },
+            { id: 'decarbonization-plan', label: 'Decarbonization Plan', kind: 'plan', icon: 'trending_down', iconLabel: 'Plan', actions: workspaceActions(false) },
+          ],
+        },
+      }
+    : section,
+);
 
 /** The companies the person belongs to; the first is the one they're in. */
 const companies: AppShellCompany[] = [
@@ -159,7 +205,7 @@ const companies: AppShellCompany[] = [
   { id: 'summit', name: 'Summit Office Partners', detail: 'Member' },
 ];
 
-const firstPage = (section: string) => sections.find((item) => item.id === section)?.panel?.items[0].id;
+
 
 /**
  * Kilowatt's `AppShell`: the frame every Enertiv page sits in, built from MUI's `List`, `Drawer`,
@@ -189,6 +235,8 @@ const meta = {
       'Menu',
       'MenuItem',
       'Slide',
+      'Select',
+      'CircularProgress',
     ],
     layout: 'fullscreen',
     // The shell fills the viewport, so the docs page shows each story in its own frame.
@@ -202,6 +250,7 @@ const meta = {
     children: null,
   },
   render: function Render(args) {
+    const firstPage = (id: string) => args.sections.find((item) => item.id === id)?.panel?.items[0].id;
     const [section, setSection] = useState(args.section);
     const [page, setPage] = useState(firstPage(args.section));
     const [assistantOpen, setAssistantOpen] = useState(args.asideOpen ?? false);
@@ -212,7 +261,7 @@ const meta = {
     const [scope, setScope] = useState<Scope>({ level: 'portfolio' });
     // On phones the header has room for an icon, not the label.
     const phone = useMediaQuery(useTheme().breakpoints.down('md'));
-    const current = sections.find((item) => item.id === section);
+    const current = args.sections.find((item) => item.id === section);
     const title = current?.panel?.items.find((item) => item.id === page)?.label ?? current?.label;
     return (
       <AppShell
@@ -305,29 +354,29 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A section with pages: the rail with Search in its foot, the section panel with a New action, the header and the page. */
+/** A section with pages: the rail with Notifications first and Search above My Account in its foot, the section panel with a New action, the header and the page. */
 export const Default: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /^Energy and ESG summary/ }));
-    await expect(canvas.getByRole('button', { name: /^Energy and ESG summary/ })).toHaveAttribute(
+    await userEvent.click(canvas.getByRole('button', { name: /^Energy and ESG Summary/ }));
+    await expect(canvas.getByRole('button', { name: /^Energy and ESG Summary/ })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Energy and ESG summary');
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Energy and ESG Summary');
   },
 };
 
-/** Panel rows can carry a count, such as open data issues; choosing a section in the rail swaps the panel. */
+/** Panel rows can carry a count, such as the properties in scope; choosing a section in the rail swaps the panel. */
 export const PanelCounts: Story = {
-  args: { section: 'property-info' },
+  args: { section: 'assets' },
   play: async ({ canvas, userEvent }) => {
-    await expect(canvas.getByRole('navigation', { name: 'Property Info' })).toHaveTextContent('90');
+    await expect(canvas.getByRole('navigation', { name: 'Assets' })).toHaveTextContent('48');
     await userEvent.click(canvas.getByRole('button', { name: 'People' }));
     await expect(canvas.getByRole('navigation', { name: 'People' })).toBeVisible();
   },
 };
 
-/** Notifications is a section like the others, placed at the bottom of the rail with its unread count; its panel groups notifications by kind, with its preferences as the panel's header action. */
+/** Notifications is a section like the others, the rail's first, with its unread count; its panel groups notifications by kind, with its preferences as the panel's header action. */
 export const Notifications: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Notifications, 10 unread' }));
@@ -336,22 +385,22 @@ export const Notifications: Story = {
       'page',
     );
     await userEvent.click(
-      within(canvas.getByRole('navigation', { name: 'Notifications' })).getByRole('button', { name: 'Data alerts' }),
+      within(canvas.getByRole('navigation', { name: 'Notifications' })).getByRole('button', { name: 'Data Health' }),
     );
-    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Data alerts');
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Data Health');
     await expect(
       within(canvas.getByRole('navigation', { name: 'Notifications' })).getByRole('button', {
-        name: 'Notification preferences',
+        name: 'Notification Preferences',
       }),
     ).toBeVisible();
   },
 };
 
-/** My account follows the same pattern at the very bottom of the rail, with the person's initials for its icon; its panel holds the Light, Dark and System appearance control. */
+/** My Account follows the same pattern, alone at the bottom of the rail with `placement: 'end'`, with the person's initials for its icon; its panel holds the Light, Dark and System appearance control. */
 export const Account: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'My account' }));
-    const panel = canvas.getByRole('navigation', { name: 'My account' });
+    await userEvent.click(canvas.getByRole('button', { name: 'My Account' }));
+    const panel = canvas.getByRole('navigation', { name: 'My Account' });
     await expect(within(panel).getByRole('button', { name: /^Profile/ })).toHaveAttribute('aria-current', 'page');
     await userEvent.click(within(panel).getByRole('button', { name: 'Dark' }));
     await expect(within(panel).getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'true');
@@ -366,7 +415,7 @@ export const Missing: Story = {
   args: { section: 'tenant-billing' },
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.queryByRole('navigation', { name: 'Tenant Billing' })).toBeNull();
-    await expect(canvas.queryByRole('button', { name: 'Dock navigation' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Dock Navigation' })).toBeNull();
     const maintenance = canvas.getByRole('button', { name: 'Maintenance. Opens the upgrade page' });
     await userEvent.hover(maintenance);
     await expect(await screen.findByRole('tooltip')).toHaveTextContent(/^Maintenance$/);
@@ -375,23 +424,23 @@ export const Missing: Story = {
   },
 };
 
-/** The panel undocked, for more room: hovering a rail item floats that section's panel inside the frame. The header keeps no panel buttons; clicking the current section's rail item opens its panel, whose Dock navigation puts it back. */
+/** The panel undocked, for more room: hovering a rail item floats that section's panel inside the frame. The header keeps no panel buttons; clicking the current section's rail item opens its panel, whose Dock Navigation puts it back. */
 export const PanelUndocked: Story = {
   args: { defaultPanelOpen: false },
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.queryByRole('navigation', { name: 'Home' })).toBeNull();
-    await userEvent.hover(canvas.getByRole('button', { name: 'Property Info' }));
-    const panel = await canvas.findByRole('navigation', { name: 'Property Info' });
+    await userEvent.hover(canvas.getByRole('button', { name: 'Data Sources' }));
+    const panel = await canvas.findByRole('navigation', { name: 'Data Sources' });
     await userEvent.click(within(panel).getByRole('button', { name: 'Meters' }));
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Meters');
-    await expect(canvas.queryByRole('navigation', { name: 'Property Info' })).toBeNull();
-    await expect(canvas.queryByRole('button', { name: 'Dock navigation' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Property Info' }));
-    const pinned = await canvas.findByRole('navigation', { name: 'Property Info' });
-    await userEvent.click(within(pinned).getByRole('button', { name: 'Dock navigation' }));
-    await expect(canvas.getByRole('navigation', { name: 'Property Info' })).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Collapse navigation' }));
-    await expect(canvas.queryByRole('navigation', { name: 'Property Info' })).toBeNull();
+    await expect(canvas.queryByRole('navigation', { name: 'Data Sources' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Dock Navigation' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Data Sources' }));
+    const pinned = await canvas.findByRole('navigation', { name: 'Data Sources' });
+    await userEvent.click(within(pinned).getByRole('button', { name: 'Dock Navigation' }));
+    await expect(canvas.getByRole('navigation', { name: 'Data Sources' })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Collapse Navigation' }));
+    await expect(canvas.queryByRole('navigation', { name: 'Data Sources' })).toBeNull();
   },
 };
 
@@ -411,12 +460,12 @@ export const PanelUndockedKeyboard: Story = {
   },
 };
 
-/** Search is in the rail's foot, above Notifications, on every page; it opens one dialog that finds a page in any section. */
+/** Search is in the rail's foot, above My Account, on every page; it opens one dialog that finds a page in any section. */
 export const Search: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Search' }));
     const dialog = await screen.findByRole('dialog', { name: 'Search' });
-    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search pages' }), 'me');
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search Pages' }), 'me');
     await expect(within(dialog).getByRole('status')).toHaveTextContent('3 pages');
     await userEvent.click(within(dialog).getByRole('button', { name: /^Meters/ }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search' })).toBeNull());
@@ -427,26 +476,86 @@ export const Search: Story = {
 /** Home's filter button narrows its workspaces to one type; a dot on the button shows a filter is on. */
 export const PanelFilter: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Filter by type' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Filter by Type' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: 'Reports' }));
     const panel = canvas.getByRole('navigation', { name: 'Home' });
-    await expect(within(panel).getByRole('button', { name: /^Energy and ESG summary/ })).toBeVisible();
-    await expect(within(panel).queryByRole('button', { name: /^Reporting readiness/ })).toBeNull();
-    await expect(canvas.getByRole('button', { name: 'Filter by type: Reports' })).toBeVisible();
+    await expect(within(panel).getByRole('button', { name: /^Energy and ESG Summary/ })).toBeVisible();
+    await expect(within(panel).queryByRole('button', { name: /^Reporting Readiness/ })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Filter by Type: Reports' })).toBeVisible();
+  },
+};
+
+/** Home's panel: the type filter in words under New (`filter.inline`), each type's icon named (`iconLabel`), a workspace being generated (`busy`) and one pinned to the top (`pinned`). */
+export const HomePanel: Story = {
+  args: { sections: homeSections },
+  play: async ({ canvas, userEvent }) => {
+    const panel = canvas.getByRole('navigation', { name: 'Home' });
+    await expect(within(panel).queryByRole('button', { name: /^Type/ })).toBeNull();
+    await expect(within(panel).getByRole('progressbar', { name: 'Generating' })).toBeVisible();
+    await expect(within(panel).getByRole('img', { name: 'Pinned' })).toBeVisible();
+    await userEvent.hover(within(panel).getAllByRole('img', { name: 'Report' })[0]);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent(/^Report$/);
+    await userEvent.click(within(panel).getByRole('combobox', { name: 'Type' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Plans' }));
+    // A named icon is part of its row's name: "Plan Decarbonization Plan".
+    await expect(within(panel).getByRole('button', { name: /^Plan Decarbonization Plan/ })).toBeVisible();
+    await expect(within(panel).queryByRole('button', { name: /Energy Overview/ })).toBeNull();
+  },
+};
+
+/** A row's actions, in a More Actions button at its end that shows on hover and focus (always on touch); Delete follows a divider, in the error color. */
+export const RowActions: Story = {
+  args: { sections: homeSections },
+  play: async ({ canvas, userEvent }) => {
+    const panel = canvas.getByRole('navigation', { name: 'Home' });
+    const more = within(panel).getByRole('button', { name: 'More Actions for Quarterly Report' });
+    await userEvent.click(more);
+    const menu = await screen.findByRole('menu', { name: 'Actions for Quarterly Report' });
+    await expect(more).toHaveAttribute('aria-expanded', 'true');
+    const items = within(menu).getAllByRole('menuitem');
+    await expect(items).toHaveLength(3);
+    await expect(items[0]).toHaveTextContent('Pin to Top');
+    // Delete comes last, after a divider.
+    await expect(items[2]).toHaveTextContent('Delete');
+    await expect(items[2].previousElementSibling).toHaveRole('separator');
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'Archive' }));
+    await waitFor(() => expect(screen.queryByRole('menu', { name: 'Actions for Quarterly Report' })).toBeNull());
+  },
+};
+
+/** At 900px with the panel and the assistant docked, the header can't hold the crumbs: the scope is one button, its level's icon alone below 140px, named in its tooltip. Closing the assistant gives the crumbs back. */
+export const NarrowHeader: Story = {
+  args: { asideOpen: true },
+  decorators: [
+    (Story) => (
+      <Box sx={{ width: 900 }}>
+        <Story />
+      </Box>
+    ),
+  ],
+  play: async ({ canvas, userEvent }) => {
+    const header = canvas.getByRole('banner');
+    await expect(within(header).queryByRole('navigation', { name: 'Scope' })).toBeNull();
+    const scope = within(header).getByRole('button', { name: 'Portfolio All properties. Change Scope' });
+    await expect(scope).not.toHaveTextContent('All properties');
+    await userEvent.hover(scope);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Portfolio All properties');
+    await userEvent.click(canvas.getByRole('button', { name: 'Close Ask Enertiv' }));
+    await waitFor(() => expect(within(header).getByRole('navigation', { name: 'Scope' })).toBeVisible());
   },
 };
 
 /** The panel resizes between 220px and 380px by dragging its edge, or with the arrow keys, Home and End once it's focused; the hover panel follows it, 8px narrower. */
 export const PanelResize: Story = {
   play: async ({ canvas, userEvent }) => {
-    const handle = canvas.getByRole('separator', { name: 'Resize navigation' });
+    const handle = canvas.getByRole('separator', { name: 'Resize Navigation' });
     handle.focus();
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
     await expect(handle).toHaveAttribute('aria-valuenow', '272');
     await userEvent.keyboard('{End}');
     await expect(handle).toHaveAttribute('aria-valuenow', '380');
     // Undocked, the hover panel follows the docked panel's width, less its 8px inset.
-    await userEvent.click(canvas.getByRole('button', { name: 'Collapse navigation' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Collapse Navigation' }));
     await userEvent.hover(canvas.getByRole('button', { name: 'People' }));
     const floating = await canvas.findByRole('navigation', { name: 'People' });
     await expect(floating.getBoundingClientRect().width).toBe(372);
@@ -531,42 +640,42 @@ const phoneViewport = { viewport: { value: 'phone', isRotated: false } };
 export const Phone: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Open Menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
     await expect(within(menu).getByRole('heading', { name: 'Home' })).toBeVisible();
-    await userEvent.click(within(menu).getByRole('button', { name: /^Emissions and energy/ }));
+    await userEvent.click(within(menu).getByRole('button', { name: /^Emissions and Energy/ }));
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
-    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Emissions and energy');
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Emissions and Energy');
   },
 };
 
-/** All sections, one level up: Notifications leads with its unread count, and sections hidden on phones (the upgrade pages) are left out. */
+/** All Sections, one level up: Notifications leads with its unread count, and sections hidden on phones (the upgrade pages) are left out. */
 export const PhoneSections: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
-    await expect(canvas.getByRole('button', { name: 'Open menu, 10 unread' })).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
+    await expect(canvas.getByRole('button', { name: 'Open Menu, 10 unread' })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: /^Open Menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
-    await userEvent.click(within(menu).getByRole('button', { name: 'All sections' }));
+    await userEvent.click(within(menu).getByRole('button', { name: 'All Sections' }));
     const rows = within(menu).getAllByRole('listitem');
     await expect(rows[0]).toHaveTextContent('Notifications10 unread');
     await expect(within(menu).queryByText('Tenant Billing')).toBeNull();
-    await userEvent.click(within(menu).getByRole('button', { name: 'Property Info' }));
+    await userEvent.click(within(menu).getByRole('button', { name: 'Data Sources' }));
     await userEvent.click(within(menu).getByRole('button', { name: 'Meters' }));
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Meters');
   },
 };
 
-/** The scope sits in the header, one button between the menu and Ask Enertiv, so it stays in view as the page scrolls; it opens Change scope. */
+/** The scope sits in the header, one button between the menu and Ask Enertiv, so it stays in view as the page scrolls; it opens Change Scope. */
 export const PhoneScope: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
     const header = canvas.getByRole('banner');
-    await userEvent.click(within(header).getByRole('button', { name: 'Portfolio All properties. Change scope' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(within(header).getByRole('button', { name: 'Portfolio All properties. Change Scope' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.click(within(dialog).getByRole('button', { name: /^East Region/ }));
-    await waitFor(() => expect(within(header).getByRole('button', { name: 'Portfolio East Region. Change scope' })).toBeVisible());
+    await waitFor(() => expect(within(header).getByRole('button', { name: 'Portfolio East Region. Change Scope' })).toBeVisible());
   },
 };
 
@@ -575,11 +684,11 @@ export const PhoneSearch: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.queryByRole('button', { name: 'Search' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Open Menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
     await userEvent.click(within(menu).getByRole('button', { name: 'Search' }));
     const dialog = await screen.findByRole('dialog', { name: 'Search' });
-    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search pages' }), 'tenants');
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search Pages' }), 'tenants');
     await userEvent.click(within(dialog).getByRole('button', { name: /^Tenants/ }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search' })).toBeNull());
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Tenants');
@@ -590,22 +699,22 @@ export const PhoneSearch: Story = {
 export const PhoneBack: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Open Menu/ }));
     await screen.findByRole('navigation', { name: 'Menu' });
     window.history.back();
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
-    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Reporting readiness');
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Reporting Readiness');
   },
 };
 
-/** My account is pinned at the foot of the menu, with the company; it opens My account's pages and the appearance control. */
+/** My Account is pinned at the foot of the menu, with the company; it opens My Account's pages and the appearance control. */
 export const PhoneAccount: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Open Menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
-    await userEvent.click(within(menu).getByRole('button', { name: /My account$/ }));
-    await expect(within(menu).getByRole('heading', { name: 'My account' })).toBeVisible();
+    await userEvent.click(within(menu).getByRole('button', { name: /My Account$/ }));
+    await expect(within(menu).getByRole('heading', { name: 'My Account' })).toBeVisible();
     await expect(within(menu).getByRole('group', { name: 'Appearance' })).toBeVisible();
   },
 };
@@ -614,13 +723,13 @@ export const PhoneAccount: Story = {
 export const PhoneCompany: Story = {
   globals: phoneViewport,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /^Open menu/ }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Open Menu/ }));
     const menu = await screen.findByRole('navigation', { name: 'Menu' });
-    await userEvent.click(within(menu).getByRole('button', { name: 'Switch company: Ridgeline Logistics REIT' }));
+    await userEvent.click(within(menu).getByRole('button', { name: 'Switch Company: Ridgeline Logistics REIT' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: /^Harbor Point Residential/ }));
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
     await expect(
-      canvas.getByText('Placeholder for the Reporting readiness page at Harbor Point Residential.'),
+      canvas.getByText('Placeholder for the Reporting Readiness page at Harbor Point Residential.'),
     ).toBeVisible();
   },
 };
@@ -628,27 +737,27 @@ export const PhoneCompany: Story = {
 /** The rail's first button, the company's mark (its initials without one), opens the companies to switch to, each with its mark. */
 export const CompanySwitch: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Switch company: Ridgeline Logistics REIT' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Switch Company: Ridgeline Logistics REIT' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: /^Summit Office Partners/ }));
-    await expect(canvas.getByRole('button', { name: 'Switch company: Summit Office Partners' })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Switch Company: Summit Office Partners' })).toBeVisible();
   },
 };
 
-/** With `onAddCompany`, the company menu ends with an Add company row; with one company, the menu lists just it. */
+/** With `onAddCompany`, the company menu ends with an Add Company row; with one company, the menu lists just it. */
 export const CompanyAdd: Story = {
   args: { companies: [companies[0]], onAddCompany: fn() },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Switch company: Ridgeline Logistics REIT' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Switch Company: Ridgeline Logistics REIT' }));
     await expect(await screen.findByRole('menuitemradio', { name: /^Ridgeline Logistics REIT/ })).toHaveAttribute(
       'aria-checked',
       'true',
     );
-    await userEvent.click(screen.getByRole('menuitem', { name: 'Add company' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Add Company' }));
     await expect(args.onAddCompany).toHaveBeenCalledOnce();
   },
 };
 
-/** The dark scheme. In the app the person switches it in My account; here the toolbar's Scheme does too. */
+/** The dark scheme. In the app the person switches it in My Account; here the toolbar's Scheme does too. */
 export const Dark: Story = {
   globals: { scheme: 'dark' },
 };

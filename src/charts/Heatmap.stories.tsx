@@ -26,8 +26,8 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * A deviation from a midpoint, buildings by month: more energy than last year, the worse side, in `error`,
- * less in `chart.neutral`, stronger the further from 0, full strength from `cap` on. Cells with no data or
- * still loading are hatched, and say so in their tooltip.
+ * less in `chart.neutral`, each cell at an opacity of its change over `cap`, fading to the card at no change.
+ * Cells with no data or still loading are hatched, and say so in their tooltip.
  */
 export const Diverging: Story = {
   parameters: { card: { title: 'Energy Use Against Last Year' } },
@@ -47,7 +47,7 @@ export const Diverging: Story = {
 
 /**
  * Where less is worse, such as occupancy: `worse="below"` puts `error` under 0 and `chart.neutral` over it,
- * and `sides` still reads left to right, lower to higher.
+ * and `sides` and the legend's gradient still read left to right, lower to higher.
  */
 export const WorseBelow: Story = {
   parameters: { card: { title: 'Occupancy Against Last Year' } },
@@ -66,7 +66,28 @@ export const WorseBelow: Story = {
   },
 };
 
-/** A magnitude, buildings by month: `scale="sequential"` on `chart.sequential`, light to dark, with the range in the legend. */
+/**
+ * A comparison where neither side is worse, such as heating degree days against last year: `worse="none"` puts
+ * `chart.diverging` under and over 0, brand blue below and parchment above, so direction shows without a status.
+ */
+export const Comparison: Story = {
+  parameters: { card: { title: 'Heating Degree Days Against Last Year' } },
+  args: {
+    cells: monthlyVariance,
+    unit: '%',
+    cap: 15,
+    worse: 'none',
+    sides: ['Fewer than 2025', 'More than 2025'],
+    summary: `Most sites had fewer heating degree days than in 2025; ${worst.row} had ${worst.value}% more in ${worst.column}.`,
+  },
+  play: async ({ canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /fewer heating degree days/ });
+    await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
+    await expect(canvas.getByText(/Fewer than 2025/)).toBeVisible();
+  },
+};
+
+/** A magnitude, buildings by month: `scale="sequential"`, `chart.sequential[3]` at each cell's place in the range, with the range at the legend's ends. */
 export const Sequential: Story = {
   parameters: { card: { title: 'Energy Use by Month' } },
   args: {

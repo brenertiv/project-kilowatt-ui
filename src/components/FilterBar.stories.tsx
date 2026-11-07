@@ -96,7 +96,7 @@ export const Full: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('group', { name: 'Filters' })).toBeVisible();
     await expect(canvas.getByRole('combobox', { name: 'Property Type' })).toBeVisible();
-    await expect(canvas.queryByRole('textbox', { name: 'Filters' })).toBeNull();
+    await expect(canvas.queryByRole('combobox', { name: 'Filters' })).toBeNull();
   },
 };
 
@@ -142,10 +142,12 @@ export const Folded: Story = {
     </AtPageWidth>
   ),
   play: async ({ canvas, userEvent }) => {
-    const field = canvas.getByRole('textbox', { name: 'Filters' });
+    const field = canvas.getByRole('combobox', { name: 'Filters' });
     await expect(field).toHaveValue('None');
+    await expect(field).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(field);
     const sheet = await screen.findByRole('dialog', { name: 'Filters' });
+    await expect(field).toHaveAttribute('aria-expanded', 'true');
     await userEvent.click(within(sheet).getByRole('combobox', { name: 'Utility' }));
     await userEvent.click(await screen.findByRole('option', { name: 'Electricity' }));
     await expect(field).toHaveValue('1 set');
@@ -153,6 +155,7 @@ export const Folded: Story = {
     await expect(field).toHaveValue('None');
     await userEvent.click(within(sheet).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Filters' })).toBeNull());
+    await expect(field).toHaveAttribute('aria-expanded', 'false');
   },
 };
 

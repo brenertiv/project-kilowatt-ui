@@ -76,19 +76,21 @@ type Intent = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
  * The intents Kilowatt moves off MUI's default, per scheme: a step from a color ramp (MUI's
  * own for error and info; Kilowatt's orange and yellow for warning and green for success) that
  * passes 4.5:1 as text on every surface level, with its contrast text also at 4.5:1 or better. Intents not listed keep MUI's default, which
- * already passes. MUI derives `light` and `dark` from `main`.
+ * already passes. MUI derives `light` and `dark` from `main`, except where `dark` is set: success's
+ * is a deeper step of the green ramp, for the negative part of a two-part bar (`SegmentedBar`'s
+ * `shade: 'dark'`), at 3:1 on the card.
  */
-export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: string; step: string; main: string }>>> = {
+export const intentSteps: Record<ColorScheme, Partial<Record<Intent, { ramp: string; step: string; main: string; dark?: { step: string; value: string } }>>> = {
   light: {
     error: { ramp: 'red', step: '800', main: red[800] },
     warning: { ramp: 'orange', step: '700', main: orange[700] },
     info: { ramp: 'purple', step: '500', main: purple[500] },
-    success: { ramp: 'green', step: '700', main: green[700] },
+    success: { ramp: 'green', step: '700', main: green[700], dark: { step: '900', value: green[900] } },
   },
   dark: {
     error: { ramp: 'red', step: '100', main: red[100] },
     info: { ramp: 'purple', step: '100', main: purple[100] },
-    success: { ramp: 'green', step: '300', main: green[300] },
+    success: { ramp: 'green', step: '300', main: green[300], dark: { step: '600', value: green[600] } },
     warning: { ramp: 'yellow', step: '400', main: yellow[400] },
   },
 };
@@ -138,12 +140,27 @@ export const secondarySteps: Record<ColorScheme, { main: keyof typeof brand; lig
  * parchment in dark), at 3:1 and apart from the six.
  * `sequential` is the brand ramp, from the step nearest the surface to the one furthest from it,
  * so it runs light to dark in light and dark to light in dark.
+ * `seriesDark` is a darker shade of each series slot, for the negative part of a two-part bar whose
+ * positive part takes the slot: further from the card in light and nearer it in dark, at 3:1 on the
+ * card and 1.5:1 from its slot, and not a step the scheme already uses for `neutral` or another slot.
+ * A slot with no step that meets all three is `undefined`, and the slot's own color stands in.
+ * `diverging` is a comparison where neither side is worse: one end color a side, brand below and
+ * parchment above, with `contrastText` for text where `text.primary` no longer passes over an end.
  */
 const chartRamps = { brand, aquaverde, parchment, navy, violet } as const;
 type ChartRamp = keyof typeof chartRamps;
 type ChartStep = { ramp: ChartRamp; step: string };
 
-export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: ChartStep; sequential: ChartStep[] }> = {
+export const chartSteps: Record<
+  ColorScheme,
+  {
+    series: ChartStep[];
+    seriesDark: (ChartStep | undefined)[];
+    neutral: ChartStep;
+    sequential: ChartStep[];
+    diverging: { below: ChartStep; above: ChartStep; contrastText: { ramp: RampName; step: Step } };
+  }
+> = {
   light: {
     series: [
       { ramp: 'brand', step: '600' },
@@ -153,8 +170,18 @@ export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: Cha
       { ramp: 'aquaverde', step: '500' },
       { ramp: 'violet', step: '500' },
     ],
+    // Aquaverde 950, slot 1, ends its ramp; aquaverde 700 is `neutral`, so slot 4 takes 800; violet 700 is too near slot 5.
+    seriesDark: [
+      { ramp: 'brand', step: '800' },
+      undefined,
+      { ramp: 'parchment', step: '800' },
+      { ramp: 'navy', step: '800' },
+      { ramp: 'aquaverde', step: '800' },
+      { ramp: 'violet', step: '900' },
+    ],
     neutral: { ramp: 'aquaverde', step: '700' },
     sequential: ['100', '300', '500', '700', '900'].map((step) => ({ ramp: 'brand', step })),
+    diverging: { below: { ramp: 'brand', step: '800' }, above: { ramp: 'parchment', step: '800' }, contrastText: { ramp: 'slate', step: 50 } },
   },
   dark: {
     series: [
@@ -165,8 +192,18 @@ export const chartSteps: Record<ColorScheme, { series: ChartStep[]; neutral: Cha
       { ramp: 'aquaverde', step: '400' },
       { ramp: 'violet', step: '300' },
     ],
+    // Aquaverde 400 is slot 4, so slot 1 takes 500. Parchment 600 falls under 3:1 on the card; aquaverde 500 and violet 400 sit too near their slots.
+    seriesDark: [
+      { ramp: 'brand', step: '600' },
+      { ramp: 'aquaverde', step: '500' },
+      undefined,
+      { ramp: 'brand', step: '300' },
+      undefined,
+      undefined,
+    ],
     neutral: { ramp: 'parchment', step: '300' },
     sequential: ['900', '700', '500', '300', '100'].map((step) => ({ ramp: 'brand', step })),
+    diverging: { below: { ramp: 'brand', step: '200' }, above: { ramp: 'parchment', step: '200' }, contrastText: { ramp: 'navy', step: 950 } },
   },
 };
 
@@ -198,6 +235,22 @@ export const textSteps: Record<ColorScheme, { primary: string; secondary: string
 };
 
 const chartColor = ({ ramp, step }: ChartStep) => (chartRamps[ramp] as Record<string, string>)[step];
+
+/** The palette's chart roles for one scheme, from `chartSteps`. */
+function chartPalette(scheme: ColorScheme) {
+  const { series, seriesDark, neutral, sequential, diverging } = chartSteps[scheme];
+  return {
+    series: series.map(chartColor),
+    seriesDark: seriesDark.map((step) => (step ? chartColor(step) : undefined)),
+    neutral: chartColor(neutral),
+    sequential: sequential.map(chartColor),
+    diverging: {
+      below: chartColor(diverging.below),
+      above: chartColor(diverging.above),
+      contrastText: rampByName[diverging.contrastText.ramp][diverging.contrastText.step],
+    },
+  };
+}
 
 /** Selectable MUI controls whose selected state fills their icons. Each gets `Mui-selected` when selected. */
 const selectableControls = ['ToggleButton', 'Tab', 'ListItemButton', 'MenuItem', 'BottomNavigationAction'] as const;
@@ -232,10 +285,13 @@ export const departures: Departure[] = [
     id: 'intents-on-surfaces',
     area: 'Palette',
     title: 'Intent colors that pass on every surface',
-    why: "MUI's intents are tuned for a white or #121212 background, and several fall below 4.5:1 as text on the surface levels. Error and info take a nearby step from MUI's own color ramps that passes on every level in its scheme; the intents that already pass stay as MUI ships them. Warning and success use Kilowatt's own ramps: orange 700 in light (clearly apart from error's red) and yellow 400 in dark for warning, and Enertiv's jade green for success, 700 in light and 300 in dark.",
+    why: "MUI's intents are tuned for a white or #121212 background, and several fall below 4.5:1 as text on the surface levels. Error and info take a nearby step from MUI's own color ramps that passes on every level in its scheme; the intents that already pass stay as MUI ships them. Warning and success use Kilowatt's own ramps: orange 700 in light (clearly apart from error's red) and yellow 400 in dark for warning, and Enertiv's jade green for success, 700 in light and 300 in dark. Success's `dark` is a deeper step of the same ramp, green 900 in light and 600 in dark, in place of the shade MUI derives from `main`, which sits one small step below it: a two-part bar draws its negative part in it (`SegmentedBar`'s `shade: 'dark'`), so the pair reads as one hue with the positive part standing out. Dark stops at 600, since 700 falls under 3:1 on the card. MUI also hovers a contained success button in it.",
     options: (scheme) => ({
       palette: Object.fromEntries(
-        Object.entries(intentSteps[scheme]).map(([intent, { main }]) => [intent, { main, contrastText: intentContrastText[scheme] }]),
+        Object.entries(intentSteps[scheme]).map(([intent, { main, dark }]) => [
+          intent,
+          { main, ...(dark && { dark: dark.value }), contrastText: intentContrastText[scheme] },
+        ]),
       ),
     }),
   },
@@ -384,7 +440,7 @@ export const departures: Departure[] = [
     area: 'Typography',
     components: ['Button', 'ToggleButton', 'Tab', 'Fab', 'BottomNavigationAction'],
     title: 'Button labels in Title Case',
-    why: "MUI uppercases every label set in the `button` type style. Kilowatt shows labels as written, and writes them in Title Case. CSS can't do Title Case (`capitalize` also capitalizes minor words such as \"and\"), so it's a writing convention: what's in the code is what people and screen readers get, and it carries through translation.",
+    why: "MUI uppercases every label set in the `button` type style. Kilowatt shows labels as written, and writes them in Title Case. CSS can't do Title Case (`capitalize` also capitalizes minor words such as \"and\"), so it's a writing convention: what's in the code is what people and screen readers get, and it carries through translation. Rules → Content and layout carries the same case to every name, not only buttons.",
     options: () => ({ typography: { button: { textTransform: 'none' } } }),
     convention: {
       muiDefault: 'Labels uppercased by `typography.button.textTransform`',
@@ -528,11 +584,8 @@ export const departures: Departure[] = [
     id: 'chart-palette',
     area: 'Palette',
     title: 'Chart colors',
-    why: "MUI's palette has no colors for data. Charts get three roles, all from five ramps (brand, aquaverde, parchment, navy and violet): `chart.series`, six colors in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: status reuses the intents, a deviation's worse side takes `error` and its better side `chart.neutral`, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color.",
-    options: (scheme) => {
-      const { series, neutral, sequential } = chartSteps[scheme];
-      return { palette: { chart: { series: series.map(chartColor), neutral: chartColor(neutral), sequential: sequential.map(chartColor) } } };
-    },
+    why: "MUI's palette has no colors for data. Charts get three roles, all from five ramps (brand, aquaverde, parchment, navy and violet): `chart.series`, six colors in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: status reuses the intents, a deviation's worse side takes `error` and its better side `chart.neutral`, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color. Two more roles serve particular marks. `chart.seriesDark` is a darker shade of each slot, for the negative part of a two-part bar (leased and vacant), so the pair reads as one hue with the positive part standing out; each shade is at least 3:1 on the card and 1.5:1 from its slot, and a slot with no step that meets both is left out and falls back to its own color. And `chart.diverging`, for a comparison where neither side is worse (this month against a year earlier): one end color a side, `below` on brand (800 in light, 200 in dark) and `above` on parchment (800 in light, 200 in dark), two ramps with nothing in common, with `contrastText` (slate 50 in light, navy 950 in dark) for text where `text.primary` no longer passes over the end color.",
+    options: (scheme) => ({ palette: { chart: chartPalette(scheme) } }),
   },
   {
     id: 'map-palette',
@@ -692,7 +745,7 @@ export const departures: Departure[] = [
     id: 'brand-type',
     area: 'Typography',
     title: 'A serif for branded moments',
-    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Roboto Serif at regular (400, like every style, `regular-weight`), 40px with a line height of 1.2, and 32px below `sm`, where 40px would break a short heading over four lines. It's for branded moments only, such as a first login's headings: a screen asks for `variant=\"brand\"`, sets the element with `component`, and no component takes it by default. Everything else stays Roboto.",
+    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Roboto Serif at regular (400, like every style, `regular-weight`), 40px with a line height of 1.2, and 32px below `sm`, where 40px would break a short heading over four lines. It's for branded moments only: a first login's and the upgrade pages' headings, and every report's title, which `PageHeader` sets in it at `h1`'s size (`titleVariant=\"brand\"`). A screen asks for `variant=\"brand\"` and sets the element with `component`; no component takes it by default. Everything else stays Roboto.",
     options: () => ({
       typography: {
         brand: { fontFamily: '"Roboto Serif", serif', fontWeight: 400, fontSize: '2rem', lineHeight: 1.2, '@media (min-width:600px)': { fontSize: '2.5rem' } },

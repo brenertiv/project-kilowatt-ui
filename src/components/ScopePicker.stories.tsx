@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
+import { useContentWidth } from 'src/components/contentWidth';
 import { ScopePicker, type Scope, type ScopeFilter, type ScopeGroup, type ScopeProperty } from 'src/components/ScopePicker';
 import { emptyFilter } from 'src/components/scopeFilterModel';
 import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
@@ -40,6 +41,16 @@ const filterGroups: ScopeGroup[] = [
 ];
 const savedPortfolio: ScopeGroup = { id: 'saved-1', name: 'Austin offices', propertyIds: ['harbor-tower', 'elm-plaza'] };
 
+/** Measures its box as AppShell measures the header's start, so a story shows the picker in a header of that width whatever the window is. */
+function InHeaderOf({ width, children }: { width: number; children: ReactNode }) {
+  const { measure, provide } = useContentWidth<HTMLDivElement>();
+  return (
+    <Box ref={measure} sx={{ width, display: 'flex' }}>
+      {provide(children)}
+    </Box>
+  );
+}
+
 /** Holds the scope, the filter and the saved portfolios in state, as an app would: the filter for the browser session, the portfolios per user and Company. */
 function FilterableScopePicker({ initialFilter = emptyFilter, initialPortfolios = [], onChange }: { initialFilter?: ScopeFilter; initialPortfolios?: ScopeGroup[]; onChange?: (scope: Scope) => void }) {
   const [value, setValue] = useState<Scope>({ level: 'portfolio' });
@@ -74,7 +85,7 @@ function FilterableScopePicker({ initialFilter = emptyFilter, initialPortfolios 
 
 /**
  * Kilowatt's `ScopePicker`: the global scope as breadcrumbs of split buttons for AppShell's
- * `headerStart`, and the Change scope dialog its chevron opens. Each story holds the scope in state,
+ * `headerStart`, and the Change Scope dialog its chevron opens. Each story holds the scope in state,
  * so choosing one updates the crumbs.
  */
 const meta = {
@@ -102,11 +113,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The whole portfolio: “All properties”. The chevron opens Change scope, on the current scope. */
+/** The whole portfolio: “All properties”. The chevron opens Change Scope, on the current scope. */
 export const Portfolio: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await expect(within(dialog).getByRole('textbox', { name: 'Search by name, address or city' })).toHaveFocus();
   },
 };
@@ -149,11 +160,10 @@ export const PropertyWithoutGroup: Story = {
 
 /** The property's chevron opens on its portfolio's properties, to move to a neighbouring property. */
 export const ChangeProperty: Story = {
-  name: 'Change property',
   args: { value: { level: 'property', id: 'highpoint-1', groupId: 'west' }, onChange: fn() },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change property' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Property' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.click(within(within(dialog).getByRole('list', { name: 'West Region' })).getByRole('button', { name: /Highpoint 2/ }));
     await expect(args.onChange).toHaveBeenCalledWith({ level: 'property', id: 'highpoint-2', groupId: 'west' });
   },
@@ -173,8 +183,8 @@ export const UpToGroup: Story = {
 export const Browse: Story = {
   args: { onChange: fn() },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Browse East Region' }));
     await expect(args.onChange).not.toHaveBeenCalled();
     await userEvent.click(within(within(dialog).getByRole('list', { name: 'East Region' })).getByRole('button', { name: /350 Park Avenue/ }));
@@ -187,8 +197,8 @@ export const ChoosePortfolio: Story = {
   name: 'Choose a portfolio',
   args: { onChange: fn() },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.click(within(within(dialog).getByRole('list', { name: 'Portfolios' })).getByRole('button', { name: /^Fund II/ }));
     await expect(args.onChange).toHaveBeenCalledWith({ level: 'group', id: 'fund-2' });
   },
@@ -197,8 +207,8 @@ export const ChoosePortfolio: Story = {
 /** Search by name, address or city. A property in two groups is one result per group, each with its path. */
 export const Search: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.type(within(dialog).getByRole('textbox'), 'Harbor');
     await expect(within(dialog).getByRole('status')).toHaveTextContent('2 results');
     const results = within(dialog).getByRole('list', { name: 'Results' });
@@ -211,8 +221,8 @@ export const Search: Story = {
 export const NoResults: Story = {
   name: 'No results',
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.type(within(dialog).getByRole('textbox'), 'Boston');
     await expect(within(dialog).getByRole('status')).toHaveTextContent('No group or property matches “Boston”.');
   },
@@ -225,8 +235,8 @@ export const Recent: Story = {
     recent: [{ level: 'property', id: 'harbor-point', groupId: 'fund-2' }, { level: 'group', id: 'east' }],
   },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Harbor Point' })).toBeVisible());
   },
 };
@@ -257,15 +267,15 @@ export const Locked: Story = {
 export const Filter: Story = {
   render: () => <FilterableScopePicker />,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    let dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    let dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Filter' }));
-    dialog = await screen.findByRole('dialog', { name: 'Filter properties' });
+    dialog = await screen.findByRole('dialog', { name: 'Filter Properties' });
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Harbor Tower' }));
     await userEvent.click(within(dialog).getByRole('checkbox', { name: 'Elm Plaza' }));
     await waitFor(() => expect(within(dialog).getByText('2 picked')).toBeVisible());
     await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
-    dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Filter · 2' })).toBeVisible());
     await expect(within(dialog).getByRole('status')).toHaveTextContent('Filtered to 2 of 6 properties');
   },
@@ -275,8 +285,8 @@ export const Filter: Story = {
 export const Filtered: Story = {
   render: () => <FilterableScopePicker initialFilter={{ ...emptyFilter, types: ['Office'] }} />,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     const column = within(dialog).getByRole('list', { name: 'Portfolios' });
     await expect(within(column).getByRole('button', { name: /^South Region/ })).toHaveTextContent('2 of 4 properties');
     await expect(within(column).getByRole('button', { name: /^North Region/ })).toHaveAttribute('aria-disabled', 'true');
@@ -290,35 +300,35 @@ export const SaveAsPortfolio: Story = {
   name: 'Save as portfolio',
   render: () => <FilterableScopePicker initialFilter={{ ...emptyFilter, cities: ['Austin, TX'] }} />,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save as Portfolio' }));
-    const naming = await screen.findByRole('dialog', { name: 'Save as portfolio' });
+    const naming = await screen.findByRole('dialog', { name: 'Save as Portfolio' });
     const name = within(naming).getByRole('textbox', { name: 'Name' });
     await expect(name).toHaveValue('Office properties in Austin, TX');
     await waitFor(() => expect(name).toHaveFocus());
     await userEvent.click(within(naming).getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Save as portfolio' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Save as Portfolio' })).toBeNull());
     const saved = await within(dialog).findByRole('list', { name: 'Office properties in Austin, TX' });
     await waitFor(() => expect(saved).toBeVisible());
   },
 };
 
-/** Your portfolios lead the Portfolios column and choose like a group, in the same crumb; More actions has Edit properties, Rename and Delete. */
+/** Your Portfolios lead the Portfolios column and choose like a group, in the same crumb; More Actions has Edit Properties, Rename and Delete. */
 export const SavedPortfolios: Story = {
   name: 'Saved portfolios',
   args: { onChange: fn() },
   render: (args) => <FilterableScopePicker initialPortfolios={[savedPortfolio]} onChange={args.onChange} />,
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
-    await waitFor(() => expect(within(dialog).getByText('Your portfolios')).toBeVisible());
-    await expect(within(dialog).getByText('Company portfolios')).toBeVisible();
-    await userEvent.click(within(dialog).getByRole('button', { name: 'More actions for Austin offices' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    await waitFor(() => expect(within(dialog).getByText('Your Portfolios')).toBeVisible());
+    await expect(within(dialog).getByText('Company Portfolios')).toBeVisible();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'More Actions for Austin offices' }));
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }));
-    const naming = await screen.findByRole('dialog', { name: 'Rename portfolio' });
+    const naming = await screen.findByRole('dialog', { name: 'Rename Portfolio' });
     await userEvent.click(within(naming).getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Rename portfolio' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Rename Portfolio' })).toBeNull());
     await userEvent.click(await within(dialog).findByRole('button', { name: /^Austin offices/ }));
     await expect(args.onChange).toHaveBeenCalledWith({ level: 'saved', id: 'saved-1' });
     await expect(await canvas.findByRole('button', { name: /^Portfolio Austin offices/ })).toBeVisible();
@@ -330,26 +340,26 @@ export const DeletePortfolio: Story = {
   name: 'Delete a portfolio',
   render: () => <FilterableScopePicker initialPortfolios={[savedPortfolio]} />,
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Change portfolio' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
-    await userEvent.click(within(dialog).getByRole('button', { name: 'More actions for Austin offices' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'More Actions for Austin offices' }));
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }));
     const confirm = await screen.findByRole('dialog', { name: 'Delete Austin offices?' });
     await userEvent.click(within(confirm).getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(within(dialog).queryByText('Your portfolios')).toBeNull());
+    await waitFor(() => expect(within(dialog).queryByText('Your Portfolios')).toBeNull());
   },
 };
 
-/** On phones the scope is one button, for AppShell's header, naming the current level. It opens Change scope at that level; the dialog fills the screen and shows one column at a time. */
+/** On phones the scope is one button, for AppShell's header, naming the current level. It opens Change Scope at that level; the dialog fills the screen and shows one column at a time. */
 export const Phone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { value: { level: 'property', id: 'highpoint-1', groupId: 'west' } },
   play: async ({ canvas, userEvent }) => {
     await expect(canvas.queryByRole('navigation', { name: 'Scope' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Property Highpoint 1, in West Region. Change scope' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Property Highpoint 1, in West Region. Change Scope' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
     await waitFor(() => expect(within(dialog).getByRole('list', { name: 'West Region' })).toBeVisible());
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Back to portfolios' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Back to Portfolios' }));
     await waitFor(() => expect(within(dialog).getByRole('list', { name: 'Portfolios' })).toBeVisible());
   },
 };
@@ -360,9 +370,9 @@ export const PhoneBack: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { value: { level: 'property', id: 'highpoint-1', groupId: 'west' }, onChange: fn() },
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /Change scope$/ }));
-    const dialog = await screen.findByRole('dialog', { name: 'Change scope' });
-    const current = within(dialog).getByRole('list', { name: 'Current scope' });
+    await userEvent.click(canvas.getByRole('button', { name: /Change Scope$/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    const current = within(dialog).getByRole('list', { name: 'Current Scope' });
     await waitFor(() => expect(within(current).getByText('Property in West Region')).toBeVisible());
     await userEvent.click(within(current).getByRole('button', { name: 'Back to West Region' }));
     await expect(args.onChange).toHaveBeenCalledWith({ level: 'group', id: 'west' });
@@ -386,6 +396,51 @@ export const Narrow: Story = {
     const name = canvas.getByText('Lebanon Distribution Center');
     await waitFor(() => expect(name.scrollWidth).toBeGreaterThan(name.clientWidth));
     await userEvent.hover(canvas.getByRole('button', { name: /^Property Lebanon/ }));
-    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Lebanon Distribution Center. Change property');
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Lebanon Distribution Center. Change Property');
+  },
+};
+
+/** Where the header's start is narrower than two crumbs need (372px), the scope is one button that opens Change Scope; a cut-off name shows in full in its tooltip. */
+export const NarrowHeader: Story = {
+  args: { value: { level: 'property', id: 'lebanon-dc', groupId: 'east' }, onChange: fn() },
+  render: function Render(args) {
+    const [value, setValue] = useState<Scope>(args.value);
+    return (
+      <InHeaderOf width={240}>
+        <ScopePicker {...args} value={value} onChange={setValue} />
+      </InHeaderOf>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.queryByRole('navigation', { name: 'Scope' })).toBeNull();
+    const button = canvas.getByRole('button', { name: 'Property Lebanon Distribution Center, in East Region. Change Scope' });
+    const name = canvas.getByText('Lebanon Distribution Center');
+    await waitFor(() => expect(name.scrollWidth).toBeGreaterThan(name.clientWidth));
+    await userEvent.hover(button);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Property Lebanon Distribution Center');
+    await userEvent.click(button);
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    // The dialog's first row goes up a level, as the crumbs' close button would.
+    // Waits for the dialog's enter transition, as the other dialog stories do.
+    await waitFor(() => expect(within(within(dialog).getByRole('list', { name: 'Current Scope' })).getByRole('button', { name: 'Back to East Region' })).toBeVisible());
+  },
+};
+
+/** Below 140px the button is the level's icon alone, its name in its tooltip. */
+export const IconOnly: Story = {
+  name: 'Icon only',
+  render: function Render(args) {
+    const [value, setValue] = useState<Scope>(args.value);
+    return (
+      <InHeaderOf width={120}>
+        <ScopePicker {...args} value={value} onChange={setValue} />
+      </InHeaderOf>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    const button = canvas.getByRole('button', { name: 'Portfolio All properties. Change Scope' });
+    await expect(button).not.toHaveTextContent('All properties');
+    await userEvent.hover(button);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Portfolio All properties');
   },
 };

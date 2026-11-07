@@ -77,7 +77,7 @@ export const WithSource: Story = {
     const calculation = await within(dialog).findByRole('button', { name: 'Calculation' });
     await expect(calculation).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(calculation);
-    await waitFor(() => expect(within(dialog).getByText('Coverage')).toBeVisible());
+    await waitFor(() => expect(within(dialog).getByText('Includes')).toBeVisible());
     await waitFor(() => expect(within(dialog).getByText(source.period)).toBeVisible());
     await userEvent.click(within(dialog).getByRole('button', { name: 'Sources' }));
     await waitFor(() => expect(within(dialog).getByText(source.source)).toBeVisible());

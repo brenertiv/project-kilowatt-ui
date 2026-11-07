@@ -10,6 +10,7 @@ import TableFooter from '@mui/material/TableFooter';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
+import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { SxProps, Theme } from '@mui/material/styles';
@@ -17,11 +18,14 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { fetchList } from 'src/api/queries';
+import { heatColors, heatEnd, type HeatEnd } from 'src/charts/deviation';
 import { fromQuery } from 'src/api/state';
 import { AsyncContent } from 'src/components/AsyncContent';
 import { HeaderLabel } from 'src/components/HeaderLabel';
 import { usePagedRows } from 'src/components/usePagedRows';
 import { monthlyUseGrid, monthlyVariance, monthNames, varianceBuildings } from 'src/fixtures/charts';
+import { createSchemeTheme } from 'src/mui/theme';
+import { useResolvedScheme } from 'src/mui/useResolvedScheme';
 import { inCard } from 'src/stories/decorators';
 
 type Building = { name: string; city: string; state: string; area: number; energy: number | null; cost: number | null; emissions: number | null };
@@ -309,29 +313,49 @@ const tintedBuildings = varianceBuildings.slice(5);
 const tintedMonths = monthNames.slice(4, 10);
 const signed = new Intl.NumberFormat('en-US', { signDisplay: 'exceptZero', minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-/** The tints of steps 1 to 4, low enough that `text.primary` holds 4.5:1 on each in both schemes. */
-const strengths = [0.12, 0.22, 0.33, 0.44];
-/** Under this distance from 0 a change is no change: noise, not a signal. */
-const neutral = 1;
+/**
+ * The scale's ends over the card in the active scheme (Rules → Charts → A heatmap cell is an overlay): a comparison's
+ * two ends on `chart.diverging` and a magnitude's on `chart.sequential[3]`, each with the opacity where its text flips.
+ */
+function useHeatEnds() {
+  const scheme = useResolvedScheme() ?? 'light';
+  return useMemo(() => {
+    const { palette } = createSchemeTheme(scheme);
+    const end = (color: string) => heatEnd(color, palette.background.level3, palette.text.primary, palette.chart.diverging.contrastText);
+    return { below: end(palette.chart.diverging.below), above: end(palette.chart.diverging.above), magnitude: end(palette.chart.sequential[3]) };
+  }, [scheme]);
+}
 
 /**
- * A cell's tint (Rules → Charts → Deviation from a midpoint): `action.hover` under `neutral`, then over 0, the
- * worse side for energy, `error`, and under it `chart.neutral`, in four equal steps up to `cap`.
+ * A cell's overlay: the end color at an opacity of its strength (0 to 1), transparent so the card shows through and
+ * no change is the bare card. Text stays `text.primary` while it holds 4.5:1, then takes `chart.diverging.contrastText`.
  */
-function changeTint(change: number, cap: number): SxProps<Theme> {
-  if (Math.abs(change) < neutral) return { bgcolor: 'action.hover' };
-  const step = Math.min(4, Math.ceil((Math.abs(change) / cap) * 4));
-  const strength = strengths[step - 1];
-  return {
-    bgcolor: (theme) =>
-      change > 0
-        ? `rgba(${theme.vars!.palette.error.mainChannel} / ${strength})`
-        : `color-mix(in srgb, ${theme.vars!.palette.chart.neutral} ${strength * 100}%, transparent)`,
-  };
+function overlay(end: HeatEnd, strength: number): SxProps<Theme> {
+  const { opacity, text } = heatColors(end, strength);
+  return { bgcolor: `color-mix(in srgb, ${end.color} ${Math.round(opacity * 100)}%, transparent)`, ...(text === 'contrast' && { color: 'chart.diverging.contrastText' }) };
+}
+
+/** The legend: the scale as the cells draw it, an end color fading to the card, with its ends in words and the no-data dash. */
+function HeatLegend({ start, stops, end, missing }: { start: string; stops: string; end: string; missing: string }) {
+  return (
+    <CardActions sx={{ flexWrap: 'wrap', gap: 1, px: 2 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {start}
+      </Typography>
+      <Box aria-hidden sx={(theme) => ({ width: theme.spacing(18), height: theme.spacing(1.5), borderRadius: 0.5, background: `linear-gradient(to right, ${stops})` })} />
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {end}
+      </Typography>
+      <Typography variant="caption" sx={{ color: 'text.secondary', ml: 2 }}>
+        {missing}
+      </Typography>
+    </CardActions>
+  );
 }
 
 /** Change on a year earlier, a row per building and a column per month. `cap` is where the tint stops growing, in percent. */
 function VarianceTable({ cap }: { cap: number }) {
+  const ends = useHeatEnds();
   return (
     <>
       <TableContainer role="region" aria-label="Energy use change, scrollable" tabIndex={0}>
@@ -356,7 +380,7 @@ function VarianceTable({ cap }: { cap: number }) {
                   const change = monthlyVariance.find(({ row, column }) => row === name && column === month)?.value;
                   return (
                     <Tooltip key={month} title={`${name}, ${month}: ${change === undefined ? 'nothing to compare' : `${signed.format(change)}% on a year earlier`}`}>
-                      <TableCell align="right" sx={change === undefined ? undefined : changeTint(change, cap)}>
+                      <TableCell align="right" sx={change === undefined ? undefined : overlay(change < 0 ? ends.below : ends.above, Math.abs(change) / cap)}>
                         {change === undefined ? '–' : `${signed.format(change)}%`}
                       </TableCell>
                     </Tooltip>
@@ -367,16 +391,17 @@ function VarianceTable({ cap }: { cap: number }) {
           </TableBody>
         </Table>
       </TableContainer>
-      <CardActions>
-        <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
-          {`Red is more than a year earlier and the neutral tint less, each strongest at ${cap}% or further. Under ${neutral}% is no change.`}
-        </Typography>
-      </CardActions>
+      <HeatLegend
+        start={`Less than a year earlier (${cap}% or more)`}
+        stops={`${ends.below.color}, transparent 50%, ${ends.above.color}`}
+        end={`More than a year earlier (${cap}% or more)`}
+        missing="– Nothing to compare"
+      />
     </>
   );
 }
 
-/** Every number must show: a cell tinted by its change, more in `error` and less in `chart.neutral`, at four strengths up to a cap, with `action.hover` under 1%. */
+/** Every number must show: each cell an overlay of its change over a cap, less in `chart.diverging.below` and more in `above`, fading to the card at no change. */
 export const TintedCells: Story = {
   parameters: { card: { title: 'Change on a Year Earlier' } },
   render: () => <VarianceTable cap={20} />,
@@ -386,16 +411,13 @@ export const TintedCells: Story = {
   },
 };
 
-/** The text on each `chart.sequential` step, nearest the surface first: the role that holds 4.5:1 on it in both schemes. */
-const stepText = ['text.primary', 'text.primary', 'common.black', 'background.level0', 'background.level0'];
 const useRows = tintedBuildings.map((name) => tintedMonths.map((month) => monthlyUseGrid.find(({ row, column }) => row === name && column === month)!.value));
 const lowestUse = Math.min(...useRows.flat());
-const stepWidth = (Math.max(...useRows.flat()) - lowestUse) / stepText.length;
+const highestUse = Math.max(...useRows.flat());
 
-/** A value with no midpoint: `chart.sequential` in equal-width steps, and the line under the table says how wide a step is. */
-export const TintedByMagnitude: Story = {
-  parameters: { card: { title: 'Energy Use' } },
-  render: () => (
+function MagnitudeTable() {
+  const { magnitude } = useHeatEnds();
+  return (
     <>
       <TableContainer role="region" aria-label="Energy use, scrollable" tabIndex={0}>
         <Table aria-label="Energy use by month" sx={{ '& .MuiTableCell-root': { whiteSpace: 'nowrap' } }}>
@@ -415,28 +437,27 @@ export const TintedByMagnitude: Story = {
                 <TableCell component="th" scope="row">
                   {name}
                 </TableCell>
-                {useRows[row].map((value, month) => {
-                  const step = Math.min(stepText.length - 1, Math.floor((value - lowestUse) / stepWidth));
-                  return (
-                    <Tooltip key={tintedMonths[month]} title={`${name}, ${tintedMonths[month]}: ${number.format(value)} MWh`}>
-                      <TableCell align="right" sx={{ bgcolor: (theme) => theme.vars!.palette.chart.sequential[step], color: stepText[step] }}>
-                        {number.format(value)}
-                      </TableCell>
-                    </Tooltip>
-                  );
-                })}
+                {useRows[row].map((value, month) => (
+                  <Tooltip key={tintedMonths[month]} title={`${name}, ${tintedMonths[month]}: ${number.format(value)} MWh`}>
+                    <TableCell align="right" sx={overlay(magnitude, (value - lowestUse) / (highestUse - lowestUse))}>
+                      {number.format(value)}
+                    </TableCell>
+                  </Tooltip>
+                ))}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
-      <CardActions>
-        <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
-          {`Each step is ${number.format(Math.round(stepWidth))} MWh.`}
-        </Typography>
-      </CardActions>
+      <HeatLegend start={`${number.format(lowestUse)} MWh`} stops={`transparent, ${magnitude.color}`} end={`${number.format(highestUse)} MWh`} missing="– No data" />
     </>
-  ),
+  );
+}
+
+/** A value with no midpoint: each cell an overlay of `chart.sequential[3]` at its place in the range, with the range at the legend's ends. */
+export const TintedByMagnitude: Story = {
+  parameters: { card: { title: 'Energy Use' } },
+  render: () => <MagnitudeTable />,
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('table', { name: 'Energy use by month' })).toBeVisible();
   },

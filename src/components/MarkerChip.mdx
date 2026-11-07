@@ -1,0 +1,82 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as MarkerChipStories from './MarkerChip.stories';
+
+<Meta
+  of={MarkerChipStories}
+  summary="Kilowatt's MarkerChip, a round icon chip in the brand-blue tint that says something lives on the card, row or title beside it, widening to its label on hover or focus and pulsing while unread."
+/>
+
+# MarkerChip
+
+`MarkerChip` says something lives on the card, row or title in front of the user, such as savings opportunities on a card, and opens it. It's a round, icon-only `Chip` in the brand-blue tint that widens to its label on hover or keyboard focus, never on touch, where a tap opens it. While what it marks is unread, a ring pulses out from it every 3 seconds. It's Kilowatt's own component, composed from MUI's `Chip` and `Collapse` (`@mui/material`, Material UI v9; MUI documents their props). `MarkedCard` puts one over a card's top-left corner.
+
+<Canvas of={MarkerChipStories.OnCardCorner} />
+
+## When to use
+
+- Use it to say that something worth opening is attached to what's in front of the user: savings opportunities on a card, a row or a property's title.
+- For a status (Healthy, At risk), use a `Chip` in the intent's color with a label.
+- For a count of unread items on a navigation item, use `Badge`.
+- For an action that isn't tied to a place, use a `Button`.
+
+## Usage
+
+```tsx
+import { MarkedCard, MarkerChip } from 'src/components/MarkerChip';
+
+<MarkedCard
+  marker={
+    <MarkerChip
+      icon="lightbulb"
+      label="$12,400 a year"
+      aria-label="2 savings opportunities on Energy Use, $12,400 a year. Open"
+      alerting={unread}
+      onClick={openInsights}
+    />
+  }
+>
+  <Card variant="outlined">…</Card>
+</MarkedCard>
+```
+
+## Variants
+
+- **On a card's corner:** `size="medium"`, the default (32px), in `MarkedCard`, over the card's top-left corner and outside its bounds, so it widens to the right over the title rather than pushing it.
+- **Beside a title or in a row:** `size="small"` (24px), on the title's line or in the row's cell, a one-off small chip as Rules → Component size allows.
+
+## States
+
+- **At rest:** the icon alone, round, in the tint.
+- **Pointed at or focused by keyboard:** a step stronger, widened to show its label. On a touch screen it never widens.
+- **Unread** (`alerting`): a ring of the secondary color pulses out every 3 seconds. It stops while the marker is pointed at and under reduced motion; set `alerting` false once the user has opened what it marks.
+
+## Do and don't
+
+- Do put one marker on a card, row or title, however many items it opens.
+- Don't put a marker on each item; open their list from the one marker.
+- Do write the accessible name to say how many, where and the label's words, then "Open".
+- Don't rely on the widened label to say what the marker is; touch screens never show it.
+- Do stop the pulse once what it marks has been opened.
+- Don't leave every marker on a page pulsing; only unread ones pulse.
+
+## MUI departures
+
+- `medium-size`: the chip stays at `medium` (32px) on a card's corner; `small` (24px) beside a title or in a row is the one-off size Rules → Component size allows.
+- `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue, around the chip.
+- `tabular-numerals`: the label's figures are tabular, as on every `Chip`.
+
+Theme-wide departures (the palette, reduced motion) apply too; see Foundations → MUI departures. The tint is the brand blue at MUI's own selected and focus opacities, a step stronger on hover as MUI tints a selected item, laid over `background.paper` so a card's border doesn't show through where the marker overhangs it.
+
+## Accessibility
+
+- The chip is a `button` (MUI renders a clickable `Chip` with `role="button"`), named by `aria-label`, which starts the same way whatever the width.
+- The widened label is shown only to pointers that hover and to keyboard focus, so a touch screen doesn't open it on the first tap.
+- The pulse stops under `prefers-reduced-motion`.
+- In a clickable row, a click on the marker opens what it marks, not the row.
+
+## Related
+
+- `Chip` for statuses and filters.
+- `Card` for the cards it marks.
+
+<Stories includePrimary={false} />

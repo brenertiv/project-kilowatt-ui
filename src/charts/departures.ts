@@ -355,15 +355,16 @@ export const chartDepartures: ChartDeparture[] = [
   {
     id: 'heatmap-scale',
     kind: 'convention',
-    title: 'Heatmaps color by deviation or magnitude, in steps',
-    why: "amCharts' heat rules blend continuously between two colors of the chart's choosing. Kilowatt's heatmap uses the chart color jobs (Rules → Charts): a deviation from 0 with the worse side in `error` and the better side in `chart.neutral`, in four steps of strength up to a cap, and no change in the range-band color; a magnitude in the steps of `chart.sequential`. Cells with no value are hatched in `border.level3` and say why in the tooltip, and a legend in words reads the scale, so no cell rests on color alone.",
+    title: 'Heatmap cells are overlays, strength by value, continuous',
+    why: "amCharts' heat rules blend between two colors of the chart's choosing. Kilowatt draws a cell as one end color over the surface at an opacity of its value: a magnitude against the range on `chart.sequential`'s fourth step, a comparison against a cap either side of a midpoint, on `error` and `chart.neutral` where one side is worse or on `chart.diverging` where neither is. Strength is continuous, full from the cap and fading to the surface at no change, so the surface is the quiet state and no band edge splits two near values. Text stays `text.primary` while it holds 4.5:1 over the blend and takes the end's contrast text from the opacity where that holds, skipping the narrow band where neither does. No data is hatched in `border.level3`, and a legend under the grid draws the gradient with the cap or the range named at its ends.",
     charts: ['Heatmap'],
     convention: {
-      amchartsDefault: '`heatRules` blending between any two colors, continuously',
-      kilowatt: "`scale=\"diverging\"`: `colors.deviation`, the `worse` side in `error` and the other in `chart.neutral`, at 25–100% strength by distance from 0, capped, and 0 in `action.hover`; `scale=\"sequential\"`: `chart.sequential` steps; no data hatched in `border.level3`; a legend in words under the grid",
+      amchartsDefault: '`heatRules` blending between any two colors',
+      kilowatt:
+        '`scale="diverging"`: the `worse` side in `error` and the other in `chart.neutral`; `worse="none"`: `chart.diverging` below and above; `scale="sequential"`: `chart.sequential[3]` against the range; every cell at an opacity of its value over its cap or range (`colors.heat`); no data hatched; a gradient legend',
       where: 'Every heatmap',
     },
-    check: /colors\.deviation\.worse/,
+    check: /colors\.heat\.(below|error|magnitude)/,
   },
   {
     id: 'data-grouping',
