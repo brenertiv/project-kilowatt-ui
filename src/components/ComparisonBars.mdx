@@ -1,0 +1,74 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ComparisonBarsStories from './ComparisonBars.stories';
+
+<Meta
+  of={ComparisonBarsStories}
+  summary="Kilowatt's ComparisonBars for two or three figures side by side as labelled bars, such as this period against the same months a year earlier, the one that is the point highlighted against a neutral baseline."
+/>
+
+# ComparisonBars
+
+`ComparisonBars` sets a few figures side by side as bars: a row per figure, its period's name and its value written in full above a bar that fills its share of the largest. The figure that is the point takes the first series color and its baseline `chart.neutral` (Rules → Charts, Highlight, don't rainbow). It's Kilowatt's own component, built from MUI's `Box`, `Stack` and `Typography` (`@mui/material`, Material UI v9; MUI documents their props) rather than amCharts, as `SegmentedBar` is, since a bar and its label need no canvas.
+
+<Canvas of={ComparisonBarsStories.AgainstLastYear} />
+
+## When to use
+
+- Use it for two or three totals in one unit where the comparison is the point: this period against the same months a year earlier, a building against its portfolio's median.
+- For a value over time, use `LineChart` or `ColumnChart`.
+- For the parts of one whole, use `SegmentedBar`.
+- For more than three figures, rank them in a `ColumnChart` or a table.
+
+## Usage
+
+```tsx
+import CardContent from '@mui/material/CardContent';
+import { ComparisonBars } from 'src/components/ComparisonBars';
+
+<CardContent>
+  <ComparisonBars
+    unit="kWh"
+    label="Electricity use, this period and a year earlier"
+    rows={[
+      { label: 'Jan–Jun 2026', value: 412300 },
+      { label: 'Jan–Jun 2025', value: 455800, neutral: true },
+    ]}
+  />
+</CardContent>
+```
+
+List the figure that is the point first and mark its baseline `neutral`.
+
+## States
+
+<Canvas of={ComparisonBarsStories.NoData} />
+
+- A row with no `value` draws an empty outline in its color and says No data, so a missing period never reads as zero.
+
+## Do and don't
+
+- Do highlight one figure and draw its baseline in `chart.neutral`.
+- Don't give each row its own series color; the comparison, not the categories, is the point.
+- Do write every value in full, with its unit, beside its bar.
+- Don't make people read the numbers off the bar lengths.
+- Do name each row by its period.
+- Don't put the unit or the period in the card's title; units sit with the numbers.
+
+## MUI departures
+
+None of Kilowatt's departures change `Box`, `Stack` or `Typography`.
+
+Theme-wide departures (the `chart-palette` roles it colors with, the surface levels its track sits on, the theme radius on the bars' ends) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The rows are a list named by `label`; each row names its period and writes its value with its unit, so the bars, hidden from screen readers, carry nothing the text doesn't.
+- A long period name truncates with its full text in a tooltip (`TruncatedText`).
+- Values use tabular figures.
+
+## Related
+
+- `SegmentedBar` for the parts of one whole.
+- `LineChart` for a value over time against a baseline.
+
+<Stories includePrimary={false} />

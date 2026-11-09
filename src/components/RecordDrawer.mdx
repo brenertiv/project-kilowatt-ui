@@ -1,0 +1,110 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as RecordDrawerStories from './RecordDrawer.stories';
+
+<Meta
+  of={RecordDrawerStories}
+  summary="Kilowatt's RecordDrawer, one object as a record beside the page it's viewed on: groups of fields, each value with the line saying where it came from, edited one group at a time, with an Activity tab for its history."
+/>
+
+# RecordDrawer
+
+`RecordDrawer` shows one object as a record: the page is the view, the drawer the record. It's the object's name with its kind, a Record tab of groups of fields (each value with the line under it saying where it came from: recorded at setup, surveyed, from another system, changed by someone and when) and an Activity tab with its history, newest first. Each group has an Edit that turns only that group into a form, with Cancel and Save under it. One group edits at a time; closing, switching tabs or editing another group with unsaved changes asks first, and a group with an `editWarning` (values recorded on a survey) asks before its form opens. It's Kilowatt's own component, composed from MUI's `Tabs`, `Table`, `TextField`, `Button` and `Dialog` (`@mui/material`, Material UI v9; MUI documents their props). Put it in `AppShell`'s `detail`, which floats it over the page inside the frame.
+
+<Canvas of={RecordDrawerStories.Fields} />
+
+## When to use
+
+- Use it for an object's facts and settings, opened from the page that shows its figures: a property's details from its dashboard, from a figure's source link or from a fix in a data-health list.
+- For a page of the object's own figures, use a page; the drawer holds the record, not charts.
+- For a short choice or a confirmation, use a `Dialog`.
+- For the assistant or another tool that stays open across pages, use `AppShell`'s `aside`.
+
+## Usage
+
+```tsx
+import { AppShell } from 'src/components/AppShell';
+import { RecordDrawer } from 'src/components/RecordDrawer';
+
+<AppShell
+  {...shell}
+  detail={open && (
+    <RecordDrawer
+      record={record}
+      onClose={() => setOpen(false)}
+      onSave={(group, changes) => {
+        save(record.id, changes);
+        notify('Saved. The new values show on every page that uses them.');
+      }}
+      action={{ label: 'View Property', onClick: () => navigate(`/properties/${record.id}`) }}
+    />
+  )}
+  detailLabel={record.name}
+>
+  {page}
+</AppShell>
+```
+
+Map each kind of object onto `RecordDrawerRecord` with an adapter, so the drawer never knows which page it serves. Format each field's `display` and `provenance` for the locale. After `onSave`, pass the updated record back, with the new values and their new provenance, and say in a `Snackbar` what the save reaches elsewhere.
+
+## Variants
+
+- **A field to confirm** (`confirm` with `onConfirm`): Confirm and Correct on the value's own row, for a value the client should verify. Correct opens the group's form.
+- **A notice** (`notice`): an `Alert` over the groups, such as that edits are a demo.
+- **An action** (`action`): a text button in the header to where the object's figures are shown.
+- **A deep link** (`initialEdit`): a group's id opens it ready to edit, once per record, for a link that goes straight to a value to fix.
+
+<Canvas of={RecordDrawerStories.ConfirmAValue} />
+
+## States
+
+- **Editing**: one group is a form; the other groups stay as they are.
+- **Edit warning**: a group with `editWarning` opens a destructive dialog before its form, with Cancel first and the confirm in `error`.
+- **Unsaved changes**: Close, Escape, a tab or another group's Edit asks "Discard unsaved changes?", with Keep Editing first.
+- **Read only**: a group the person can't edit keeps a disabled Edit with `cannotEditReason` in its tooltip.
+- **No activity**: the Activity tab says nothing has happened to the record yet.
+
+<Canvas of={RecordDrawerStories.EditWarning} />
+
+## Do and don't
+
+- Do give every value a provenance line: where it came from and when.
+- Don't show a value without its source; a person deciding whether to trust it needs both.
+- Do edit one group at a time, with its own Save and Cancel.
+- Don't turn the whole record into one form; a save would reach more than the person meant to change.
+- Do warn before replacing a surveyed value, and say what the survey recorded.
+- Don't warn on every edit; keep the dialog for values an edit overwrites.
+- Do say after a save what it reaches elsewhere, in a `Snackbar`.
+- Don't close the drawer on Save; the person may want the next group.
+
+## MUI departures
+
+- `table-cell-border`: the fields' rows divide with `divider`.
+- `table-sticky-header`: not used; the groups' tables have no header row.
+- `table-last-row`: a group's last field has no bottom line.
+- `button-text-case`: the tabs' and buttons' labels are shown as written, in Title Case.
+- `button-text-weight`: the tabs' labels are regular weight.
+- `control-outlines`: the form's fields take `palette.control.border` at rest.
+- `focus-ring`: the tabs, buttons and fields show the 2px focus ring in `palette.control.focus`.
+- `medium-size`: the fields, buttons and tabs stay at medium; the kind chip and the Confirm and Correct pair are `small`, one-offs beside a heading and in a table cell.
+- `paper-surface-levels`: the warning dialogs take their surface from their elevation.
+- `selected-fills-icons`: not used; the tabs have no icons.
+- `tabular-numerals`: values use tabular figures.
+
+Theme-wide departures (the surface levels, the intents, the theme radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- Opening the drawer moves focus to the object's name (an `h2`), so the page's focus doesn't stay behind it; Escape closes it, after asking about unsaved changes.
+- The tabs are MUI's `Tabs`, each controlling its `tabpanel`.
+- Each group is a `section` named by its heading; its fields are a table whose first cell is the row header.
+- Each Edit is named for its group ("Edit Building details"); a disabled one's reason is in a tooltip on a wrapper, since a disabled button fires no events.
+- The dialogs are named by their titles and described by their text.
+- Name the `AppShell` `detail` with `detailLabel`, such as the object's name.
+
+## Related
+
+- `AppShell`'s `detail` to float it over the page.
+- `SourceFigure` for a figure whose source opens the record.
+- `Dialog` for a short decision.
+
+<Stories includePrimary={false} />

@@ -1,0 +1,90 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SchematicPreviewStories from './SchematicPreview.stories';
+
+<Meta
+  of={SchematicPreviewStories}
+  summary="Kilowatt's SchematicPreview, a page's layout in miniature with a shape per component, drawn from the palette's roles, for the preview at the top of a template or workspace card."
+/>
+
+# SchematicPreview
+
+`SchematicPreview` draws a template's or workspace's preview as a schematic of the page it opens on: the top of the page in miniature, with a shape per component (a headline figure, columns, a line, ranked bars, a table, a list, prose, a map, a progress bar). A dashboard's blocks are cards on the canvas, a report's are outlined on a centred page (with a hero image if it opens on one), and a plan's sit under a timeline; a page with no blocks shows an Add plus in a dashed frame. It shows what the page holds rather than anyone's data. It's Kilowatt's own component, an SVG in MUI's `Box` (`@mui/material`, Material UI v9; MUI documents its props), drawn from the palette's roles (surfaces, borders, text, the first series color and `chart.neutral`, the map's land) so it follows the color scheme as the page does. 3:1, edge to edge at the top of a card.
+
+<Canvas of={SchematicPreviewStories.Gallery} />
+
+## When to use
+
+- Use it at the top of a template or workspace card, so a gallery shows what each opens on.
+- For a picture of real content (a report's cover, a photo of a building), use an image.
+- Don't use it to show data; a chart card shows that.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardActionArea from '@mui/material/CardActionArea';
+import CardHeader from '@mui/material/CardHeader';
+import { SchematicPreview } from 'src/components/SchematicPreview';
+
+<Card variant="outlined">
+  <CardActionArea>
+    <SchematicPreview
+      preview={{
+        frame: 'dashboard',
+        blocks: [
+          { glyph: 'figure', span: 4 },
+          { glyph: 'figure', span: 4 },
+          { glyph: 'figure', span: 4 },
+          { glyph: 'column', span: 12 },
+        ],
+      }}
+    />
+    <CardHeader title="Energy Overview" />
+  </CardActionArea>
+</Card>
+```
+
+List the page's components in order, each as the blocks it shows, with its width in twelfths as MUI's `Grid` counts them; they pack into rows of twelve, and what falls below the preview's edge is cut off. `previewAspect` gives the 3:1 proportions, for a card without a preview that must stand as tall as one with it.
+
+## Variants
+
+- **Dashboard** (`frame: 'dashboard'`): cards on the canvas.
+- **Report** (`frame: 'report'`): a page narrower than the canvas, its blocks outlined under a title; `hero` adds a hero image at the top.
+- **Plan** (`frame: 'plan'`): the canvas under a timeline.
+
+<Canvas of={SchematicPreviewStories.Report} />
+
+<Canvas of={SchematicPreviewStories.Plan} />
+
+## States
+
+- **Blank** (no `blocks`): an Add plus in a dashed frame, so an empty template reads as a place to start.
+
+<Canvas of={SchematicPreviewStories.Blank} />
+
+## Do and don't
+
+- Do draw each component as the shapes it shows, in the page's order.
+- Don't draw a shape for a component whose content isn't settled; leave it out.
+- Do keep the preview the same 3:1 shape on every card in a gallery.
+- Don't put the user's data or a screenshot in a preview; it shows the layout, not the numbers.
+- Do name the card in text under the preview.
+- Don't rely on the preview to tell templates apart; the name and description do.
+
+## MUI departures
+
+None of Kilowatt's departures change `Box`.
+
+Theme-wide departures (the surface and border levels, the chart palette's first series and neutral, the map's land) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The preview is decorative (`aria-hidden`): the card's name and description carry its meaning.
+- It reads the color scheme on screen (`useResolvedScheme`), so it's never a light page on a dark card.
+
+## Related
+
+- `Card` and `CardActionArea` for the card it sits in.
+- `ScrollRow` for a row of template cards.
+
+<Stories includePrimary={false} />

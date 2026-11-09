@@ -1,0 +1,92 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as CompletenessCardStories from './CompletenessCard.stories';
+
+<Meta
+  of={CompletenessCardStories}
+  summary="Kilowatt's CompletenessCard, one outlined card per property with a status chip and a MonthBars strip per data feed on one month axis, for a grid that scans the health of many properties' data at once."
+/>
+
+# CompletenessCard
+
+`CompletenessCard` is one card in a grid that scans the completeness of many things' data at once, a property per card: every card the same shape, so the eye learns the layout once and then reads color. The title (a link that opens the property, with `open`) over a subheader, a status chip at the top right so a column of cards scans by its right edge, a line of counts, then a `MonthBars` strip per feed (Electricity, Water, Gas, Weather), each labelled at the left and stretched to one month axis, with the period's first month and the latest month with data under them. It's Kilowatt's own component, composed from MUI's `Card`, `CardHeader`, `CardContent`, `Chip` and `Link` (`@mui/material`, Material UI v9; MUI documents their props).
+
+<Canvas of={CompletenessCardStories.Property} />
+
+## When to use
+
+- Use it for a portfolio's or group's data sources page, as the Cards view: one card per property, to spot the ones missing months.
+- For the same rows as a table (the Table view), put `MonthBars` in its cells.
+- For one property's sources one by one, use `SourcesTimeline`.
+
+## Usage
+
+```tsx
+import Grid from '@mui/material/Grid';
+import { CompletenessCard } from 'src/components/CompletenessCard';
+import { MonthBarsLegend } from 'src/components/MonthBars';
+
+<MonthBarsLegend inline />
+<Grid container spacing={2} component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+  {properties.map((property) => (
+    <Grid key={property.id} component="li" size={{ xs: 12, sm: 6, md: 4 }}>
+      <CompletenessCard
+        title={property.name}
+        subheader={`${property.type} · ${property.city}`}
+        open={{ onClick: () => openProperty(property), label: `Open ${property.name}: sets it as your scope` }}
+        status={{ label: property.status, color: statusColor[property.status] }}
+        caption="3/4 feeds complete · 2 open items"
+        rows={property.feeds}
+        start="Jan 2025"
+        end="Last data · Oct 2025"
+      />
+    </Grid>
+  ))}
+</Grid>
+```
+
+Lay the cards out in MUI's `Grid` as a list, sorted least complete first by default with a Sort By select beside the caption, every card showing, with no pager, since the point is the scan. Put a caption above that says what the cards show and what they cover, `MonthBarsLegend` (`inline`) beside it, and the rule the bars are drawn by in a caption under the grid.
+
+<Canvas of={CompletenessCardStories.CardGridLayout} />
+
+## States
+
+- A feed that doesn't apply at the property takes a `placeholder` (`Not applicable`); one with nothing connected takes an `overlay` (`No source`). See `MonthBars`.
+- Without `open`, the title is plain text.
+
+## Do and don't
+
+- Do keep every card in a grid the same shape: the same feeds in the same order, even where one doesn't apply.
+- Don't drop a feed's row from one card; the rows would stop lining up down a column.
+- Do sort least complete first by default.
+- Don't page the grid; the scan needs every card.
+- Do count feeds as complete only when every month that isn't awaited is complete, and leave out feeds that don't apply.
+- Don't count a feed that doesn't apply as a gap.
+
+## MUI departures
+
+- `card-header-title`: the property's name is the header's `h6` title, set as an `h2` for the page's outline.
+- `card-header-subheader`: the type and city are `body2`.
+- `card-header-layout`: the status chip sits in the header's action slot, in a box the height of the icon button the slot is laid out for, so it stays level with the title.
+- `card-content-padding`: the strips' content is 16px on every side, with no top padding under the header.
+- `card-radius`: the card rounds at 16px.
+- `paper-surface-levels`: the card sits on `background.level3`; the overlay's label takes that surface so it reads over the grey bars.
+- `focus-ring`: the title's link button and each strip show the 2px focus ring.
+- `medium-size`: the status chip is `small`, a one-off beside a heading.
+- `tabular-numerals`: the chip's label, and the counts line, use tabular figures.
+
+Theme-wide departures (the intents on surfaces that color the bars, the surface and border levels) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- Each card's title is an `h2`; with `open` it's a link button named by `open.label`, which says what opening it does.
+- Each feed's row is a term and its strip: the feed's name, then a focusable figure named by its summary sentence.
+- The status is a chip with its words; its color never stands alone.
+- Lay the cards out as a list (`component="ul"` on the `Grid`), named for what it lists.
+
+## Related
+
+- `MonthBars` for the strips, in a table or a card.
+- `SourcesTimeline` for one property's sources.
+- `Card` for the card itself.
+
+<Stories includePrimary={false} />

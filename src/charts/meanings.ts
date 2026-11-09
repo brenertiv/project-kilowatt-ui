@@ -33,6 +33,17 @@ export const workOrderTypeSlots: Record<string, number> = {
 };
 
 /**
+ * A workspace type's series slot, by its name: Dashboard the first, Report the second, Plan the third, in the palette's
+ * fixed order. Each passes 3:1 on every surface in both schemes, so it can color an icon (`TypeChip`). The color always
+ * rides on the type's icon beside its name, never on the name alone.
+ */
+export const workspaceTypeSlots: Record<string, number> = {
+  Dashboard: 0,
+  Report: 1,
+  Plan: 2,
+};
+
+/**
  * A work-order status's intent, by its API name, for a chart colored by status: the statuses that
  * need someone's attention take an intent, and the rest are drawn `neutral`. Seven statuses don't fit
  * four intents one to one, so a status chart always labels its parts as well (a legend or direct labels).

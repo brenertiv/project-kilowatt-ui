@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
@@ -8,6 +8,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
+import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -346,5 +347,47 @@ export const LongTitle: Story = {
     const title = canvas.getByText(/^Energy Use by Floor/);
     await waitFor(() => expect(title).toHaveAttribute('tabindex', '0'));
     await expect(title.getBoundingClientRect().height).toBeLessThan(30);
+  },
+};
+
+/** A card that folds to its header: the header's expand button and the content under it in a `Collapse`. */
+function FoldingCard({ defaultExpanded }: { defaultExpanded: boolean }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const id = useId();
+  const title = 'Meter Readings';
+  return (
+    <Card variant="outlined" sx={{ maxWidth: 360 }}>
+      <CardHeader
+        title={<TruncatedText>{title}</TruncatedText>}
+        action={
+          <IconButton aria-label={`${expanded ? 'Collapse' : 'Expand'} ${title}`} aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded((open) => !open)}>
+            <Icon name="expand_more" sx={{ transform: expanded ? 'rotate(180deg)' : undefined, transition: (t) => t.transitions.create('transform', { duration: t.transitions.duration.shortest }) }} />
+          </IconButton>
+        }
+      />
+      <Collapse in={expanded} id={id} unmountOnExit>
+        <List>
+          {meters.map((meter) => (
+            <ListItem key={meter.name} secondaryAction={<Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>{kWh.format(meter.reading)}\u00a0kWh</Typography>}>
+              <ListItemText primary={meter.name} />
+            </ListItem>
+          ))}
+        </List>
+      </Collapse>
+    </Card>
+  );
+}
+
+/**
+ * A card that folds to its header, for a long table the reader opens when they need it: MUI's Card expand pattern, an
+ * icon button in the header's `action` that names what it does and sets `aria-expanded`, and the body in a `Collapse`.
+ */
+export const Collapsible: Story = {
+  render: () => <FoldingCard defaultExpanded={false} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.queryByText(meters[0].name)).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Expand Meter Readings' }));
+    await expect(canvas.getByRole('button', { name: 'Collapse Meter Readings' })).toHaveAttribute('aria-expanded', 'true');
+    await waitFor(() => expect(canvas.getByText(meters[0].name)).toBeVisible());
   },
 };

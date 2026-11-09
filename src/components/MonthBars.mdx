@@ -1,0 +1,84 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as MonthBarsStories from './MonthBars.stories';
+
+<Meta
+  of={MonthBarsStories}
+  summary="Kilowatt's MonthBars, a strip of equal bars, one per month of a period, colored by how completely a data feed reported in each: complete, partial, gap or awaiting."
+/>
+
+# MonthBars
+
+`MonthBars` draws one bar per month of a period, showing how completely a data feed reported in each. Every bar is the same height, so the strip reads as the state of the data rather than as usage. The state is the bar's color, by status, the same for every feed: Complete is `success`, Partial `warning`, a Gap the disabled background (`action.disabledBackground`, as a disabled control is), so a missing month is a mark rather than a hole, and Awaiting (a month after the latest entry, still within the billing lag) is an outline with no fill. `MonthBarsLegend` is its key. It's Kilowatt's own component, built from MUI's `Box`, `Tooltip` and `Typography` (`@mui/material`, Material UI v9; MUI documents their props): a table of 48 properties by four feeds is 192 strips, too many canvases for amCharts.
+
+<Canvas of={MonthBarsStories.Year} />
+
+## When to use
+
+- Use it for data completeness by month: whether each month of a feed (a utility, a meter, weather) has its data, in a table cell or stacked in a card.
+- For a feed's sources one by one, with their gaps and runs, use `SourcesTimeline`.
+- For usage by month, use `ColumnChart`; bars of one height would hide the amounts.
+- For a single share of months, write the count (`10/12`) or use `LinearProgress`.
+
+## Usage
+
+```tsx
+import { MonthBars, MonthBarsLegend } from 'src/components/MonthBars';
+
+<MonthBars
+  months={['complete', 'complete', 'gap', 'complete', 'partial', 'awaiting']}
+  summary="Electricity, Jan–Jun 2026: 3 of 5 months complete, 1 partial; no data in March; June awaited."
+/>
+<MonthBarsLegend />
+```
+
+Write `summary` as one sentence with the counts and the months that matter: it's the tooltip and the accessible name. Put `MonthBarsLegend` in the row under a table of strips, or `inline` beside a grid of them.
+
+<Canvas of={MonthBarsStories.InATable} />
+
+## Variants
+
+- **In a cell** (the default): 4px bars, for a table.
+- **Stretched** (`stretch`): the strip fills its row and the bars share the width, so strips stacked in a card line up on one month axis (`CompletenessCard`).
+
+<Canvas of={MonthBarsStories.Stretched} />
+
+## States
+
+- **No source** (`overlay`): the feed applies but nothing is connected for it. Every month is drawn as a gap, with the label over the strip.
+- **Not applicable** (`placeholder`): the feed doesn't apply (a property with no gas). No bars, only the label in the strip's slot, so it never looks like a problem and the row stays in line.
+- **Long period**: past 24 months the bars are too thin to read, and the count of complete months stands in.
+
+<Canvas of={MonthBarsStories.NoSource} />
+
+<Canvas of={MonthBarsStories.NotApplicable} />
+
+## Do and don't
+
+- Do keep every bar the same height.
+- Don't scale bars by usage; a short bar would read as low use, not as missing data.
+- Do color the bars by status, the same for every feed.
+- Don't color a feed's strip in its series color; status takes the intents (Rules → Charts).
+- Do write the counts and the missing months in `summary`.
+- Don't add a count beside the strip; the sentence carries the numbers.
+- Do mark a feed that doesn't apply with `placeholder`, and one with nothing connected with `overlay`.
+- Don't draw a feed that doesn't apply as gaps; it isn't a problem to fix.
+
+## MUI departures
+
+None of Kilowatt's departures change `Box`, `Tooltip` or `Typography`.
+
+Theme-wide departures (the intents on surfaces that color the bars, the `focus-ring` on the focusable strip, the surface levels) apply too; see Foundations → MUI departures. The bars round at a quarter of the theme radius, the size of a 4px bar's corner.
+
+## Accessibility
+
+- The strip is a focusable `figure` named by `summary`, which is also its tooltip, so the sentence reaches keyboard and screen-reader users once and the bars are hidden from them.
+- The colors never stand alone: the sentence names the states, and the legend names each swatch.
+- A placeholder or overlay is text in the strip's slot.
+
+## Related
+
+- `CompletenessCard` for a card of strips, one per feed.
+- `SourcesTimeline` for each source's runs and gaps.
+- `SegmentedBar` for the parts of one whole.
+
+<Stories includePrimary={false} />

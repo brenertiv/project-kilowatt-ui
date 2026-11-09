@@ -1,0 +1,77 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as SourcesTimelineStories from './SourcesTimeline.stories';
+
+<Meta
+  of={SourcesTimelineStories}
+  summary="Kilowatt's SourcesTimeline, a row per data source on one month axis, with each run of months it reported as a bar, each gap hatched and flagged, and optionally the feed's usage as columns above."
+/>
+
+# SourcesTimeline
+
+`SourcesTimeline` shows a feed's sources over a period: a row per source on one month axis, a bar for each run of months it reported, and a hatched segment for each gap, a hole between runs, a silence at the end longer than the billing lag (`lagMonths`, two by default), or a row that reported nothing. Months before a source's first reading are a source not reporting yet, not a gap. A row with a gap gets a "needs fixing" dot and a `warning` outline. With `usage`, the feed's usage by month sits above as columns on the same month slots. With `onSelect`, each row is a toggle button, for the selected source's record under the timeline. It's Kilowatt's own component, built from MUI's `Box`, `ButtonBase`, `Stack`, `Tooltip` and `Typography` (`@mui/material`, Material UI v9; MUI documents their props): `ColumnChart` keeps its value axis, so its columns couldn't line up with the rows.
+
+<Canvas of={SourcesTimelineStories.WithUsage} />
+
+## When to use
+
+- Use it on one property's data sources page, for each utility: which source reported when, and where the gaps are.
+- For many properties or feeds at once, use `MonthBars` in a table, or `CompletenessCard` in a grid.
+- For usage alone, use `ColumnChart`.
+
+## Usage
+
+```tsx
+import { SourcesTimeline } from 'src/components/SourcesTimeline';
+
+<SourcesTimeline
+  months={months}
+  sources={[{ id: 'acct-1', kind: 'Utility account', name: '4410-2271-08', reported: [true, true, false, true] }]}
+  label="Electricity sources, Jan–Apr 2025"
+  heading="Electricity sources"
+  usage={{ values: [61200, 58400, undefined, 60100], unit: 'kWh', heading: 'Electricity usage · kWh per month' }}
+  selected={selected}
+  onSelect={setSelected}
+/>
+```
+
+`months` are the first day of each month on the axis; each source's `reported` has one entry per month. `spansOf` and `gapsOf` give the runs and gaps it draws, for a record or a count beside it.
+
+## Variants
+
+- **Rows alone**, for a page that shows usage elsewhere.
+- **With usage** (`usage`): the columns above take the first series color, one measure across months, each with its compact value over it and the full value in its tooltip.
+- **Selectable** (`onSelect`, `selected`): a row is a toggle button, ringed in `primary` when selected, and the legend adds "Click a source for details".
+
+<Canvas of={SourcesTimelineStories.Rows} />
+
+<Canvas of={SourcesTimelineStories.WithRecord} />
+
+## Do and don't
+
+- Do give every source its own row, named by its kind and name.
+- Don't merge a feed's sources into one row; a gap in one source would hide behind another's data.
+- Do hatch a gap and flag its row as needing a fix.
+- Don't count the months before a source's first reading as a gap; it wasn't connected yet.
+- Do show the selected source's record under the timeline, with who is responsible for it.
+- Don't open a dialog for a source's record; the timeline stays in view to compare.
+
+## MUI departures
+
+- `focus-ring`: a row's keyboard focus is the 2px ring in `palette.control.focus`, 2px outside the row.
+
+Theme-wide departures (the intents on surfaces that color the runs and gaps, the first series color for the usage columns, the border levels for the month gridlines, the surface levels behind the names) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- Each row is a button named by a sentence: its kind and name, whether it needs fixing, how many months it reported and which months have no data, in words. The same sentence is its tooltip, so the hatch and colors never stand alone.
+- Selectable rows set `aria-pressed`.
+- The rows sit in a group named by `label`; the usage columns are a `figure` named by a summary of their months and highest value.
+- The legend is a list naming each mark.
+
+## Related
+
+- `MonthBars` for completeness by month across many feeds.
+- `CompletenessCard` for a grid of properties.
+- `ColumnChart` for usage alone.
+
+<Stories includePrimary={false} />

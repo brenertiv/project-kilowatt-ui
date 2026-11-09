@@ -28,7 +28,7 @@ Below `md` the shell switches to a layout built for a phone's browser: a sticky 
 - Use it once, at the root of the app, around every page.
 - Use the panel for a section's own pages. For actions on the current page, use the page's header or toolbar, not the panel.
 - For the scope (the portfolio or property), use `headerStart`; for page-wide actions, `headerEnd`.
-- For details of one item, open a `Drawer` from the page rather than the aside; the aside is for a tool that stays open across pages, like the assistant.
+- For one object's record (its facts and settings), put a `RecordDrawer` in `detail` rather than the aside; the aside is for a tool that stays open across pages, like the assistant.
 
 ## Usage
 
@@ -104,6 +104,7 @@ Reach for it when a page's columns would crowd beside docked panels; otherwise s
 - **Companies:** pass every company the person belongs to as `companies` (the current one included), each with an optional `detail` such as their role and an optional `logo`. The company button always opens the company menu, with each company's mark and the current one checked; choosing another calls `onCompanyChange`. A mark is the company's `logo` on a white tile (marks are drawn for white), or its initials without one. With `onAddCompany`, an Add Company row ends the menu, after a divider.
 - **With an aside:** pass `aside` and `asideOpen`, and a button in `headerEnd` that toggles it. The column's width starts at `defaultAsideWidth` (344px) and `onAsideWidthChange` lets the app remember it. At 900px with the panel and the aside both docked at their default widths, the page is left about 220px: collapsing the panel or floating the aside gives it back, and a page can size its columns by that width (Usage → Columns by the page's width).
 - **Floating aside:** `asideDocked={false}` floats the aside over the page at the bottom right, at its column's width and up to 640px tall, on level1 with the divider and a shadow. Mark its header with `data-drag-handle`: a press there, away from its buttons, drags it, kept 8px inside the window, and a double-click puts it back in the corner. `defaultAsidePosition` and `onAsidePositionChange` (its distance from the window's right and bottom edges, or `null` for the corner) let the app remember where it was left. Put the Dock and Undock control in the aside's own header and pass the choice back as `asideDocked`.
+- **With a record:** `detail` floats one object's record, such as a `RecordDrawer`, over the page inside the frame at the right, as the undocked panel floats at the left: elevation 2, 8px in from the frame's right edge and 16px from its top and bottom, the theme radius, up to 440px wide. It sits above the aside, docked or floating, with the page live beneath and no scrim; dialogs stay above it. On phones it fills the window less 8px on every side. Name it with `detailLabel`, and leave `detail` out while no record is open.
 - **No header:** `hideHeader` leaves the header out on wide screens, for a page about making something new rather than a scope. Phones keep theirs, which holds the menu button.
 
 ### Phones
@@ -154,7 +155,7 @@ Test the phone layout on a real iPhone (with Safari's toolbar at the bottom and 
 
 ## MUI departures
 
-- `paper-surface-levels`: the drawers, the floating panel, the menus and the header take their surface from their elevation: the floating panel is on level3, the company menu on the menu surface (level4), the phone menu on level5, and the header is transparent, on the frame's level2 (on phones, set to level2 so the page scrolls under it). The docked panel and the aside, docked or floating, sit on level1, a step darker than the frame; on the floating aside that's set over `elevation={0}`, with the divider and a shadow in both schemes, the docked column's surface lifted off the page. In the dark scheme the menus, the phone menu, the bottom sheet and the search dialog sit on level2 with the divider as their edge, the frame's own surface.
+- `paper-surface-levels`: the drawers, the floating panel, the menus and the header take their surface from their elevation: the floating panel and the record in `detail` are on level3, the company menu on the menu surface (level4), the phone menu on level5, and the header is transparent, on the frame's level2 (on phones, set to level2 so the page scrolls under it). The docked panel and the aside, docked or floating, sit on level1, a step darker than the frame; on the floating aside that's set over `elevation={0}`, with the divider and a shadow in both schemes, the docked column's surface lifted off the page. In the dark scheme the menus, the phone menu, the bottom sheet and the search dialog sit on level2 with the divider as their edge, the frame's own surface.
 - `soft-shadow`: not used by the shell; its floating layers keep `theme.shadows`. A composer in the aside takes a raised surface framed in the `divider`, with no shadow.
 - `selected-fills-icons`: the current section and page show their icons filled.
 - `icon-button-radius`: the rail's and header's icon buttons round at the theme radius.
@@ -171,7 +172,7 @@ Theme-wide departures (surfaces, borders, radius, type, reduced motion) apply to
 
 ## Accessibility
 
-- Landmarks: the rail is a `nav` named Main, the panel a `nav` named after its section, the page is `main` (`id="main"`) and the aside an `aside` named by `asideLabel`. On phones the menu is a dialog and a `nav`, both named Menu.
+- Landmarks: the rail is a `nav` named Main, the panel a `nav` named after its section, the page is `main` (`id="main"`), the aside an `aside` named by `asideLabel`, and the record in `detail` an `aside` named by `detailLabel`. On phones the menu is a dialog and a `nav`, both named Menu.
 - A Skip to Content link is the first thing in the tab order and appears on focus.
 - The current section and page carry `aria-current="page"`.
 - Every icon-only button has an accessible name and a tooltip: sections by label, with their `badge` words ("Notifications, 10 unread"); on phones the menu button includes them too ("Open Menu, 10 unread").

@@ -182,6 +182,15 @@ export type AppShellProps = {
   asideLabel?: string;
   /** Called when the bottom sheet's scrim or Escape closes `aside`. */
   onAsideClose?: () => void;
+  /**
+   * A record of one object, such as `RecordDrawer`, floating over the page inside the frame at the right, as the
+   * undocked section panel floats at the left: elevation 2, 8px in from the frame's right edge and 16px from its top and
+   * bottom, the theme radius, above the aside whether docked or floating, with the page live beneath and no scrim. On
+   * phones it fills the window less 8px on every side. Default none: nothing while no record is open.
+   */
+  detail?: ReactNode;
+  /** The accessible name of `detail`, such as the object's name. Default `'Record'`. */
+  detailLabel?: string;
   /** Leaves the header out on wide screens, for a page with no scope and no page-wide actions. Phones keep theirs, which holds the menu button. Default `false`. */
   hideHeader?: boolean;
   /** Whether the page is still loading. A panel docking from the floating panel keeps its overlay up until this is `false`, so the page behind it never shows mid-load. Default `false`. */
@@ -836,8 +845,9 @@ type PhoneShellProps = Pick<
   | 'onPageChange'
   | 'onCompanyChange'
   | 'onAddCompany'
+  | 'detail'
   | 'children'
-> & { asideLabel: string; asideOpen: boolean; companies: AppShellCompany[] };
+> & { asideLabel: string; asideOpen: boolean; companies: AppShellCompany[]; detailLabel: string };
 
 /**
  * The shell below the `md` breakpoint, built for a phone's browser. The page scrolls the document, so the
@@ -862,6 +872,8 @@ function PhoneShell({
   companies,
   onCompanyChange,
   onAddCompany,
+  detail,
+  detailLabel,
   children,
 }: PhoneShellProps) {
   const [menuOpen, showMenu, hideMenu] = useBackToClose();
@@ -1110,6 +1122,17 @@ function PhoneShell({
           {aside}
         </AsideSheet>
       )}
+      {detail && (
+        // The record on a phone: the same floating Paper, 8px in from the window's edges, over the page and the aside's sheet.
+        <Paper
+          component="aside"
+          elevation={2}
+          aria-label={detailLabel}
+          sx={{ position: 'fixed', inset: (t) => t.spacing(1), zIndex: 'modal', display: 'flex', borderRadius: 1, overflow: 'hidden' }}
+        >
+          {detail}
+        </Paper>
+      )}
     </Box>
   );
 }
@@ -1322,6 +1345,8 @@ export function AppShell({
   onPageChange,
   onCompanyChange,
   onAddCompany,
+  detail,
+  detailLabel = 'Record',
   children,
 }: AppShellProps) {
   const theme = useTheme();
@@ -1696,6 +1721,8 @@ export function AppShell({
           companies,
           onCompanyChange,
           onAddCompany,
+          detail,
+          detailLabel,
         }}
       >
         {children}
@@ -1898,6 +1925,31 @@ export function AppShell({
           }}
         >
           {aside}
+        </Paper>
+      )}
+      {detail && (
+        // The record, drawn as the undocked section panel is and mirrored to the right. Elevation 2 puts it on level3 with
+        // a low shadow; it floats inside the frame, 8px in from the frame's right edge and 16px from its top and bottom,
+        // so its corners are concentric with the frame's; and it sits on the modal layer after the floating aside, so it
+        // is above the aside, docked or floating, while dialogs (portaled after it) stay above it. No scrim: the page
+        // beneath stays live.
+        <Paper
+          component="aside"
+          elevation={2}
+          aria-label={detailLabel}
+          sx={{
+            position: 'absolute',
+            top: (t) => t.spacing(2),
+            bottom: (t) => t.spacing(2),
+            right: (t) => t.spacing(2),
+            width: (t) => `min(${t.spacing(55)}, calc(100% - ${railWidth}px - ${t.spacing(3)}))`,
+            zIndex: 'modal',
+            display: 'flex',
+            borderRadius: 1,
+            overflow: 'hidden',
+          }}
+        >
+          {detail}
         </Paper>
       )}
     </Box>
