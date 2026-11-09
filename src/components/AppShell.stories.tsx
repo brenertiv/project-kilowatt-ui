@@ -12,10 +12,12 @@ import { useTheme } from '@mui/material/styles';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, screen, waitFor, within } from 'storybook/test';
 import { AppShell, type AppShellCompany, type AppShellItemAction, type AppShellSection } from 'src/components/AppShell';
+import { RecordDrawer } from 'src/components/RecordDrawer';
 import { useContentUp } from 'src/components/contentWidth';
 import { ScopePicker, type Scope, type ScopeGroup, type ScopeProperty } from 'src/components/ScopePicker';
 import { Icon } from 'src/icons';
 import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
+import { sampleRecord } from 'src/fixtures/records';
 
 /** The portfolio the scope picker in the header chooses from. */
 const scopeProperties: ScopeProperty[] = [
@@ -594,6 +596,22 @@ export const AssistantFloating: Story = {
   },
 };
 
+/** `detail`: one object's record floats over the page inside the frame at the right, above the assistant, the page live beneath. */
+export const RecordOpen: Story = {
+  args: {
+    asideOpen: true,
+    detail: <RecordDrawer record={sampleRecord} onClose={fn()} onSave={fn()} />,
+    detailLabel: sampleRecord.name,
+  },
+  play: async ({ canvas }) => {
+    const record = canvas.getByRole('complementary', { name: 'Harbor Point' });
+    await expect(record).toBeVisible();
+    await expect(within(record).getByRole('tab', { name: 'Record' })).toHaveAttribute('aria-selected', 'true');
+    // The page stays live beside it.
+    await expect(canvas.getByRole('main')).toBeVisible();
+  },
+};
+
 /** Three cards across while the page, not the window, is at least `md` wide: what `useContentUp` answers for a page beside docked panels. */
 function CardsByPageWidth() {
   const across = useContentUp('md');
@@ -646,6 +664,18 @@ export const Phone: Story = {
     await userEvent.click(within(menu).getByRole('button', { name: /^Emissions and Energy/ }));
     await waitFor(() => expect(screen.queryByRole('navigation', { name: 'Menu' })).toBeNull());
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Emissions and Energy');
+  },
+};
+
+/** On a phone, the record fills the window less 8px on every side, over the page. */
+export const PhoneRecord: Story = {
+  globals: phoneViewport,
+  args: {
+    detail: <RecordDrawer record={sampleRecord} onClose={fn()} onSave={fn()} />,
+    detailLabel: sampleRecord.name,
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('complementary', { name: 'Harbor Point' })).toBeVisible();
   },
 };
 

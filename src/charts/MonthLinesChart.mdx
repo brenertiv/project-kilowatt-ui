@@ -1,0 +1,98 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as MonthLinesChartStories from './MonthLinesChart.stories';
+
+<Meta
+  of={MonthLinesChartStories}
+  summary="Kilowatt's MonthLinesChart, a line per year across January to December, for comparing years month by month, such as a property's electricity this year against the two before."
+/>
+
+# MonthLinesChart
+
+`MonthLinesChart` draws a line per year across the twelve months, for a year-over-year chart: each year's January over every other January. `LineChart` can't draw it, since its months sit on one date axis. It's built as the reference charts are (Rules → Charts): amCharts 5 through `useChart`, the lines in `chart.series` order through `seriesColors`, the unit above the value axis on the right, a legend past one line, the full value in every tooltip, a dot on every month so a lone month with data still shows, and a gap where a month has no data, never a line across it. It sits in a `figure` named by `summary`, in an outlined MUI `Card` (`@mui/material`, Material UI v9) under a `CardHeader`.
+
+<Canvas of={MonthLinesChartStories.YearOverYear} />
+
+## When to use
+
+- Use it to compare years month by month: a property's electricity, water or gas this year against the years before.
+- For a value over continuous time, use `LineChart`.
+- For two totals, this period against the same months a year earlier, use `ComparisonBars`.
+- For monthly totals of one year, use `ColumnChart`.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { MonthLinesChart } from 'src/charts/MonthLinesChart';
+import { TruncatedText } from 'src/components/TruncatedText';
+
+const data = [{ month: 'Jan', y2024: 59100, y2025: 57400 } /* …to Dec */];
+const series = [
+  { field: 'y2024', name: '2024' },
+  { field: 'y2025', name: '2025' },
+];
+
+<Card variant="outlined">
+  <CardHeader title={<TruncatedText>Electricity by Month</TruncatedText>} />
+  <MonthLinesChart data={data} categoryField="month" series={series} unit="kWh" summary="Electricity by month, 2024 and 2025: …" />
+</Card>
+```
+
+Pass twelve rows, January first, with a field per year; leave a field out of a month that has no data. List the years oldest first. Keep `data` and `series` stable (`useMemo`).
+
+## Variants
+
+- **Several years**: the lines take the series colors in order, with a legend under the plot.
+- **One year**: one line in the first series color, no legend.
+
+<Canvas of={MonthLinesChartStories.OneYear} />
+
+## Do and don't
+
+- Do list the years oldest first, so the newest takes the latest series slot and the legend reads in time order.
+- Don't give the current year a different line style; variants differ by style, years are different series.
+- Do leave a month out where there's no data.
+- Don't fill a missing month with 0; the line breaks there instead.
+- Do keep to six years at most.
+- Don't add a seventh color; past six years, show a table.
+
+## MUI departures
+
+- `chart-palette`: lines take `chart.series` in order or by `slot`, and neutral lines take `chart.neutral`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: value-axis numbers are left-aligned, 8px from the plot.
+- `legend-items`: legend items have no left padding, so the legend lines up with the axis and the title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: the one value axis sits on the right.
+- `axis-units`: the value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `full-value-tooltips`: every point has a tooltip with the year, the month, the exact value and the unit (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `legend-layout`: the legend sits below the plot in up to three columns, for two or more years.
+- `point-markers`: every month is marked with a 4px dot ringed in the card surface, so a month with data between two without still shows.
+
+## Accessibility
+
+- The chart draws on a canvas; the `figure` around it is named by `summary`, one sentence with the numbers that matter and the months without data.
+- Every point's tooltip names its year and month and gives the full value with its unit.
+- The years are told apart by the legend's names as well as by color.
+
+## Related
+
+- `LineChart` for values over continuous time.
+- `ComparisonBars` for two totals side by side.
+- `ColumnChart` for one year's monthly totals.
+
+<Stories includePrimary={false} />

@@ -132,6 +132,10 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 
 `CardHeader` sets a title, a `subheader` and an `action` (an icon button or menu) in one row. `CardContent` pads the content, and `CardActions` lays out text buttons along the bottom. `CardActionArea` turns the whole card into one button, for a card that only opens its subject.
 
+A card can fold to its header, for a long table that's there when the reader needs it: put an `IconButton` with `expand_more` in the header's `action`, named for what it does ("Expand Meter Readings") with `aria-expanded` and `aria-controls`, and the body in MUI's `Collapse`. The icon turns over when the card is open. Choose whether it starts open or closed by how often the content is needed. It keeps the card's 16px radius, which an `Accordion` wouldn't.
+
+<Canvas of={CardStories.Collapsible} />
+
 ## Do and don't
 
 - Do keep one subject per card, with a heading that names it.
@@ -155,6 +159,8 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 - Don't pad the `Card` itself, or nudge a header action into place with margins; its position comes from `card-header-layout`.
 - Do wrap header titles and subtitles in `TruncatedText`, and keep them short enough to fit a typical card.
 - Don't let a title wrap or set `noWrap` on it yourself; the theme keeps it on one line, and `TruncatedText` shows the rest.
+- Do fold a card to its header with an expand button and `Collapse`, for content the reader opens only when they need it.
+- Don't use an `Accordion` for a folding card; it loses the card's radius and header. Keep `Accordion` for stacked sections of a form or a page.
 - Do let the card take its surface and its 16px radius from the theme.
 - Don't set the card's `backgroundColor` or `borderRadius` with `sx`; the surface comes from its elevation and the radius from `card-radius`.
 
@@ -175,6 +181,7 @@ How the charts inside cards differ from stock amCharts (an outlined card, the 16
 - `Card` renders a plain `div` with no role; give it a heading (`component="h2"` or the right level for the page) so people can find it by heading.
 - `CardActionArea` renders a `button`, with keyboard activation and a visible focus state. Its accessible name is all the text inside it, so keep that text short.
 - Name each button in `CardActions` for its action, so "View Building" makes sense when read out of the card.
+- A folding card's expand button names what it does and the card ("Expand Meter Readings", then "Collapse Meter Readings"), and sets `aria-expanded` and `aria-controls` to the `Collapse`.
 - A chart draws on a canvas that screen readers can't read. Put it in a `figure` named by a one-line summary with the numbers that matter (`aria-label`); the summary isn't shown on screen. For detailed data, offer it as a table too. Don't give the chart's container `role="img"`: amCharts adds focusable elements for keyboard access, and an image can't contain them.
 
 ## Related

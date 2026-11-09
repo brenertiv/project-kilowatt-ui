@@ -16,7 +16,7 @@ import type { Theme } from '@mui/material/styles';
  */
 
 /** Kilowatt's reference charts, by component name. */
-export type ChartName = 'LineChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap' | 'IntervalChart' | 'Treemap';
+export type ChartName = 'LineChart' | 'MonthLinesChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap' | 'IntervalChart' | 'Treemap';
 
 /** What a theme entry's `apply` works with, for one chart root and color scheme. */
 export type ChartThemeContext = {
@@ -61,8 +61,8 @@ export type ChartDeparture = {
  */
 export const axisNumberFormat: Intl.NumberFormatOptions = { notation: 'compact' };
 
-const all: ChartName[] = ['LineChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart', 'Treemap'];
-const xy: ChartName[] = ['LineChart', 'ColumnChart', 'IntervalChart'];
+const all: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart', 'Treemap'];
+const xy: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'IntervalChart'];
 
 export const chartDepartures: ChartDeparture[] = [
   {
@@ -330,8 +330,8 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'point-markers',
     kind: 'convention',
     title: 'Markers only where they say something',
-    why: "amCharts draws no markers until a bullet is added, and charts then tend to mark every point. Kilowatt draws none by default; `markers: 'last'` marks the latest reading, and `'all'` marks every point of sparse data, where each point is a reading. A marker is a 4px dot in the line's color (or its band's) ringed in the card surface, so it stays legible where lines cross.",
-    charts: ['LineChart', 'Sparkline'],
+    why: "amCharts draws no markers until a bullet is added, and charts then tend to mark every point. Kilowatt draws none by default; `markers: 'last'` marks the latest reading, and `'all'` marks every point of sparse data, where each point is a reading, as `MonthLinesChart` marks every month so a lone month with data still shows. A marker is a 4px dot in the line's color (or its band's) ringed in the card surface, so it stays legible where lines cross.",
+    charts: ['LineChart', 'MonthLinesChart', 'Sparkline'],
     convention: {
       amchartsDefault: 'No bullets; when added, usually on every point',
       kilowatt: "`markers: 'last' | 'all'` on a `LineChart` series, and the last point of every `Sparkline`: a 4px dot ringed in the card surface",

@@ -1,13 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { actionStatuses, actionTypes, utilityBillTypes } from '../fixtures/data';
-import { meaningColor, scoreBands, utilitySlots, workOrderStatusIntents, workOrderTypeSlots } from './meanings';
+import { meaningColor, scoreBands, utilitySlots, workOrderStatusIntents, workOrderTypeSlots, workspaceTypeSlots } from './meanings';
 
 const series = 6;
 
 describe.each([
   ['utilitySlots', utilitySlots],
   ['workOrderTypeSlots', workOrderTypeSlots],
+  ['workspaceTypeSlots', workspaceTypeSlots],
 ])('%s', (_name, slots) => {
   it('gives each meaning its own series slot', () => {
     const taken = Object.values(slots);

@@ -12,6 +12,7 @@ import { chartDepartures, type ChartName } from './departures';
 
 const charts: ChartName[] = [
   'LineChart',
+  'MonthLinesChart',
   'ColumnChart',
   'DonutChart',
   'Sparkline',

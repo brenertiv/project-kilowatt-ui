@@ -1,0 +1,63 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as TypeChipStories from './TypeChip.stories';
+
+<Meta
+  of={TypeChipStories}
+  summary="Kilowatt's TypeChip and TypeFilterChip, a type's icon in its chart.series slot color on a tint of it, so dashboards, reports and plans are told apart at a glance in cards, rows, menus and type filters."
+/>
+
+# TypeChip
+
+`TypeChip` is a 32px square holding a type's icon in the type's color, the square in a tint of it, so mixed types are told apart at a glance in cards, list rows and menus. The color is a `chart.series` slot, as Rules → Charts asks of a product meaning, never a palette color of its own: the workspace types take theirs from `workspaceTypeSlots` in `src/charts/meanings` (Dashboard the first slot, Report the second, Plan the third), each passing 3:1 on every surface in both schemes. The tint is the slot's color at MUI's `action.selectedOpacity`, the wash MUI's standard Alert lays on a surface. `TypeFilterChip` is MUI's `Chip` for a type filter: the type's icon in its color and, chosen, the chip filled with the tint. `useSlotColor` gives the color for an icon that stands alone. Kilowatt's own components, built from MUI's `Box` and `Chip` (`@mui/material`, Material UI v9; MUI documents their props).
+
+<Canvas of={TypeChipStories.InAList} />
+
+## When to use
+
+- Use it beside a workspace's name wherever types mix: a card, a recent-items row, a menu, the panel.
+- Use `TypeFilterChip` for a row of chips that filters a gallery by type, after an All chip.
+- For a status, use a `Chip` with an intent color; type colors aren't statuses.
+- For a meaning without a series slot, use the icon alone in `text.secondary`.
+
+## Usage
+
+```tsx
+import { workspaceTypeSlots } from 'src/charts/meanings';
+import { TypeChip, TypeFilterChip } from 'src/components/TypeChip';
+
+<TypeChip slot={workspaceTypeSlots.Report} icon="description" />
+
+<TypeFilterChip label="Reports" slot={workspaceTypeSlots.Report} icon="description" selected={kind === 'Report'} onClick={() => setKind('Report')} />
+```
+
+<Canvas of={TypeChipStories.FilterChips} />
+
+## Do and don't
+
+- Do take a type's color from its series slot in `src/charts/meanings`.
+- Don't add a palette color for a type; a meaning is an assignment, not a color.
+- Do put the type's name beside the chip, or in the row it sits in.
+- Don't let the color carry the type alone; the icon and the name say it too.
+- Do keep a filter chip's label in the text color.
+- Don't color a filter chip's words; the color rides on the icon and the fill.
+
+## MUI departures
+
+- `focus-ring`: a `TypeFilterChip` shows the 2px focus ring in `palette.control.focus`.
+- `medium-size`: the filter chips stay at medium, MUI's default.
+- `tabular-numerals`: a chip's label uses tabular figures, as every chip's does.
+
+Theme-wide departures (the chart palette's series slots, the theme radius on the square) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- `TypeChip` is decorative (`aria-hidden`); the type's name beside it is what's read.
+- `TypeFilterChip` is a button with its label, and sets `aria-pressed`; put the chips in a group named for what they filter.
+- Each slot's color passes 3:1 on every surface in both schemes, as a graphic must.
+
+## Related
+
+- Rules → Charts → Meaning is an assignment, not a color.
+- `Chip` for the All chip and other filters.
+
+<Stories includePrimary={false} />
