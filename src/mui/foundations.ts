@@ -200,13 +200,13 @@ export function typographyMarkdown() {
     '## Font',
     table(
       ['Theme path', 'Value', 'Source'],
-      ['fontFamily', 'fontSize', 'htmlFontSize', 'fontWeightLight', 'fontWeightRegular', 'fontWeightMedium', 'fontWeightBold'].map((key) => [
+      ['fontFamily', 'fontSize', 'htmlFontSize', 'fontWeightLight', 'fontWeightRegular', 'fontWeightMedium', 'fontWeightSemibold', 'fontWeightBold'].map((key) => [
         code(`typography.${key}`),
         code(read(themes.light, `typography.${key}`)),
         sourceOf(`typography.${key}`),
       ]),
     ),
-    'Roboto loads from Google Fonts at 300, 400, 500 and 700, as MUI\'s installation guide does. Roboto Serif loads at 400 with its optical-size axis, for the `brand` variant only.',
+    'Roboto loads from Google Fonts at 300, 400, 500 and 700, as MUI\'s installation guide does, and at 600 for `fontWeightSemibold`. Roboto Serif loads at 400 with its optical-size axis, for the `brand` variant only.',
     '## Variants',
     'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`. `brand` is Kilowatt\'s own, in Roboto Serif, for branded moments only: a first login\'s and the upgrade pages\' headings, and report titles, which `PageHeader` sets at `h1`\'s size (`titleVariant="brand"`). It is 40px from `sm` up (the size below is under `sm`), and no component takes it by default.',
     table(
