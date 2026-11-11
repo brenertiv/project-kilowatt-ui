@@ -47,7 +47,7 @@ Props, with their defaults:
 
 ## Variants
 
-- **Parts.** Up to six slices, largest first, in `chart.series` order, with the total in the middle and each part's name and share in the legend under the ring, its swatch in the slice's color.
+- **Parts.** Up to six slices, largest first, in `chart.series` order, with the total in the middle and each part's name and share in the legend under the ring, marked by a small dot in the slice's color.
 - **Grouped into Other.** With more than six parts, the five largest keep their slices and the rest are summed into one slice in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
 - **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each slice, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
 - **Filter.** With `onSelect`, the chart filters what's beside it (the map, a table): each legend entry becomes a toggle button, pressed while its part is selected, and a click on a slice or its entry passes its category to `onSelect`. The page keeps the selection and passes it back as `selected`. While anything is selected, the other slices and swatches step back. Without `onSelect`, the legend is read-only text.
