@@ -184,6 +184,8 @@ export function LineChart({
             valueYField: field,
             stroke: strokes[i],
             fill: strokes[i],
+            // A missing reading breaks the line rather than being bridged, so a gap never reads as data.
+            connect: false,
             tooltip: am5.Tooltip.new(root, { labelText: `${name}: {valueY.formatNumber('${tooltipNumberFormat}')} ${lineUnit}` }),
           }),
         );

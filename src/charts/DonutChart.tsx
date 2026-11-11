@@ -156,20 +156,24 @@ export function DonutChart({
         sx={(theme) => {
           const { chart } = (theme.vars ?? theme).palette;
           return {
-            width: 12,
-            height: 12,
+            // A small dot, as SegmentedBar's legend marks its parts.
+            width: 8,
+            height: 8,
             flex: 'none',
-            borderRadius: 0.5,
+            borderRadius: '50%',
             bgcolor: fill ?? (slot === 'neutral' ? chart.neutral : chart.series[slot]),
             opacity: (fill ? stepOpacity(i) : 1) * (dimmed(category) ? dimmedOpacity : 1),
           };
         }}
       />
     );
-    // The separator is hidden from screen readers, so an entry reads "Office 42%".
+    // The name, then its share in the supporting text color: an entry reads "Office 42%".
     const label: ReactNode = (
       <>
-        {category} <span aria-hidden>·</span> {share(value)}
+        {category}{' '}
+        <Box component="span" sx={{ color: 'text.secondary' }}>
+          {share(value)}
+        </Box>
       </>
     );
     return { category, swatch, label };

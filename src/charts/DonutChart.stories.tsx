@@ -48,7 +48,9 @@ export const Parts: Story = {
     const figure = canvas.getByRole('figure', { name: /properties; office is the largest type/ });
     await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
     await expect(canvas.getByText(String(propertyTotal))).toBeVisible();
-    await expect(canvas.getByText(new RegExp(`Office.*${share(propertyTypes, propertyTypes[0].value)}`))).toBeVisible();
+    // The entry's name and its share, which sits in its own span in the secondary text color.
+    const entry = new RegExp(`^Office ${share(propertyTypes, propertyTypes[0].value)}$`);
+    await expect(canvas.getByText((_, element) => element?.tagName === 'P' && entry.test(element.textContent ?? ''))).toBeVisible();
   },
 };
 

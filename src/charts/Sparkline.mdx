@@ -82,6 +82,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `chart-colors`: the chart's chrome takes the palette's roles, and the line takes `chart.series`, used as it is.
 - `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
 - `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `date-labels`: the tooltip writes each point's date in the viewer's locale with `Intl.DateTimeFormat`, in UTC.
 - `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
 - `chart-card`: the sparkline sits straight in an outlined `Card` and pads itself 16px (`inset`), under the headline number's `CardContent`.
 - `full-value-tooltips`: every point has a tooltip with its date, exact value and unit (`tooltipNumberFormat`).

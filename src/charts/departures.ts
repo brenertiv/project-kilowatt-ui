@@ -61,6 +61,29 @@ export type ChartDeparture = {
  */
 export const axisNumberFormat: Intl.NumberFormatOptions = { notation: 'compact' };
 
+/** A date in UTC, as charts' dates are (`root.utc`): amCharts ignores `utc` for `Intl` formats, so each one says so itself. */
+const utc = (options: Intl.DateTimeFormatOptions): Intl.DateTimeFormatOptions => ({ ...options, timeZone: 'UTC' });
+const time = utc({ hour: 'numeric', minute: '2-digit' });
+const seconds = utc({ hour: 'numeric', minute: '2-digit', second: '2-digit' });
+const day = utc({ month: 'short', day: 'numeric' });
+const month = utc({ month: 'short' });
+const monthYear = utc({ month: 'short', year: 'numeric' });
+const year = utc({ year: 'numeric' });
+const fullDay = utc({ month: 'short', day: 'numeric', year: 'numeric' });
+const fullTime = utc({ month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+/**
+ * How dates are written, in `Intl.DateTimeFormat` options in the viewer's locale and in UTC (the
+ * `date-labels` departure): `axis` for a date axis's labels, `periodChange` for the label where a
+ * larger period starts (a new day, month or year), `tooltip` for the date of the item under the
+ * pointer. Keyed by amCharts' time units, as a `DateAxis` takes them.
+ */
+export const dateLabelFormats = {
+  axis: { millisecond: seconds, second: seconds, minute: time, hour: time, day, week: day, month, year },
+  periodChange: { millisecond: seconds, second: seconds, minute: time, hour: day, day, week: day, month: monthYear, year },
+  tooltip: { millisecond: fullTime, second: fullTime, minute: fullTime, hour: fullTime, day: fullDay, week: fullDay, month: monthYear, year },
+} satisfies Record<string, Record<am5.time.TimeUnit, Intl.DateTimeFormatOptions>>;
+
 const all: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart', 'Treemap'];
 const xy: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'IntervalChart'];
 
@@ -172,6 +195,20 @@ export const chartDepartures: ChartDeparture[] = [
     charts: xy,
     apply: ({ root }) => {
       root.numberFormatter.set('numberFormat', axisNumberFormat);
+    },
+  },
+  {
+    id: 'date-labels',
+    kind: 'theme',
+    title: "Dates in the viewer's locale",
+    why: "amCharts writes a date axis's labels and tooltips with its own format strings in English (\"Sep 07\", \"HH:mm\"), whatever the viewer's locale. Kilowatt writes them with `Intl.DateTimeFormat` in the viewer's locale (`dateLabelFormats`), as the app writes every other date, and in UTC like the data (amCharts ignores `root.utc` for `Intl` formats, so each format sets its time zone).",
+    charts: ['LineChart', 'IntervalChart', 'Sparkline'],
+    apply: ({ theme }) => {
+      theme.rule('DateAxis').setAll({
+        dateFormats: dateLabelFormats.axis,
+        periodChangeDateFormats: dateLabelFormats.periodChange,
+        tooltipDateFormats: dateLabelFormats.tooltip,
+      });
     },
   },
   {
