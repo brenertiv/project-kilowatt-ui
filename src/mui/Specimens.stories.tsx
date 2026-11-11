@@ -94,7 +94,7 @@ export const Color: Story = {
         <Stack spacing={1}>
           <Typography variant="subtitle2">text</Typography>
           <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
-            {['text.primary', 'text.secondary', 'text.disabled'].map((path) => (
+            {['text.primary', 'text.secondary', 'text.tertiary', 'text.disabled'].map((path) => (
               <Swatch key={path} color={path} label={path} />
             ))}
           </Stack>

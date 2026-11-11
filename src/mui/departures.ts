@@ -2,7 +2,7 @@ import type { ThemeOptions } from '@mui/material/styles';
 import { iconWeight } from '../icons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
-import { purple, red } from '@mui/material/colors';
+import { blueGrey, purple, red } from '@mui/material/colors';
 import { aquaverde, brand, green, navy, orange, parchment, slate, violet, yellow } from './colors';
 
 /**
@@ -228,10 +228,16 @@ export const mapSteps: Record<ColorScheme, { land: string; water: string; road: 
  */
 export const focusSteps: Record<ColorScheme, keyof typeof brand> = { light: 700, dark: 200 };
 
-/** Text, per scheme: primary and secondary. Neutral icons take the secondary (`icon-color`). */
-export const textSteps: Record<ColorScheme, { primary: string; secondary: string }> = {
-  light: { primary: navy[950], secondary: slate[900] },
-  dark: { primary: slate[100], secondary: slate[800] },
+/**
+ * Text, per scheme: primary, secondary and tertiary. Neutral icons take the secondary (`icon-color`).
+ * Dark secondary and both tertiaries come from MUI's blue grey, whose hue sits with navy's: slate
+ * jumps from a near-white 800 to a mid grey 900, with no step between. Dark secondary is the darkest
+ * blue grey that keeps 4.5:1 on a hovered selected row (`dark-selected-tint`). Tertiary is below
+ * 4.5:1 by design decision (about 3:1 at its faintest).
+ */
+export const textSteps: Record<ColorScheme, { primary: string; secondary: string; tertiary: string }> = {
+  light: { primary: navy[950], secondary: slate[900], tertiary: blueGrey[400] },
+  dark: { primary: slate[100], secondary: blueGrey[200], tertiary: blueGrey[500] },
 };
 
 const chartColor = ({ ramp, step }: ChartStep) => (chartRamps[ramp] as Record<string, string>)[step];
@@ -299,7 +305,7 @@ export const departures: Departure[] = [
     id: 'text-colors',
     area: 'Palette',
     title: 'Navy and slate text',
-    why: "MUI sets text in black or white at fixed opacities (87% and 60% in light, 100% and 70% in dark). Kilowatt uses solid navy 950 and slate 900 in light, slate 100 and slate 800 in dark, so text takes the palette's hue and reads the same on every surface instead of blending into it. Light secondary text is slate, a grey-navy, because the navy ramp has no desaturated mid tone.",
+    why: "MUI sets text in black or white at fixed opacities (87% and 60% in light, 100% and 70% in dark). Kilowatt uses solid navy 950 and slate 900 in light, slate 100 and MUI's blue grey 200 in dark, so text takes the palette's hue and reads the same on every surface instead of blending into it. Light secondary text is slate, a grey-navy, because the navy ramp has no desaturated mid tone; dark secondary is blue grey, because slate has no mid tone between its near-white 800 and its grey 900, and 800 sat too close to primary to read as secondary. Blue grey 200 is the darkest step that still passes 4.5:1 on a hovered selected row, with the dark selected tint at 10% (`dark-selected-tint`). Kilowatt adds a third role, `text.tertiary` (blue grey 400 in light, 500 in dark), for the quietest text: metadata, timestamps, units and placeholder-like hints. It is below 4.5:1 by design decision (about 3:1 at its faintest), so it never carries text a reader needs; that goes in `text.secondary`.",
     options: (scheme) => ({ palette: { text: textSteps[scheme] } }),
   },
   {
@@ -424,14 +430,33 @@ export const departures: Departure[] = [
   {
     id: 'regular-weight',
     area: 'Typography',
-    title: 'Every type style at regular weight',
-    why: "MUI sets `h1` and `h2` light (300) and `h6` and `subtitle2` medium (500), so weight shifts between neighbouring styles. Kilowatt sets every type style at regular (400, `fontWeightRegular`): size and color carry the hierarchy, and a headline number reads at the same weight as the text around it. `button` is regular through `button-text-weight`. The weight tokens (`fontWeightLight` to `fontWeightBold`) keep MUI's values, for the components that use them directly and for `strong`.",
+    title: 'Headings and body at regular weight',
+    why: "MUI sets `h1` and `h2` light (300) and `h6` medium (500), so weight shifts between neighbouring headings. Kilowatt sets the headings and body styles at regular (400, `fontWeightRegular`): size and color carry the hierarchy, and a headline number reads at the same weight as the text around it. `button` is regular through `button-text-weight`; the subheadings are semibold (`semibold-weight`). The weight tokens (`fontWeightLight` to `fontWeightBold`) keep MUI's values, for the components that use them directly and for `strong`.",
     options: () => ({
       typography: {
         h1: { fontWeight: 400 },
         h2: { fontWeight: 400 },
         h6: { fontWeight: 400 },
-        subtitle2: { fontWeight: 400 },
+      },
+    }),
+  },
+  {
+    id: 'dark-selected-tint',
+    area: 'Palette',
+    title: 'A lighter selected tint in the dark scheme',
+    why: "MUI tints a selected row, menu item or list item with the primary color at 16% (`action.selectedOpacity`), and at 24% when it's hovered. Dark primary is a light neutral, so at those strengths the tint lifts the navy surface enough to pull secondary text (blue grey 200, `text-colors`) below 4.5:1. Kilowatt tints at 10% in the dark scheme (18% hovered), which keeps secondary text at 4.5:1 or more on every surface while a selected row still reads as selected. The light scheme keeps MUI's 16%, since its secondary text is dark on a light tint.",
+    options: (scheme) => (scheme === 'dark' ? { palette: { action: { selectedOpacity: 0.1 } } } : {}),
+  },
+  {
+    id: 'semibold-weight',
+    area: 'Typography',
+    title: 'A semibold weight for subheadings and data',
+    why: "MUI's weights are light (300), regular (400), medium (500) and bold (700), and it sets `subtitle1` regular and `subtitle2` medium. Kilowatt adds `fontWeightSemibold` (600) for small text that has to stand out without growing: the subheadings, `subtitle1` and `subtitle2`, which label a section inside a card or drawer and sit at body size or smaller, and data a reader looks for first (a total, a key reading), through `sx={{ fontWeight: 'fontWeightSemibold' }}`. Headings stay regular (`regular-weight`), so weight marks the small labels, not the large ones. MUI's components that use medium (table heads, alert titles, tooltips) keep it.",
+    options: () => ({
+      typography: {
+        fontWeightSemibold: 600,
+        subtitle1: { fontWeight: 600 },
+        subtitle2: { fontWeight: 600 },
       },
     }),
   },
@@ -769,7 +794,7 @@ export const departures: Departure[] = [
     id: 'font-synthesis',
     area: 'Typography',
     title: 'No synthesized bold or italic',
-    why: "When a weight or style isn't loaded, browsers fake it by smearing or slanting the nearest one. Kilowatt loads Roboto at 300, 400, 500 and 700 and no italics, so CssBaseline sets `font-synthesis: none` on the page: text renders only in the cuts that exist, and emphasis comes from weight, not a faked slant.",
+    why: "When a weight or style isn't loaded, browsers fake it by smearing or slanting the nearest one. Kilowatt loads Roboto at 300, 400, 500, 600 and 700 and no italics, so CssBaseline sets `font-synthesis: none` on the page: text renders only in the cuts that exist, and emphasis comes from weight, not a faked slant.",
     options: () => ({ components: { MuiCssBaseline: { styleOverrides: { body: { fontSynthesis: 'none' } } } } }),
   },
   {
