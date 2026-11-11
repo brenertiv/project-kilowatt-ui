@@ -294,7 +294,7 @@ function GroupView({ group, editing, draft, setDraft, onEdit, onSave, onCancel, 
   return (
     <Stack component="section" aria-label={group.label} sx={{ gap: 1 }}>
       <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-        <Typography variant="subtitle1" component="h3">
+        <Typography variant="subtitle2" component="h3">
           {group.label}
         </Typography>
         {hasInputs &&
