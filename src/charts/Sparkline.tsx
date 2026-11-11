@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
-import { referenceLines, seriesColors, tooltipNumberFormat, type ChartInset, type ReferenceLine, type SeriesColor } from './theme';
+import { dateLabelFormats, referenceLines, seriesColors, tooltipNumberFormat, type ChartInset, type ReferenceLine, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
 export type SparklineProps = SeriesColor & {
@@ -34,9 +34,6 @@ export type SparklineProps = SeriesColor & {
 
 const noReferences: ReferenceLine[] = [];
 
-/** How the tooltip writes a row's date, by interval, in amCharts' date format. */
-const dateFormats = { hour: 'MMM d, h a', day: 'MMM d', month: 'MMM yyyy' } as const;
-
 /**
  * A sparkline: one measure's trend in a small space, under the headline number it explains, in
  * Kilowatt's chart theme (Rules → Charts). It's a reference implementation that Enertiv's app rebuilds.
@@ -67,6 +64,8 @@ export function Sparkline({
   const build = useCallback(
     ({ root, colors }: ChartContext) => {
       root.utc = true;
+      // The tooltip writes a row's date for its interval, in the viewer's locale (the `date-labels` departure).
+      root.dateFormatter.set('dateFormat', dateLabelFormats.tooltip[interval]);
       if (references.length > 2) console.warn('A Sparkline has more than two references; past two, it has no room to label them.');
       // Room at the right for the latest point's marker, which sits on the plot's edge.
       const chart = root.container.children.push(am5xy.XYChart.new(root, { paddingLeft: 0, paddingRight: 6, paddingTop: 6, paddingBottom: 6 }));
@@ -94,7 +93,7 @@ export function Sparkline({
           stroke,
           fill: stroke,
           tooltip: am5.Tooltip.new(root, {
-            labelText: `${name}, {valueX.formatDate('${dateFormats[interval]}')}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
+            labelText: `${name}, {valueX.formatDate()}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
           }),
         }),
       );

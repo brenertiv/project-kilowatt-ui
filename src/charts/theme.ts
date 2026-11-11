@@ -105,6 +105,9 @@ export type ChartStatus = keyof ReturnType<typeof chartColors>['status'];
 /** How value axes write their numbers: compact, in the viewer's locale (the `compact-axis-numbers` departure). */
 export { axisNumberFormat } from './departures';
 
+/** How dates are written, as `Intl.DateTimeFormat` options in the viewer's locale and in UTC, by amCharts time unit (the `date-labels` departure). */
+export { dateLabelFormats } from './departures';
+
 /**
  * How tooltips write a value: in full, with grouping and up to two decimals (61,240.5), never compact.
  * Axes round to compact numbers, so every chart item a pointer can rest on (a line point, a column, a
