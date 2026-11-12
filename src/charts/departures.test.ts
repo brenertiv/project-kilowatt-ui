@@ -18,7 +18,10 @@ function recorder() {
     states: { create: (state: string) => rules.push(`${key}:${state}`) },
   });
   const theme = { rule: (name: string, tags: string[] = []) => settings([name, ...tags].join('.')) } as unknown as am5.Theme;
-  const root = { numberFormatter: { set: (key: string) => rootSettings.push(key) } } as unknown as am5.Root;
+  const root = {
+    numberFormatter: { set: (key: string) => rootSettings.push(key) },
+    language: { setTranslationAny: (key: string) => rootSettings.push(key) },
+  } as unknown as am5.Root;
   const animated = {} as am5.Theme;
   const context = (reducedMotion: boolean): ChartThemeContext => ({
     root,
