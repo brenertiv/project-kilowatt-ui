@@ -503,6 +503,14 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'link-underline',
+    area: 'Components',
+    components: ['Link'],
+    title: 'Links without underlines',
+    why: "MUI underlines every `Link` (`underline=\"always\"`), which in product UI marks a name in a table, a card title or a source as a web link and clutters dense text. Kilowatt sets `underline=\"none\"` by default, so a link is told apart by its color (`primary`, MUI's default) and its wording, and the one underline on a page stays the SourceFigure's, which marks a number that opens its explanation. Links in running text are rare; an action is a Button.",
+    options: () => ({ components: { MuiLink: { defaultProps: { underline: 'none' } } } }),
+  },
+  {
     id: 'control-outlines',
     area: 'Components',
     components: ['Button', 'ButtonGroup', 'ToggleButton', 'TextField', 'Select', 'Autocomplete', 'OutlinedInput'],
@@ -738,14 +746,6 @@ export const departures: Departure[] = [
         selectableControls.map((control) => [`Mui${control}`, { styleOverrides: { root: { '&.Mui-selected': { '--icon-fill': 1 } } } }]),
       ),
     }),
-  },
-  {
-    id: 'link-underline',
-    area: 'Components',
-    components: ['Link'],
-    title: 'Link underlines at the font\'s own position',
-    why: "MUI leaves a link's underline where the browser puts it, which on Roboto sits close under the baseline and can crowd descenders. Kilowatt places it with `text-underline-position: from-font`, the position Roboto's own metrics give, so underlines sit at the same distance on every link and in every browser that supports it.",
-    options: () => ({ components: { MuiLink: { styleOverrides: { root: { textUnderlinePosition: 'from-font' } } } } }),
   },
   {
     id: 'toggle-button-text',
