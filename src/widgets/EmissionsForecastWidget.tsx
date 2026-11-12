@@ -22,7 +22,7 @@ export type EmissionsForecastWidgetProps = {
   title?: string;
 };
 
-const tonnes = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const tonnes = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const month = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const series = (projectedFrom: number | undefined) => [{ field: 'emissions', name: 'Emissions', projectedFrom }];
 

@@ -21,9 +21,9 @@ export type BurnRateWidgetProps = {
   title?: string;
 };
 
-const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const tonnes = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const percent = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 });
+const usd = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const tonnes = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 });
 
 /**
  * How much of a portfolio's committed capital is spent: the recipe for Carbon Budget Burn Rate. It asks

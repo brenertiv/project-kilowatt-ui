@@ -28,8 +28,8 @@ export type ScoreSummaryWidgetProps = {
   references?: ReferenceLine[];
 };
 
-const points = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const change = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0, signDisplay: 'exceptZero' });
+const points = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+const change = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0, signDisplay: 'exceptZero' });
 const noReferences: ReferenceLine[] = [];
 
 /**
@@ -53,7 +53,7 @@ export function ScoreSummaryWidget({ kind, scope, from, to, title, references = 
     fromQuery(trend, { isEmpty: (data) => scoreRows(data as ScorePoint[]).length === 0 }),
   );
   const name = scoreNames[kind].toLowerCase();
-  // Intl writes a hyphen for minus in en-US; the real minus sign reads as one (Rules → Content and layout).
+  // Intl writes a hyphen for minus in most locales; the real minus sign reads as one (Rules → Content and layout).
   const changeText = headline.change === null ? null : `${change.format(headline.change).replace('-', '\u2212')} points from the period before`;
 
   return (

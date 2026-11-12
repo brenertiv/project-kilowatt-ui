@@ -22,7 +22,7 @@ export type DataCoverageTrendWidgetProps = {
   title?: string;
 };
 
-const percent = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
+const percent = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
 const monthName = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 /**

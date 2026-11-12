@@ -15,7 +15,7 @@ export type ExpendituresBreakdownWidgetProps = {
   title?: string;
 };
 
-const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const usd = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const series = [{ field: 'spend', name: 'Committed spend' }];
 
 /** The height a bar takes, so the chart grows with the number of project types rather than squeezing them. */

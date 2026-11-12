@@ -23,9 +23,9 @@ export type UtilityCostBreakdownWidgetProps = {
   title?: string;
 };
 
-const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const percent = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' });
-/** Intl writes a hyphen for minus in en-US; the real minus sign reads as one. */
+const usd = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+/** Intl writes a hyphen for minus in most locales; the real minus sign reads as one. */
 const minus = (text: string) => text.replace('-', '−');
 
 /**

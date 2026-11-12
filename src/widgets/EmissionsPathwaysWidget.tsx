@@ -19,7 +19,7 @@ export type EmissionsPathwaysWidgetProps = {
   title?: string;
 };
 
-const tonnes = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const tonnes = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 const series = [
   { field: 'with', name: 'With approved plans' },
   { field: 'without', name: 'Without plans' },

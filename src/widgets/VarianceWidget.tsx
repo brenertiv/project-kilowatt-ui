@@ -20,7 +20,7 @@ export type VarianceWidgetProps = {
   title?: string;
 };
 
-const percent = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+const percent = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1, signDisplay: 'exceptZero' });
 
 /**
  * Each building's use against the same month a year before: the recipe for Variance Tracking. It asks
