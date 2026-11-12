@@ -79,7 +79,7 @@ export function typeSlices(counts: GroupedCount[], types: ActionType[]): DonutSl
 }
 
 const monthKey = (ts: string) => ts.slice(0, 7);
-const monthName = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' });
+const monthName = new Intl.DateTimeFormat(undefined, { month: 'short', timeZone: 'UTC' });
 
 /** A point's value scaled to a whole month, so a partial month compares fairly with a full one. */
 const fullMonth = (point: LocationDataPoint) => (point.coverage > 0 ? point.value / point.coverage : point.value);

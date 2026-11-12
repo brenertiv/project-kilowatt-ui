@@ -23,7 +23,7 @@ export type DataCoverageTrendWidgetProps = {
 };
 
 const percent = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
-const monthName = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const monthName = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 /**
  * How much of each month has bills behind it, utility by utility: the recipe for Data Coverage Trend. It
