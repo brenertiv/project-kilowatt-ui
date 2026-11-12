@@ -15,7 +15,7 @@ export type AnnualExpendituresWidgetProps = {
   title?: string;
 };
 
-const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const usd = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 /**
  * Committed capital spend by year, stacked by property: the recipe for Total Annual Expenditures. It

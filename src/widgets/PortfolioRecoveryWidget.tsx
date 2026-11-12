@@ -28,7 +28,7 @@ export type PortfolioRecoveryWidgetProps = {
 };
 
 /** One decimal always, so the table's column lines up. */
-const percent = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const percent = new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
  * How much of their utility cost buildings recover from tenants, month by month, and by property: the

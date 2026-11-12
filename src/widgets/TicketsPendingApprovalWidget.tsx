@@ -16,7 +16,7 @@ export type TicketsPendingApprovalWidgetProps = {
   title?: string;
 };
 
-const share = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 });
+const share = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 });
 
 /**
  * Tenant tickets waiting for approval, by category: the recipe for Tickets Pending Approval by Category.

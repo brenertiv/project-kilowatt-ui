@@ -20,7 +20,7 @@ export type WorkOrderTypeWidgetProps = {
   title?: string;
 };
 
-const share = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 });
+const share = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 });
 
 /**
  * Work orders by type as parts of the whole: the recipe for Work Order Type Breakdown. It asks

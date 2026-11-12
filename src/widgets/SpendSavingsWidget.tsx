@@ -15,7 +15,7 @@ export type SpendSavingsWidgetProps = {
   title?: string;
 };
 
-const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const usd = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const series = [
   { field: 'spend', name: 'Project spend' },
   { field: 'savings', name: 'Energy-cost savings' },

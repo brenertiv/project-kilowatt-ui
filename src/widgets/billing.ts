@@ -21,7 +21,7 @@ export function useBilledLogs(scope: Scope, from: IsoDate, to: IsoDate) {
   return { logs: query.data?.results, state: fromQuery(query) };
 }
 
-const monthName = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const monthName = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-/** A billing month, `YYYY-MM`, as people write it: `October 2026`. */
+/** A billing month, `YYYY-MM`, as people write it in the viewer's locale: `October 2026`. */
 export const billingMonthName = (month: string) => monthName.format(new Date(`${month}-01T00:00:00Z`));
