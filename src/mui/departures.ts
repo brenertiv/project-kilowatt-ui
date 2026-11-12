@@ -786,10 +786,10 @@ export const departures: Departure[] = [
     id: 'brand-type',
     area: 'Typography',
     title: 'A serif for branded moments',
-    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Roboto Serif at regular (400, like every style, `regular-weight`), 40px with a line height of 1.2, and 32px below `sm`, where 40px would break a short heading over four lines. It's for branded moments only: a first login's and the upgrade pages' headings, and every report's title, which `PageHeader` sets in it at `h1`'s size (`titleVariant=\"brand\"`). A screen asks for `variant=\"brand\"` and sets the element with `component`; no component takes it by default. Everything else stays Roboto.",
+    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Besley, a Clarendon-style serif from Google Fonts, at regular (400, like every style, `regular-weight`), 40px with a line height of 1.2, and 32px below `sm`, where 40px would break a short heading over four lines. It's for branded moments only: a first login's and the upgrade pages' headings, and every report's title, which `PageHeader` sets in it at `h1`'s size (`titleVariant=\"brand\"`). A screen asks for `variant=\"brand\"` and sets the element with `component`; no component takes it by default. Everything else stays Roboto.",
     options: () => ({
       typography: {
-        brand: { fontFamily: '"Roboto Serif", serif', fontWeight: 400, fontSize: '2rem', lineHeight: 1.2, '@media (min-width:600px)': { fontSize: '2.5rem' } },
+        brand: { fontFamily: '"Besley", serif', fontWeight: 400, fontSize: '2rem', lineHeight: 1.2, '@media (min-width:600px)': { fontSize: '2.5rem' } },
       },
     }),
   },
