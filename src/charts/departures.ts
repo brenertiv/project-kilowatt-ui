@@ -188,6 +188,32 @@ export const chartDepartures: ChartDeparture[] = [
     },
   },
   {
+    id: 'legend-markers',
+    kind: 'theme',
+    title: 'Legend markers are small dots',
+    why: "amCharts marks each legend item with an 18px square rounded at 3px. Kilowatt marks it with an 8px dot in the series' color, as the donut's and the segmented bar's legends mark their parts, so every legend reads the same and the marker doesn't outweigh its name.",
+    charts: xy,
+    apply: ({ theme }) => {
+      theme.rule('Container', ['legend', 'marker']).setAll({ width: 8, height: 8 });
+      theme.rule('RoundedRectangle', ['legend', 'marker', 'rectangle']).setAll({ cornerRadiusTL: 4, cornerRadiusTR: 4, cornerRadiusBL: 4, cornerRadiusBR: 4 });
+      // A line series hides that rectangle and draws a short stroke across the marker instead; draw the dot there too,
+      // filled in the line's color and solid even for a dashed line (the series' 2px stroke rings a 3px circle: 8px across).
+      theme.rule('Graphics', ['line', 'series', 'legend', 'marker', 'stroke']).setAll({
+        draw: (display, sprite) => {
+          const marker = sprite.parent;
+          if (!marker) return;
+          display.setLineDash([]);
+          display.drawCircle(marker.width() / 2, marker.height() / 2, 3);
+          const stroke = sprite.get('stroke');
+          if (stroke) {
+            display.beginFill(stroke, 1);
+            display.endFill();
+          }
+        },
+      });
+    },
+  },
+  {
     id: 'compact-axis-numbers',
     kind: 'theme',
     title: 'Compact axis numbers',
