@@ -332,15 +332,15 @@ export const departures: Departure[] = [
     id: 'type-scale',
     area: 'Typography',
     title: 'A compact heading scale',
-    why: "MUI's headings are sized for marketing pages (`h1` 96px down to `h6` 20px), which is too large for a dense product UI. Kilowatt's step down from 32px to 16px, one step apart, so `h6` meets body size. Only `h1` to `h6` change: body, caption, button and input text keep MUI's sizes, so reading sizes don't shrink. Line heights and letter spacing stay MUI's, and every style is regular weight (`regular-weight`). Card titles are `h6` (`card-header-title`).",
+    why: "MUI's headings are sized for marketing pages (`h1` 96px down to `h6` 20px), which is too large for a dense product UI. Kilowatt's step down from 32px to 16px, one step apart, so `h6` meets body size. Only `h1` to `h6` change: body, caption, button and input text keep MUI's sizes, so reading sizes don't shrink. Line heights stay MUI's, and headings are regular weight (`regular-weight`). MUI's letter spacing was tuned for its own sizes (a tight -0.016em on a 96px `h1`, a loose +0.007em on a 34px `h4`), so Kilowatt resets it: `h1` and `h2`, the two largest, tighten slightly (-0.01em), and `h3` to `h6` take none, as body sizes need none. Card titles are `h6` (`card-header-title`).",
     options: () => ({
       typography: {
-        h1: { fontSize: '2rem' },
-        h2: { fontSize: '1.75rem' },
+        h1: { fontSize: '2rem', letterSpacing: '-0.01em' },
+        h2: { fontSize: '1.75rem', letterSpacing: '-0.01em' },
         h3: { fontSize: '1.5rem' },
-        h4: { fontSize: '1.25rem' },
+        h4: { fontSize: '1.25rem', letterSpacing: 0 },
         h5: { fontSize: '1.125rem' },
-        h6: { fontSize: '1rem' },
+        h6: { fontSize: '1rem', letterSpacing: 0 },
       },
     }),
   },
@@ -406,6 +406,14 @@ export const departures: Departure[] = [
     options: () => ({ components: { MuiTableCell: { styleOverrides: { root: { borderBottomColor: 'var(--mui-palette-divider)' } } } } }),
   },
   {
+    id: 'table-head-weight',
+    area: 'Components',
+    components: ['Table'],
+    title: 'Table header cells at semibold',
+    why: "MUI sets header cells at medium (500). Kilowatt sets them at semibold (600, `fontWeightSemibold`), the weight of the subheading that usually names the table, so a card doesn't set three weights in a few lines (a regular title, a semibold subheading, a medium header) that differ by a step too small to read as intended.",
+    options: () => ({ components: { MuiTableCell: { styleOverrides: { head: { fontWeight: 600 } } } } }),
+  },
+  {
     id: 'table-sticky-header',
     area: 'Components',
     components: ['Table'],
@@ -451,7 +459,7 @@ export const departures: Departure[] = [
     id: 'semibold-weight',
     area: 'Typography',
     title: 'A semibold weight for subheadings and data',
-    why: "MUI's weights are light (300), regular (400), medium (500) and bold (700), and it sets `subtitle1` regular and `subtitle2` medium. Kilowatt adds `fontWeightSemibold` (600) for small text that has to stand out without growing: the subheadings, `subtitle1` and `subtitle2`, which label a section inside a card or drawer and sit at body size or smaller, and data a reader looks for first (a total, a key reading), through `sx={{ fontWeight: 'fontWeightSemibold' }}`. Headings stay regular (`regular-weight`), so weight marks the small labels, not the large ones. MUI's components that use medium (table heads, alert titles, tooltips) keep it.",
+    why: "MUI's weights are light (300), regular (400), medium (500) and bold (700), and it sets `subtitle1` regular and `subtitle2` medium. Kilowatt adds `fontWeightSemibold` (600) for small text that has to stand out without growing: the subheadings, `subtitle1` and `subtitle2`, which label a section inside a card or drawer and sit at body size or smaller, and data a reader looks for first (a total, a key reading), through `sx={{ fontWeight: 'fontWeightSemibold' }}`. Headings stay regular (`regular-weight`), so weight marks the small labels, not the large ones. Table header cells are semibold too (`table-head-weight`); MUI's other components that use medium (alert titles, tooltips) keep it.",
     options: () => ({
       typography: {
         fontWeightSemibold: 600,
@@ -732,6 +740,14 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'link-underline',
+    area: 'Components',
+    components: ['Link'],
+    title: 'Link underlines at the font\'s own position',
+    why: "MUI leaves a link's underline where the browser puts it, which on Roboto sits close under the baseline and can crowd descenders. Kilowatt places it with `text-underline-position: from-font`, the position Roboto's own metrics give, so underlines sit at the same distance on every link and in every browser that supports it.",
+    options: () => ({ components: { MuiLink: { styleOverrides: { root: { textUnderlinePosition: 'from-font' } } } } }),
+  },
+  {
     id: 'toggle-button-text',
     components: ['ToggleButton'],
     area: 'Components',
@@ -794,7 +810,7 @@ export const departures: Departure[] = [
     id: 'font-synthesis',
     area: 'Typography',
     title: 'No synthesized bold or italic',
-    why: "When a weight or style isn't loaded, browsers fake it by smearing or slanting the nearest one. Kilowatt loads Roboto at 300, 400, 500, 600 and 700 and no italics, so CssBaseline sets `font-synthesis: none` on the page: text renders only in the cuts that exist, and emphasis comes from weight, not a faked slant.",
+    why: "When a weight or style isn't loaded, browsers fake it by smearing or slanting the nearest one. Kilowatt loads Roboto at 400, 500, 600 and 700 and no italics (`fontWeightLight`, 300, is unused, so it isn't loaded), so CssBaseline sets `font-synthesis: none` on the page: text renders only in the cuts that exist, and emphasis comes from weight, not a faked slant.",
     options: () => ({ components: { MuiCssBaseline: { styleOverrides: { body: { fontSynthesis: 'none' } } } } }),
   },
   {
