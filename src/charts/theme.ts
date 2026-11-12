@@ -109,7 +109,8 @@ export { axisNumberFormat } from './departures';
 export { dateLabelFormats } from './departures';
 
 /**
- * How tooltips write a value: in full, with grouping and up to two decimals (61,240.5), never compact.
+ * How tooltips write a value: in full, with grouping and up to two decimals (61,240.5), never compact. The
+ * separators are the viewer's (the `number-separators` departure): `,` and `.` here are placeholders, not English.
  * Axes round to compact numbers, so every chart item a pointer can rest on (a line point, a column, a
  * slice) shows its exact value in a tooltip. Use it in a tooltip's text: `{valueY.formatNumber('${tooltipNumberFormat}')}`.
  */

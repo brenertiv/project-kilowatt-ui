@@ -224,6 +224,19 @@ export const chartDepartures: ChartDeparture[] = [
     },
   },
   {
+    id: 'number-separators',
+    kind: 'theme',
+    title: "Number separators in the viewer's locale",
+    why: "amCharts writes a number format string (`tooltipNumberFormat`, `#,###.##`) with English separators, a comma between thousands and a point before decimals, whatever the viewer's locale. Kilowatt takes both from `Intl.NumberFormat` in the viewer's locale, so a tooltip's exact value reads as the axis numbers and the page's other numbers do (1.234,5 in German).",
+    charts: all,
+    apply: ({ root }) => {
+      const parts = new Intl.NumberFormat().formatToParts(12345.6);
+      const part = (type: Intl.NumberFormatPartTypes, fallback: string) => parts.find((p) => p.type === type)?.value ?? fallback;
+      root.language.setTranslationAny('_thousandSeparator', part('group', ','));
+      root.language.setTranslationAny('_decimalSeparator', part('decimal', '.'));
+    },
+  },
+  {
     id: 'date-labels',
     kind: 'theme',
     title: "Dates in the viewer's locale",
