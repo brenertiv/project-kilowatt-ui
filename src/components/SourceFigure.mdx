@@ -72,6 +72,7 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 - **`PlainFigure`:** the number in `h2` with tabular numerals and the unit after it in `body1`, `text.secondary`. Not a control.
 - **`SourceFigure`:** the same type, as a button. Its dialog has the optional `note` as its description, one line per entry, then Calculation (How, Period, Scope and Includes, as a description list, `dl`) and Sources (`source.source` with its last update).
 - **With source links:** pass `sources` to list where the data comes from as links, each with an optional line under it. The last update moves under Calculation.
+- **With records:** a source's `records` are the records the figure is built from (the properties, meters or accounts it counts), each a link under the source's detail that opens its record: six are listed, then “and N more”. A record link closes the explanation as it opens, so the record drawer isn't behind the dialog.
 - **With View Sources:** pass `onViewSources`, and the dialog gets a View Sources action, for a page that has a sources view. It closes the dialog first. Without it the dialog has no actions: the close button and Escape close it.
 - **`ExplainedFigure`:** the same button and dialog with your own content in `children`, usually a `FigureExplanation`.
 - **`FigureExplanation`:** `description`, `calculation` and `sources`, each left out when empty. `calculation` is a sentence or your own content.
@@ -89,6 +90,8 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 - Don't style the figure with `sx` or a different variant; the h2-to-h4 step is the one size change.
 - Do keep the dialog's lines to one short sentence each, about the figure on screen.
 - Don't write your own dialog content for a figure with a calculation or sources; `FigureExplanation` keeps every figure's dialog reading the same way.
+- Do list the records a figure is built from under its source, so a person can go from the number to one of the things it counts.
+- Don't list more than six records; past that the line says how many more, and the page's table is where to find them.
 
 ## MUI departures
 
@@ -102,6 +105,7 @@ The figure's underline (`border.level2`), its hover tint (`action.hover`) and it
 - The figure is a `button` (`aria-haspopup="dialog"`) named for its value and the card: “64.2 kBtu/ft², view source for Energy Use Intensity”. The value leads the name, so people using speech input can say what they see. A tooltip repeats “View source: {title}” on hover and focus.
 - The underline and the hover tint are visual cues only; the button role and its name tell screen readers the number opens something.
 - MUI's `Dialog` moves focus into the dialog, traps it there, closes on Escape and returns focus to the figure. The dialog is labelled by its title (`aria-labelledby`), and the close button is named Close.
+- A source's records are a list named Records, each a link button; following one closes the dialog first, so focus lands in the record it opened rather than behind the dialog.
 - Calculation and Sources are MUI's `Accordion`s: each summary is a button that says whether it's expanded, inside a heading. Calculation's lines are a description list, so screen readers read each label with its line, and Sources is a list named Sources.
 - The hover tint fades in over the theme's shortest duration, which CssBaseline stills under reduced motion (`reduced-motion`).
 

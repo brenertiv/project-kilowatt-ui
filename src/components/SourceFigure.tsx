@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { createContext, useContext, useId, useState, type ReactNode } from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -42,7 +42,57 @@ export type FigureLink = {
   detail?: string;
   /** Where the link goes. Defaults to none, and the label is plain text. */
   href?: string;
+  /** The records the figure is built from (the properties, meters or accounts it counts), each a link under the detail that opens its record. Six are listed, then "and N more". The explanation closes as a record opens, so the record isn't behind it. Defaults to none. */
+  records?: FigureRecord[];
 };
+
+/** A record a figure is built from: a link in the dialog's Sources list that opens it. */
+export type FigureRecord = {
+  /** Identifies the record in the list. */
+  id: string;
+  /** The record's name: “Harbor Point”. */
+  label: string;
+  /** Opens the record, in the record drawer or on its page. */
+  onOpen: () => void;
+};
+
+/** Closes the explanation dialog a record link sits in, so the record it opens isn't behind it. */
+const CloseExplanation = createContext<() => void>(() => undefined);
+
+/** How many records a source lists before "and N more". */
+const listedRecords = 6;
+
+/** A source's records as links, the explanation closing as one opens. */
+function RecordLinks({ records }: { records: FigureRecord[] }) {
+  const close = useContext(CloseExplanation);
+  const shown = records.slice(0, listedRecords);
+  const more = records.length - shown.length;
+  return (
+    <Stack component="ul" aria-label="Records" sx={{ listStyle: 'none', m: 0, p: 0, mt: 0.5, gap: 0.25 }}>
+      {shown.map((record) => (
+        <li key={record.id}>
+          <Link
+            component="button"
+            type="button"
+            variant="body2"
+            onClick={() => {
+              close();
+              record.onOpen();
+            }}
+            sx={{ textAlign: 'start' }}
+          >
+            {record.label}
+          </Link>
+        </li>
+      ))}
+      {more > 0 && (
+        <Typography component="li" variant="caption" color="text.secondary">
+          and {new Intl.NumberFormat().format(more)} more
+        </Typography>
+      )}
+    </Stack>
+  );
+}
 
 /** One accordion of a figure's explanation, collapsed until opened: MUI's outlined variant. */
 function ExplanationSection({ title, following, children }: { title: string; following?: boolean; children: ReactNode }) {
@@ -100,7 +150,7 @@ export function FigureExplanation({ description, calculation, sources = [] }: Fi
           {sources.length > 0 && (
             <ExplanationSection title="Sources" following={Boolean(calculation)}>
               <List disablePadding aria-label="Sources">
-                {sources.map(({ label, detail, href }) => (
+                {sources.map(({ label, detail, href, records }) => (
                   <ListItem key={label} disableGutters sx={{ py: 0.5 }}>
                     <ListItemText
                       primary={
@@ -113,7 +163,18 @@ export function FigureExplanation({ description, calculation, sources = [] }: Fi
                           label
                         )
                       }
-                      secondary={detail}
+                      // A source's records as links under its detail; a list can't sit in a paragraph, so the line is a div then.
+                      secondary={
+                        records ? (
+                          <>
+                            {detail}
+                            <RecordLinks records={records} />
+                          </>
+                        ) : (
+                          detail
+                        )
+                      }
+                      slotProps={records ? { secondary: { component: 'div' } } : undefined}
                     />
                   </ListItem>
                 ))}
@@ -218,7 +279,10 @@ export function ExplainedFigure({ title, value, unit, children, onViewSources }:
         <IconButton aria-label="Close" onClick={close} sx={{ position: 'absolute', top: (theme) => theme.spacing(1), right: (theme) => theme.spacing(1) }}>
           <Icon name="close" />
         </IconButton>
-        <DialogContent>{children}</DialogContent>
+        <DialogContent>
+          {/* A record link in the explanation closes it as the record opens. */}
+          <CloseExplanation.Provider value={close}>{children}</CloseExplanation.Provider>
+        </DialogContent>
         {/* No Done button: the close button and Escape close the dialog. */}
         {onViewSources && (
           <DialogActions>
