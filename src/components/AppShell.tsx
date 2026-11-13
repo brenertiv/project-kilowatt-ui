@@ -137,6 +137,20 @@ export type AppShellSection = {
     }
 );
 
+/** A result the app's `onSearch` adds to the search dialog beyond the pages: a file, a record, anything with a place to go. */
+export type AppShellSearchResult = {
+  /** Identifies the result in the list. */
+  id: string;
+  /** The result's name, as the row's first line. */
+  label: string;
+  /** Where it is, as the row's second line: the building, the folder. */
+  detail: string;
+  /** The row's icon, from `src/icons`. */
+  icon: IconName;
+  /** Opens the result; the dialog closes first. */
+  onChoose: () => void;
+};
+
 /** A company the person belongs to. */
 export type AppShellCompany = {
   /** Identifies the company in `onCompanyChange`. */
@@ -184,9 +198,9 @@ export type AppShellProps = {
   onAsideClose?: () => void;
   /**
    * A record of one object, such as `RecordDrawer`, floating over the page inside the frame at the right, as the
-   * undocked section panel floats at the left: elevation 2, 8px in from the frame's right edge and 16px from its top and
-   * bottom, the theme radius, above the aside whether docked or floating, with the page live beneath and no scrim. On
-   * phones it fills the window less 8px on every side. Default none: nothing while no record is open.
+   * undocked section panel floats at the left: elevation 2, 8px in from the frame's right, top and bottom edges, the
+   * theme radius, above the aside whether docked or floating, with the page live beneath and no scrim. On phones it
+   * fills the window less 8px on every side. Default none: nothing while no record is open.
    */
   detail?: ReactNode;
   /** The accessible name of `detail`, such as the object's name. Default `'Record'`. */
@@ -209,6 +223,10 @@ export type AppShellProps = {
   onPageChange?: (page: string, section: string) => void;
   /** Called with a company's id when it's chosen in the company menu. */
   onCompanyChange?: (company: string) => void;
+  /** Finds results beyond the pages for a search term (files at any building, records): they list after the page matches, each saying where it is. Default none: the dialog finds pages only. */
+  onSearch?: (term: string) => AppShellSearchResult[];
+  /** The search field's label, and what the dialog says it finds. Default `'Search Pages'`, or `'Search Pages and Files'` with `onSearch`. */
+  searchLabel?: string;
   /** Adds an Add Company row at the foot of the company menu, which calls this. Default none: no row. */
   onAddCompany?: () => void;
   /** The page. */
@@ -223,6 +241,8 @@ const minPanelWidth = 220;
 const maxPanelWidth = 380;
 const minAsideWidth = 280;
 const maxAsideWidth = 560;
+/** The gap round the frame, in theme spacing units: 4px from the window's top, right and bottom; the rail takes the left. The floating panel and the record in `detail` sit a further 8px inside the frame. */
+const frameGap = 0.5;
 /** The undocked panel is the docked panel's width less this, its 8px inset, so its right edge lands where the docked panel's would. */
 const flyoutInset = 8;
 /** How long the pointer rests on a rail item before its panel floats: short, so the panel doesn't feel late, but long enough that crossing the rail doesn't open each one. */
@@ -489,10 +509,28 @@ type SearchDialogProps = {
   fullScreen: boolean;
   onClose: () => void;
   onChoose: (page: string, section: string) => void;
+  /** The app's results beyond the pages, listed after the page matches. */
+  onSearch?: (term: string) => AppShellSearchResult[];
+  /** Closes the dialog, then opens the result. */
+  onChooseResult: (choose: () => void) => void;
+  /** The field's label. */
+  label: string;
 };
 
-/** Searches the pages of every section, from any page: the same dialog on wide screens and phones. */
-function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchDialogProps) {
+/** How many results there are, in words: "3 pages", "1 page · 2 files". */
+function resultCount(pages: number, others: number) {
+  const count = new Intl.NumberFormat();
+  const one = (n: number) => new Intl.PluralRules().select(n) === 'one';
+  return [pages ? `${count.format(pages)} ${one(pages) ? 'page' : 'pages'}` : '', others ? `${count.format(others)} ${one(others) ? 'result' : 'results'}` : '']
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/**
+ * Searches the pages of every section, from any page: the same dialog on wide screens and phones. With `onSearch`,
+ * the app's own results (files at any building, records) list after the pages, each saying where it is.
+ */
+function SearchDialog({ open, sections, fullScreen, onClose, onChoose, onSearch, onChooseResult, label }: SearchDialogProps) {
   const [query, setQuery] = useState('');
   const titleId = useId();
   const term = query.trim().toLowerCase();
@@ -503,6 +541,8 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchD
           .map((item) => ({ section, item })),
       )
     : [];
+  const extra = term && onSearch ? onSearch(term) : [];
+  const total = results.length + extra.length;
   return (
     <Dialog
       open={open}
@@ -529,7 +569,7 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchD
         <TextField
           autoFocus
           fullWidth
-          label="Search Pages"
+          label={label}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           slotProps={{
@@ -545,12 +585,12 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchD
       </Box>
       <Typography role="status" variant="body2" color="text.secondary" sx={{ px: 3, py: 1 }}>
         {!term
-          ? 'Find a page in any section.'
-          : results.length === 0
-            ? `No pages match “${query.trim()}”.`
-            : new Intl.PluralRules().select(results.length) === 'one'
-              ? '1 page'
-              : `${new Intl.NumberFormat().format(results.length)} pages`}
+          ? onSearch
+            ? 'Find a page in any section, or a file at any building.'
+            : 'Find a page in any section.'
+          : total === 0
+            ? `Nothing matches “${query.trim()}”.`
+            : resultCount(results.length, extra.length)}
       </Typography>
       <List aria-label="Results" sx={{ minHeight: 0, overflowY: 'auto', px: 1, pt: 0, pb: 2 }}>
         {results.map(({ section, item }) => (
@@ -564,6 +604,16 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose }: SearchD
                 <Icon name={item.icon} />
               </ListItemIcon>
               <ListItemText primary={item.label} secondary={section.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+        {extra.map((result) => (
+          <ListItem key={`result:${result.id}`} disablePadding>
+            <ListItemButton onClick={() => onChooseResult(result.onChoose)} sx={{ borderRadius: 1 }}>
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <Icon name={result.icon} />
+              </ListItemIcon>
+              <ListItemText primary={result.label} secondary={result.detail} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -845,9 +895,10 @@ type PhoneShellProps = Pick<
   | 'onPageChange'
   | 'onCompanyChange'
   | 'onAddCompany'
+  | 'onSearch'
   | 'detail'
   | 'children'
-> & { asideLabel: string; asideOpen: boolean; companies: AppShellCompany[]; detailLabel: string };
+> & { asideLabel: string; asideOpen: boolean; companies: AppShellCompany[]; detailLabel: string; searchLabel: string };
 
 /**
  * The shell below the `md` breakpoint, built for a phone's browser. The page scrolls the document, so the
@@ -872,6 +923,8 @@ function PhoneShell({
   companies,
   onCompanyChange,
   onAddCompany,
+  onSearch,
+  searchLabel,
   detail,
   detailLabel,
   children,
@@ -1103,6 +1156,9 @@ function PhoneShell({
         fullScreen
         onClose={() => hideSearch()}
         onChoose={(id, sectionId) => hideSearch(() => onPageChange?.(id, sectionId))}
+        onSearch={onSearch}
+        onChooseResult={(choose) => hideSearch(choose)}
+        label={searchLabel}
       />
       <CompanyMenu
         anchorEl={companyButton}
@@ -1345,6 +1401,8 @@ export function AppShell({
   onPageChange,
   onCompanyChange,
   onAddCompany,
+  onSearch,
+  searchLabel = onSearch ? 'Search Pages and Files' : 'Search Pages',
   detail,
   detailLabel = 'Record',
   children,
@@ -1562,6 +1620,7 @@ export function AppShell({
   // Floats inside the frame, 8px in from its edges (its 1px border included), so the corners are
   // concentric: the frame's 16px is the panel's theme radius (8px) plus the gap. Elevation 2 puts it on
   // level3, a step below the menu surface, with the lowest shadow that still lifts it off the page.
+  // Its offsets are measured from the shell, so they add the frame's own gap to the window.
   const floatingPanel = hasPanel(flyoutSection) && (
     <Paper
       elevation={2}
@@ -1571,8 +1630,8 @@ export function AppShell({
       onKeyDown={(event) => event.key === 'Escape' && dismissFlyout(flyoutPinned)}
       sx={{
         position: 'absolute',
-        top: (t) => t.spacing(2),
-        bottom: (t) => t.spacing(2),
+        top: (t) => t.spacing(frameGap + 1),
+        bottom: (t) => t.spacing(frameGap + 1),
         left: (t) => `calc(${railWidth}px + ${t.spacing(1)})`,
         zIndex: 'drawer',
         display: 'flex',
@@ -1721,6 +1780,8 @@ export function AppShell({
           companies,
           onCompanyChange,
           onAddCompany,
+          onSearch,
+          searchLabel,
           detail,
           detailLabel,
         }}
@@ -1742,7 +1803,8 @@ export function AppShell({
         height: '100dvh',
         overflow: 'hidden',
         bgcolor: 'background.level0',
-        p: 1,
+        // 4px from the window's top, right and bottom; the rail takes the left.
+        p: frameGap,
         pl: 0,
       }}
     >
@@ -1810,17 +1872,21 @@ export function AppShell({
           {!hideHeader && (
             // No line under the header: it sits on the frame's surface, and the page's own content starts below it.
             <AppBar position="static" color="transparent" elevation={0}>
-              {/* The page's 24px gutter on the sides, and 16px above the scope: a 72px header. */}
+              {/* The page's 24px gutter on the sides, and 8px above the scope: a 64px header. */}
               <Toolbar
                 disableGutters
-                sx={{ gap: 1, px: 3, pt: 2, pb: 0.5, minHeight: { md: 0 }, alignItems: 'stretch' }}
+                sx={{ gap: 1, px: 3, pt: 1, pb: 0.5, minHeight: { md: 0 }, alignItems: 'stretch' }}
               >
                 {/* Dock Navigation lives in the panel and Search in the rail, so the header's room goes to the scope. Its
-                    width is measured and handed down, so the scope takes one button where its crumbs don't fit. */}
-                <Box ref={measureHeaderStart} sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                    width is measured and handed down, so the scope takes one button where its crumbs don't fit. The scope
+                    overhangs the gutter by its crumb's 8px padding and the 4px inset of the lead icon in its slot, 12px in
+                    all, so the icon's glyph box sits on the page title's edge. */}
+                <Box ref={measureHeaderStart} sx={{ flex: 1, minWidth: 0, overflow: 'hidden', ml: -1.5 }}>
                   {provideHeaderStart(headerStart)}
                 </Box>
-                {headerEnd}
+                {/* The page controls overhang the gutter as far as the scope does, so the header's buttons sit 12px from
+                    the frame on both sides. */}
+                <Box sx={{ display: 'flex', mr: -1.5 }}>{headerEnd}</Box>
               </Toolbar>
             </AppBar>
           )}
@@ -1873,6 +1939,9 @@ export function AppShell({
         fullScreen={false}
         onClose={() => hideSearch()}
         onChoose={(id, sectionId) => hideSearch(() => choosePage(id, sectionId))}
+        onSearch={onSearch}
+        onChooseResult={(choose) => hideSearch(choose)}
+        label={searchLabel}
       />
       <CompanyMenu
         anchorEl={companyAnchor}
@@ -1929,19 +1998,19 @@ export function AppShell({
       )}
       {detail && (
         // The record, drawn as the undocked section panel is and mirrored to the right. Elevation 2 puts it on level3 with
-        // a low shadow; it floats inside the frame, 8px in from the frame's right edge and 16px from its top and bottom,
-        // so its corners are concentric with the frame's; and it sits on the modal layer after the floating aside, so it
-        // is above the aside, docked or floating, while dialogs (portaled after it) stay above it. No scrim: the page
-        // beneath stays live.
+        // a low shadow; it floats inside the frame, 8px in from the frame's edges (its offsets add the frame's gap to the
+        // window), so its corners are concentric with the frame's; and it sits on the modal layer after the floating
+        // aside, so it is above the aside, docked or floating, while dialogs (portaled after it) stay above it. No scrim:
+        // the page beneath stays live.
         <Paper
           component="aside"
           elevation={2}
           aria-label={detailLabel}
           sx={{
             position: 'absolute',
-            top: (t) => t.spacing(2),
-            bottom: (t) => t.spacing(2),
-            right: (t) => t.spacing(2),
+            top: (t) => t.spacing(frameGap + 1),
+            bottom: (t) => t.spacing(frameGap + 1),
+            right: (t) => t.spacing(frameGap + 1),
             width: (t) => `min(${t.spacing(55)}, calc(100% - ${railWidth}px - ${t.spacing(3)}))`,
             zIndex: 'modal',
             display: 'flex',

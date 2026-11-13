@@ -63,7 +63,7 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - **Text left, numbers right.** Set `align="right"` on a number's header and cells, so digits line up by place. The theme sets tabular figures on every cell.
 - **Format every value with `Intl`.** One number of decimals per column, so the column lines up.
 - **Units sit in the header.** “Energy (kWh)” in the header and bare numbers in the cells, unless the units differ by row.
-- **A missing reading is a dash.** Show “–”, never 0, and keep it last when sorting: it has no place in the order.
+- **A missing reading is a dash.** Show “–”, never 0, and keep it last when sorting: it has no place in the order. A missing fact that was never measured (a property with no floor area on record) says so in words instead, “Not recorded” in `text.secondary`, never a bare dash and never 0, as `ScopePicker`'s filter table does.
 - **Headers are sentence case**, and name what's in the column. Set each in `HeaderLabel`, so it stays on one line, truncated with a tooltip, and its column is at least its longest word.
 
 ## Variants
