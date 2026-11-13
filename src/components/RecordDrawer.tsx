@@ -11,11 +11,13 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
+import Link from '@mui/material/Link';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
 import Tab from '@mui/material/Tab';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -27,16 +29,37 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { Icon } from '../icons';
 
-/** How a field is edited, when it is: a text, number or date field, a select, or a multiple select. */
+/** How a field is edited, when it is: a text, number or date field, a select, a multiple select, a week's hours, or the exceptions to them. */
 export type RecordFieldInput =
   | { kind: 'text' }
   | { kind: 'number'; unit?: string; min?: number }
   | { kind: 'date' }
   | { kind: 'select'; options: { value: string; label: string }[] }
-  | { kind: 'multi'; options: { value: string; label: string }[] };
+  | { kind: 'multi'; options: { value: string; label: string }[] }
+  | { kind: 'hours' }
+  | { kind: 'exceptions' };
 
-/** A field's value as recorded: a string (a date as `YYYY-MM-DD`), a number, the chosen values of a multiple select, or `null` for nothing on record. */
-export type RecordFieldValue = string | number | string[] | null;
+export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+export const weekdays: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const weekdayLabels: Record<Weekday, string> = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+
+/** A day's opening and closing times, as `HH:MM`. */
+export type HoursSpan = { open: string; close: string };
+/** The standing weekly hours (a building's occupied hours), per weekday; `null` is closed that day. */
+export type WeeklyHours = Record<Weekday, HoursSpan | null>;
+/** A one-off exception to the weekly hours: a date (`YYYY-MM-DD`), what it is ("Thanksgiving"), and the hours that day, `null` closed. */
+export type HoursException = { date: string; name: string; hours: HoursSpan | null };
+
+/** A field's value as recorded: a string (a date as `YYYY-MM-DD`), a number, the chosen values of a multiple select, a week's hours, its exceptions, or `null` for nothing on record. */
+export type RecordFieldValue = string | number | string[] | WeeklyHours | HoursException[] | null;
+
+/** A link from a field's value: another record, which opens in the same drawer, or a page. */
+export type RecordLink = {
+  /** The link's text: the record's or page's name. */
+  label: string;
+  /** Opens the record or page. The drawer asks about unsaved changes first. */
+  onOpen: () => void;
+};
 
 export type RecordField = {
   id: string;
@@ -51,6 +74,12 @@ export type RecordField = {
   input?: RecordFieldInput;
   /** Asks whoever may edit to confirm or correct the value, with Confirm and Correct on its row. */
   confirm?: boolean;
+  /** Makes the value a link that opens what it names: a meter's page, the bill behind a charge. Default none: the value is text. */
+  link?: RecordLink;
+  /** Objects the value names, each a link under it that opens its own record or page: a space's accounts and meters, its tenant. Default none. */
+  links?: RecordLink[];
+  /** Images the value is, shown under it: the property's photos, a logo. Each needs its `alt`. Default none. */
+  media?: { src: string; alt: string }[];
 };
 
 export type RecordGroup = {
@@ -108,6 +137,9 @@ export type RecordDrawerProps = {
 
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 const same = (a: RecordFieldValue, b: RecordFieldValue) => JSON.stringify(a) === JSON.stringify(b);
+const emptyHours: WeeklyHours = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null };
+const isWeeklyHours = (value: RecordFieldValue): value is WeeklyHours => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+const isExceptions = (value: RecordFieldValue): value is HoursException[] => Array.isArray(value) && value.every((item) => typeof item === 'object');
 
 type Draft = Record<string, RecordFieldValue>;
 
@@ -217,6 +249,7 @@ export function RecordDrawer({ record, onClose, onSave, onConfirm, action, notic
                 onSave={() => save(group)}
                 onCancel={cancel}
                 onConfirm={onConfirm}
+                onFollow={(link) => guard(link.onOpen)}
               />
             ))}
           </Stack>
@@ -282,9 +315,10 @@ type GroupViewProps = {
   onSave: () => void;
   onCancel: () => void;
   onConfirm?: (field: RecordField) => void;
+  onFollow: (link: RecordLink) => void;
 };
 
-function GroupView({ group, editing, draft, setDraft, onEdit, onSave, onCancel, onConfirm }: GroupViewProps) {
+function GroupView({ group, editing, draft, setDraft, onEdit, onSave, onCancel, onConfirm, onFollow }: GroupViewProps) {
   const hasInputs = group.fields.some((f) => f.input);
   const editButton = (
     <Button startIcon={<Icon name="edit" />} disabled={!group.editable} onClick={onEdit} aria-label={`Edit ${group.label}`}>
@@ -347,9 +381,33 @@ function GroupView({ group, editing, draft, setDraft, onEdit, onSave, onCancel, 
                   {field.label}
                 </TableCell>
                 <TableCell sx={{ pr: 0 }}>
-                  <Typography variant="body2" component="p" sx={{ fontVariantNumeric: 'tabular-nums' }}>
-                    {field.display}
-                  </Typography>
+                  {field.link ? (
+                    <Link component="button" type="button" variant="body2" onClick={() => onFollow(field.link!)} sx={{ display: 'block', textAlign: 'start', fontVariantNumeric: 'tabular-nums' }}>
+                      {field.display}
+                    </Link>
+                  ) : (
+                    <Typography variant="body2" component="p" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                      {field.display}
+                    </Typography>
+                  )}
+                  {field.media && field.media.length > 0 && (
+                    <Stack direction="row" sx={{ gap: 1, my: 0.5, flexWrap: 'wrap' }}>
+                      {field.media.map((image) => (
+                        <Box key={image.src} component="img" src={image.src} alt={image.alt} sx={{ width: (t) => t.spacing(16), aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 1, display: 'block' }} />
+                      ))}
+                    </Stack>
+                  )}
+                  {field.links && field.links.length > 0 && (
+                    <Stack component="ul" sx={{ listStyle: 'none', m: 0, p: 0, gap: 0.5 }}>
+                      {field.links.map((link) => (
+                        <li key={link.label}>
+                          <Link component="button" type="button" variant="body2" onClick={() => onFollow(link)} sx={{ textAlign: 'start' }}>
+                            {link.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </Stack>
+                  )}
                   <Typography variant="caption" component="p" color="text.secondary">
                     {field.provenance}
                   </Typography>
@@ -405,7 +463,7 @@ function FieldInput({ field, input, value, onChange }: { field: RecordField; inp
         </TextField>
       );
     case 'multi': {
-      const chosen = Array.isArray(value) ? value : [];
+      const chosen = Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
       return (
         <TextField
           select
@@ -427,7 +485,84 @@ function FieldInput({ field, input, value, onChange }: { field: RecordField; inp
         </TextField>
       );
     }
+    case 'hours':
+      return <HoursInput label={field.label} value={isWeeklyHours(value) ? value : emptyHours} onChange={onChange} />;
+    case 'exceptions':
+      return <ExceptionsInput label={field.label} value={isExceptions(value) ? value : []} onChange={onChange} />;
   }
+}
+
+/** A day's open switch beside its name, then its opening and closing times, disabled while closed. */
+function DayHours({ name, switchLabel, hours, onChange }: { name: string; switchLabel: string; hours: HoursSpan | null; onChange: (hours: HoursSpan | null) => void }) {
+  return (
+    <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center' }}>
+      <Box sx={{ width: (t) => t.spacing(14), display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Switch checked={Boolean(hours)} onChange={(event) => onChange(event.target.checked ? { open: '08:00', close: '18:00' } : null)} slotProps={{ input: { 'aria-label': switchLabel } }} />
+        <Typography variant="body2">{name}</Typography>
+      </Box>
+      <TextField type="time" label="Opens" value={hours?.open ?? ''} disabled={!hours} onChange={(event) => hours && onChange({ ...hours, open: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} sx={{ flex: 1 }} />
+      <TextField type="time" label="Closes" value={hours?.close ?? ''} disabled={!hours} onChange={(event) => hours && onChange({ ...hours, close: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} sx={{ flex: 1 }} />
+    </Stack>
+  );
+}
+
+/** The weekly grid: a row per day, open or closed, with its opening and closing times. */
+function HoursInput({ label, value, onChange }: { label: string; value: WeeklyHours; onChange: (value: WeeklyHours) => void }) {
+  return (
+    <Stack component="fieldset" sx={{ gap: 1.5, border: 0, p: 0, m: 0 }}>
+      <Typography component="legend" variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+        {label}
+      </Typography>
+      {weekdays.map((day) => (
+        <DayHours key={day} name={weekdayLabels[day].slice(0, 3)} switchLabel={`${weekdayLabels[day]} open`} hours={value[day]} onChange={(hours) => onChange({ ...value, [day]: hours })} />
+      ))}
+    </Stack>
+  );
+}
+
+/** The first day of next month, as `YYYY-MM-DD`: where a new exception starts, the commonest case being a holiday ahead. */
+function firstOfNextMonth() {
+  const today = new Date();
+  const first = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  return `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, '0')}-01`;
+}
+
+/**
+ * The one-off exceptions to the weekly hours: a row per date with what it is and its hours, or closed, Remove on each,
+ * and Add Exception for another. A new one starts on the first day of next month, closed.
+ */
+function ExceptionsInput({ label, value, onChange }: { label: string; value: HoursException[]; onChange: (value: HoursException[]) => void }) {
+  const set = (index: number, next: HoursException) => onChange(value.map((exception, i) => (i === index ? next : exception)));
+  return (
+    <Stack component="fieldset" sx={{ gap: 1.5, border: 0, p: 0, m: 0 }}>
+      <Typography component="legend" variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+        {label}
+      </Typography>
+      {value.length === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          No exceptions. Add one for a holiday or a closure.
+        </Typography>
+      )}
+      {value.map((exception, index) => (
+        <Stack key={index} sx={{ gap: 1.5 }}>
+          <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center' }}>
+            <TextField type="date" label="Date" value={exception.date} onChange={(event) => set(index, { ...exception, date: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} sx={{ flex: 1 }} />
+            <TextField label="Reason" value={exception.name} onChange={(event) => set(index, { ...exception, name: event.target.value })} sx={{ flex: 1 }} />
+            <IconButton aria-label={`Remove the exception on ${exception.date}`} onClick={() => onChange(value.filter((_, i) => i !== index))}>
+              <Icon name="delete" />
+            </IconButton>
+          </Stack>
+          <DayHours name={exception.hours ? 'Open' : 'Closed'} switchLabel={`Open on ${exception.date}`} hours={exception.hours} onChange={(hours) => set(index, { ...exception, hours })} />
+          {index < value.length - 1 && <Divider />}
+        </Stack>
+      ))}
+      <Box>
+        <Button startIcon={<Icon name="add" />} onClick={() => onChange([...value, { date: firstOfNextMonth(), name: '', hours: null }])}>
+          Add Exception
+        </Button>
+      </Box>
+    </Stack>
+  );
 }
 
 function ActivityView({ entries }: { entries: RecordActivityEntry[] }) {
