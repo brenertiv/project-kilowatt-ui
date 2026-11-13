@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Box from '@mui/material/Box';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { PeriodPicker, type Period, type PeriodPreset } from 'src/components/PeriodPicker';
@@ -96,6 +97,34 @@ export const ApplyCustomRange: Story = {
     await waitFor(() => expect(apply).toBeEnabled());
     await userEvent.click(apply);
     await expect(args.onChange).toHaveBeenCalledWith({ from: '2025-04', to: '2026-09' });
+  },
+};
+
+/** `anchor="right"` lines the popover up with the field's right edge, for a field that is the last control in a bar, so it opens inward rather than past the page's edge. */
+export const AnchoredRight: Story = {
+  name: 'Anchored at the right',
+  args: { anchor: 'right' },
+  render: function Render(args) {
+    const [value, setValue] = useState<Period>(args.value);
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <PeriodPicker {...args} value={value} onChange={setValue} />
+      </Box>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    const field = canvas.getByRole('combobox', { name: 'Period' });
+    await userEvent.click(field);
+    const dialog = await screen.findByRole('dialog', { name: 'Period' });
+    // The popover's right edge sits on the field's, and it opens inward, to the left of the field.
+    await waitFor(() => {
+      const popover = dialog.getBoundingClientRect();
+      const anchor = field.closest('.MuiFormControl-root')!.getBoundingClientRect();
+      expect(popover.right).toBeLessThanOrEqual(anchor.right + 1);
+      expect(popover.left).toBeLessThan(anchor.left);
+    });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   },
 };
 

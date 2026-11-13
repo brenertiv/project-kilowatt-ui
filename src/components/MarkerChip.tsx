@@ -33,6 +33,8 @@ export type MarkerChipProps = {
   size?: 'small' | 'medium';
   /** Opens what it marks. A marker in a clickable row stops the click there, so the row doesn't open too. */
   onClick: () => void;
+  /** What opening it shows, for assistive tech: `'dialog'` for a marker that opens a dialog, `'menu'` for a menu. Default none: it goes somewhere on the page. */
+  'aria-haspopup'?: 'dialog' | 'menu' | 'listbox' | 'true';
 };
 
 /**
@@ -44,7 +46,7 @@ export type MarkerChipProps = {
  * @summary A round icon chip in the brand-blue tint that widens to its label on hover or focus and pulses while unread.
  * @import import { MarkerChip } from 'src/components/MarkerChip';
  */
-export function MarkerChip({ icon, label, 'aria-label': ariaLabel, alerting = false, size = 'medium', onClick }: MarkerChipProps) {
+export function MarkerChip({ icon, label, 'aria-label': ariaLabel, 'aria-haspopup': ariaHasPopup, alerting = false, size = 'medium', onClick }: MarkerChipProps) {
   // A screen with a pointer that can hover; on touch screens the marker stays an icon and a tap opens it.
   const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
   const [pointed, setPointed] = useState(false);
@@ -58,7 +60,8 @@ export function MarkerChip({ icon, label, 'aria-label': ariaLabel, alerting = fa
       icon={<Icon name={icon} />}
       label={
         <Collapse orientation="horizontal" in={canHover && pointed}>
-          <Box component="span" sx={{ display: 'block', whiteSpace: 'nowrap', pr: small ? 1 : 1.5 }}>
+          {/* The label is data (a dollar value, a count), so it takes tabular figures. */}
+          <Box component="span" sx={{ display: 'block', whiteSpace: 'nowrap', pr: small ? 1 : 1.5, fontVariantNumeric: 'tabular-nums' }}>
             {label}
           </Box>
         </Collapse>
@@ -72,6 +75,7 @@ export function MarkerChip({ icon, label, 'aria-label': ariaLabel, alerting = fa
       onFocus={(event) => setPointed(event.currentTarget.matches(':focus-visible'))}
       onBlur={() => setPointed(false)}
       aria-label={ariaLabel}
+      aria-haspopup={ariaHasPopup}
       sx={{
         position: 'relative',
         isolation: 'isolate',
