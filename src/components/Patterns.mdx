@@ -1,0 +1,93 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as PatternsStories from './Patterns.stories';
+
+<Meta
+  of={PatternsStories}
+  summary="Kilowatt's page patterns: NotBuiltYet (a disabled action with why beside it), WidgetScopeIdle (a widget at a scope it can't take), RowAction (a row's action, disabled with its reason in a tooltip) and ExportShare (Export CSV, Export PDF and Share)."
+/>
+
+# Patterns
+
+Four small patterns a page repeats, each composed once from MUI's `Button`, `Tooltip`, `Stack` and `Typography` (`@mui/material`, Material UI v9) and Kilowatt's `AsyncContent`, so every page answers the same situation the same way: `NotBuiltYet` for an action whose destination isn't built, `WidgetScopeIdle` for a widget at a scope it can't take, `RowAction` for a table row's action, and `ExportShare` for a page's Export and Share. They're Kilowatt's own; the props of the parts are MUI's: see the [Button API](https://mui.com/material-ui/api/button/) and [Tooltip API](https://mui.com/material-ui/api/tooltip/).
+
+<Canvas of={PatternsStories.NotBuilt} />
+
+## When to use
+
+- Use `NotBuiltYet` where an action leads somewhere that doesn't exist yet: the button stays, disabled, and `{template} isn’t built yet` sits beside it in words. For an action that's unavailable for another reason, write that reason instead, in the same place.
+- Use `WidgetScopeIdle` as a dashboard widget's card body when the page's scope isn't one the widget can draw (a property-level chart while the page is on a group of groups). The card keeps its place and height. For data that's missing at a scope the widget does take, use `AsyncContent`'s empty state.
+- Use `RowAction` for a text button in a table row, whether or not the row itself opens on click. When the role or the row's state doesn't allow the action, pass `disabledReason`; the button disables and the reason shows in a tooltip. For an icon-only row action, use `IconButton` with an `aria-label` and the same `Tooltip` around a `span`.
+- Use `ExportShare` on a page that exports or shares: Export CSV for tables and figures, Export PDF for reports (the browser's print), Share for the page's link, which carries its scope, period and filters. Give it `notify` so the result lands in the page's `Snackbar`. Turn `share` off where the page already has its own Share.
+- For the states of data itself (loading, empty, error, no access), use `AsyncContent`.
+
+## Usage
+
+```tsx
+import Snackbar from '@mui/material/Snackbar';
+import { ExportShare, NotBuiltYet, RowAction, WidgetScopeIdle } from 'src/components/patterns';
+
+<NotBuiltYet label="Open Carbon Plan" template="Carbon Plan" />
+
+<WidgetScopeIdle height={256} />
+
+<RowAction label="Assign" onClick={assign} disabledReason={canAssign ? undefined : 'Only an admin can assign a work order.'} />
+
+<ExportShare
+  csv={() => ({ filename: 'open-work-orders.csv', rows: [['Work order', 'Property'], ...rows] })}
+  pdf
+  notify={(message) => setToast(message)}
+/>
+<Snackbar open={Boolean(toast)} message={toast} autoHideDuration={4000} onClose={() => setToast('')} />
+```
+
+`toCsv` is exported too, for a page that builds its own download: it quotes a value with a comma, a quote or a line break, doubles a quote, and leaves a missing value blank.
+
+## States
+
+- `NotBuiltYet` is always disabled; the text beside it is the reason.
+- `WidgetScopeIdle` is `AsyncContent`'s idle state with one fixed sentence, "This chart works for a portfolio, group or single property." Pass `height` so it takes the chart's space.
+- `RowAction` is enabled without `disabledReason`, and disabled with the reason in a tooltip when it has one.
+- `ExportShare` with `disabled` disables the exports while there's nothing to export; Share stays on, since the link is always there.
+
+## Do and don't
+
+- Do say in words why an action is disabled, beside it or in its tooltip.
+- Don't leave a disabled button to explain itself by its color; pair it with `NotBuiltYet` or `disabledReason`.
+- Do name the thing that isn't built in `template` as the person would say it: "Carbon Plan", not a route or a spec id.
+- Don't hide an action that isn't built; show it disabled, so the page's shape stays the one it will have.
+- Do keep a widget's card on the page at a scope it can't take, with `WidgetScopeIdle` at the chart's height.
+- Don't drop the card or draw an empty chart; the layout would shift and the empty axis would read as zero.
+- Do use `RowAction` in a row that opens on click, so the action's click stops at the button.
+- Don't handle the row's and the action's clicks on the row alone; the action would open the row too.
+- Do report every export and share through `notify`, so the person hears the result.
+- Don't make Share copy silently; a copied link that no one is told about looks like nothing happened.
+- Do keep Export CSV, Export PDF and Share as text buttons in a row, in that order.
+- Don't make one of them contained; the page's main action is elsewhere.
+
+## MUI departures
+
+- `button-text-case`: the labels ("Export CSV", "Share", and `label`) are shown as written, in Title Case.
+- `button-text-weight`: the labels are regular weight.
+- `flat-buttons`: a contained button beside these would be flat; the patterns themselves use text buttons.
+- `control-outlines`: an outlined primary button beside these takes the control outline; the patterns' text buttons have none.
+- `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the button, instead of MUI's background tint alone.
+- `medium-size`: every button stays at `medium`, the default.
+- `icons`: a `startIcon` on one of these buttons is an `Icon` from `src/icons`, a Material Symbol.
+
+Theme-wide departures (the type scale, the text colors, the surface levels the card sits on) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- `NotBuiltYet`'s reason is visible text beside the button, so it's read in the same place by everyone.
+- `RowAction`'s tooltip sits on a `span` around the disabled button, since a disabled button fires no pointer or focus events; MUI's `Tooltip` names the span with the reason, so it's read with the button.
+- `WidgetScopeIdle` sits in `AsyncContent`'s polite live region, so a scope change that empties the widget is announced.
+- `ExportShare` reports through `notify`; show the message in a `Snackbar` or an `aria-live` region, so a download or a copied link is announced. Export PDF opens the browser's own print dialog.
+- Every button is a native `button` with a visible focus ring.
+
+## Related
+
+- `AsyncContent` for loading, empty, error and no-access states.
+- `Button` for the variants and the Title Case rule.
+- `Table` for the rows a `RowAction` sits in.
+
+<Stories includePrimary={false} />

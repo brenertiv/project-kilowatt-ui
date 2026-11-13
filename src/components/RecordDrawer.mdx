@@ -8,7 +8,7 @@ import * as RecordDrawerStories from './RecordDrawer.stories';
 
 # RecordDrawer
 
-`RecordDrawer` shows one object as a record: the page is the view, the drawer the record. It's the object's name with its kind, a Record tab of groups of fields (each value with the line under it saying where it came from: recorded at setup, surveyed, from another system, changed by someone and when) and an Activity tab with its history, newest first. Each group has an Edit that turns only that group into a form, with Cancel and Save under it. One group edits at a time; closing, switching tabs or editing another group with unsaved changes asks first, and a group with an `editWarning` (values recorded on a survey) asks before its form opens. It's Kilowatt's own component, composed from MUI's `Tabs`, `Table`, `TextField`, `Button` and `Dialog` (`@mui/material`, Material UI v9; MUI documents their props). Put it in `AppShell`'s `detail`, which floats it over the page inside the frame.
+`RecordDrawer` shows one object as a record: the page is the view, the drawer the record. It's the object's name with its kind, a Record tab of groups of fields (each value with the line under it saying where it came from: recorded at setup, surveyed, from another system, changed by someone and when) and an Activity tab with its history, newest first. Each group has an Edit that turns only that group into a form, with Cancel and Save under it. One group edits at a time; closing, switching tabs or editing another group with unsaved changes asks first, and a group with an `editWarning` (values recorded on a survey) asks before its form opens. It's Kilowatt's own component, composed from MUI's `Tabs`, `Table`, `TextField`, `Button`, `Dialog`, `Link` and `Switch` (`@mui/material`, Material UI v9; MUI documents their props). Put it in `AppShell`'s `detail`, which floats it over the page inside the frame.
 
 <Canvas of={RecordDrawerStories.Fields} />
 
@@ -51,6 +51,9 @@ Map each kind of object onto `RecordDrawerRecord` with an adapter, so the drawer
 - **A field to confirm** (`confirm` with `onConfirm`): Confirm and Correct on the value's own row, for a value the client should verify. Correct opens the group's form.
 - **A notice** (`notice`): an `Alert` over the groups, such as that edits are a demo.
 - **An action** (`action`): a text button in the header to where the object's figures are shown.
+- **A value that links** (`link`, `links`): a field's `link` makes its value a link that opens what it names (a meter's page, the bill behind a charge), and `links` list the objects a value names under it (a space's accounts and meters, its tenant), each opening another record in the same drawer or a page. The drawer asks about unsaved changes before following one.
+- **Images under a value** (`media`): the property's photos or a logo, each with its `alt`, 128px wide at 4:3 under the value.
+- **Exceptions to the weekly hours** (`input: { kind: 'exceptions' }`): the one-off exceptions to a building's standing hours (a holiday, a closure) as rows of a date, a reason and the hours that day or closed, with Add Exception and a Remove on each. The value is `HoursException[]`; the standing week itself is a read-only field.
 - **A deep link** (`initialEdit`): a group's id opens it ready to edit, once per record, for a link that goes straight to a value to fix.
 
 <Canvas of={RecordDrawerStories.ConfirmAValue} />
@@ -82,13 +85,14 @@ Map each kind of object onto `RecordDrawerRecord` with an adapter, so the drawer
 - `table-head-weight`: not used; the groups' tables have no header row.
 - `table-sticky-header`: not used; the groups' tables have no header row.
 - `table-last-row`: a group's last field has no bottom line.
+- `link-underline`: a value's link and the links under it have no underline; they're told apart by color.
+- `selected-fills-icons`: not used; the exceptions' switches have no icons.
 - `button-text-case`: the tabs' and buttons' labels are shown as written, in Title Case.
 - `button-text-weight`: the tabs' labels are regular weight.
 - `control-outlines`: the form's fields take `palette.control.border` at rest.
 - `focus-ring`: the tabs, buttons and fields show the 2px focus ring in `palette.control.focus`.
-- `medium-size`: the fields, buttons and tabs stay at medium; the kind chip and the Confirm and Correct pair are `small`, one-offs beside a heading and in a table cell.
+- `medium-size`: the fields, buttons, the exceptions' switches and tabs stay at medium; the kind chip and the Confirm and Correct pair are `small`, one-offs beside a heading and in a table cell.
 - `paper-surface-levels`: the warning dialogs take their surface from their elevation.
-- `selected-fills-icons`: not used; the tabs have no icons.
 - `tabular-numerals`: values use tabular figures.
 
 Theme-wide departures (the surface levels, the intents, the theme radius) apply too; see Foundations → MUI departures.
@@ -98,6 +102,8 @@ Theme-wide departures (the surface levels, the intents, the theme radius) apply 
 - Opening the drawer moves focus to the object's name (an `h2`), so the page's focus doesn't stay behind it; Escape closes it, after asking about unsaved changes.
 - The tabs are MUI's `Tabs`, each controlling its `tabpanel`.
 - Each group is a `section` named by its heading; its fields are a table whose first cell is the row header.
+- A value's links are link buttons named by what they open; following one asks about unsaved changes first, as Close does.
+- Each exception's open switch is named for its date ("Open on 2026-11-26"), and its Remove names the date too.
 - Each Edit is named for its group ("Edit Building details"); a disabled one's reason is in a tooltip on a wrapper, since a disabled button fires no events.
 - The dialogs are named by their titles and described by their text.
 - Name the `AppShell` `detail` with `detailLabel`, such as the object's name.

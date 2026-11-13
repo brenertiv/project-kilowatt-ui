@@ -41,11 +41,13 @@ Props, with their defaults:
 - `otherLabel`: the name of the grouped rectangle. Default `'Other'`.
 - `height`: the chart's height in pixels. Default `160`, a fact card's strip.
 - `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+- `group`: whether to group the smallest parts into `otherLabel` past six. `false` keeps every part as its own rectangle, all in one colour. Default `true`.
 
 ## Variants
 
 - **Parts.** Up to six rectangles, largest first, squarified and 2px apart, in `chart.series` order, each labeled with its name and share where it fits, in the palette's contrast text for its color.
 - **Grouped into Other.** With more than six parts, the five largest keep their rectangles and the rest are summed into one in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
+- **Ungrouped.** With `group={false}`, every part keeps its rectangle past six, drawn in one colour (`neutral` on every part), told apart by size and label, each named in its tooltip. For parts that aren't product meanings and are read by size, such as every property's floor area (Rules → Charts, Six series at most).
 - **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each part, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
 
 ## Do and don't
@@ -55,7 +57,7 @@ Props, with their defaults:
 - Do use a treemap only for parts that add up to a meaningful whole.
 - Don't use a treemap for values that overlap or don't sum, such as averages or rates; use a column chart.
 - Do let the chart group the smallest parts into "Other" past six, and name them in the summary.
-- Don't raise the part count or add colors to fit more parts; use a table instead.
+- Don't raise the part count or add colors to fit more parts; use a table instead, or `group={false}` with every part in one colour where the parts are read by size and label.
 - Do give parts that stand for product meanings their `slot` from `src/charts/meanings`.
 - Don't nest a second level into the rectangles; show the breakdown of one part in its own chart or a table.
 - Do write `summary` as one sentence with the share that matters.

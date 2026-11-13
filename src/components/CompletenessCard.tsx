@@ -1,9 +1,10 @@
+import { useId } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import Chip, { type ChipProps } from '@mui/material/Chip';
-import Link from '@mui/material/Link';
+import CardActionArea from '@mui/material/CardActionArea';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { MonthBars, type MonthBarsProps } from './MonthBars';
@@ -20,7 +21,7 @@ export type CompletenessCardProps = {
   title: string;
   /** A line under the title: `Office · Springfield, OR`. Default none. */
   subheader?: string;
-  /** Makes the title a link button that opens the thing the card is about, and names it for screen readers (`Open Harbor Point: sets it as your scope`). Default none: plain text. */
+  /** Makes the whole card a button that opens the thing it is about, named for screen readers (`Open Harbor Point: sets it as your scope`), its content as the description. Default none: a plain card. */
   open?: { onClick: () => void; label: string };
   /** A status chip at the top right, so a column of cards scans by its right edge: `{ label: 'Healthy', color: 'success' }`. Default none. */
   status?: { label: string; color: ChipProps['color'] };
@@ -36,7 +37,8 @@ export type CompletenessCardProps = {
 
 /**
  * One card in a grid that scans the health of many things' data at once: every card the same shape, so the eye learns
- * the layout once and then reads color. The title (a link that opens the thing, with `open`) over a subheader, a status
+ * the layout once and then reads color. With `open`, the whole card opens the thing (its month bars take no focus then).
+ * The title over a subheader, a status
  * chip at the top right, a line of counts, then one `MonthBars` strip per feed, stretched to one month axis, with the
  * period's first month and the latest month with data under them. Lay the cards out in MUI's `Grid`, sorted least
  * complete first, with `MonthBarsLegend` above them and the rule the bars follow written under them.
@@ -45,24 +47,11 @@ export type CompletenessCardProps = {
  * @import import { CompletenessCard } from 'src/components/CompletenessCard';
  */
 export function CompletenessCard({ title, subheader, open, status, caption, rows, start, end }: CompletenessCardProps) {
-  return (
-    <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+  const detailsId = useId();
+  const content = (
+    <>
       <CardHeader
-        // The name opens the thing as the tables' name columns do, with the same ellipsis.
-        title={
-          open ? (
-            <Link
-              component="button"
-              onClick={open.onClick}
-              aria-label={open.label}
-              sx={{ font: 'inherit', color: 'inherit', textAlign: 'start', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
-            >
-              {title}
-            </Link>
-          ) : (
-            <TruncatedText>{title}</TruncatedText>
-          )
-        }
+        title={<TruncatedText>{title}</TruncatedText>}
         slotProps={{ title: { component: 'h2' } }}
         subheader={subheader && <TruncatedText>{subheader}</TruncatedText>}
         // The chip takes the action slot, in a box the height of the icon button the slot is laid out for, so it sits level with the title.
@@ -74,7 +63,7 @@ export function CompletenessCard({ title, subheader, open, status, caption, rows
           )
         }
       />
-      <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <CardContent id={detailsId} sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
         {caption && (
           <Typography variant="caption" sx={{ color: 'text.secondary', alignSelf: 'flex-end', fontVariantNumeric: 'tabular-nums' }}>
             {caption}
@@ -87,7 +76,7 @@ export function CompletenessCard({ title, subheader, open, status, caption, rows
                 {label}
               </Typography>
               <Box component="dd" sx={{ m: 0, flex: 1, minWidth: 0, display: 'flex' }}>
-                <MonthBars {...bars} stretch />
+                <MonthBars {...bars} stretch focusable={!open} />
               </Box>
             </Stack>
           ))}
@@ -102,6 +91,18 @@ export function CompletenessCard({ title, subheader, open, status, caption, rows
           </Typography>
         </Stack>
       </CardContent>
+    </>
+  );
+  return (
+    <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {open ? (
+        // One button for the whole card, named by `open.label` and described by its content (Card → Clickable).
+        <CardActionArea onClick={open.onClick} aria-label={open.label} aria-describedby={detailsId} sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+          {content}
+        </CardActionArea>
+      ) : (
+        content
+      )}
     </Card>
   );
 }

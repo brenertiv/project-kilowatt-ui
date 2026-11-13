@@ -75,7 +75,7 @@ function EnergyUseChart() {
 - **Units sit with the numbers.** "32,914 kWh" in the content, a unit above a chart's value axis, a unit after each value in a tooltip or list. A card can show values in more than one unit, and each number carries its own.
 - **A subtitle is the exception.** Add one only when the card's period differs from the page's ("Last 12 months" on a monthly dashboard). It holds that period and nothing else, never a unit.
 - **Titles sit in one place.** A header's title is 16px from the card's top and left edges, with or without a subtitle, so the titles in a grid of cards line up. A subtitle only adds height below the title.
-- **One line each.** Titles and subtitles truncate instead of wrapping (`card-header-layout`). Wrap each in `TruncatedText`, so a cut-off title shows in full in a tooltip.
+- **One line each.** Titles and subtitles truncate instead of wrapping (`card-header-layout`). Wrap each in `TruncatedText`, so a cut-off title shows in full in a tooltip. The one allowance: a title that is the card's point (an insight's outcome, a next step) may wrap to two lines, since the title is the card's content; set `slotProps={{ title: { sx: { whiteSpace: 'normal' } } }}` and clamp it to two lines.
 - **The action lines up with the content.** An icon button in `action` is centered on a one-line title, and its icon sits 16px from the card's right edge, in line with the content below. The button's hover background reaches to 8px from the corner, which is why cards round at 16px (`card-radius`). The button doesn't add height: a header with only a title is the title line plus 16px above and below.
 
 ### Metric
@@ -130,7 +130,7 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 - `variant="elevation"` (MUI's default): the card sits on surface level3 with MUI's elevation 1 shadow. Use it for cards on the page background.
 - `variant="outlined"`: a border (`divider`) instead of a shadow. Use it for cards in a dense grid, on a surface that already has depth, and for every chart card.
 
-`CardHeader` sets a title, a `subheader` and an `action` (an icon button or menu) in one row. `CardContent` pads the content, and `CardActions` lays out text buttons along the bottom. `CardActionArea` turns the whole card into one button, for a card that only opens its subject.
+`CardHeader` sets a title, a `subheader` and an `action` (an icon button or menu) in one row. `CardContent` pads the content, and `CardActions` lays out text buttons along the bottom. `CardActionArea` turns the whole card into one button, for a card that only opens its subject: a card whose title would be a link is a whole-card link instead, named for what it opens, with its title as plain text. It holds no other control, so a figure inside it is a `PlainFigure`, and the page it opens explains the figure. There is no title-as-link card.
 
 A card can fold to its header, for a long table that's there when the reader needs it: put an `IconButton` with `expand_more` in the header's `action`, named for what it does ("Expand Meter Readings") with `aria-expanded` and `aria-controls`, and the body in MUI's `Collapse`. The icon turns over when the card is open. Choose whether it starts open or closed by how often the content is needed. It keeps the card's 16px radius, which an `Accordion` wouldn't.
 
@@ -142,7 +142,8 @@ A card can fold to its header, for a long table that's there when the reader nee
 - Don't pack unrelated content into one card; split it into cards or sections.
 - Do put a card's actions in `CardActions` as text buttons, named for what they do.
 - Don't put a contained button on every card in a grid; the repeated emphasis competes with the view's main action.
-- Do use `CardActionArea` when the whole card is one action, such as opening the building.
+- Do use `CardActionArea` when the whole card is one action, such as opening the building, with the title as plain text.
+- Don't make a card's title a link; a card that opens one thing is one `CardActionArea`, and its figure inside is plain.
 - Don't put buttons or links inside a `CardActionArea`; a button can't contain another control, so use `CardActions` for a card with several actions.
 - Do choose one look per grid: all elevation or all outlined.
 - Don't add a border to an elevation card or a shadow to an outlined one; keep one edge per card.
@@ -158,7 +159,7 @@ A card can fold to its header, for a long table that's there when the reader nee
 - Don't change `CardContent`'s padding with `sx`; its last-child bottom padding won't move. Leave `CardContent` out instead.
 - Don't pad the `Card` itself, or nudge a header action into place with margins; its position comes from `card-header-layout`.
 - Do wrap header titles and subtitles in `TruncatedText`, and keep them short enough to fit a typical card.
-- Don't let a title wrap or set `noWrap` on it yourself; the theme keeps it on one line, and `TruncatedText` shows the rest.
+- Don't let a title wrap or set `noWrap` on it yourself; the theme keeps it on one line, and `TruncatedText` shows the rest. A title that is the card's point (an outcome, a next step) is the one allowance, at two lines.
 - Do fold a card to its header with an expand button and `Collapse`, for content the reader opens only when they need it.
 - Don't use an `Accordion` for a folding card; it loses the card's radius and header. Keep `Accordion` for stacked sections of a form or a page.
 - Do let the card take its surface and its 16px radius from the theme.

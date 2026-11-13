@@ -110,6 +110,12 @@ export type ScopePickerProps = {
   onUpdatePortfolio?: (id: string, patch: { name?: string; propertyIds?: string[] }) => void;
   /** Called with a saved portfolio's id after its deletion is confirmed. Move the scope up if it was in that portfolio. Default none. */
   onDeletePortfolio?: (id: string) => void;
+  /**
+   * The key that opens Change Scope at the scope's level from anywhere on the page: pressed on its own, outside text
+   * fields and open dialogs. A locked or single-property picker has nothing to open, so it ignores the key. Default
+   * `'s'`; `false` turns the shortcut off.
+   */
+  shortcut?: string | false;
 };
 
 const levelIcon = { portfolio: 'account_tree', group: 'folder_open', saved: 'folder_special', property: 'apartment' } satisfies Record<Scope['level'], IconName>;
@@ -129,12 +135,12 @@ function countProperties(count: number) {
  */
 const crumbRadius = 2;
 
-/** The crumb frame: the faintest border, at the crumb radius. Crumbs and the dialog's portfolio rows share it. */
-const crumbFrame = { border: 1, borderColor: 'border.level0', borderRadius: crumbRadius } as const;
+/** The crumb frame: the crumb radius, with no border, so the crumbs and the header's buttons sit on their fill alone. */
+const crumbFrame = { borderRadius: crumbRadius } as const;
 
 /**
- * A crumb: a surface with the faintest border, split flush into the level's button and one icon
- * button, each the crumb's full height, so either half fills on hover.
+ * A crumb: a surface, split flush into the level's button and one icon button, each the crumb's
+ * full height, so either half fills on hover.
  */
 function Crumb({ surface, label, children }: { surface: string; label: string; children: ReactNode }) {
   return (
@@ -363,7 +369,7 @@ function LockedCrumb({ type, name, reason }: { type: string; name: string; reaso
  * @summary The global scope as split-button breadcrumbs, with a dialog to search and browse groups and properties.
  * @import import { ScopePicker } from 'src/components/ScopePicker';
  */
-export function ScopePicker({ groups, properties, value, onChange, recent = [], locked, portfolios = [], filter, onFilterChange, onSavePortfolio, onUpdatePortfolio, onDeletePortfolio }: ScopePickerProps) {
+export function ScopePicker({ groups, properties, value, onChange, recent = [], locked, portfolios = [], filter, onFilterChange, onSavePortfolio, onUpdatePortfolio, onDeletePortfolio, shortcut = 's' }: ScopePickerProps) {
   // The level the dialog opens at, or null while it's closed.
   const [step, setStep] = useState<DialogStep | null>(null);
   const theme = useTheme();
@@ -373,6 +379,24 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
   const fitsCrumbs = useContentUp(crumbsFloor);
   const fitsLabel = useContentUp(scopeLabelFloor);
   const compact = phone || !fitsCrumbs;
+
+  // The keyboard shortcut: the key on its own, outside text fields and open dialogs, opens Change Scope at the scope's
+  // level. A locked or single-property picker has nothing to open, so the key does nothing there.
+  const canOpen = properties.length > 1 && !locked;
+  const atProperty = value.level === 'property';
+  useEffect(() => {
+    if (!canOpen || !shortcut) return;
+    const key = shortcut.toLowerCase();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== key || event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.closest('[role="dialog"]'))) return;
+      event.preventDefault();
+      setStep(atProperty ? 'properties' : 'groups');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [canOpen, shortcut, atProperty]);
 
   const groupById = new Map(groups.map((group) => [group.id, group]));
   const savedById = new Map(portfolios.map((portfolio) => [portfolio.id, portfolio]));
@@ -767,8 +791,16 @@ function ScopeFilterView({ properties, value, onChange, compact }: ScopeFilterVi
                   </TableCell>
                   {!compact && <TableCell>{property.city}</TableCell>}
                   {!compact && <TableCell>{property.type}</TableCell>}
-                  {/* A missing area is a dash, never 0 (Table → Content). */}
-                  <TableCell align="right">{property.area === undefined ? '–' : new Intl.NumberFormat().format(property.area)}</TableCell>
+                  {/* A missing area says so in words, never a bare dash and never 0 (Table → Content). */}
+                  <TableCell align="right">
+                    {property.area === undefined ? (
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        Not recorded
+                      </Typography>
+                    ) : (
+                      new Intl.NumberFormat().format(property.area)
+                    )}
+                  </TableCell>
                 </TableRow>
               );
             })}

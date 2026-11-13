@@ -1,0 +1,90 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as VacancyFigureStories from './VacancyFigure.stories';
+
+<Meta
+  of={VacancyFigureStories}
+  summary="Kilowatt's VacancyCard for the share of floor area vacant as a metric card, the percent opening its source, with leased and vacant floor area in one bar."
+/>
+
+# VacancyCard
+
+`VacancyCard` shows the share of the floor area in scope that is vacant: a metric card (Card → Metric) whose headline figure opens its calculation and sources through `SourceFigure`, with the floor area as Leased and Vacant in one `SegmentedBar` under it. It's Kilowatt's own component, built from MUI's `Card`, `CardHeader`, `CardContent` and `Stack` (`@mui/material`, Material UI v9) and Kilowatt's `SourceFigure` and `SegmentedBar`. Its color follows the chart rules (Rules → Charts): leased and vacant are a positive and its negative, so both take the first `chart.series` slot, Vacant in its darker shade, rather than two colors, and the words carry the state.
+
+<Canvas of={VacancyFigureStories.Vacancy} />
+
+## When to use
+
+- Use it as the lead figure of a page about areas or leasing: how much of the floor area in scope has no tenant today, and how that splits between leased and vacant.
+- For one building's spaces floor by floor, use `StackingPlanCard` (Charts → Stacking plan).
+- For a count or amount that isn't a share of a whole, use a metric card with `SourceFigure` on its own (Card → Metric).
+- For vacancy over time, use a line chart; the card is a figure for one moment.
+
+## Usage
+
+```tsx
+import { VacancyCard } from 'src/components/VacancyFigure';
+
+<VacancyCard
+  area={180000}
+  leasedArea={153000}
+  spaces={24}
+  leasedSpaces={21}
+  source={{
+    source: 'Each property’s spaces and the tenant in each today',
+    period: 'As of today; the page’s period doesn’t apply',
+    calculation: 'The floor area of the spaces with no tenant today, as a share of the floor area of every space',
+    scope: 'Every property in the current scope with floors and tenants on record',
+    coverage: '3 of 4 properties have floors and tenants on record; the other 1 is left out',
+    updated: 'Nov 12, 2026',
+  }}
+/>
+```
+
+Pass the floor area of every space in scope and of the spaces with a tenant, in sq ft, and the matching counts of spaces. The card works out the vacant area and share, formats the percent with `Intl.NumberFormat`, and puts the vacant area and spaces out of the whole in the figure's note, where a caption would have gone. `title` defaults to Vacancy, and `action` goes in the card header's `action` slot.
+
+## States
+
+- With area on record, the figure is the percent vacant with the unit “vacant”, and the bar shows Leased and Vacant in sq ft with their shares.
+- With no area on record (`area` is 0), the figure is “—” with no unit, its note says nothing is on record, and there is no bar.
+
+<Canvas of={VacancyFigureStories.Empty} />
+
+## Do and don't
+
+- Do keep leased and vacant in one hue: both take the first series slot, Vacant in its darker shade, as the component draws them.
+- Don't give Vacant an intent or a second series slot; a positive and its negative are one quantity, and a red Vacant would claim a status the figure doesn't have.
+- Do leave the state to the words: the figure says “vacant”, and the legend names Leased and Vacant with their areas.
+- Don't drop the bar's legend or the figure's unit to save height; the bar is decorative, and the words are what everyone reads.
+- Do pass the whole scope's area and spaces, so the share and the note agree with the stacking plans beside it.
+- Don't pass the leased area alone as `area`; the share would read 0% vacant.
+- Do say in `source.coverage` which properties are left out for want of floors or tenants on record.
+- Don't hide a partial scope behind a clean percent; the dialog is where people check what the figure counts.
+- Do pass `area` as 0 when nothing is on record, so the card shows its empty state.
+- Don't show a 0% vacancy for a scope with no data; nothing on record isn't fully leased.
+
+## MUI departures
+
+- `card-radius`: the card rounds at twice the theme radius (16px), as every card does.
+- `paper-surface-levels`: the card's surface comes from its level, as every `Card` does; the bar's gaps show that surface.
+- `card-header-title`: the title is the header's title in `h6`.
+- `card-header-subheader`: the card has no subheader; one added through `CardHeader` would be `body2`.
+- `card-header-layout`: the header's title sits 16px from the card's edges, in line with the figure and the bar below, and `action` sits in line with the content.
+- `card-content-padding`: the figure and the bar sit in `CardContent`, padded 16px on every side (top padding removed under the header), pushed to the card's foot with `mt: 'auto'` on a 160px floor.
+
+The figure's type and underline are `SourceFigure`'s, and the bar's colors are `SegmentedBar`'s (`chart.series` and `chart.seriesDark` from `chart-palette`). Theme-wide departures (CSS variables, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The figure is a `button` named for its value and the card (“15% vacant, view source for Vacancy”) that opens a `Dialog` with the figure's description, calculation and sources, as every `SourceFigure` does.
+- The bar is hidden from screen readers; its legend is a list naming Leased and Vacant, each with its area in sq ft and its share, inside a `figure` named Floor Area by Lease.
+- Leased and its darker Vacant are told apart by their names in the legend and by the figure's unit, so color is never the only signal.
+- The empty state says in the figure's dialog that nothing is on record, rather than showing a bar with nothing in it.
+
+## Related
+
+- `StackingPlanCard` (Charts → Stacking plan) for one building's spaces floor by floor.
+- `SourceFigure` for the headline figure and its dialog.
+- `SegmentedBar` for a positive part and its negative in one bar.
+- Card → Metric for the metric card layout.
+
+<Stories includePrimary={false} />

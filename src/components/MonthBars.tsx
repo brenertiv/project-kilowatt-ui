@@ -27,6 +27,8 @@ export type MonthBarsProps = {
   overlay?: string;
   /** Whether the strip fills its row, the bars sharing the width, so strips in a card line up on one month axis. Default `false`: 4px bars, for a table cell. */
   stretch?: boolean;
+  /** Whether the strip takes keyboard focus. Default `true`; `false` inside a clickable card, whose button can't hold a focusable element (its tooltip still shows on hover, and the card carries the summary). */
+  focusable?: boolean;
 };
 
 /** Past this many months a bar is too thin to read, and the count stands alone. */
@@ -52,7 +54,7 @@ function fill(theme: Theme, state: MonthState) {
  * @summary A strip of equal bars, one per month, colored by how completely a feed reported.
  * @import import { MonthBars, MonthBarsLegend } from 'src/components/MonthBars';
  */
-export function MonthBars({ months, summary, placeholder, overlay, stretch = false }: MonthBarsProps) {
+export function MonthBars({ months, summary, placeholder, overlay, stretch = false, focusable = true }: MonthBarsProps) {
   const strip = months.length <= mostBars;
   const complete = months.filter((state) => state === 'complete').length;
   return (
@@ -61,7 +63,7 @@ export function MonthBars({ months, summary, placeholder, overlay, stretch = fal
       <Box
         component="figure"
         aria-label={summary}
-        tabIndex={0}
+        tabIndex={focusable ? 0 : undefined}
         sx={{
           position: 'relative',
           display: stretch ? 'flex' : 'inline-flex',
