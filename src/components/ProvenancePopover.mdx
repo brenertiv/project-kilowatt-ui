@@ -1,0 +1,100 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ProvenancePopoverStories from './ProvenancePopover.stories';
+
+<Meta
+  of={ProvenancePopoverStories}
+  summary="Kilowatt's ProvenanceFigure for a number cited in running text: a button that opens a popover (a bottom sheet on phones) listing where the number comes from, its period, calculation, what it includes and when it was last updated."
+/>
+
+# ProvenanceFigure
+
+`ProvenanceFigure` sets a number cited in running text, such as a figure in an assistant's answer, and lets people see where it comes from without leaving the sentence. The number, its unit and the `info` icon are one button, in the surrounding text's font with a faint underline and the hover tint, and it opens MUI's `Popover` (`@mui/material`, Material UI v9), anchored under the number, holding a description list of the rows that apply: Built From, Period, Calculation, Includes, Estimated by Source, Awaiting Bill, Last Updated and ENERGY STAR Last Push. Below the `md` breakpoint it opens as a bottom sheet instead, MUI's bottom `Drawer`, titled with the number and closed by a Close button. It's Kilowatt's own component, built from MUI's `ButtonBase`, `Popover`, `Drawer`, `Link` and `IconButton`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/), [Popover API](https://mui.com/material-ui/api/popover/) and [Drawer API](https://mui.com/material-ui/api/drawer/).
+
+<Canvas of={ProvenancePopoverStories.InText} />
+
+## When to use
+
+- Use `ProvenanceFigure` for a number inside a sentence that people may need to trust or check: a total, an intensity, a count, anything worked out from data and cited in prose.
+- Pass the provenance as data (`CitedFigure`), so a message or record that cites the number can store where it came from and show it again later.
+- For a card's headline number, use `SourceFigure`, which opens a dialog with the same kind of explanation sized for a card.
+- For a number in a table or a chart, use plain text with tabular numerals and give the table or chart its own source; a popover per cell is too many controls.
+- For a number with nothing to explain, use plain text; a button with nothing behind it costs a tab stop.
+
+## Usage
+
+```tsx
+import { ProvenanceFigure } from 'src/components/ProvenancePopover';
+
+const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+<p>
+  Across Northwind’s twelve sites, the monthly electricity spend was{' '}
+  <ProvenanceFigure
+    figure={{
+      label: 'Monthly Electricity Spend',
+      value: currency.format(42180),
+      provenance: {
+        builtFrom: [
+          { label: 'Harbor Point electricity bills', detail: '2 bills, both received', to: '/sites/harbor-point/bills' },
+          { label: 'Lakeside electricity bills', detail: '1 bill, received', to: '/sites/lakeside/bills' },
+        ],
+        period: 'October 2026',
+        calculation: 'The sum of every electricity bill whose service period falls in the month, in dollars',
+        updated: Date.UTC(2026, 10, 2),
+      },
+    }}
+    onNavigate={(to) => navigate(to)}
+  />{' '}
+  for the period.
+</p>
+```
+
+`figure` is a `CitedFigure`: a `label` naming the number, its `value` formatted with `Intl.NumberFormat`, an optional `unit`, and its `provenance`. `provenance.builtFrom` and `provenance.calculation` are required; `period`, `includes` (with `missing`, a link to what is left out), `estimatedBySource`, `awaitingBill` and `energyStarPush` are optional, and a row that isn't given is left out. `updated` is epoch milliseconds, or `null` when no date is recorded; the row then says so in words. `onNavigate` receives a link's `to` after the popover has closed.
+
+## Variants
+
+- **Popover:** at `md` and above, MUI's `Popover` under the number, capped at 44 characters a line. Clicking outside or pressing Escape closes it.
+- **Bottom sheet:** below `md`, MUI's bottom `Drawer`, with a heading naming the number and a Close button in its top right.
+- **Linked and plain sources:** a source with `to` is a link that closes the popover and calls `onNavigate`; one without is plain text.
+
+## Do and don't
+
+- Do format `value` with `Intl.NumberFormat` and pass the unit as `unit`, so the button's name reads as the number does on screen.
+- Don't put the unit in `value` or format the number in the label; the label names what the number is.
+- Do write each row as one short sentence about the number on screen, with real punctuation (“ ” ’ – —).
+- Don't write “estimated” alone in Estimated by Source; say which values and which source.
+- Do leave out a row that doesn't apply by not passing it; the popover shows only the rows it is given.
+- Don't pass a placeholder such as “n/a” or an empty string to fill a row.
+- Do pass `null` as `updated` when the source records no date, so the row says so.
+- Don't invent a date, or pass today's date, for a number whose source records none.
+- Do give each source a `to` where it has a page of its own, so people can go on to the data itself.
+- Don't open the popover on hover or focus; it opens on click, Enter or Space, as the button role promises.
+- Do keep the number inside its sentence, in the sentence's font; the button inherits it.
+- Don't style the number with `sx` or a different variant to make it stand out; the underline and the icon mark it.
+
+## MUI departures
+
+- `focus-ring`: the number is a `ButtonBase` and the sheet's close button an `IconButton`, so keyboard focus is the theme's 2px ring in `palette.control.focus`, 2px outside the control. The component adds no focus style of its own.
+- `icon-button-radius`: the sheet's Close button takes the theme radius (8px) instead of MUI's circle.
+- `icons`: the `info` icon on the number and the `close` icon on the sheet's button are `Icon` from `src/icons`, Material Symbols at weight 300.
+- `link-underline`: a source's link has no underline; it is told apart by its color. The number's own underline is the figure's, in `border.level2`, not a link's.
+- `medium-size`: the sheet's Close button stays at medium, the default.
+- `paper-surface-levels`: the popover and the bottom sheet sit on their elevation's surface level, as every `Popover` and `Drawer` does, in place of MUI's white light surface and its dark-scheme overlay.
+
+The number's underline (`border.level2`), its hover tint (`action.hover`) and the rows' type (`caption` terms in `text.secondary`, `body2` details) are existing theme roles. Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The number is a `button` (`aria-haspopup="dialog"`, with `aria-expanded` while open) named for the number and what it opens: “Monthly Electricity Spend, $42,180: where this number comes from”. The label and value lead the name, so people using speech input can say what they see. Its `info` icon is hidden from assistive technology.
+- The underline and the hover tint are visual cues only; the button role and its name tell screen readers the number opens something.
+- The popover and the sheet are MUI's `Popover` and `Drawer`, each with a paper of `role="dialog"` labelled by its heading (`aria-labelledby`), which names the number. MUI moves focus into it, traps it there, closes on Escape or a click outside, and returns focus to the number. The sheet's close button is named Close.
+- The rows are a description list (`dl`), so screen readers read each term with its detail, and Built From's sources are a list. A source with a link is a `button` styled as a link, since it goes through `onNavigate` after the popover closes; links and the number keep a 24px hit area.
+- The hover tint fades in over the theme's shortest duration, which CssBaseline stills under reduced motion (`reduced-motion`).
+
+## Related
+
+- `SourceFigure` for a card's headline number, which opens a dialog with the same kind of explanation.
+- `Link` for a source's link once the popover has closed.
+- Rules → Typography on tabular numerals, and Rules → Content and layout on `Intl` formatting and line length.
+
+<Stories includePrimary={false} />
