@@ -29,29 +29,22 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { Icon } from '../icons';
 
-/** How a field is edited, when it is: a text, number or date field, a select, a multiple select, a week's hours, or the exceptions to them. */
+/** How a field is edited, when it is: a text, number or date field, a select, a multiple select, or the exceptions to a building's weekly hours. */
 export type RecordFieldInput =
   | { kind: 'text' }
   | { kind: 'number'; unit?: string; min?: number }
   | { kind: 'date' }
   | { kind: 'select'; options: { value: string; label: string }[] }
   | { kind: 'multi'; options: { value: string; label: string }[] }
-  | { kind: 'hours' }
   | { kind: 'exceptions' };
-
-export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
-export const weekdays: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-const weekdayLabels: Record<Weekday, string> = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 
 /** A day's opening and closing times, as `HH:MM`. */
 export type HoursSpan = { open: string; close: string };
-/** The standing weekly hours (a building's occupied hours), per weekday; `null` is closed that day. */
-export type WeeklyHours = Record<Weekday, HoursSpan | null>;
 /** A one-off exception to the weekly hours: a date (`YYYY-MM-DD`), what it is ("Thanksgiving"), and the hours that day, `null` closed. */
 export type HoursException = { date: string; name: string; hours: HoursSpan | null };
 
-/** A field's value as recorded: a string (a date as `YYYY-MM-DD`), a number, the chosen values of a multiple select, a week's hours, its exceptions, or `null` for nothing on record. */
-export type RecordFieldValue = string | number | string[] | WeeklyHours | HoursException[] | null;
+/** A field's value as recorded: a string (a date as `YYYY-MM-DD`), a number, the chosen values of a multiple select, the exceptions to the weekly hours, or `null` for nothing on record. */
+export type RecordFieldValue = string | number | string[] | HoursException[] | null;
 
 /** A link from a field's value: another record, which opens in the same drawer, or a page. */
 export type RecordLink = {
@@ -137,8 +130,6 @@ export type RecordDrawerProps = {
 
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 const same = (a: RecordFieldValue, b: RecordFieldValue) => JSON.stringify(a) === JSON.stringify(b);
-const emptyHours: WeeklyHours = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null };
-const isWeeklyHours = (value: RecordFieldValue): value is WeeklyHours => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 const isExceptions = (value: RecordFieldValue): value is HoursException[] => Array.isArray(value) && value.every((item) => typeof item === 'object');
 
 type Draft = Record<string, RecordFieldValue>;
@@ -485,14 +476,12 @@ function FieldInput({ field, input, value, onChange }: { field: RecordField; inp
         </TextField>
       );
     }
-    case 'hours':
-      return <HoursInput label={field.label} value={isWeeklyHours(value) ? value : emptyHours} onChange={onChange} />;
     case 'exceptions':
       return <ExceptionsInput label={field.label} value={isExceptions(value) ? value : []} onChange={onChange} />;
   }
 }
 
-/** A day's open switch beside its name, then its opening and closing times, disabled while closed. */
+/** An exception's open switch beside its state, then its opening and closing times, disabled while closed. */
 function DayHours({ name, switchLabel, hours, onChange }: { name: string; switchLabel: string; hours: HoursSpan | null; onChange: (hours: HoursSpan | null) => void }) {
   return (
     <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center' }}>
@@ -502,20 +491,6 @@ function DayHours({ name, switchLabel, hours, onChange }: { name: string; switch
       </Box>
       <TextField type="time" label="Opens" value={hours?.open ?? ''} disabled={!hours} onChange={(event) => hours && onChange({ ...hours, open: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} sx={{ flex: 1 }} />
       <TextField type="time" label="Closes" value={hours?.close ?? ''} disabled={!hours} onChange={(event) => hours && onChange({ ...hours, close: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} sx={{ flex: 1 }} />
-    </Stack>
-  );
-}
-
-/** The weekly grid: a row per day, open or closed, with its opening and closing times. */
-function HoursInput({ label, value, onChange }: { label: string; value: WeeklyHours; onChange: (value: WeeklyHours) => void }) {
-  return (
-    <Stack component="fieldset" sx={{ gap: 1.5, border: 0, p: 0, m: 0 }}>
-      <Typography component="legend" variant="caption" color="text.secondary" sx={{ mb: 1 }}>
-        {label}
-      </Typography>
-      {weekdays.map((day) => (
-        <DayHours key={day} name={weekdayLabels[day].slice(0, 3)} switchLabel={`${weekdayLabels[day]} open`} hours={value[day]} onChange={(hours) => onChange({ ...value, [day]: hours })} />
-      ))}
     </Stack>
   );
 }

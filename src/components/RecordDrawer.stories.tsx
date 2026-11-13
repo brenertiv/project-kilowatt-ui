@@ -5,7 +5,7 @@ import Snackbar from '@mui/material/Snackbar';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
-import { RecordDrawer, type HoursException, type RecordChange, type RecordDrawerProps, type RecordDrawerRecord, type RecordGroup, type WeeklyHours } from 'src/components/RecordDrawer';
+import { RecordDrawer, type HoursException, type RecordChange, type RecordDrawerProps, type RecordDrawerRecord, type RecordGroup } from 'src/components/RecordDrawer';
 import { sampleRecord } from 'src/fixtures/records';
 
 /** Applies a group's changes to the record, as the app would after saving, with the new provenance. */
@@ -53,10 +53,9 @@ const spaceRecord: RecordDrawerRecord = {
   activity: [],
 };
 
-const weekdayHours: WeeklyHours = { mon: { open: '08:00', close: '18:00' }, tue: { open: '08:00', close: '18:00' }, wed: { open: '08:00', close: '18:00' }, thu: { open: '08:00', close: '18:00' }, fri: { open: '08:00', close: '17:00' }, sat: null, sun: null };
 const exceptions: HoursException[] = [{ date: '2026-11-26', name: 'Thanksgiving', hours: null }];
 
-/** A synthetic property's occupied hours: the standing week and its one-off exceptions, both editable. */
+/** A synthetic property's occupied hours: the standing week as text, and its one-off exceptions, editable. */
 const hoursRecord: RecordDrawerRecord = {
   id: 'prop-harbor-point',
   name: 'Harbor Point',
@@ -67,7 +66,7 @@ const hoursRecord: RecordDrawerRecord = {
       label: 'Occupied hours',
       editable: true,
       fields: [
-        { id: 'weekly', label: 'Weekly hours', value: weekdayHours, display: 'Mon–Thu 8:00–18:00, Fri 8:00–17:00, closed weekends', provenance: 'Recorded at setup, Feb 3, 2025', input: { kind: 'hours' } },
+        { id: 'weekly', label: 'Weekly hours', value: 'Mon–Thu 8:00–18:00, Fri 8:00–17:00, closed weekends', display: 'Mon–Thu 8:00–18:00, Fri 8:00–17:00, closed weekends', provenance: 'Recorded at setup, Feb 3, 2025' },
         { id: 'exceptions', label: 'Exceptions', value: exceptions, display: '1 exception: Thanksgiving, closed', provenance: 'Changed by Avery Lin, Oct 2, 2025, 3:14 PM', input: { kind: 'exceptions' } },
       ],
     },
@@ -195,13 +194,13 @@ export const FieldLinks: Story = {
   },
 };
 
-/** A weekly-hours group: the standing week as a grid of days, and its exceptions as rows of a date, a reason and the hours or closed, with Add Exception and Remove. */
+/** A weekly-hours group's exceptions: rows of a date, a reason and the hours that day or closed, with Add Exception and a Remove on each. */
 export const HoursExceptions: Story = {
   name: 'Hours and exceptions',
   args: { record: hoursRecord },
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: 'Edit Occupied hours' }));
-    await expect(canvas.getByRole('switch', { name: 'Saturday open' })).not.toBeChecked();
+    await expect(canvas.getByRole('switch', { name: 'Open on 2026-11-26' })).not.toBeChecked();
     await expect(canvas.getByRole('textbox', { name: 'Reason' })).toHaveValue('Thanksgiving');
     await userEvent.click(canvas.getByRole('button', { name: 'Add Exception' }));
     await expect(canvas.getAllByRole('textbox', { name: 'Reason' })).toHaveLength(2);
