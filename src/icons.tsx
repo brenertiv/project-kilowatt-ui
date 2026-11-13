@@ -81,6 +81,7 @@ export const iconNames = [
   'inbox',
   'info',
   'keep_off',
+  'key',
   'keyboard_arrow_right',
   'laptop',
   'layers',
