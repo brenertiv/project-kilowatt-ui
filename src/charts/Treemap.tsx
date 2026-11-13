@@ -27,6 +27,12 @@ export type TreemapProps = {
   height?: number;
   /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
   inset?: ChartInset;
+  /**
+   * Whether to group the smallest parts into `otherLabel` past six. `false` keeps every part as its own rectangle, however
+   * many: give them one colour then (each `neutral`, or one `slot`), since the palette has six, and let size and label
+   * tell them apart, each named in its tooltip. Default `true`.
+   */
+  group?: boolean;
 };
 
 /** Shares in the labels and tooltips, formatted with Intl (Rules → Content and layout). */
@@ -50,9 +56,9 @@ const maxParts = 6;
  * The parts, largest first. Past six, the five largest keep their rectangles and the rest are
  * summed into one `otherLabel` rectangle, drawn in `chart.neutral`.
  */
-function parts(data: TreemapNode[], otherLabel: string) {
+function parts(data: TreemapNode[], otherLabel: string, group = true) {
   const sorted = [...data].sort((a, b) => b.value - a.value);
-  if (sorted.length <= maxParts) return { kept: sorted, other: undefined };
+  if (!group || sorted.length <= maxParts) return { kept: sorted, other: undefined };
   const kept = sorted.slice(0, maxParts - 1);
   const rest = sorted.slice(maxParts - 1);
   return { kept, other: { category: otherLabel, value: rest.reduce((sum, part) => sum + part.value, 0) } };
@@ -70,7 +76,7 @@ function parts(data: TreemapNode[], otherLabel: string) {
  * @summary A treemap of up to six parts of a whole, sized by value and labeled with their shares, with the smallest grouped into Other.
  * @import import { Treemap } from 'src/charts/Treemap';
  */
-export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 160, inset = 2 }: TreemapProps) {
+export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 160, inset = 2, group = true }: TreemapProps) {
   const build = useCallback(
     ({ root, scheme, colors }: ChartContext) => {
       const series = root.container.children.push(
@@ -100,7 +106,7 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 16
       series.labels.template.setAll({ text: '{category}\n{share}', textAlign: 'center', oversizedBehavior: 'hide' });
       // Each label in the palette's contrast text for its rectangle's color.
       series.labels.template.adapters.add('fill', (value, target) => (target.dataItem?.dataContext as { label?: am5.Color } | undefined)?.label ?? value);
-      const { kept, other } = parts(data, otherLabel);
+      const { kept, other } = parts(data, otherLabel, group);
       const total = data.reduce((sum, part) => sum + part.value, 0);
       const share = (value: number) => (total ? percent.format(value / total) : '–');
       // Parts with a slot keep it, so a meaning is one color on every chart; the rest take the free slots, largest first.
@@ -119,7 +125,7 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 16
       ]);
       series.set('selectedDataItem', series.dataItems[0]);
     },
-    [data, unit, otherLabel],
+    [data, unit, otherLabel, group],
   );
   const ref = useChart(build);
 

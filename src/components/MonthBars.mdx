@@ -47,6 +47,7 @@ Write `summary` as one sentence with the counts and the months that matter: it's
 - **No source** (`overlay`): the feed applies but nothing is connected for it. Every month is drawn as a gap, with the label over the strip.
 - **Not applicable** (`placeholder`): the feed doesn't apply (a property with no gas). No bars, only the label in the strip's slot, so it never looks like a problem and the row stays in line.
 - **Long period**: past 24 months the bars are too thin to read, and the count of complete months stands in.
+- **Not focusable** (`focusable={false}`): inside a clickable card, whose button can't hold a focusable element, the strip takes no focus; its tooltip still shows on hover, and the card's description carries the sentence.
 
 <Canvas of={MonthBarsStories.NoSource} />
 
@@ -71,7 +72,7 @@ Theme-wide departures (the intents on surfaces that color the bars, the `focus-r
 
 ## Accessibility
 
-- The strip is a focusable `figure` named by `summary`, which is also its tooltip, so the sentence reaches keyboard and screen-reader users once and the bars are hidden from them.
+- The strip is a focusable `figure` named by `summary`, which is also its tooltip, so the sentence reaches keyboard and screen-reader users once and the bars are hidden from them. Inside a clickable card set `focusable={false}` and let the card's `aria-describedby` carry the sentence, since a button can't hold a focusable element.
 - The colors never stand alone: the sentence names the states, and the legend names each swatch.
 - A placeholder or overlay is text in the strip's slot.
 
