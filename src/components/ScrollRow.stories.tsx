@@ -25,7 +25,7 @@ function Row({ titles, width }: { titles: string[]; width: number }) {
         {titles.map((title) => (
           <ScrollRowItem key={title}>
             <Card variant="outlined" sx={{ height: '100%' }}>
-              <CardActionArea sx={{ height: '100%', minHeight: (theme) => theme.spacing(16), alignItems: 'flex-start', display: 'flex' }}>
+              <CardActionArea sx={{ height: '100%', alignItems: 'flex-start', display: 'flex' }}>
                 <CardHeader title={title} />
               </CardActionArea>
             </Card>

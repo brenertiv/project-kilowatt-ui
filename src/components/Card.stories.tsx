@@ -255,13 +255,14 @@ const comparison = `${change.format(difference)} ${difference < 0 ? 'less' : 'mo
 
 /**
  * A headline number at the card's foot: `SourceFigure` sets it in `h2` with tabular numerals, the unit after it,
- * and opens its source; what would be a caption under it is its `note`. The card has a 160px floor.
+ * and opens its source; what would be a caption under it is its `note`. The card is a flex column, so the figure sits at the foot
+ * of the card's 160px floor (`card-min-height`), and the content keeps its top padding, so the figure is never closer than 32px to the title.
  */
 export const Metric: Story = {
   render: (args) => (
-    <Card {...args} variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+    <Card {...args} variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
       <CardHeader title={<TruncatedText>Energy Use</TruncatedText>} action={options} />
-      <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ mt: 'auto', display: 'flex', flexDirection: 'column' }}>
         <SourceFigure title="Energy Use" value={kWh.format(sum('current'))} unit="kWh" note={comparison} source={energySource} />
       </CardContent>
     </Card>
@@ -314,7 +315,7 @@ export const Highlight: Story = {
         slotProps={{ title: { variant: 'h5', component: 'h2' } }}
         action={<HighlightActions title="Energy Use" />}
       />
-      <CardContent sx={{ pt: 0, display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ display: 'flex', flexDirection: 'column' }}>
         <SourceFigure title="Energy Use" value={kWh.format(sum('current'))} unit="kWh" note={comparison} source={energySource} />
       </CardContent>
       <Box component="figure" aria-label={summary} sx={{ m: 0, px: 2, pb: 2 }}>

@@ -29,7 +29,7 @@ const meta = {
   decorators: [inCard],
   render: (args) => (
     <>
-      <CardContent sx={{ pt: 0, pb: 1 }}>
+      <CardContent sx={{ pb: 1 }}>
         <Typography variant="h2" component="p" sx={{ fontVariantNumeric: 'tabular-nums' }}>
           {whole.format(args.data[args.data.length - 1][args.field])}
           <Typography component="span" variant="body1" sx={{ color: 'text.secondary' }}>

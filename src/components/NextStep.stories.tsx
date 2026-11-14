@@ -81,7 +81,7 @@ export const UnderPageHeader: Story = {
       <Grid container spacing={2}>
         {cards.map((title) => (
           <Grid key={title} size={{ xs: 12, sm: 6 }}>
-            <Card variant="outlined" sx={{ minHeight: (theme) => theme.spacing(20) }}>
+            <Card variant="outlined">
               <CardHeader title={title} />
             </Card>
           </Grid>
@@ -102,10 +102,10 @@ const openProperties = fn();
 export const OnCard: Story = {
   name: 'On an Overview card',
   render: () => (
-    <Card variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+    <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
       <CardActionArea onClick={openProperties} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
         <CardHeader title={<TruncatedText>Properties</TruncatedText>} slotProps={{ title: { component: 'h2' } }} />
-        <CardContent sx={{ pt: 0, mt: 'auto' }}>
+        <CardContent sx={{ mt: 'auto' }}>
           <PlainFigure value="12" />
           <CardNextStep>Name the 3 missing contacts</CardNextStep>
         </CardContent>
