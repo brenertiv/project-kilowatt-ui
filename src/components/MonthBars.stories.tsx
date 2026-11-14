@@ -105,6 +105,16 @@ export const NotApplicable: Story = {
   args: { placeholder: 'Not applicable', months: [], summary: 'Gas, Jan–Dec 2025: not applicable, the property has no gas service.' },
 };
 
+/** `focusable={false}`, for a strip inside a clickable card: a button can't hold a focusable element, so the strip takes no focus and the card carries its sentence; the tooltip still shows on hover. */
+export const NotFocusable: Story = {
+  name: 'Not focusable',
+  args: { focusable: false },
+  parameters: { card: { title: 'Electricity Completeness' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('figure')).not.toHaveAttribute('tabindex');
+  },
+};
+
 /** Past 24 months the bars are too thin to read: the count of complete months stands in, with the sentence in its tooltip. */
 export const LongPeriod: Story = {
   parameters: { card: { title: 'Electricity Completeness' } },

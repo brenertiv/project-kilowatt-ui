@@ -5,7 +5,7 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { CompletenessCard, type CompletenessCardProps } from 'src/components/CompletenessCard';
 import { MonthBarsLegend, type MonthState } from 'src/components/MonthBars';
 
@@ -73,26 +73,29 @@ const meta = {
   component: CompletenessCard,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
-  parameters: { muiComponents: ['Card', 'CardHeader', 'CardContent', 'Chip', 'Link'] },
+  parameters: { muiComponents: ['Card', 'CardHeader', 'CardContent', 'CardActionArea', 'Chip'] },
   args: cardFor(properties[1], () => {}).card,
 } satisfies Meta<typeof CompletenessCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** One property: its status chip at the top right, its counts, a strip per feed on one month axis, and its first and last months. */
+/** One property: its status chip at the top right, its counts, a strip per feed on one month axis, and its first and last months. With `open`, the whole card is one button that opens the property. */
 export const Property: Story = {
   decorators: [oneColumn],
   args: { open: { onClick: fn(), label: 'Open Maple Court' } },
   play: async ({ args, canvas, userEvent }) => {
     await expect(canvas.getByRole('heading', { name: 'Maple Court' })).toBeVisible();
     await expect(canvas.getByText('Not applicable')).toBeVisible();
-    await userEvent.click(canvas.getByRole('button', { name: 'Open Maple Court' }));
+    const card = canvas.getByRole('button', { name: 'Open Maple Court' });
+    // The card is the one control: its strips take no focus inside it.
+    await expect(within(card).queryByRole('figure', { name: /Electricity/ })).not.toHaveAttribute('tabindex');
+    await userEvent.click(card);
     await expect(args.open!.onClick).toHaveBeenCalledOnce();
   },
 };
 
-/** Without `open` the title is plain text, for a card whose subject has no page of its own. */
+/** Without `open` the card is plain, for a subject with no page of its own; its strips then take focus, so the keyboard reaches their tooltips. */
 export const PlainTitle: Story = {
   decorators: [oneColumn],
   args: { open: undefined, status: undefined },

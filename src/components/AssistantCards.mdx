@@ -1,0 +1,99 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as AssistantCardsStories from './AssistantCards.stories';
+
+<Meta
+  of={AssistantCardsStories}
+  summary="Kilowatt's assistant cards for a thread: ConfirmCard before anything is written (the action, what changes, Confirm and Cancel, then the outcome) and NotBoughtCard when a question needs a product the account doesn't include."
+/>
+
+# Assistant cards
+
+The message kinds an assistant's thread shows beyond plain text. `ConfirmCard` asks before anything is written: the action as its title, what will change under it, a contained Confirm and a text Cancel each labelled with what it does, and once settled, what happened. `NotBoughtCard` answers a question that needs a product the account doesn't include: a lock, one line saying so, and one action that asks the account team. Both are Kilowatt's own, composed from MUI's outlined `Card`, `CardContent`, `CardActions`, `Button`, `Typography` and `Stack` (`@mui/material`, Material UI v9) and `Icon` from `src/icons`; the props of the parts are MUI's: see the [Card API](https://mui.com/material-ui/api/card/), [CardActions API](https://mui.com/material-ui/api/card-actions/) and [Button API](https://mui.com/material-ui/api/button/).
+
+<Canvas of={AssistantCardsStories.Confirm} />
+
+## When to use
+
+- Use `ConfirmCard` in an assistant's thread before the assistant writes anything: creates a work order, changes a setting, sends a message. The person confirms or cancels in the thread, and the card keeps the record.
+- Use `NotBoughtCard` when the assistant can't answer because the product the question needs isn't part of the company's account. It names the product and offers one way forward.
+- For a confirmation outside a thread (a destructive action from a button), use a `Dialog`, not a card.
+- For a product that's in the account but has no data yet, use `AsyncContent`'s empty state in the thread's answer, not `NotBoughtCard`.
+
+## Usage
+
+```tsx
+import { ConfirmCard, NotBoughtCard } from 'src/components/AssistantCards';
+
+<ConfirmCard
+  request={{
+    action: 'Create a work order at Harbor Point',
+    detail: 'A new work order for Chiller 2’s high discharge pressure, assigned to Dana Okafor, due Friday.',
+    confirmLabel: 'Create Work Order',
+    cancelLabel: 'Don’t Create',
+    doneText: 'Work order 4823 created and assigned to Dana Okafor.',
+    outcome: message.outcome,
+  }}
+  onSettle={(outcome) => settle(message.id, outcome)}
+/>
+
+<NotBoughtCard product="Carbon Planning" company="Northwind Holdings" requested={message.requestedAt} onRequest={() => askAccountTeam(message.id)} />
+```
+
+Neither card holds state. The owner records `onSettle`'s outcome on the request and `onRequest`'s time on `requested`, as a thread's store would, and the card shows the result on the next render.
+
+## States
+
+- `ConfirmCard` asking: title, detail, and the two buttons in `CardActions`.
+- `ConfirmCard` confirmed: the buttons are gone, and `doneText` sits under the detail with a `check_circle` icon in the success color.
+- `ConfirmCard` cancelled: the buttons are gone, and "Cancelled. Nothing changed." sits under the detail with a `close` icon.
+- `ConfirmCard` without `onSettle`: the buttons are disabled, for a thread that's read-only.
+- `NotBoughtCard` not yet asked: the title "Data-ready, not in your account yet", the line naming the product and the company, and the text button "Ask Your Account Team About It".
+- `NotBoughtCard` asked: `You asked your account team on {date}. They’ll be in touch.` replaces the button, the date in the person's locale.
+- `NotBoughtCard` without `onRequest`: the button is disabled.
+
+## Do and don't
+
+- Do label Confirm and Cancel with what each does: "Create Work Order" and "Don’t Create", in Title Case.
+- Don't label them "Yes" and "No" or "OK" and "Cancel"; the thread scrolls, and a bare label loses its question.
+- Do say in `detail` exactly what will change, with the names and values the assistant will write.
+- Don't ask to confirm an action the detail doesn't fully describe; the person is signing off on the detail.
+- Do write `doneText` as what happened, with the identifier the action made: "Work order 4823 created."
+- Don't repeat the request in the past tense; say the result.
+- Do keep the confirm card in the thread after it settles, with its outcome.
+- Don't remove or replace it; the thread is the record of what was and wasn't written.
+- Do keep the not-bought card to its one line and one action.
+- Don't add pricing, features or a second call to action; it's an answer, not a sales pitch.
+- Do pass `requested` once the account team has been asked, so the card says when.
+- Don't leave the ask button on after it's been pressed; one ask per product is enough.
+- Do keep cards narrow, in the thread's column.
+- Don't stretch a card across a page; it's a message, not a panel.
+
+## MUI departures
+
+- `card-content-padding`: `CardContent` is 16px on every side, so the card's text sits 16px in.
+- `card-radius`: the cards round at twice the theme radius, 16px, because their `CardActions` buttons sit 8px from the corners.
+- `paper-surface-levels`: the outlined card sits on `background.level3`, a step above the thread's surface.
+- `button-text-case`: the labels are shown as written, in Title Case.
+- `button-text-weight`: the labels are regular weight.
+- `flat-buttons`: the contained Confirm has no shadow.
+- `control-outlines`: an outlined button in `CardActions` would take the control outline; these cards use contained and text buttons.
+- `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the button, instead of MUI's background tint alone.
+- `medium-size`: the buttons stay at `medium`, the default.
+- `icons`: the check, cross and lock are `Icon` from `src/icons`, Material Symbols.
+
+Theme-wide departures (the type scale, the text colors, the intents, surface and border levels) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- Each card is a `section` named by `aria-label` ("Confirm: Create a work order at Harbor Point", "Carbon Planning isn’t in your account"), with its title as an `h3`, so a screen reader finds it in the thread.
+- The outcome and the asked date are text beside their icons; the check and cross are decorative and the meaning is in the words, so it doesn't rest on color.
+- The buttons are native `button`s, in `CardActions`, with a visible focus ring; a card without `onSettle` or `onRequest` disables them rather than hiding them.
+- A thread that announces new messages (an `aria-live` region) announces a card's outcome when it settles; the cards don't announce on their own.
+
+## Related
+
+- `Card` for the card's own conventions.
+- `Button` for the variants and the Title Case rule.
+- `AsyncContent` for the states of data in a thread's answer.
+
+<Stories includePrimary={false} />

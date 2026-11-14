@@ -114,6 +114,32 @@ export const WithSourceLinks: Story = {
   },
 };
 
+/** Stands in for opening a property's record; the With records story's play function checks it. */
+const openRecord = fn();
+
+/** The properties a figure counts, as records: synthetic names only. */
+const properties = ['Harbor Point', 'Lakeside Commons', 'Ridgeline Plaza', 'Northwind Tower', 'Cedar Annex', 'Maple Court', 'Riverside Lofts', 'Pine Court'];
+
+/** `records` lists the records a source is built from as links under its detail, six then "and N more"; a link closes the explanation as it opens the record. */
+export const WithRecords: Story = {
+  name: 'With records',
+  args: {
+    sources: [{ label: 'Property records', detail: '8 properties with a recorded floor area', records: properties.map((name) => ({ id: name, label: name, onOpen: () => openRecord(name) })) }],
+  },
+  play: async ({ canvas, userEvent }) => {
+    openRecord.mockClear();
+    await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use Intensity/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
+    await userEvent.click(await within(dialog).findByRole('button', { name: 'Sources' }));
+    const records = await within(dialog).findByRole('list', { name: 'Records' });
+    await waitFor(() => expect(within(records).getAllByRole('button')).toHaveLength(6));
+    await waitFor(() => expect(within(records).getByText('and 2 more')).toBeVisible());
+    await userEvent.click(within(records).getByRole('button', { name: 'Lakeside Commons' }));
+    await expect(openRecord).toHaveBeenCalledWith('Lakeside Commons');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  },
+};
+
 /** A figure that isn't a `SourceFigure`: an `ExplainedFigure` holding a `FigureExplanation`. Whatever is empty stays out, here Sources. */
 export const WithExplanation: Story = {
   render: (args) => (

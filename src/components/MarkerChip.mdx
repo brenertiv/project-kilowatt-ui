@@ -48,6 +48,7 @@ import { MarkedCard, MarkerChip } from 'src/components/MarkerChip';
 
 - **At rest:** the icon alone, round, in the tint.
 - **Pointed at or focused by keyboard:** a step stronger, widened to show its label. On a touch screen it never widens.
+- **Opens a dialog** (`aria-haspopup="dialog"`): a marker whose click opens a dialog or a menu says so, so assistive tech announces what follows.
 - **Unread** (`alerting`): a ring of the secondary color pulses out every 3 seconds. It stops while the marker is pointed at and under reduced motion; set `alerting` false once the user has opened what it marks.
 
 ## Do and don't
@@ -63,13 +64,13 @@ import { MarkedCard, MarkerChip } from 'src/components/MarkerChip';
 
 - `medium-size`: the chip stays at `medium` (32px) on a card's corner; `small` (24px) beside a title or in a row is the one-off size Rules → Component size allows.
 - `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue, around the chip.
-- `tabular-numerals`: the label's figures are tabular, as on every `Chip`.
+- `tabular-numerals`: the label's figures are tabular, as on every `Chip`; the widened label sets them too, since a dollar value or a count is data.
 
 Theme-wide departures (the palette, reduced motion) apply too; see Foundations → MUI departures. The tint is the brand blue at MUI's own selected and focus opacities, a step stronger on hover as MUI tints a selected item, laid over `background.paper` so a card's border doesn't show through where the marker overhangs it.
 
 ## Accessibility
 
-- The chip is a `button` (MUI renders a clickable `Chip` with `role="button"`), named by `aria-label`, which starts the same way whatever the width.
+- The chip is a `button` (MUI renders a clickable `Chip` with `role="button"`), named by `aria-label`, which starts the same way whatever the width. Pass `aria-haspopup` when the click opens a dialog or a menu.
 - The widened label is shown only to pointers that hover and to keyboard focus, so a touch screen doesn't open it on the first tap.
 - The pulse stops under `prefers-reduced-motion`.
 - In a clickable row, a click on the marker opens what it marks, not the row.

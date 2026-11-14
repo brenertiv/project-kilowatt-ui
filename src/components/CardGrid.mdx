@@ -1,0 +1,88 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as CardGridStories from './CardGrid.stories';
+
+<Meta
+  of={CardGridStories}
+  summary="Kilowatt's card grid: useCardGrid gives each card in a row its span by what it holds (a chart half the row, a figure a third), rebalanced so no card sits alone, and FeatureRow lays a lead card beside a 2 × 2 of figure cards."
+/>
+
+# Card grid
+
+Every content page lays its cards out on MUI's 12-column `Grid` (`@mui/material`, Material UI v9; MUI documents its props) with one 16px gutter. `useCardGrid` says how many twelfths each card takes, by what it holds and how wide the page is, and rebalances a row so no card sits alone beside empty columns. `FeatureRow` is the one layout with a quarter-width card: a lead card six columns wide and two rows high beside a 2 × 2 of figure cards. Both read the page's own width through `useContentUp`, so a docked panel or the assistant narrows every page alike. The rules are in Rules → Content and layout.
+
+<Canvas of={CardGridStories.Feature} />
+
+## When to use
+
+- Use `useCardGrid` for every row of cards on a content page: a dashboard's figures, a section's chart cards, a collection of properties or templates.
+- Use `FeatureRow` where a page leads with one card and four figures: a map or chart beside the four numbers that explain it.
+- Use `main` and `side` for report text beside its card, a detail beside its panel, or a figure beside a map or table.
+- For a table or a long time series, give the card the full row (`size={12}`); no helper is needed.
+- For a form or a list of fields, lay it out as a form, not as cards.
+
+## Usage
+
+```tsx
+import Grid from '@mui/material/Grid';
+import { FeatureRow, useCardGrid } from 'src/components/cardGrid';
+
+function Overview({ cards }) {
+  const grid = useCardGrid();
+  return (
+    <Grid container spacing={2}>
+      {cards.map((card, i) => (
+        <Grid key={card.id} size={grid.span('figure', cards.length, i)}>
+          <MetricCard {...card} />
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
+
+<FeatureRow lead={<MapCard />} cells={[<MetricCard />, <MetricCard />, <MetricCard />, <MetricCard />]} />;
+```
+
+`spans(kind, count)` gives every card's span in order; `span(kind, count, index)` one card's. `kind` is `'chart'` (half the row from `md`; a small bar counts), `'figure'` (a third from `md`, half from `sm`) or `'collection'` (a wrapping set of like cards that each open something, laid out as figures). `half`, `main` and `side` are 6, 8 and 4 from `md`, and `sideBySide` says whether cards sit side by side at all. `cardSpans(kind, count, perRow)` is the pure part, for a test.
+
+## Variants
+
+- **Figures.** Thirds from `md`, pairs from `sm`, stacked below. Rows rebalance fullest first: 4 → 2 + 2, 7 → 3 + 2 + 2, 10 → 3 + 3 + 2 + 2. Figures that can't pair evenly stay stacked until thirds fit.
+- **Charts.** Halves from `md`, stacked below. An odd chart ends on a card across the row.
+- **Collections.** As figures: a grid of property cards, templates or report items, even when each holds a small chart.
+- **The feature row.** A lead card six wide and two rows high beside four figure cards three wide, in a 2 × 2. Below `md` the lead goes first at full width and the cells follow as two pairs.
+- **Main and side.** 8 + 4 from `md`, stacked below.
+
+<Canvas of={CardGridStories.SevenFigures} />
+
+## Do and don't
+
+- Do take every card's span from `useCardGrid`, so every page lays out the same way and narrows alike beside a docked panel.
+- Don't size cards by breakpoint by hand on a content page; the helper reads the page's width, which `Grid`'s breakpoints don't.
+- Do give a chart card half the row and a figure card a third; a small bar counts as a chart.
+- Don't put a figure card at a quarter of the row outside the feature row; it's the one quarter-width layout.
+- Do let rows rebalance, so no card sits alone beside empty columns.
+- Don't pad a short row with an empty cell or a placeholder card.
+- Do keep the cards in a row one height, each filling its cell, with metric cards at their 160px floor.
+- Don't let a row's cards differ in height; a taller card goes in its own row, or across it.
+- Do give a table or a long time series the full row.
+- Don't squeeze a table into half a row beside a chart; put the chart in the row above.
+
+## MUI departures
+
+None of Kilowatt's departures change `Grid`.
+
+Theme-wide departures (the spacing scale, the breakpoints) apply too; see Foundations → MUI departures. The helper sets no value of its own: the gutter is `spacing={2}` and the spans are twelfths.
+
+## Accessibility
+
+- The helper sets widths only; it adds no roles. Lay a grid of like cards out as a list (`component="ul"` on the `Grid` container, `component="li"` on each cell) named for what it lists, so screen readers hear how many there are.
+- Cards keep their own headings, so the page reads as a list of named cards whatever their widths.
+- Below `md` every row stacks in source order, which is the reading order.
+
+## Related
+
+- `Card` for the cards themselves, and Card → Metric for the 160px floor.
+- `AppShell` → Columns by the page's width for `useContentUp`.
+- Rules → Content and layout for the layout rules.
+
+<Stories includePrimary={false} />

@@ -43,6 +43,7 @@ const [period, setPeriod] = useState<Period>('ytd');
 - **Preset:** the field shows the preset's name, and the list marks it selected.
 - **Custom range:** the field shows the range's months, and the selects open on them.
 - **Choosing a range:** Apply stays disabled until both months are set; choosing a From month after the To month clears the To month, and the To select lists only months from the From month on. Cancel, Escape or a click outside closes without a change.
+- **Anchored at the right** (`anchor="right"`): the popover lines up with the field's right edge, for a field that is the last control in a bar, so it opens inward rather than past the page's edge. The default lines it up with the left edge.
 - **Phone:** below `md` the picker is a full-screen dialog titled by the field's label, with a close button.
 
 ## Do and don't
@@ -53,6 +54,8 @@ const [period, setPeriod] = useState<Period>('ytd');
 - Don't set `size="small"` to fit a crowded bar; set it only when every field in that bar is small, so the controls stay one size.
 - Do end the custom range at the last complete month, so a range never includes a partial month.
 - Don't use it for a single date or a range of days; use a date picker.
+- Do anchor the popover at the right (`anchor="right"`) when the field is the last control in a bar.
+- Don't let the popover open past the page's edge; a field at a bar's right end anchors at the right.
 - Do keep the period in the page's toolbar and let every card follow it.
 - Don't repeat the period in each card's header; the page sets it once.
 

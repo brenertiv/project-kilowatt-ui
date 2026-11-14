@@ -1,4 +1,5 @@
 import { createTheme, type Theme, type ThemeOptions } from '@mui/material/styles';
+import { blueGrey } from '@mui/material/colors';
 import { aquaverde, brand, green, navy, orange, parchment, slate, violet, yellow } from './colors';
 import { borderSteps, chartSteps, departures, elevationSurfaces, intentSteps, primarySteps, secondarySteps, surfaceSteps, type ColorScheme } from './departures';
 import { mergeOptions } from './theme';
@@ -71,7 +72,7 @@ function schemeRows(paths: string[]) {
 const schemeHead = ['Theme path', 'Light', 'Dark', 'Source'];
 
 /** The ramps the chart roles read from, by the names `chartSteps` uses. */
-const chartRamps: Record<string, Record<string, string>> = { brand, aquaverde, parchment, navy, violet };
+const chartRamps: Record<string, Record<string, string>> = { brand, aquaverde, parchment, violet, blueGrey };
 /** A chart role's cell: the ramp step and its value, as the intent table shows them. */
 const chartCell = ({ ramp, step }: { ramp: string; step: string }) => `${ramp} ${step} ${code(chartRamps[ramp][step])}`;
 /** A darker series shade's cell, or a dash where the slot has none and its own color stands in. */
@@ -149,7 +150,7 @@ export function colorMarkdown() {
         ]),
     ),
     '## Chart colors',
-    "The data roles (Rules → Charts), set by the `chart-palette` departure from five ramps: brand, aquaverde, parchment, navy and violet. `chart.series` is six colors in a fixed order, the first three one step each of brand, aquaverde and parchment and the sixth violet, for the separation a six-series chart needs; `chart.neutral` is for what isn't the focus; `chart.sequential` is the brand ramp from the surface outward; `chart.seriesDark` a darker shade of each slot, for the negative part of a two-part bar (a dash where a slot has none and its own color stands in); `chart.diverging` the two ends of a comparison where neither side is worse, with the text over them. A heatmap or table cell is an end color over the surface at an opacity of its value; a deviation takes `error` on its worse side and `chart.neutral` on its better, and a map's deviation steps them in four, with no change in `action.hover`; these are blends of existing roles, not roles of their own. Red, yellow and green are signals and reach a chart only through the intents. Every series color and the neutral reach 3:1 on every surface level and stay apart under simulated color-vision deficiencies.",
+    "The data roles (Rules → Charts), set by the `chart-palette` departure from four ramps, brand, aquaverde, parchment and violet, with the neutral from MUI's blue grey. `chart.series` is six colors in a fixed order: slots 0 to 2 are the go-to ramps, one step each of brand, aquaverde and parchment; slots 3 and 4 are second steps of brand and aquaverde and slot 5 violet, the reach for a six-series chart; `chart.neutral`, a gray lighter than secondary text, is for what isn't the focus; `chart.sequential` is the brand ramp from the surface outward; `chart.seriesDark` a darker shade of each slot, for the negative part of a two-part bar (a dash where a slot has none and its own color stands in); `chart.diverging` the two ends of a comparison where neither side is worse, with the text over them. A heatmap or table cell is an end color over the surface at an opacity of its value; a deviation takes `error` on its worse side and `chart.neutral` on its better, and a map's deviation steps them in four, with no change in `action.hover`; these are blends of existing roles, not roles of their own. Red, yellow and green are signals and reach a chart only through the intents. Every series color and the neutral reach 3:1 on every surface level and stay apart under simulated color-vision deficiencies.",
     table(
       ['Role', 'Light', 'Dark'],
       [

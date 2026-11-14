@@ -8,7 +8,7 @@ import * as PageHeaderStories from './PageHeader.stories';
 
 # PageHeader
 
-`PageHeader` is a page's title, set to shrink as the page scrolls. The full header scrolls away with the page, and as it goes a one-line condensed title pins at the top of the page, with the page's own controls at its right and the page's `FilterBar` under it. It's Kilowatt's own component, composed from MUI's `Typography` and `Fade` (`@mui/material`, Material UI v9; MUI documents their props) and `usePinned` from `src/components/pageScroll`.
+`PageHeader` is a page's title, set to shrink as the page scrolls. The full header scrolls away with the page, and as it goes a one-line condensed title pins at the top of the page, with the page's own controls at its right and the page's `FilterBar` under it. A `summary` sits on the title's line, a report's `description` under it, and at property scope a `property` bar and a `byline` under the header; all scroll away with it. It's Kilowatt's own component, composed from MUI's `Typography`, `Fade` and `Card` (`@mui/material`, Material UI v9; MUI documents their props) and `usePinned` from `src/components/pageScroll`.
 
 <Canvas of={PageHeaderStories.WithFilters} />
 
@@ -16,6 +16,8 @@ import * as PageHeaderStories from './PageHeader.stories';
 
 - Use it at the top of a page that scrolls and has filters or controls people need as they read.
 - Use it inside `AppShell`, which says what scrolls the page: `main` from `md`, the window on phones.
+- Use `property` on a page at property scope (a property's dashboard or data sources), so the page names the building it's about under the title, and in the condensed line once pinned.
+- Use `description` and `byline` on a report or dashboard: the description is the text the report is made of, and the byline says who made it and when.
 - For a short page that never scrolls, a plain `h1` in `Typography` is enough.
 - For a card's title, use `CardHeader`.
 
@@ -35,6 +37,16 @@ import { PageHeader } from 'src/components/PageHeader';
 
 A report sets its title in the brand serif with `titleVariant="brand"`; every other page keeps the default, `h3`.
 
+```tsx
+<PageHeader
+  title="Energy and Emissions Summary"
+  property={{ name: 'Highpoint 1', details: '1600 Wynkoop Street, Denver, CO', photo: highpoint1 }}
+  summary={<Chip label="AI Summary" onClick={openSummary} />}
+/>
+```
+
+`property` draws one outlined bar under the title with the building's photo (or the building icon without one), its name and, quieter, its address, and the condensed line reads "Title — Property · address". `summary` is a node on the title's line, after it. `description` sits under the title in `body1` and `text.secondary`. `byline` sits under the header, 12px below the title.
+
 Put it first in the page, directly in `main`, with the content after it. The condensed line reads the title; `actions` shows in both places, so keep them to a few controls.
 
 ### Building your own
@@ -44,14 +56,18 @@ Put it first in the page, directly in `main`, with the content after it. The con
 ## States
 
 - **At rest:** the title in `h3`, as the page's `h1`, with `actions` at its right. The filters sit under it.
+- **At property scope:** the property bar under the title, and the condensed line naming the property after the title.
+- **With a summary, description or byline:** the summary on the title's line, the description under it, the byline under the header; none of them pins.
 - **A report:** the title in `brand`, the serif (`brand-type`), at `h1`'s size and `h2`'s below `sm`, a step under the style's own size so a long report title stays on two lines. The condensed line is unchanged.
 - **Pinned:** the title has gone, and the condensed line sits at the top in `subtitle1`, truncated with `TruncatedText`, with `actions` at its right and the filters under it. The band takes the frame's surface and a `divider` under it, so the page passes behind it. It fades in with MUI's `Fade`.
 - **Phones:** the window scrolls, and the band pins under AppShell's sticky header.
 
 ## Do and don't
 
-- Do let the title stand alone, with nothing under it (Rules → Content and layout).
-- Don't add a line of description under the title; put it in the content it explains.
+- Do let a page's title stand alone, with nothing under it (Rules → Content and layout); the property bar and a report's description are the two things that may sit there.
+- Don't describe a dashboard or a plan under its title; put the explanation in the content it explains, and keep `description` for a report.
+- Do name the property under the title at property scope, through `property`, so the page says which building it's about.
+- Don't name the property in the title itself; the condensed line joins them once pinned.
 - Do set a report's title in the brand serif (`titleVariant="brand"`), so every report reads as a document.
 - Don't set the serif on a page that isn't a report; pages, dashboards and plans keep `h3`.
 - Do pass the page's `FilterBar` as `filters`, so it pins with the title.
@@ -61,6 +77,9 @@ Put it first in the page, directly in `main`, with the content after it. The con
 
 ## MUI departures
 
+- `card-radius`: the property bar is an outlined `Card`, so it rounds at 16px, concentric with the 8px photo inside it.
+- `paper-surface-levels`: the property bar sits on `background.level3`, a step above the page.
+
 None of Kilowatt's departures change `Typography` or `Fade` directly.
 
 Theme-wide departures (the palette, the type scale) apply too; see Foundations → MUI departures. Under reduced motion the fade finishes at once (`reduced-motion`).
@@ -68,6 +87,7 @@ Theme-wide departures (the palette, the type scale) apply too; see Foundations �
 ## Accessibility
 
 - The title is the page's `h1`. The condensed line is a paragraph, not a second heading.
+- The property's photo is decorative (`alt=""`), since its name is beside it; the bar is a paragraph naming the property and its address.
 - While it's hidden, the line's `actions` are hidden with it (MUI's `Fade` sets `visibility: hidden`), so the keyboard meets one set of controls at a time.
 - The line's title truncates with `TruncatedText`, which shows the full title in a tooltip while it's cut off.
 - The band takes pointer events only once it's pinned, so until then clicks reach the header under it.

@@ -64,6 +64,20 @@ export const BesideTitle: Story = {
   ),
 };
 
+/** A marker that opens a dialog says so (`aria-haspopup="dialog"`), so assistive tech announces what a click opens; its label's figures are tabular. */
+export const OpensDialog: Story = {
+  name: 'Opens a dialog',
+  args: { 'aria-haspopup': 'dialog', label: '$12,400 a year' },
+  render: (args) => (
+    <Box sx={{ p: 2 }}>
+      <MarkerChip {...args} />
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', { name: /savings opportunities on Energy Use/ })).toHaveAttribute('aria-haspopup', 'dialog');
+  },
+};
+
 /** While what it marks is unread (`alerting`), a ring pulses out every 3 seconds; it stops on hover and under reduced motion. */
 export const Unread: Story = {
   args: { alerting: true },

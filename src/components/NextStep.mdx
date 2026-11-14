@@ -1,0 +1,103 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as NextStepStories from './NextStep.stories';
+
+<Meta
+  of={NextStepStories}
+  summary="Kilowatt's NextStep for a page's call to action: one line under the page header with the state in words and the next step as a text button, and CardNextStep for the same step as a caption on a clickable Overview card."
+/>
+
+# NextStep
+
+`NextStep` is a page's call to action: one line under every page header that tells the person where things stand and what to do next. An arrow in the primary color leads, the state follows in words (`body2`, `text.secondary`), and the step is MUI's text `Button` (`@mui/material`, Material UI v9) that does it or opens where it is done. A page with nothing to do says so in the same line (“Nothing to do here: …”), so the line is always there and the person learns to read it. It's Kilowatt's own component, built on MUI's `Button`, `Tooltip` and `Typography`, whose props are MUI's: see the [Button API](https://mui.com/material-ui/api/button/) and [Tooltip API](https://mui.com/material-ui/api/tooltip/). `CardNextStep`, from the same file, is the step on a clickable Overview card: a plain caption line under the card's figure, because the whole card is the control.
+
+<Canvas of={NextStepStories.WithAction} />
+
+## When to use
+
+- Use `NextStep` under every page header, as the one line between the title and the page's content: the state in one sentence, then the step. Keep it when there is nothing to do, with the state saying so.
+- It is the one line that sits under a page title. The rules (Rules → Content and layout) keep a line of description out from under a title; this line is not a description of the page but a call to action, the state and the step, and it reads as one. Don't let it carry what the page is for; that goes in the title.
+- Use `CardNextStep` for the same step on an Overview card that opens its page: a caption under the figure, so a count isn't left on its own. The card's `CardActionArea` is the one control; opening the card leads to where the step is taken.
+- For a result that appears on its own (a save finished, a request failed), use `Snackbar` or `Alert`; this line is the page's standing state, not an event.
+- For the page's own controls (share, export), use `PageHeader`'s `actions`.
+
+## Usage
+
+```tsx
+import { NextStep } from 'src/components/NextStep';
+
+<PageHeader title="Properties" />
+<NextStep state="3 of 12 properties have no named contact." action={{ label: 'Name the Contacts', onClick: openContacts }} />
+```
+
+A page with nothing to do:
+
+```tsx
+<NextStep state="Nothing to do here: every property has a named contact." />
+```
+
+On a clickable Overview card, under the figure:
+
+```tsx
+import { CardNextStep } from 'src/components/NextStep';
+
+<CardActionArea onClick={openProperties}>
+  <CardHeader title={<TruncatedText>Properties</TruncatedText>} />
+  <CardContent>
+    <PlainFigure value="12" />
+    <CardNextStep>Name the 3 missing contacts</CardNextStep>
+  </CardContent>
+</CardActionArea>
+```
+
+## States
+
+- With an action: the state, then the step as a text button with a chevron after its label.
+- Disabled (`action.disabled`): the step can't be taken right now. The button is disabled and `action.reason` shows in a tooltip on hover, from a wrapper around the button, since a disabled button fires no events.
+- Nothing to do: no `action`. The line is the state alone, and the state says so: “Nothing to do here: …”.
+
+## Do and don't
+
+- Do put one `NextStep` under every page header, and keep it there when there is nothing to do.
+- Don't drop the line on a page with nothing to do, or leave the state empty; say “Nothing to do here” and why.
+- Do write the state as one sentence about this page, with its numbers: “3 of 12 properties have no named contact.”
+- Don't write the page's description or purpose in the state; the title says what the page is for.
+- Do name the step in the button's label, in Title Case, as the action it takes: “Name the Contacts”.
+- Don't label the button “Go” or “Fix”, or repeat the state in it; name what happens.
+- Do give a disabled step a `reason`, so the person learns why from the tooltip.
+- Don't disable the step without a reason, or hide the line instead; a silent disabled button explains nothing.
+- Do keep the step a text button at the medium size, as the component sets it.
+- Don't make the step contained, outlined or small; the page's main action belongs to the page, and this line stays low in emphasis.
+- Do use `CardNextStep` on a card whose whole surface is a `CardActionArea`.
+- Don't put a `NextStep` or any button inside a clickable card; a button can hold no other control, so the step is plain text there.
+- Do let the arrow, the state and the button take their colors from the theme: primary, `text.secondary` and the button's own.
+- Don't recolor the line with `sx` to make it louder; its place under the title and its arrow are what mark it.
+
+## MUI departures
+
+- `button-text-case`: the step's label is shown as written, in Title Case (“Name the Contacts”), not uppercased.
+- `button-text-weight`: the label is at the regular weight.
+- `control-outlines`: the step is a text button, so it shows no outline; a primary outlined button would take `palette.control.border`.
+- `flat-buttons`: the step is a text button, so it has no shadow to remove; a contained button would be flat.
+- `focus-ring`: keyboard focus on the step is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the button, instead of MUI's background tint alone.
+- `icons`: the arrow and the chevron are Material Symbols through `Icon`; the button sizes its end icon as it would MUI's SVG icons.
+- `medium-size`: the step stays at `medium`, the default; it doesn't take `small` to sit in the line.
+
+Theme-wide departures (the palette, the type scale, the corner radius) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The line is a `status` region named “Next step”, so a screen reader can find it and hears a change to it without it taking focus.
+- The arrow and the chevron are MUI `Icon`s, hidden from assistive technology; the state and the button's label carry the meaning.
+- The step is MUI's `Button`: a native `button`, with keyboard activation and a visible focus state.
+- A disabled step leaves the tab order, so its `reason` is reached by hovering the button; say the reason in the state too when a keyboard or screen-reader user needs it.
+- `CardNextStep` is plain text inside the card's `CardActionArea`, so it becomes part of the card's accessible name; keep it short.
+
+## Related
+
+- `PageHeader`, which the line sits under.
+- `Card` → Clickable for a card whose whole surface is a control.
+- `SourceFigure` for the figure `CardNextStep` sits under (`PlainFigure`).
+- `Button` for the step's variants.
+- `Alert` and `Snackbar` for results that appear on their own.
+
+<Stories includePrimary={false} />

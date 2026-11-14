@@ -52,6 +52,8 @@ export type PeriodPickerProps = {
   fullWidth?: boolean;
   /** The field's size, passed to `TextField`. Leave it at the default, `'medium'`; set `'small'` only to match a one-off bar of small fields (Rules → Component size). */
   size?: 'small' | 'medium';
+  /** Which edge of the field the popover lines up with: `'left'`, or `'right'` for a field that is the last control in a bar, so the popover opens inward rather than past the page's edge. Default `'left'`. */
+  anchor?: 'left' | 'right';
 };
 
 /** A `YYYY-MM` month as the date of its first day, in local time. */
@@ -98,6 +100,7 @@ export function PeriodPicker({
   label = 'Period',
   fullWidth = false,
   size,
+  anchor: anchorEdge = 'left',
 }: PeriodPickerProps) {
   const theme = useTheme();
   const phone = !useMediaQuery(theme.breakpoints.up('md'), { noSsr: true });
@@ -228,7 +231,8 @@ export function PeriodPicker({
           open={Boolean(anchor)}
           anchorEl={anchor}
           onClose={close}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: anchorEdge }}
+          transformOrigin={{ vertical: 'top', horizontal: anchorEdge }}
           slotProps={{ paper: { role: 'dialog', 'aria-label': label } }}
         >
           {body}

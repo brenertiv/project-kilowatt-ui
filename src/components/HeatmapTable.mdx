@@ -1,0 +1,103 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as HeatmapTableStories from './HeatmapTable.stories';
+
+<Meta
+  of={HeatmapTableStories}
+  summary="Kilowatt's HeatmapTable, a heatmap as a table for when every cell's number must show: each cell its value tinted by it, a comparison, a deviation or a magnitude, with a gradient legend and paging."
+/>
+
+# HeatmapTable
+
+A heatmap table shows a value for every pair of two dimensions, each building's use by month, with the number in every cell and the cell tinted by it. `HeatmapTable` is the `Heatmap` chart's grid in MUI's `Table` (`@mui/material`, Material UI v9), so the numbers, links, real rows and headers are there to read, scan down and print, and the grid scrolls sideways inside its card with the row headers held in place. It's Kilowatt's own component, built from `Table`, `Tooltip`, `Link` and `TablePagination`; it sits straight in an outlined `Card` under a `CardHeader`, as the charts do.
+
+<Canvas of={HeatmapTableStories.Comparison} />
+
+## When to use
+
+- Use it where people read the numbers as well as the pattern: Usage Tracking, a month-by-month change on a year earlier with each month's figure in the cell.
+- For the pattern alone across many rows, with the numbers in tooltips, use the `Heatmap` chart.
+- For one row over time, use a line chart; for a few rows, a line chart with a line each.
+- For a table whose cells aren't tinted, use `Table`.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { HeatmapTable } from 'src/components/HeatmapTable';
+
+<Card variant="outlined">
+  <CardHeader title="Usage Tracking" />
+  <HeatmapTable
+    rows={[{ key: 'b1', label: '350 Park Avenue', onOpen: () => open('b1') }]}
+    columns={['Jan', 'Feb', 'Mar']}
+    cells={[{ row: 'b1', column: 'Jan', value: -4.2, detail: '350 Park Avenue, Jan 2026: 41,200 kWh, −4.2% on Jan 2025' }, { row: 'b1', column: 'Feb' }]}
+    unit="%"
+    cap={30}
+    worse="none"
+    sides={['Less than a year earlier', 'More than a year earlier']}
+    rowHeader="Property"
+    label="Usage Tracking, year to date"
+  />
+</Card>
+```
+
+Each row has a `key` and a `label`, and opens something with `onOpen` (its header is then a link). Each cell names its `row` and `column` and carries its `value`; `detail` is its full statement, shown in its tooltip and read as its accessible name, and defaults to the row, the column and the value. Every cell is one end color over the card at an opacity of its value: on a diverging scale its distance from 0 against `cap`, full from the cap on and fading to the bare card at no change; on a sequential scale its place between the lowest and highest value (Rules → Charts → A heatmap cell is an overlay). The text stays `text.primary` while it holds 4.5:1 over the tint, then takes `chart.diverging.contrastText`. A cell with no `value` is a dash on the bare card. `label` names the table; `rowHeader` heads the first column; `format` writes the cells where `Intl`'s one decimal and the unit don't fit (a compact `1.2M` for use).
+
+## Variants
+
+- **Comparison.** `worse="none"`, for a change where neither side is worse (this month against the same month a year earlier): `chart.diverging`, brand blue below 0 and parchment above, two hues that show direction without reading as a health status. Name both sides with `sides`; the legend draws the two ends meeting at the card, with the cap at each end.
+
+<Canvas of={HeatmapTableStories.Deviation} />
+
+- **Deviation.** The default, `worse="above"`, for a variance where less is better (energy, cost, emissions): the worse side in `error` and the better in `chart.neutral`, so only the cells that need attention are in color. `worse="below"` where more is better (occupancy, data coverage).
+
+<Canvas of={HeatmapTableStories.Sequential} />
+
+- **Sequential.** `scale="sequential"`: a magnitude, `chart.sequential[3]` at an opacity of each cell's place between the lowest and highest value, with the range at the legend's ends.
+
+## States
+
+- **No value.** The cell is a dash on the bare card, and its tooltip says what the legend calls it (`missing`, "No data" by default). It isn't tinted, so it never reads as 0, which is the bare card.
+- **Paged.** Past ten rows, MUI's `TablePagination` follows the legend (`usePagedRows`); a cell keeps its strength against every row, not the page shown.
+
+<Canvas of={HeatmapTableStories.Paged} />
+
+## Do and don't
+
+- Do set `cap` to the change that matters, so a few outliers don't wash out every other cell, and let the legend name it.
+- Don't let one extreme month set the scale for the whole grid.
+- Do say which side is worse with `worse`, or `worse="none"` where neither is, and say what each side means in `sides`.
+- Don't put `error` on a comparison where neither side is worse; use `worse="none"`, so neither side reads as a status.
+- Do give each cell a `detail` with its full statement, the use and the change, so the tooltip says more than the cell.
+- Don't write 0 for a month with no data; leave `value` out, and the cell stays a dash.
+- Do keep the column labels distinct across years (`Jan 25`, `Jan 26`); each is a column's key.
+- Don't tint in steps or build a scale from your own colors; the component overlays `heatmap-scale`'s end colors at the value's opacity.
+
+## MUI departures
+
+- `medium-size`: the table stays at `medium`, MUI's default, so leave `size` off.
+- `tabular-numerals`: every cell and the pager use tabular digits, so a column of figures lines up.
+- `table-cell-border`: row lines use `divider` instead of MUI's mix of it with white or black, so they show on a card and match its frame.
+- `table-head-weight`: header cells are semibold (600) instead of MUI's medium (500), matching the subheading that names the table.
+- `table-sticky-header`: a sticky header sits on `background.level3`, the card surface; the row headers hold their place the same way as the grid scrolls.
+- `table-last-row`: the last row has no bottom line, so it doesn't double the card's edge.
+- `link-underline`: a row header that opens something is a link told apart by its color, not an underline.
+
+Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text and intent colors, `chart.diverging` in the chart palette) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The `Table` has an accessible name from `label`, and its container is a named region with `tabIndex={0}`, so a keyboard can scroll the grid sideways.
+- Each row's header is a `th` with `scope="row"`; as a link it's a button whose name is `openLabel`, which should say what opening does.
+- Every cell's tooltip is also its accessible name, so a screen reader hears the full statement (`detail`), not the bare number.
+- The number is in every cell, and the legend names the scale's ends and the dash in text, so no cell rests on color. The text flips to the contrast color where `text.primary` would fall under 4.5:1 over the tint.
+- Only the worse side of a deviation is red, and the better side is the neutral; the two ends of a comparison are blue and parchment. Each pair stays apart under simulated color-vision deficiencies.
+
+## Related
+
+- `Heatmap` for the pattern alone, on a canvas, with the numbers in tooltips.
+- `Table` → Tinted cells, the same cell drawn by hand in a table of your own.
+- Rules → Charts for what each color job means.
+
+<Stories includePrimary={false} />

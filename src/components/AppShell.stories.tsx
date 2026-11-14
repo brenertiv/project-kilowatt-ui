@@ -475,6 +475,30 @@ export const Search: Story = {
   },
 };
 
+/** Synthetic files at a few buildings, for the search's `onSearch`. */
+const files = [
+  { id: 'file-1', label: 'Harbor Point Lease Abstract.pdf', detail: 'Harbor Point · Files', icon: 'description' as const },
+  { id: 'file-2', label: 'Lakeside Commons Meter Survey.xlsx', detail: 'Lakeside Commons · Files', icon: 'description' as const },
+  { id: 'file-3', label: 'Ridgeline Plaza Boiler Service Report.pdf', detail: 'Ridgeline Plaza · Files', icon: 'description' as const },
+];
+
+/** `onSearch` adds the app's own results (files at any building, records) after the page matches, each saying where it is; the field reads "Search Pages and Files". */
+export const SearchResults: Story = {
+  name: 'Search results beyond pages',
+  args: {
+    onSearch: (term) => files.filter((file) => file.label.toLowerCase().includes(term)).map((file) => ({ ...file, onChoose: fn() })),
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Search' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Search' });
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search Pages and Files' }), 'meter');
+    await expect(within(dialog).getByRole('status')).toHaveTextContent('1 page · 1 result');
+    await expect(within(dialog).getByRole('button', { name: /Lakeside Commons Meter Survey/ })).toHaveTextContent('Lakeside Commons · Files');
+    await userEvent.click(within(dialog).getByRole('button', { name: /Lakeside Commons Meter Survey/ }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Search' })).toBeNull());
+  },
+};
+
 /** Home's filter button narrows its workspaces to one type; a dot on the button shows a filter is on. */
 export const PanelFilter: Story = {
   play: async ({ canvas, userEvent }) => {

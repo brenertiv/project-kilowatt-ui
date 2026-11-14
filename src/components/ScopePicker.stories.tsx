@@ -251,6 +251,22 @@ export const SingleProperty: Story = {
   },
 };
 
+/** The S key, pressed on its own outside a text field, opens Change Scope at the scope's level; `shortcut` changes the key or turns it off. */
+export const Shortcut: Story = {
+  args: { value: { level: 'group', id: 'west' } },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.keyboard('s');
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    await waitFor(() => expect(within(dialog).getByRole('list', { name: 'Portfolios' })).toBeVisible());
+    // Inside the dialog's search field the key types, and doesn't open a second dialog.
+    await userEvent.type(within(dialog).getByRole('textbox', { name: 'Search by name, address or city' }), 's');
+    await expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await expect(canvas.getByRole('button', { name: /^Portfolio West Region/ })).toBeVisible();
+  },
+};
+
 /** A fixed scope, for a report or plan that keeps its own properties: one crumb with a lock, nothing to open, and why in its tooltip. */
 export const Locked: Story = {
   args: { value: { level: 'group', id: 'west' }, locked: { type: 'Report scope', reason: 'This report keeps the properties it was written for.' } },

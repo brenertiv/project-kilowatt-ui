@@ -1,0 +1,96 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as StackingPlanStories from './StackingPlan.stories';
+
+<Meta
+  of={StackingPlanStories}
+  summary="Kilowatt's StackingPlanCard for one building's floors as rows of spaces sized by area, leased spaces tinted in the first series slot, every space naming its occupant and area."
+/>
+
+# StackingPlanCard
+
+`StackingPlanCard` draws one building's stacking plan: its floors from the roof down, each a row of its spaces sized by floor area, every space naming itself, its occupant (the tenant, “Vacant”, or its type for a common area) and its area. It's Kilowatt's own component, built from MUI's `Card`, `CardHeader`, `CardContent`, `ButtonBase`, `Stack`, `Box` and `Typography` (`@mui/material`, Material UI v9) rather than amCharts, since rows of boxes need no canvas. Its color follows the chart rules (Rules → Charts): leased and vacant are a positive and its negative, so they share the first `chart.series` slot rather than taking two colors, and the words carry the state.
+
+<Canvas of={StackingPlanStories.Building} />
+
+## When to use
+
+- Use it to show which spaces of a building are leased and which are vacant, floor by floor, with how much of each floor each space takes.
+- For the share of floor area vacant across a scope, use `VacancyCard` (Charts → Vacancy); the plan shows one building at a time.
+- For spaces people look up, sort or filter, use a table; the plan is for seeing the building at a glance.
+- For a building with no floors or spaces on record, pass `floors` as `null`: the card says so under its title rather than drawing an empty plan.
+
+## Usage
+
+```tsx
+import { StackingPlanCard, type StackingFloor } from 'src/components/StackingPlan';
+
+const floors: StackingFloor[] = [
+  { key: 'RF', label: 'Roof', spaces: [{ id: 'rf-1', name: 'Roof', kind: 'common', type: 'Mechanical' }] },
+  {
+    key: 'F12',
+    label: '12',
+    spaces: [
+      { id: 'f12-1', name: 'Suite 1201', area: 12400, tenant: 'Northwind Logistics' },
+      { id: 'f12-2', name: 'Suite 1202', area: 6200 },
+    ],
+  },
+];
+
+<StackingPlanCard name="Harbor Point" floors={floors} onOpen={(space) => navigate(space.id)} />
+```
+
+Pass the floors top down, each with its spaces in the order they're drawn left to right. A space with a `tenant` is leased; a tenant space without one reads “Vacant”; a space with `kind: 'common'` shows its `type` in place of a tenant and is never leased or vacant. The header counts the floors that hold tenant spaces and the spaces leased. Areas are formatted with `Intl.NumberFormat`; a space with no `area` says “No area on record” and takes a third of its row's smallest sized space, so it never crowds the sized ones.
+
+## Variants
+
+- **Read only.** Without `onOpen`, each space is a plain box: the plan is a figure to read.
+- **Opens records.** With `onOpen`, each space is a `ButtonBase` named “{space}, {occupant}: open its record”, with the theme's hover and focus states.
+
+<Canvas of={StackingPlanStories.OpensRecords} />
+
+## States
+
+- A leased space is tinted with the first series slot at `action.selectedOpacity`, as `TypeChip` tints its square, with its occupant in `text.primary`.
+- A vacant space and a common area are the bare card surface, their occupant in `text.secondary`.
+- A building with no plan (`floors` is `null`) shows “No floors or spaces recorded.” under its title and no body.
+
+## Do and don't
+
+- Do keep leased and vacant in one hue: the leased tint and the bare surface, as the component draws them.
+- Don't give vacant spaces a color of their own, an intent or a second series slot; a positive and its negative are one quantity, not two categories or statuses.
+- Do let the words carry the state: every space names its occupant, and the legend names both states.
+- Don't take the occupant line out of a space to save room; the tint is decoration, and a narrow space still says “Vacant”.
+- Do pass every floor's spaces, common areas included, so each row adds up to the floor.
+- Don't leave common areas out to make the plan look fuller; their rows would read as leasable.
+- Do pass `onOpen` when a space has a record to open, and nothing when it doesn't.
+- Don't make the spaces buttons that go nowhere, or open a record from the plan alone; keep a table or list beside it for people who read the spaces one by one.
+- Do pass `floors` as `null` for a building with nothing on record.
+- Don't pass an empty array to mean no plan; the header would count zero floors and the body would be blank.
+
+## MUI departures
+
+- `card-radius`: the card rounds at twice the theme radius (16px), as every card does; the spaces inside keep the theme radius.
+- `paper-surface-levels`: the card's surface comes from its level, as every `Card` does; vacant spaces and common areas show that surface bare.
+- `card-header-title`: the building's name is the header's title in `h6`.
+- `card-header-subheader`: the floor and space counts are the header's subheader in `body2`.
+- `card-header-layout`: the header's title sits 16px from the card's edges, in line with the plan below.
+- `card-content-padding`: the plan and its legend sit in `CardContent`, padded 16px on every side (top padding removed under the header).
+- `focus-ring`: with `onOpen`, keyboard focus on a space is the theme's 2px ring in `palette.control.focus`.
+
+The leased tint (the first `chart.series` slot at `action.selectedOpacity`), the spaces' outline (`border.level2`) and the theme radius are existing theme roles. Theme-wide departures (CSS variables, the `chart-palette` roles, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The plan is a `figure` named “{building} stacking plan”, holding one list per floor named for the floor, so a screen reader hears each floor's spaces in order.
+- Every space reads as text: its name, its occupant (“Vacant” or the common area's type) and its area, so nothing rests on the tint; the legend names Leased and Vacant or Common Area.
+- With `onOpen`, each space is a `button` named “{space}, {occupant}: open its record”; without it, the spaces aren't controls.
+- The header's counts say how many floors hold tenant spaces and how many spaces are leased, in words, for people who don't read the plan.
+- Areas use tabular figures; names that don't fit truncate and show in full in a tooltip (`TruncatedText`).
+
+## Related
+
+- `VacancyCard` (Charts → Vacancy) for the share of floor area vacant across a scope.
+- `SegmentedBar` for a positive part and its negative in one bar.
+- `TypeChip` for how a series slot tints a surface.
+
+<Stories includePrimary={false} />
