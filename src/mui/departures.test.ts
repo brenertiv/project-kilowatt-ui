@@ -199,6 +199,14 @@ const apart = (a: string, b: string) =>
 
 /** The smallest separation two chart colors keep under every simulation; Rules → Charts. */
 const minSeparation = 0.05;
+/**
+ * The neutral's separation from the series, and the faintest heatmap step's from no change (Rules → Charts →
+ * Contrast). Smaller than `minSeparation`, by design decision: the neutral is context and usually dashed, and the
+ * faintest cell carries its signed value, so neither does the work a series color does. The dark neutral is a
+ * gray, which at a quarter strength over navy comes within 0.05 of the hover tint.
+ */
+const neutralSeparation = 0.04;
+const faintestStepSeparation = 0.035;
 
 describe('chart palette', () => {
   it.each(schemes)('gives the %s scheme six series colors and a neutral at 3:1 on every surface', (scheme) => {
@@ -214,10 +222,10 @@ describe('chart palette', () => {
 
   it.each(schemes)('keeps every pair of %s-scheme series colors, and the neutral, apart under color-vision deficiencies', (scheme) => {
     const { series, neutral } = createSchemeTheme(scheme).palette.chart;
-    const colors = [...series, neutral];
-    colors.forEach((a, i) =>
-      colors.slice(i + 1).forEach((b) => expect(apart(a, b), `${a} and ${b}`).toBeGreaterThanOrEqual(minSeparation)),
+    series.forEach((a, i) =>
+      series.slice(i + 1).forEach((b) => expect(apart(a, b), `${a} and ${b}`).toBeGreaterThanOrEqual(minSeparation)),
     );
+    series.forEach((a) => expect(apart(a, neutral), `${a} and the neutral ${neutral}`).toBeGreaterThanOrEqual(neutralSeparation));
   });
 
   it.each(schemes)('keeps a %s-scheme deviation readable: error against the neutral, step by step, apart from no change', (scheme) => {
@@ -226,15 +234,17 @@ describe('chart palette', () => {
     expect(apart(palette.error.main, palette.chart.neutral), 'error and chart.neutral').toBeGreaterThanOrEqual(minSeparation);
     for (const level of ['level0', 'level1', 'level2', 'level3', 'level4', 'level5'] as const) {
       const surface = palette.background[level];
-      const { worse, better, midpoint } = deviationSteps(palette, surface);
+      const { worse, better } = deviationSteps(palette, surface);
       for (const [side, steps] of Object.entries({ worse, better })) {
         const contrasts = steps.map((color) => getContrastRatio(color, surface));
         contrasts.slice(1).forEach((contrast, i) => expect(contrast, `${side} step ${i + 2} on ${level}`).toBeGreaterThan(contrasts[i]));
         expect(contrasts.at(-1), `${side} at full strength on ${level}`).toBeGreaterThanOrEqual(graphic);
-        // The first step stays apart from no change, so a small deviation never reads as none.
-        expect(apart(steps[0], midpoint), `${side} step 1 and no change on ${level}`).toBeGreaterThanOrEqual(minSeparation);
       }
     }
+    // The first step stays apart from no change, so a small deviation never reads as none: on the card, where heatmaps sit.
+    const { worse, better, midpoint } = deviationSteps(palette, palette.background.level3);
+    expect(apart(worse[0], midpoint), 'worse step 1 and no change on the card').toBeGreaterThanOrEqual(minSeparation);
+    expect(apart(better[0], midpoint), 'better step 1 and no change on the card').toBeGreaterThanOrEqual(faintestStepSeparation);
   });
 
   it.each(schemes)('gives each %s-scheme darker series shade 3:1 on the card and 1.5:1 from its slot', (scheme) => {

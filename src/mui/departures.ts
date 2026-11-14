@@ -147,7 +147,7 @@ export const secondarySteps: Record<ColorScheme, { main: keyof typeof brand; lig
  * `diverging` is a comparison where neither side is worse: one end color a side, brand below and
  * parchment above, with `contrastText` for text where `text.primary` no longer passes over an end.
  */
-const chartRamps = { brand, aquaverde, parchment, navy, violet } as const;
+const chartRamps = { brand, aquaverde, parchment, violet, blueGrey } as const;
 type ChartRamp = keyof typeof chartRamps;
 type ChartStep = { ramp: ChartRamp; step: string };
 
@@ -162,24 +162,25 @@ export const chartSteps: Record<
   }
 > = {
   light: {
+    // Slots 0 to 2 are the go-to ramps, one step each; 3 and 4 are second steps of brand and aquaverde, 5 is violet.
     series: [
       { ramp: 'brand', step: '600' },
-      { ramp: 'aquaverde', step: '950' },
+      { ramp: 'aquaverde', step: '700' },
       { ramp: 'parchment', step: '600' },
-      { ramp: 'navy', step: '200' },
-      { ramp: 'aquaverde', step: '500' },
+      { ramp: 'brand', step: '800' },
+      { ramp: 'aquaverde', step: '950' },
       { ramp: 'violet', step: '500' },
     ],
-    // Aquaverde 950, slot 1, ends its ramp; aquaverde 700 is `neutral`, so slot 4 takes 800; violet 700 is too near slot 5.
+    // Brand 800 is slot 3, so slot 0 takes 900; aquaverde 800 is under 1.5:1 from slot 1, so it takes 900; aquaverde 950, slot 4, ends its ramp; violet 700 is too near slot 5.
     seriesDark: [
-      { ramp: 'brand', step: '800' },
-      undefined,
+      { ramp: 'brand', step: '900' },
+      { ramp: 'aquaverde', step: '900' },
       { ramp: 'parchment', step: '800' },
-      { ramp: 'navy', step: '800' },
-      { ramp: 'aquaverde', step: '800' },
+      { ramp: 'brand', step: '900' },
+      undefined,
       { ramp: 'violet', step: '900' },
     ],
-    neutral: { ramp: 'aquaverde', step: '700' },
+    neutral: { ramp: 'blueGrey', step: '600' },
     sequential: ['100', '300', '500', '700', '900'].map((step) => ({ ramp: 'brand', step })),
     diverging: { below: { ramp: 'brand', step: '800' }, above: { ramp: 'parchment', step: '800' }, contrastText: { ramp: 'slate', step: 50 } },
   },
@@ -188,20 +189,20 @@ export const chartSteps: Record<
       { ramp: 'brand', step: '400' },
       { ramp: 'aquaverde', step: '200' },
       { ramp: 'parchment', step: '500' },
-      { ramp: 'brand', step: '50' },
+      { ramp: 'brand', step: '100' },
       { ramp: 'aquaverde', step: '400' },
       { ramp: 'violet', step: '300' },
     ],
-    // Aquaverde 400 is slot 4, so slot 1 takes 500. Parchment 600 falls under 3:1 on the card; aquaverde 500 and violet 400 sit too near their slots.
+    // Aquaverde 400 is slot 4, so slot 1 takes 500. Parchment 600 falls under 3:1 on the card; aquaverde 500 and violet 400 sit too near their slots; brand 300 is too near slot 3, so it takes 500.
     seriesDark: [
       { ramp: 'brand', step: '600' },
       { ramp: 'aquaverde', step: '500' },
       undefined,
-      { ramp: 'brand', step: '300' },
+      { ramp: 'brand', step: '500' },
       undefined,
       undefined,
     ],
-    neutral: { ramp: 'parchment', step: '300' },
+    neutral: { ramp: 'blueGrey', step: '300' },
     sequential: ['900', '700', '500', '300', '100'].map((step) => ({ ramp: 'brand', step })),
     diverging: { below: { ramp: 'brand', step: '200' }, above: { ramp: 'parchment', step: '200' }, contrastText: { ramp: 'navy', step: 950 } },
   },
@@ -625,7 +626,7 @@ export const departures: Departure[] = [
     id: 'chart-palette',
     area: 'Palette',
     title: 'Chart colors',
-    why: "MUI's palette has no colors for data. Charts get three roles, all from five ramps (brand, aquaverde, parchment, navy and violet): `chart.series`, six colors in a fixed order for telling categories apart; `chart.neutral` for what isn't the focus; and `chart.sequential`, the brand ramp, for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: status reuses the intents, a deviation's worse side takes `error` and its better side `chart.neutral`, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color. Two more roles serve particular marks. `chart.seriesDark` is a darker shade of each slot, for the negative part of a two-part bar (leased and vacant), so the pair reads as one hue with the positive part standing out; each shade is at least 3:1 on the card and 1.5:1 from its slot, and a slot with no step that meets both is left out and falls back to its own color. And `chart.diverging`, for a comparison where neither side is worse (this month against a year earlier): one end color a side, `below` on brand (800 in light, 200 in dark) and `above` on parchment (800 in light, 200 in dark), two ramps with nothing in common, with `contrastText` (slate 50 in light, navy 950 in dark) for text where `text.primary` no longer passes over the end color.",
+    why: "MUI's palette has no colors for data. Charts get three roles. `chart.series` is six colors in a fixed order for telling categories apart: slots 0 to 2 are the go-to ramps, brand, aquaverde and parchment, one step each, so every chart opens with the same colors in the same order; slots 3 and 4 are second steps of brand and aquaverde and slot 5 is violet, the reach for the rare six-series chart, where violet gives the separation the dark steps that pass on white can't. Navy left the series: it's the dark scheme's surface ramp and has no step at 3:1 there. `chart.neutral`, for what isn't the focus, is a gray lighter than secondary text (MUI's blue grey, 600 in light and 300 in dark, the ramp the tertiary text already reads from; light stops at 600, the lightest step that holds white text at 4.5:1 in a full-strength heatmap cell), so a baseline recedes behind every series and shares no ramp with a slot; it's held to a smaller separation from the series than they keep from each other, since it's context and usually dashed (Rules → Charts → Contrast). `chart.sequential`, the brand ramp, is for magnitude. Each series color reaches 3:1 on every surface and stays apart from the others under simulated color-vision deficiencies. Red, yellow and green are signals: status reuses the intents, a deviation's worse side takes `error` and its better side `chart.neutral`, and no series slot is red, yellow or green. Product meanings (a utility type) map to a series slot in product code, not to a palette color. Two more roles serve particular marks. `chart.seriesDark` is a darker shade of each slot, for the negative part of a two-part bar (leased and vacant), so the pair reads as one hue with the positive part standing out; each shade is at least 3:1 on the card and 1.5:1 from its slot, and a slot with no step that meets both is left out and falls back to its own color. And `chart.diverging`, for a comparison where neither side is worse (this month against a year earlier): one end color a side, `below` on brand (800 in light, 200 in dark) and `above` on parchment (800 in light, 200 in dark), two ramps with nothing in common, with `contrastText` (slate 50 in light, navy 950 in dark) for text where `text.primary` no longer passes over the end color.",
     options: (scheme) => ({ palette: { chart: chartPalette(scheme) } }),
   },
   {

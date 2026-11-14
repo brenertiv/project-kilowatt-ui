@@ -96,7 +96,7 @@ export const yellow = {
 
 /**
  * Parchment, a warm neutral: off-white at 50 to deep brown at 950, low chroma throughout.
- * Chart series and the dark-scheme chart neutral read from it (`chart-palette`).
+ * Chart series read from it (`chart-palette`): slot 2, the third go-to ramp.
  */
 export const parchment = {
   50: '#f6f3ee',
@@ -114,7 +114,7 @@ export const parchment = {
 
 /**
  * Aquaverde, a muted blue-green: pale at 50 to near-black at 950, low chroma throughout.
- * Chart series and the light-scheme chart neutral read from it (`chart-palette`).
+ * Chart series read from it (`chart-palette`): slot 1, the second go-to ramp, and slot 4.
  */
 export const aquaverde = {
   50: '#ebf2f1',
@@ -132,8 +132,8 @@ export const aquaverde = {
 
 /**
  * Violet, a saturated blue-violet: lavender at 50 to a deep blue-violet at 900, with no 950.
- * The one chart ramp with real chroma beside brand, for the series slot that needs the most
- * separation from the neutrals (`chart-palette`).
+ * The one chart ramp with real chroma beside brand, for the last series slot, which needs the most
+ * separation from the others (`chart-palette`).
  */
 export const violet = {
   50: '#f0e7fc',
