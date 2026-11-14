@@ -65,11 +65,12 @@ Pass the floor area of every space in scope and of the spaces with a tenant, in 
 ## MUI departures
 
 - `card-radius`: the card rounds at twice the theme radius (16px), as every card does.
+- `card-min-height`: the card is at least 160px tall, like every card; the figure sits at its foot.
 - `paper-surface-levels`: the card's surface comes from its level, as every `Card` does; the bar's gaps show that surface.
 - `card-header-title`: the title is the header's title in `h6`.
 - `card-header-subheader`: the card has no subheader; one added through `CardHeader` would be `body2`.
 - `card-header-layout`: the header's title sits 16px from the card's edges, in line with the figure and the bar below, and `action` sits in line with the content.
-- `card-content-padding`: the figure and the bar sit in `CardContent`, padded 16px on every side (top padding removed under the header), pushed to the card's foot with `mt: 'auto'` on a 160px floor.
+- `card-content-padding`: the figure and the bar sit in `CardContent`, padded 16px on every side (the top padding kept, so the figure sits 32px under the title), pushed to the foot of the card's 160px floor with `mt: 'auto'`.
 
 The figure's type and underline are `SourceFigure`'s, and the bar's colors are `SegmentedBar`'s (`chart.series` and `chart.seriesDark` from `chart-palette`). Theme-wide departures (CSS variables, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
 

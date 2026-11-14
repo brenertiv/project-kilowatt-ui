@@ -11,12 +11,12 @@ import { TruncatedText } from 'src/components/TruncatedText';
 
 const whole = new Intl.NumberFormat('en-US');
 
-/** A metric card: the figure at its foot over a 160px floor (Card → Metric). */
+/** A metric card: the figure at its foot of the 160px floor every card has (Card → Metric). */
 function FigureCard({ title, value, unit }: { title: string; value: number; unit: string }) {
   return (
-    <Card variant="outlined" sx={{ height: '100%', minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+    <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardHeader title={<TruncatedText>{title}</TruncatedText>} />
-      <CardContent sx={{ pt: 0, mt: 'auto' }}>
+      <CardContent sx={{ mt: 'auto' }}>
         <PlainFigure value={whole.format(value)} unit={unit} />
       </CardContent>
     </Card>

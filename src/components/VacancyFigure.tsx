@@ -42,9 +42,9 @@ const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFrac
 export function VacancyCard({ title = 'Vacancy', area, leasedArea, spaces, leasedSpaces, source, action }: VacancyCardProps) {
   const vacant = area - leasedArea;
   return (
-    <Card variant="outlined" sx={{ minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+    <Card variant="outlined" sx={{ display: 'flex', flexDirection: 'column' }}>
       <CardHeader title={<TruncatedText>{title}</TruncatedText>} action={action} />
-      <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ mt: 'auto', display: 'flex', flexDirection: 'column' }}>
         <Stack sx={{ gap: 3 }}>
           <SourceFigure
             title={title}
