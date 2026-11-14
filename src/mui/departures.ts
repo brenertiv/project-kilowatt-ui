@@ -398,6 +398,14 @@ export const departures: Departure[] = [
     options: () => ({ components: { MuiCard: { styleOverrides: { root: { borderRadius: 'calc(2 * var(--mui-shape-borderRadius))' } } } } }),
   },
   {
+    id: 'card-min-height',
+    area: 'Components',
+    components: ['Card'],
+    title: 'Cards are at least 160px tall',
+    why: "MUI's `Card` is as tall as its content, so a row of cards steps up and down with what each holds, and a card with one figure is a title with a number pressed under it. Kilowatt gives every card a floor of 20 spacing units (160px): room for a header, a headline figure in `h2` and 16px around each, so single-figure cards in a grid hold one height with their figures along the bottom (Card → Metric), and a card with more in it grows past the floor as before. It's set in spacing units, so a change to the spacing scale moves it.",
+    options: () => ({ components: { MuiCard: { styleOverrides: { root: { minHeight: 'calc(20 * var(--mui-spacing))' } } } } }),
+  },
+  {
     id: 'table-cell-border',
     area: 'Components',
     components: ['Table'],

@@ -31,9 +31,9 @@ import { TruncatedText } from 'src/components/TruncatedText';
 
 const intensity = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-<Card variant="outlined" sx={{ minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+<Card variant="outlined" sx={{ display: 'flex', flexDirection: 'column' }}>
   <CardHeader title={<TruncatedText>Energy Use Intensity</TruncatedText>} />
-  <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+  <CardContent sx={{ mt: 'auto', display: 'flex', flexDirection: 'column' }}>
     <SourceFigure
       title="Energy Use Intensity"
       value={intensity.format(64.2)}

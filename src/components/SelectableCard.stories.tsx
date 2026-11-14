@@ -36,7 +36,7 @@ function Board({ active, initial = [] }: { active: boolean; initial?: ContextIte
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 2, pt: 3, maxWidth: 720 }}>
         {cards.map((card) => (
           <SelectableCard key={card.title} title={card.title}>
-            <Card variant="outlined" sx={{ height: '100%', minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+            <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardHeader
                 title={<TruncatedText>{card.title}</TruncatedText>}
                 action={
@@ -45,7 +45,7 @@ function Board({ active, initial = [] }: { active: boolean; initial?: ContextIte
                   </IconButton>
                 }
               />
-              <CardContent sx={{ pt: 0, mt: 'auto' }}>
+              <CardContent sx={{ mt: 'auto' }}>
                 <PlainFigure value={card.value} unit={card.unit} />
               </CardContent>
             </Card>
