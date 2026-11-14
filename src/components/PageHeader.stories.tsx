@@ -58,7 +58,7 @@ const meta = {
       <Grid container spacing={2}>
         {cards.map((title) => (
           <Grid key={title} size={{ xs: 12, sm: 6 }}>
-            <Card variant="outlined" sx={{ minHeight: (theme) => theme.spacing(20) }}>
+            <Card variant="outlined">
               <CardHeader title={title} />
             </Card>
           </Grid>

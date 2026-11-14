@@ -60,7 +60,7 @@ export function ScoreSummaryWidget({ kind, scope, from, to, title, references = 
     <Card variant="outlined">
       <CardHeader title={<TruncatedText>{title}</TruncatedText>} />
       <AsyncContent state={state} height={160} loadingLabel={`Loading the ${name}`} emptyText={`No ${name} for this period.`}>
-        <CardContent sx={{ pt: 0, pb: 1 }}>
+        <CardContent sx={{ pb: 1 }}>
           <Typography variant="h2" component="p" sx={{ fontVariantNumeric: 'tabular-nums' }}>
             {headline.score === null ? '—' : points.format(headline.score)}
             <Typography component="span" variant="body1" sx={{ color: 'text.secondary' }}>

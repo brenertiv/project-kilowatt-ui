@@ -31,7 +31,7 @@ const viewSources = fn();
 /**
  * Kilowatt's `SourceFigure`, `ExplainedFigure` and `PlainFigure`: a card's headline number, which opens
  * MUI's `Dialog` with what explains it. Each story shows it as a metric card ships: an outlined `Card`
- * with a 160px floor, the figure at its foot.
+ * with the 160px floor every card has (`card-min-height`), the figure at its foot.
  */
 const meta = {
   title: 'Data display/SourceFigure',
@@ -41,9 +41,9 @@ const meta = {
   parameters: { muiComponents: ['Accordion', 'ButtonBase', 'Dialog', 'Tooltip', 'Typography'] },
   args: { title: 'Energy Use Intensity', value: intensity.format(64.2), unit: 'kBtu/ft²', source },
   render: (args) => (
-    <Card variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+    <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
       <CardHeader title={<TruncatedText>{args.title}</TruncatedText>} />
-      <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ mt: 'auto', display: 'flex', flexDirection: 'column' }}>
         <SourceFigure {...args} />
       </CardContent>
     </Card>
@@ -56,9 +56,9 @@ type Story = StoryObj<typeof meta>;
 /** A figure with nothing to explain: `PlainFigure`, the same type as a source figure, not a control. */
 export const Plain: Story = {
   render: (args) => (
-    <Card variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+    <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
       <CardHeader title={<TruncatedText>{args.title}</TruncatedText>} />
-      <CardContent sx={{ pt: 0, mt: 'auto' }}>
+      <CardContent sx={{ mt: 'auto' }}>
         <PlainFigure value={args.value} unit={args.unit} />
       </CardContent>
     </Card>
@@ -117,9 +117,9 @@ export const WithSourceLinks: Story = {
 /** A figure that isn't a `SourceFigure`: an `ExplainedFigure` holding a `FigureExplanation`. Whatever is empty stays out, here Sources. */
 export const WithExplanation: Story = {
   render: (args) => (
-    <Card variant="outlined" sx={{ maxWidth: 360, minHeight: (theme) => theme.spacing(20), display: 'flex', flexDirection: 'column' }}>
+    <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
       <CardHeader title={<TruncatedText>Properties Reporting</TruncatedText>} />
-      <CardContent sx={{ pt: 0, mt: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ mt: 'auto', display: 'flex', flexDirection: 'column' }}>
         <ExplainedFigure title="Properties Reporting" value="42" onViewSources={args.onViewSources}>
           <FigureExplanation description="Properties with a full year of bills or meter data." calculation="Properties with twelve months of data, out of the 45 in scope." />
         </ExplainedFigure>
