@@ -43,13 +43,14 @@ const line = 6;
 
 /**
  * The property bar: one outlined card under the title with the property's photo, its name and, quieter, its address.
- * The photo is decorative, since the name is beside it; without one the frame holds the building icon.
+ * The photo is decorative, since the name is beside it; without one the frame holds the building icon. It is a bar,
+ * one row with no header, so it opts out of the card floor (`card-min-height`) and is as tall as its row.
  */
 function PropertyBar({ property }: { property: PageHeaderProperty }) {
   const theme = useTheme();
   const frame = { width: theme.spacing(5), flexShrink: 0, aspectRatio: '1', borderRadius: 1 } as const;
   return (
-    <Card variant="outlined" sx={{ mb: 3 }}>
+    <Card variant="outlined" sx={{ mb: 3, minHeight: 0 }}>
       <Stack direction="row" sx={{ gap: 2, alignItems: 'center', p: 1.5 }}>
         {property.photo ? (
           <Box component="img" src={property.photo} alt="" sx={{ ...frame, objectFit: 'cover', display: 'block' }} />

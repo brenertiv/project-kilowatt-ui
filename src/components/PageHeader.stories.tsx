@@ -118,11 +118,13 @@ export const Report: Story = {
   },
 };
 
-/** At property scope, `property` draws one outlined bar under the title with the building's photo, name and address; the condensed line reads "Title — Property · address". */
+/** At property scope, `property` draws one outlined bar under the title with the building's photo, name and address, as tall as its row, not the 160px card floor; the condensed line reads "Title — Property · address". */
 export const WithProperty: Story = {
   args: { title: 'Energy and Emissions Summary', property: { name: 'Highpoint 1', details: '1600 Wynkoop Street, Denver, CO', photo: highpoint1 } },
   play: async ({ canvas, canvasElement }) => {
     await expect(canvas.getByText('Highpoint 1')).toBeVisible();
+    // The bar opts out of the 160px card floor: it is as tall as its row.
+    await expect(canvas.getByText('Highpoint 1').closest('.MuiCard-root')!.getBoundingClientRect().height).toBeLessThan(160);
     const condensed = canvas.getByText('Energy and Emissions Summary — Highpoint 1 · 1600 Wynkoop Street, Denver, CO');
     await expect(condensed).not.toBeVisible();
     scrollPage(canvasElement, 600);
