@@ -81,6 +81,8 @@ export type CitedFigure = {
   value: string;
   /** The unit, shown after the value. Defaults to none. */
   unit?: string;
+  /** For a value its source estimated, the source's name as it reads after “Estimated by”: `the utility`. The number is followed by the word “est.” in `text.secondary`, its tooltip and name say “Estimated by the utility”, and the popover's Estimated by Source row says so too unless `provenance.estimatedBySource` says more. Never Enertiv, and never for a total. Defaults to none. */
+  estimated?: string;
   /** Where the number comes from: the popover's rows. */
   provenance: Provenance;
 };
@@ -259,7 +261,8 @@ const hoverCloseDelay = 200;
 /**
  * A number cited in running text, with where it comes from one click away. The number, its unit and
  * the `info` icon are one `ButtonBase`, set in the surrounding text's font with a faint `border.level2`
- * underline and the theme's `action.hover` tint. It opens on click, tap, Enter or Space; for a mouse it
+ * underline and the theme's `action.hover` tint. A value its source estimated is followed by the word
+ * “est.” in `text.secondary` (`figure.estimated`), and its tooltip says “Estimated by the utility”. It opens on click, tap, Enter or Space; for a mouse it
  * also opens after the pointer rests on it for a moment, its tooltip (“Where this number comes from”)
  * first and the popover after. Opened by click it is MUI's `Popover` as it comes, so the page doesn't
  * scroll under it and focus moves into it; opened by hover it takes no focus, leaves the page
@@ -292,6 +295,8 @@ export function ProvenanceFigure({ figure, onNavigate }: ProvenanceFigureProps) 
   const hover = by === 'hover' && !phone;
   const hovered = open && hover;
   const shown = `${figure.value}${figure.unit ? ` ${figure.unit}` : ''}`;
+  // “Estimated by the utility”: the marker's tooltip, and what the number's name adds.
+  const estimated = figure.estimated ? `Estimated by ${figure.estimated}` : undefined;
   const wait = (run: () => void, delay: number) => {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(run, delay);
@@ -343,18 +348,18 @@ export function ProvenanceFigure({ figure, onNavigate }: ProvenanceFigureProps) 
       <Typography id={titleId} component="h2" variant="subtitle2" sx={{ pr: phone ? 5 : 0 }}>
         {figure.label}, {shown}
       </Typography>
-      <ProvenanceRows provenance={figure.provenance} onFollow={follow} />
+      <ProvenanceRows provenance={figure.estimated && !figure.provenance.estimatedBySource ? { ...figure.provenance, estimatedBySource: `This value is estimated by ${figure.estimated}` } : figure.provenance} onFollow={follow} />
     </>
   );
   return (
     <>
       {/* The tooltip comes first, the popover after; once the popover is open the tooltip has nothing to add. */}
-      <Tooltip title={open ? '' : 'Where this number comes from'}>
+      <Tooltip title={open ? '' : (estimated ?? 'Where this number comes from')}>
         <ButtonBase
           ref={button}
           focusRipple
           // The visible figure leads the name, so speech input can say what's on screen.
-          aria-label={`${figure.label}, ${shown}: where this number comes from`}
+          aria-label={`${figure.label}, ${shown}${figure.estimated ? `, estimated by ${figure.estimated}` : ''}: where this number comes from`}
           aria-haspopup="dialog"
           aria-expanded={open}
           onClick={click}
@@ -377,6 +382,12 @@ export function ProvenanceFigure({ figure, onNavigate }: ProvenanceFigureProps) 
           }}
         >
           {shown}
+          {estimated && (
+            // The estimated marker is the word, in `text.secondary`; a non-breaking space keeps it with its value.
+            <Box component="span" sx={{ color: 'text.secondary' }}>
+              {'\u00a0'}est.
+            </Box>
+          )}
           <Icon name="info" fontSize="inherit" sx={{ color: 'text.secondary' }} />
         </ButtonBase>
       </Tooltip>

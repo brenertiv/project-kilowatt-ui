@@ -69,6 +69,26 @@ export const Plain: Story = {
   },
 };
 
+/** A plain figure its source estimated: the word “est.” follows the value in `text.secondary`, and takes focus to show “Estimated by the utility” in a tooltip. */
+export const PlainEstimated: Story = {
+  name: 'Plain, estimated',
+  render: (args) => (
+    <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
+      <CardHeader title={<TruncatedText>{args.title}</TruncatedText>} />
+      <CardContent sx={{ mt: 'auto' }}>
+        <PlainFigure value={args.value} unit={args.unit} estimated="the utility" />
+      </CardContent>
+    </Card>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const marker = canvas.getByText('est.');
+    await expect(marker).toBeVisible();
+    await userEvent.tab();
+    await expect(marker).toHaveFocus();
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Estimated by the utility');
+  },
+};
+
 /** The figure opens its source: a faint underline under the number, the hover tint, and a dialog titled with the card's title that lists the provenance popover's rows in its order, Built From first. */
 export const WithSource: Story = {
   play: async ({ canvas, userEvent }) => {
@@ -85,6 +105,21 @@ export const WithSource: Story = {
     await expect(within(dialog).queryByRole('button', { name: 'Done' })).toBeNull();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  },
+};
+
+/** A value its source estimated: `estimated` names the source, the word “est.” follows the value in `text.secondary`, the tooltip and the button's name say “Estimated by the utility”, and the dialog's Estimated by Source row says so too. */
+export const Estimated: Story = {
+  args: { estimated: 'the utility' },
+  play: async ({ canvas, userEvent }) => {
+    const figure = canvas.getByRole('button', { name: '64.2 kBtu/ft², estimated by the utility, view source for Energy Use Intensity' });
+    await expect(within(figure).getByText('est.')).toBeVisible();
+    await userEvent.hover(figure);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Estimated by the utility. View source: Energy Use Intensity');
+    await userEvent.click(figure);
+    const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
+    await waitFor(() => expect(within(dialog).getByText('Estimated by Source')).toBeVisible());
+    await expect(within(dialog).getByText('This value is estimated by the utility')).toBeVisible();
   },
 };
 

@@ -82,6 +82,19 @@ const energy: CitedFigure = {
   },
 };
 
+/** A single bill's amount that the utility estimated: the value as the utility reported it, marked est. */
+const estimatedBill: CitedFigure = {
+  label: 'March Gas Bill',
+  value: currency.format(3940),
+  estimated: 'the utility',
+  provenance: {
+    builtFrom: [{ label: 'Lakeside gas bill, March 2026', detail: 'Marked estimated by the utility', to: '/sites/lakeside/gas-bills' }],
+    period: 'March 2026',
+    calculation: 'The bill’s total as the utility issued it, in dollars',
+    updated: Date.UTC(2026, 3, 6),
+  },
+};
+
 /** A number whose source records no last-updated date. */
 const occupied: CitedFigure = {
   label: 'Occupied Area',
@@ -247,5 +260,20 @@ export const EmissionsFigure: Story = {
     await expect(within(factors).getByText('Regional grid factor set, 2024')).toBeVisible();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Harbor Point’s emission factors' }));
     await expect(args.onNavigate).toHaveBeenCalledWith('/sites/harbor-point/factors');
+  },
+};
+
+/** A value its source estimated: the word “est.” follows it in `text.secondary`, the tooltip and the button's name say “Estimated by the utility”, and the popover's Estimated by Source row says so too. */
+export const Estimated: Story = {
+  args: { figure: estimatedBill },
+  play: async ({ canvas, userEvent }) => {
+    const figure = canvas.getByRole('button', { name: 'March Gas Bill, $3,940, estimated by the utility: where this number comes from' });
+    await expect(within(figure).getByText(/est\./)).toBeVisible();
+    await userEvent.hover(figure);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Estimated by the utility');
+    await userEvent.click(figure);
+    const dialog = await screen.findByRole('dialog', { name: 'March Gas Bill, $3,940' });
+    await waitFor(() => expect(within(dialog).getByText('Estimated by Source')).toBeVisible());
+    await expect(within(dialog).getByText('This value is estimated by the utility')).toBeVisible();
   },
 };

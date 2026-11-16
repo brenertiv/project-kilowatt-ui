@@ -280,8 +280,25 @@ export function FigureExplanation({
 /** A value longer than this (a phrase rather than a number) steps down from `h2` to `h4`, so it still fits on a card. */
 const longValue = 14;
 
-/** The headline number as it reads on a card: `h2` with tabular numerals (`h4` for a long phrase), the unit after it in `body1`. */
-function FigureText({ value, unit, underline }: { value: string; unit?: string; underline: boolean }) {
+/** What the estimated marker's tooltip says, and what the figure's name adds: “Estimated by the utility”. */
+const estimatedBy = (source: string) => `Estimated by ${source}`;
+
+/**
+ * The estimated marker: the word “est.” after a value its source estimated, in `body1` and `text.secondary` as the
+ * unit is. On a figure that isn't a control it carries its own tooltip and takes keyboard focus, so the tooltip opens
+ * without a pointer; inside a figure's button, the button carries the tooltip.
+ */
+function EstimatedMarker({ source, standalone }: { source: string; standalone: boolean }) {
+  const marker = (
+    <Typography component="span" variant="body1" tabIndex={standalone ? 0 : undefined} sx={{ color: 'text.secondary', display: 'inline-block', ml: 0.5, borderRadius: 1 }}>
+      est.
+    </Typography>
+  );
+  return standalone ? <Tooltip title={estimatedBy(source)}>{marker}</Tooltip> : marker;
+}
+
+/** The headline number as it reads on a card: `h2` with tabular numerals (`h4` for a long phrase), the unit after it in `body1`, then “est.” for an estimated value. */
+function FigureText({ value, unit, underline, estimated }: { value: string; unit?: string; underline: boolean; estimated?: string }) {
   return (
     <Typography
       variant={value.length > longValue ? 'h4' : 'h2'}
@@ -304,6 +321,7 @@ function FigureText({ value, unit, underline }: { value: string; unit?: string; 
           {unit}
         </Typography>
       )}
+      {estimated && <EstimatedMarker source={estimated} standalone={!underline} />}
     </Typography>
   );
 }
@@ -315,6 +333,8 @@ export type ExplainedFigureProps = {
   value: string;
   /** The unit, shown after the value in `body1` and `text.secondary`. Defaults to none. */
   unit?: string;
+  /** For a value its source estimated, the source's name as it reads after “Estimated by”: `the utility`. The figure is followed by the word “est.” in `text.secondary`, and its tooltip and name say “Estimated by the utility”. Never Enertiv, and never for a total: a total says what it includes instead. Defaults to none. */
+  estimated?: string;
   /** What explains the figure: the dialog's content, usually a `FigureExplanation`. */
   children: ReactNode;
   /** Where View Sources goes, after the dialog closes. Defaults to none, and the action isn't shown. */
@@ -324,24 +344,25 @@ export type ExplainedFigureProps = {
 /**
  * A headline number that opens what explains it. The number is a button with a faint `border.level2`
  * underline under the number (not the unit) and the theme's `action.hover` tint on hover; it opens a
- * `Dialog` titled with the card's title that holds the explanation. Use it for any figure a card would
+ * `Dialog` titled with the card's title that holds the explanation. A value its source estimated is followed
+ * by “est.” (`estimated`). Use it for any figure a card would
  * otherwise clarify with a caption under it; `SourceFigure` fills the dialog with where the figure comes
  * from, and `PlainFigure` sets a figure with nothing to explain in the same type.
  *
  * @summary A card's headline number as a button that opens a dialog explaining it.
  * @import import { ExplainedFigure } from 'src/components/SourceFigure';
  */
-export function ExplainedFigure({ title, value, unit, children, onViewSources }: ExplainedFigureProps) {
+export function ExplainedFigure({ title, value, unit, estimated, children, onViewSources }: ExplainedFigureProps) {
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const close = () => setOpen(false);
   return (
     <>
-      <Tooltip title={`View source: ${title}`}>
+      <Tooltip title={estimated ? `${estimatedBy(estimated)}. View source: ${title}` : `View source: ${title}`}>
         <ButtonBase
           focusRipple
           // The visible figure leads the name, so speech input can say what's on screen.
-          aria-label={`${unit ? `${value} ${unit}` : value}, view source for ${title}`}
+          aria-label={`${unit ? `${value} ${unit}` : value}${estimated ? `, estimated by ${estimated}` : ''}, view source for ${title}`}
           aria-haspopup="dialog"
           onClick={() => setOpen(true)}
           sx={{
@@ -357,7 +378,7 @@ export function ExplainedFigure({ title, value, unit, children, onViewSources }:
             '&:hover': { bgcolor: 'action.hover' },
           }}
         >
-          <FigureText value={value} unit={unit} underline />
+          <FigureText value={value} unit={unit} underline estimated={estimated} />
         </ButtonBase>
       </Tooltip>
       <Dialog open={open} onClose={close} fullWidth maxWidth="sm" aria-labelledby={titleId}>
@@ -396,19 +417,22 @@ export type PlainFigureProps = {
   value: string;
   /** The unit, shown after the value in `body1` and `text.secondary`. Defaults to none. */
   unit?: string;
+  /** For a value its source estimated, the source's name as it reads after “Estimated by”: `the utility`. The figure is followed by the word “est.” in `text.secondary`, which takes keyboard focus and shows “Estimated by the utility” in a tooltip. Defaults to none. */
+  estimated?: string;
 };
 
 /**
  * A headline number with nothing to explain: the same type as `ExplainedFigure` (`h2` with tabular
  * numerals, the unit after it in `body1` and `text.secondary`), as a paragraph rather than a control.
+ * A value its source estimated is followed by “est.” (`estimated`), with the source in its tooltip.
  *
  * @summary A card's headline number, with its unit, that isn't a control.
  * @import import { PlainFigure } from 'src/components/SourceFigure';
  */
-export function PlainFigure({ value, unit }: PlainFigureProps) {
+export function PlainFigure({ value, unit, estimated }: PlainFigureProps) {
   return (
     <Typography component="p" sx={{ m: 0 }}>
-      <FigureText value={value} unit={unit} underline={false} />
+      <FigureText value={value} unit={unit} underline={false} estimated={estimated} />
     </Typography>
   );
 }
@@ -420,6 +444,8 @@ export type SourceFigureProps = {
   value: string;
   /** The unit, shown after the value in `body1` and `text.secondary`. Defaults to none. */
   unit?: string;
+  /** For a value its source estimated, the source's name as it reads after “Estimated by”: `the utility`. The figure is followed by the word “est.” in `text.secondary`, its tooltip and name say “Estimated by the utility”, and the dialog's Estimated by Source row says so too unless `source.estimatedBySource` says more. Never Enertiv, and never for a total. Defaults to none. */
+  estimated?: string;
   /** Where the figure comes from: the dialog's rows, in the provenance popover's order. */
   source: FigureSource;
   /** What clarifies the number (what it counts, how sure it is): the dialog's description, at the top; an array shows one line each. Defaults to none. */
@@ -435,15 +461,16 @@ export type SourceFigureProps = {
  * with `note` as the description and then the rows the provenance popover lists (`ProvenanceFigure`), in
  * the same order: Built From, Period, Calculation (with Show the Figures where `source.figures` is given),
  * Includes (the scope, then what it leaves out), Estimated by Source, Awaiting Bill, Last Updated and
- * ENERGY STAR Last Push, with an optional View Sources action. The card carries no caption under the
- * figure; what would have gone there goes in `note`.
+ * ENERGY STAR Last Push, with an optional View Sources action. A value its source estimated is followed
+ * by “est.” (`estimated`). The card carries no caption under the figure; what would have gone there goes
+ * in `note`.
  *
  * @summary A card's headline number that opens a dialog with its description and where it comes from.
  * @import import { SourceFigure } from 'src/components/SourceFigure';
  */
-export function SourceFigure({ title, value, unit, source, note, sources, onViewSources }: SourceFigureProps) {
+export function SourceFigure({ title, value, unit, estimated, source, note, sources, onViewSources }: SourceFigureProps) {
   return (
-    <ExplainedFigure title={title} value={value} unit={unit} onViewSources={onViewSources}>
+    <ExplainedFigure title={title} value={value} unit={unit} estimated={estimated} onViewSources={onViewSources}>
       <FigureExplanation
         description={note}
         sources={sources ?? [{ label: source.source }]}
@@ -451,7 +478,7 @@ export function SourceFigure({ title, value, unit, source, note, sources, onView
         calculation={source.calculation}
         figures={source.figures}
         includes={[source.scope, source.coverage]}
-        estimatedBySource={source.estimatedBySource}
+        estimatedBySource={source.estimatedBySource ?? (estimated ? `This value is estimated by ${estimated}` : undefined)}
         awaitingBill={source.awaitingBill}
         updated={source.updated}
         energyStarPush={source.energyStarPush}

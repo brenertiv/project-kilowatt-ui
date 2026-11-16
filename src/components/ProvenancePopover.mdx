@@ -49,7 +49,7 @@ const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 </p>
 ```
 
-`figure` is a `CitedFigure`: a `label` naming the number, its `value` formatted with `Intl.NumberFormat`, an optional `unit`, and its `provenance`. `provenance.builtFrom` and `provenance.calculation` are required; `period`, `figures`, `includes` (with `missing`, a link to what is left out), `estimatedBySource`, `awaitingBill` and `energyStarPush` are optional, and a row that isn't given is left out. `calculation` is a sentence in words; `figures` holds what an auditor checks it against: `formula`, the formula with the values used, a line per step, and for an emissions figure `factors` (the factor applied per fuel, with its `source` and `year`) and `factorsTable`, a link to the building's factors table. `updated` is epoch milliseconds, or `null` when no date is recorded; the row then says so in words. `onNavigate` receives a link's `to` after the popover has closed.
+`figure` is a `CitedFigure`: a `label` naming the number, its `value` formatted with `Intl.NumberFormat`, an optional `unit`, and its `provenance`. `provenance.builtFrom` and `provenance.calculation` are required; `period`, `figures`, `includes` (with `missing`, a link to what is left out), `estimatedBySource`, `awaitingBill` and `energyStarPush` are optional, and a row that isn't given is left out. `calculation` is a sentence in words; `figures` holds what an auditor checks it against: `formula`, the formula with the values used, a line per step, and for an emissions figure `factors` (the factor applied per fuel, with its `source` and `year`) and `factorsTable`, a link to the building's factors table. `updated` is epoch milliseconds, or `null` when no date is recorded; the row then says so in words. `estimated` on the figure names the source of a value its source estimated (`estimated: 'the utility'`). `onNavigate` receives a link's `to` after the popover has closed.
 
 ## Variants
 
@@ -58,6 +58,7 @@ const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 - **Show the Figures:** with `provenance.figures`, a Show the Figures button sits under the calculation's sentence, folded by default. It lays out the formula with the values used, a line per step in tabular numerals.
 - **An emissions figure:** Show the Figures also lists the emission factor applied per fuel, each with its source and year, and links to the building's factors table.
 - **Bottom sheet:** below `md`, MUI's bottom `Drawer`, with a heading naming the number and a Close button in its top right.
+- **Estimated:** with `figure.estimated`, the word “est.” follows the number in `text.secondary`, inside the button; the tooltip and the button's name say “Estimated by the utility”, and the popover says so under Estimated by Source unless `provenance.estimatedBySource` says more.
 - **Linked and plain sources:** a source with `to` is a link that closes the popover and calls `onNavigate`; one without is plain text.
 
 ## Do and don't
@@ -66,6 +67,8 @@ const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 - Don't put the unit in `value` or format the number in the label; the label names what the number is.
 - Do write each row as one short sentence about the number on screen, with real punctuation (“ ” ’ – —).
 - Don't write “estimated” alone in Estimated by Source; say which values and which source.
+- Do mark a single value its source estimated with `estimated`, naming the source.
+- Don't mark a total with `estimated`, or name Enertiv as the estimator; a total says what it includes under Includes.
 - Do leave out a row that doesn't apply by not passing it; the popover shows only the rows it is given.
 - Don't pass a placeholder such as “n/a” or an empty string to fill a row.
 - Do pass `null` as `updated` when the source records no date, so the row says so.
@@ -95,7 +98,7 @@ The number's underline (`border.level2`), its hover tint (`action.hover`) and th
 
 ## Accessibility
 
-- The number is a `button` (`aria-haspopup="dialog"`, with `aria-expanded` while open) named for the number and what it opens: “Monthly Electricity Spend, $42,180: where this number comes from”. The label and value lead the name, so people using speech input can say what they see. Its `info` icon is hidden from assistive technology. A tooltip repeats “Where this number comes from” on hover and focus.
+- The number is a `button` (`aria-haspopup="dialog"`, with `aria-expanded` while open) named for the number and what it opens: “Monthly Electricity Spend, $42,180: where this number comes from”. The label and value lead the name, so people using speech input can say what they see. Its `info` icon is hidden from assistive technology. A tooltip repeats “Where this number comes from” on hover and focus. For an estimated value the name adds who estimated it (“March Gas Bill, $3,940, estimated by the utility: where this number comes from”) and the tooltip says “Estimated by the utility”.
 - Hover is an extra way in for a mouse, never the only one: the keyboard opens the popover with Enter or Space and touch with a tap, and both end in the same popover. Opened by hover it can be pointed at without closing, stays until the pointer leaves it and the number, and closes on Escape (WCAG 1.4.13).
 - Show the Figures is a `button` with `aria-expanded` and `aria-controls`; the formula is a list named Formula and the factors a list named Emission Factors.
 - The underline and the hover tint are visual cues only; the button role and its name tell screen readers the number opens something.
