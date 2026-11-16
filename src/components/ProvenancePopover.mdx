@@ -3,12 +3,12 @@ import * as ProvenancePopoverStories from './ProvenancePopover.stories';
 
 <Meta
   of={ProvenancePopoverStories}
-  summary="Kilowatt's ProvenanceFigure for a number cited in running text: a button that opens a popover (a bottom sheet on phones) listing where the number comes from, its period, calculation, what it includes and when it was last updated."
+  summary="Kilowatt's ProvenanceFigure for a number cited in running text: a button that opens a popover (a bottom sheet on phones), on click or after a mouse rests on it, listing where the number comes from, its period, calculation, what it includes and when it was last updated."
 />
 
 # ProvenanceFigure
 
-`ProvenanceFigure` sets a number cited in running text, such as a figure in an assistant's answer, and lets people see where it comes from without leaving the sentence. The number, its unit and the `info` icon are one button, in the surrounding text's font with a faint underline and the hover tint, and it opens MUI's `Popover` (`@mui/material`, Material UI v9), anchored under the number, holding a description list of the rows that apply: Built From, Period, Calculation, Includes, Estimated by Source, Awaiting Bill, Last Updated and ENERGY STAR Last Push. Below the `md` breakpoint it opens as a bottom sheet instead, MUI's bottom `Drawer`, titled with the number and closed by a Close button. It's Kilowatt's own component, built from MUI's `ButtonBase`, `Popover`, `Drawer`, `Link` and `IconButton`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/), [Popover API](https://mui.com/material-ui/api/popover/) and [Drawer API](https://mui.com/material-ui/api/drawer/).
+`ProvenanceFigure` sets a number cited in running text, such as a figure in an assistant's answer, and lets people see where it comes from without leaving the sentence. The number, its unit and the `info` icon are one button, in the surrounding text's font with a faint underline and the hover tint, and it opens MUI's `Popover` (`@mui/material`, Material UI v9), anchored under the number, holding a description list of the rows that apply, in this order: Built From, Period, Calculation, Includes, Estimated by Source, Awaiting Bill, Last Updated and ENERGY STAR Last Push. It opens on click, tap, Enter or Space, and for a mouse also after the pointer rests on the number for a moment, its tooltip first and the popover after. The calculation is a sentence; the formula and the values used sit under it behind Show the Figures. Below the `md` breakpoint it opens as a bottom sheet instead, MUI's bottom `Drawer`, titled with the number and closed by a Close button. It's Kilowatt's own component, built from MUI's `ButtonBase`, `Tooltip`, `Popover`, `Drawer`, `Link`, `IconButton`, `Button` and `Collapse`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/), [Popover API](https://mui.com/material-ui/api/popover/) and [Drawer API](https://mui.com/material-ui/api/drawer/).
 
 <Canvas of={ProvenancePopoverStories.InText} />
 
@@ -16,7 +16,7 @@ import * as ProvenancePopoverStories from './ProvenancePopover.stories';
 
 - Use `ProvenanceFigure` for a number inside a sentence that people may need to trust or check: a total, an intensity, a count, anything worked out from data and cited in prose.
 - Pass the provenance as data (`CitedFigure`), so a message or record that cites the number can store where it came from and show it again later.
-- For a card's headline number, use `SourceFigure`, which opens a dialog with the same kind of explanation sized for a card.
+- For a card's headline number, use `SourceFigure`, which opens a dialog listing the same rows in the same order, with more room.
 - For a number in a table or a chart, use plain text with tabular numerals and give the table or chart its own source; a popover per cell is too many controls.
 - For a number with nothing to explain, use plain text; a button with nothing behind it costs a tab stop.
 
@@ -49,11 +49,14 @@ const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 </p>
 ```
 
-`figure` is a `CitedFigure`: a `label` naming the number, its `value` formatted with `Intl.NumberFormat`, an optional `unit`, and its `provenance`. `provenance.builtFrom` and `provenance.calculation` are required; `period`, `includes` (with `missing`, a link to what is left out), `estimatedBySource`, `awaitingBill` and `energyStarPush` are optional, and a row that isn't given is left out. `updated` is epoch milliseconds, or `null` when no date is recorded; the row then says so in words. `onNavigate` receives a link's `to` after the popover has closed.
+`figure` is a `CitedFigure`: a `label` naming the number, its `value` formatted with `Intl.NumberFormat`, an optional `unit`, and its `provenance`. `provenance.builtFrom` and `provenance.calculation` are required; `period`, `figures`, `includes` (with `missing`, a link to what is left out), `estimatedBySource`, `awaitingBill` and `energyStarPush` are optional, and a row that isn't given is left out. `calculation` is a sentence in words; `figures` holds what an auditor checks it against: `formula`, the formula with the values used, a line per step, and for an emissions figure `factors` (the factor applied per fuel, with its `source` and `year`) and `factorsTable`, a link to the building's factors table. `updated` is epoch milliseconds, or `null` when no date is recorded; the row then says so in words. `onNavigate` receives a link's `to` after the popover has closed.
 
 ## Variants
 
-- **Popover:** at `md` and above, MUI's `Popover` under the number, capped at 44 characters a line. Clicking outside or pressing Escape closes it.
+- **Popover:** at `md` and above, MUI's `Popover` under the number, capped at 44 characters a line. Opened by click, tap, Enter or Space it is modal, as MUI's `Popover` is: the page doesn't scroll under it, focus moves into it, and clicking outside or pressing Escape closes it.
+- **Opened by hover:** for a mouse, resting on the number shows its tooltip (“Where this number comes from”) after 100ms and opens the popover after 600ms. Opened this way it takes no focus and leaves the page scrolling, stays open while the pointer is on the number or the popover, and closes 200ms after the pointer leaves both, or on Escape. A click on the number keeps it open as a click's popover. Touch and the keyboard never open it by hover, and the bottom sheet opens by tap or click only.
+- **Show the Figures:** with `provenance.figures`, a Show the Figures button sits under the calculation's sentence, folded by default. It lays out the formula with the values used, a line per step in tabular numerals.
+- **An emissions figure:** Show the Figures also lists the emission factor applied per fuel, each with its source and year, and links to the building's factors table.
 - **Bottom sheet:** below `md`, MUI's bottom `Drawer`, with a heading naming the number and a Close button in its top right.
 - **Linked and plain sources:** a source with `to` is a link that closes the popover and calls `onNavigate`; one without is plain text.
 
@@ -68,24 +71,33 @@ const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 - Do pass `null` as `updated` when the source records no date, so the row says so.
 - Don't invent a date, or pass today's date, for a number whose source records none.
 - Do give each source a `to` where it has a page of its own, so people can go on to the data itself.
-- Don't open the popover on hover or focus; it opens on click, Enter or Space, as the button role promises.
+- Do leave opening to the component: click, tap, Enter or Space, and a mouse's rest on the number.
+- Don't open the popover on focus, or on hover from touch; a popover that opens as focus passes traps a keyboard user in every number on the way.
+- Do write `calculation` as a sentence anyone can read, and put the formula and its values in `figures`.
+- Don't put the formula in the calculation's sentence or show the figures unfolded; most readers want the sentence, and an auditor asks for the rest.
 - Do keep the number inside its sentence, in the sentence's font; the button inherits it.
 - Don't style the number with `sx` or a different variant to make it stand out; the underline and the icon mark it.
 
 ## MUI departures
 
+- `button-text-case`: Show the Figures is shown as written, in Title Case, not uppercased.
+- `button-text-weight`: Show the Figures is at the regular weight.
+- `control-outlines`: Show the Figures is a text button, so it shows no outline; a primary outlined button would take `palette.control.border`.
+- `flat-buttons`: Show the Figures is a text button, so it has no shadow to remove; a contained button would be flat.
 - `focus-ring`: the number is a `ButtonBase` and the sheet's close button an `IconButton`, so keyboard focus is the theme's 2px ring in `palette.control.focus`, 2px outside the control. The component adds no focus style of its own.
 - `icon-button-radius`: the sheet's Close button takes the theme radius (8px) instead of MUI's circle.
-- `icons`: the `info` icon on the number and the `close` icon on the sheet's button are `Icon` from `src/icons`, Material Symbols at weight 300.
+- `icons`: the `info` icon on the number, the `close` icon on the sheet's button and the `expand_more` on Show the Figures are `Icon` from `src/icons`, Material Symbols at weight 300.
 - `link-underline`: a source's link has no underline; it is told apart by its color. The number's own underline is the figure's, in `border.level2`, not a link's.
-- `medium-size`: the sheet's Close button stays at medium, the default.
+- `medium-size`: the sheet's Close button and Show the Figures stay at medium, the default.
 - `paper-surface-levels`: the popover and the bottom sheet sit on their elevation's surface level, as every `Popover` and `Drawer` does, in place of MUI's white light surface and its dark-scheme overlay.
 
 The number's underline (`border.level2`), its hover tint (`action.hover`) and the rows' type (`caption` terms in `text.secondary`, `body2` details) are existing theme roles. Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
 
 ## Accessibility
 
-- The number is a `button` (`aria-haspopup="dialog"`, with `aria-expanded` while open) named for the number and what it opens: “Monthly Electricity Spend, $42,180: where this number comes from”. The label and value lead the name, so people using speech input can say what they see. Its `info` icon is hidden from assistive technology.
+- The number is a `button` (`aria-haspopup="dialog"`, with `aria-expanded` while open) named for the number and what it opens: “Monthly Electricity Spend, $42,180: where this number comes from”. The label and value lead the name, so people using speech input can say what they see. Its `info` icon is hidden from assistive technology. A tooltip repeats “Where this number comes from” on hover and focus.
+- Hover is an extra way in for a mouse, never the only one: the keyboard opens the popover with Enter or Space and touch with a tap, and both end in the same popover. Opened by hover it can be pointed at without closing, stays until the pointer leaves it and the number, and closes on Escape (WCAG 1.4.13).
+- Show the Figures is a `button` with `aria-expanded` and `aria-controls`; the formula is a list named Formula and the factors a list named Emission Factors.
 - The underline and the hover tint are visual cues only; the button role and its name tell screen readers the number opens something.
 - The popover and the sheet are MUI's `Popover` and `Drawer`, each with a paper of `role="dialog"` labelled by its heading (`aria-labelledby`), which names the number. MUI moves focus into it, traps it there, closes on Escape or a click outside, and returns focus to the number. The sheet's close button is named Close.
 - The rows are a description list (`dl`), so screen readers read each term with its detail, and Built From's sources are a list. A source with a link is a `button` styled as a link, since it goes through `onNavigate` after the popover closes; links and the number keep a 24px hit area.
@@ -93,7 +105,7 @@ The number's underline (`border.level2`), its hover tint (`action.hover`) and th
 
 ## Related
 
-- `SourceFigure` for a card's headline number, which opens a dialog with the same kind of explanation.
+- `SourceFigure` for a card's headline number, which opens a dialog with the same rows in the same order.
 - `Link` for a source's link once the popover has closed.
 - Rules → Typography on tabular numerals, and Rules → Content and layout on `Intl` formatting and line length.
 
