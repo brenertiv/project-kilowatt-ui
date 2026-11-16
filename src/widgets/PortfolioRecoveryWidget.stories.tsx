@@ -24,8 +24,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Twelve months of recovery. October is still being billed, so it's dashed and its tooltip says "incomplete
- * month"; the table ranks September's properties, lowest first.
+ * Twelve months of recovery. October has bills for fewer than nine in ten properties, so it's still being billed:
+ * dashed, with its count in the tooltip and under the chart; the table ranks September's properties, lowest first.
  */
 export const Portfolio: Story = {
   play: async ({ canvas }) => {
@@ -33,6 +33,7 @@ export const Portfolio: Story = {
     await expect(table).toHaveTextContent('200 Vesey Street');
     const figure = canvas.getByRole('figure', { name: /still being billed/ });
     await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
+    await expect(canvas.getByText(/^Still being billed: \d+ of \d+ properties$/)).toBeVisible();
   },
 };
 

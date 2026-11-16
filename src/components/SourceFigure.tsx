@@ -1,7 +1,4 @@
 import { createContext, useContext, useId, useState, type ReactNode } from 'react';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
 import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import Dialog from '@mui/material/Dialog';
@@ -17,24 +14,47 @@ import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { Icon } from '../icons';
+import { ShowTheFigures, type ProvenanceFactor } from './ProvenancePopover';
 
-/** Where a figure comes from, each as one short line. `SourceFigure`'s dialog sets `source` under Sources and the rest under Calculation. */
+/** The figures behind a figure's calculation, for someone checking it: what Show the Figures lays out in the dialog. */
+export type FigureFigures = {
+  /** The formula with the values used, a line per step: “2,696,400 kBtu ÷ 42,000 ft² = 64.2 kBtu/ft²”. */
+  formula: string[];
+  /** For an emissions figure: the factor applied per fuel, with its source and year. Defaults to none. */
+  factors?: ProvenanceFactor[];
+  /** For an emissions figure: a link to the building's factors table. Defaults to none. */
+  factorsTable?: { label: string; href: string };
+};
+
+/**
+ * Where a figure comes from, each as one short line. `SourceFigure`'s dialog lists them as the provenance
+ * popover does (`ProvenanceFigure`), in the same order: Built From, Period, Calculation, Includes, Estimated
+ * by Source, Awaiting Bill, Last Updated and ENERGY STAR Last Push, leaving out a row that isn't given.
+ */
 export type FigureSource = {
   /** Where the data comes from: “Utility bills, then interval meter data where no bill covers the period”. */
   source: string;
   /** The period the figure covers: “January–December 2025”. */
   period: string;
-  /** How the figure is worked out from the data. */
+  /** How the figure is worked out from the data, as a sentence. */
   calculation: string;
-  /** What the figure counts: which properties, meters or areas. */
+  /** The formula with the values used, and an emissions figure's factors, under the calculation behind Show the Figures, folded until asked for. Defaults to none, and the control is left out. */
+  figures?: FigureFigures;
+  /** What the figure counts: which properties, meters or areas. The first line under Includes. */
   scope: string;
-  /** What the figure includes: how much of the scope has data, and what is left out. The dialog labels it Includes. */
+  /** What the figure includes: how much of the scope has data, and what is left out. The second line under Includes. */
   coverage: string;
+  /** Which values are estimated and by which source, never “estimated” alone. Defaults to none, and the row is left out. */
+  estimatedBySource?: string;
+  /** The bills still to come. Defaults to none, and the row is left out. */
+  awaitingBill?: string;
   /** When the data was last updated, formatted with `Intl.DateTimeFormat`. */
   updated: string;
+  /** For a figure synced to ENERGY STAR, when it was last pushed. Defaults to none, and the row is left out. */
+  energyStarPush?: string;
 };
 
-/** A place a figure's data comes from: a link in the dialog's Sources list. */
+/** A place a figure's data comes from: a link in the dialog's Built From list. */
 export type FigureLink = {
   /** What the place is called: “Utility bills”. */
   label: string;
@@ -46,7 +66,7 @@ export type FigureLink = {
   records?: FigureRecord[];
 };
 
-/** A record a figure is built from: a link in the dialog's Sources list that opens it. */
+/** A record a figure is built from: a link in the dialog's Built From list that opens it. */
 export type FigureRecord = {
   /** Identifies the record in the list. */
   id: string;
@@ -94,41 +114,69 @@ function RecordLinks({ records }: { records: FigureRecord[] }) {
   );
 }
 
-/** One accordion of a figure's explanation, collapsed until opened: MUI's outlined variant. */
-function ExplanationSection({ title, following, children }: { title: string; following?: boolean; children: ReactNode }) {
-  const id = useId();
+/** One term and its detail in the explanation's description list, as the provenance popover sets a row. */
+function ExplanationRow({ term, children }: { term: string; children: ReactNode }) {
   return (
-    // One border per edge: an accordion that follows another leaves the shared edge to it.
-    <Accordion disableGutters variant="outlined" sx={following ? { borderTop: 0 } : undefined}>
-      <AccordionSummary expandIcon={<Icon name="expand_more" />} aria-controls={`${id}-content`} id={`${id}-header`}>
-        <Typography variant="subtitle2" component="h3">
-          {title}
-        </Typography>
-      </AccordionSummary>
-      <AccordionDetails sx={{ pt: 0 }}>{children}</AccordionDetails>
-    </Accordion>
+    <div>
+      <Typography component="dt" variant="caption" sx={{ color: 'text.secondary' }}>
+        {term}
+      </Typography>
+      <Typography component="dd" variant="body2" sx={{ m: 0 }}>
+        {children}
+      </Typography>
+    </div>
   );
 }
 
 export type FigureExplanationProps = {
   /** What the figure is, always shown, first; an array shows one line each. Defaults to none. */
   description?: string | string[];
-  /** How the figure is worked out: the Calculation accordion, left out when empty. Defaults to none. */
-  calculation?: ReactNode;
-  /** Where the data comes from: the Sources accordion, as links, left out when empty. Defaults to none. */
+  /** Built From: where the data comes from, as links where a place has one. Defaults to none, and the row is left out. */
   sources?: FigureLink[];
+  /** Period: the period the figure covers. Defaults to none, and the row is left out. */
+  period?: string;
+  /** Calculation: how the figure is worked out, as a sentence or your own content. Defaults to none, and the row is left out. */
+  calculation?: ReactNode;
+  /** The formula with the values used, under the calculation behind Show the Figures. Defaults to none, and the control is left out. */
+  figures?: FigureFigures;
+  /** Includes: what the figure counts and what is left out; an array shows one line each. Defaults to none, and the row is left out. */
+  includes?: string | string[];
+  /** Estimated by Source: which values are estimated and by which source. Defaults to none, and the row is left out. */
+  estimatedBySource?: string;
+  /** Awaiting Bill: the bills still to come. Defaults to none, and the row is left out. */
+  awaitingBill?: string;
+  /** Last Updated: when the data was last updated, already formatted. Defaults to none, and the row is left out. */
+  updated?: string;
+  /** ENERGY STAR Last Push: when a figure synced to ENERGY STAR was last pushed. Defaults to none, and the row is left out. */
+  energyStarPush?: string;
 };
 
 /**
- * What a figure's dialog says: a description, then Calculation and Sources as outlined, collapsed
- * accordions, each left out when empty. `SourceFigure` builds one from its `source`; put one in an
- * `ExplainedFigure` for a figure that isn't a `SourceFigure`, so every figure's dialog reads the same way.
+ * What a figure's dialog says: a description, then the rows the provenance popover lists
+ * (`ProvenanceFigure`), under the same names and in the same order, as one description list: Built From,
+ * Period, Calculation (with the formula behind Show the Figures), Includes, Estimated by Source, Awaiting
+ * Bill, Last Updated and ENERGY STAR Last Push. A row that isn't given is left out. `SourceFigure` builds
+ * one from its `source`; put one in an `ExplainedFigure` for a figure that isn't a `SourceFigure`, so
+ * every figure's dialog reads the same way, and the same way as a number cited in text.
  *
- * @summary A figure's explanation: a description, then Calculation and Sources accordions.
+ * @summary A figure's explanation: a description, then the provenance popover's rows in its order.
  * @import import { FigureExplanation } from 'src/components/SourceFigure';
  */
-export function FigureExplanation({ description, calculation, sources = [] }: FigureExplanationProps) {
+export function FigureExplanation({
+  description,
+  sources = [],
+  period,
+  calculation,
+  figures,
+  includes,
+  estimatedBySource,
+  awaitingBill,
+  updated,
+  energyStarPush,
+}: FigureExplanationProps) {
   const lines = description === undefined ? [] : Array.isArray(description) ? description : [description];
+  const included = includes === undefined ? [] : Array.isArray(includes) ? includes : [includes];
+  const rows = sources.length > 0 || period || calculation || included.length > 0 || estimatedBySource || awaitingBill || updated || energyStarPush;
   return (
     <Stack sx={{ gap: 2 }}>
       {lines.length > 0 && (
@@ -140,48 +188,90 @@ export function FigureExplanation({ description, calculation, sources = [] }: Fi
           ))}
         </Stack>
       )}
-      {(calculation || sources.length > 0) && (
-        <div>
-          {calculation && (
-            <ExplanationSection title="Calculation">
-              {typeof calculation === 'string' ? <Typography variant="body2">{calculation}</Typography> : calculation}
-            </ExplanationSection>
-          )}
+      {rows && (
+        <Stack component="dl" sx={{ gap: 1.5, m: 0 }}>
           {sources.length > 0 && (
-            <ExplanationSection title="Sources" following={Boolean(calculation)}>
-              <List disablePadding aria-label="Sources">
-                {sources.map(({ label, detail, href, records }) => (
-                  <ListItem key={label} disableGutters sx={{ py: 0.5 }}>
-                    <ListItemText
-                      primary={
-                        href ? (
-                          <Link href={href} variant="body2" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                            {label}
-                            <Icon name="arrow_right_alt" fontSize="small" />
-                          </Link>
-                        ) : (
-                          label
-                        )
-                      }
-                      // A source's records as links under its detail; a list can't sit in a paragraph, so the line is a div then.
-                      secondary={
-                        records ? (
-                          <>
-                            {detail}
-                            <RecordLinks records={records} />
-                          </>
-                        ) : (
-                          detail
-                        )
-                      }
-                      slotProps={records ? { secondary: { component: 'div' } } : undefined}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </ExplanationSection>
+            <div>
+              <Typography component="dt" variant="caption" sx={{ color: 'text.secondary' }}>
+                Built From
+              </Typography>
+              <Stack component="dd" sx={{ m: 0 }}>
+                <List disablePadding aria-label="Built From">
+                  {sources.map(({ label, detail, href, records }) => (
+                    <ListItem key={label} disableGutters sx={{ py: 0.25 }}>
+                      <ListItemText
+                        sx={{ my: 0 }}
+                        primary={
+                          href ? (
+                            <Link href={href} variant="body2" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+                              {label}
+                              <Icon name="arrow_right_alt" fontSize="small" />
+                            </Link>
+                          ) : (
+                            label
+                          )
+                        }
+                        // A source's records as links under its detail; a list can't sit in a paragraph, so the line is a div then.
+                        secondary={
+                          records ? (
+                            <>
+                              {detail}
+                              <RecordLinks records={records} />
+                            </>
+                          ) : (
+                            detail
+                          )
+                        }
+                        slotProps={{ primary: { variant: 'body2' }, ...(records ? { secondary: { component: 'div' } } : {}) }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Stack>
+            </div>
           )}
-        </div>
+          {period && <ExplanationRow term="Period">{period}</ExplanationRow>}
+          {calculation && (
+            <div>
+              <Typography component="dt" variant="caption" sx={{ color: 'text.secondary' }}>
+                Calculation
+              </Typography>
+              <Stack component="dd" sx={{ m: 0 }}>
+                {typeof calculation === 'string' ? <Typography variant="body2">{calculation}</Typography> : calculation}
+                {figures && (
+                  <ShowTheFigures
+                    figures={figures}
+                    factorsLink={
+                      figures.factorsTable && (
+                        <Link href={figures.factorsTable.href} variant="body2" sx={{ alignSelf: 'flex-start' }}>
+                          {figures.factorsTable.label}
+                        </Link>
+                      )
+                    }
+                  />
+                )}
+              </Stack>
+            </div>
+          )}
+          {included.length > 0 && (
+            <div>
+              <Typography component="dt" variant="caption" sx={{ color: 'text.secondary' }}>
+                Includes
+              </Typography>
+              <Stack component="dd" sx={{ m: 0, gap: 0.5 }}>
+                {included.map((line) => (
+                  <Typography key={line} variant="body2">
+                    {line}
+                  </Typography>
+                ))}
+              </Stack>
+            </div>
+          )}
+          {estimatedBySource && <ExplanationRow term="Estimated by Source">{estimatedBySource}</ExplanationRow>}
+          {awaitingBill && <ExplanationRow term="Awaiting Bill">{awaitingBill}</ExplanationRow>}
+          {updated && <ExplanationRow term="Last Updated">{updated}</ExplanationRow>}
+          {energyStarPush && <ExplanationRow term="ENERGY STAR Last Push">{energyStarPush}</ExplanationRow>}
+        </Stack>
       )}
     </Stack>
   );
@@ -190,8 +280,25 @@ export function FigureExplanation({ description, calculation, sources = [] }: Fi
 /** A value longer than this (a phrase rather than a number) steps down from `h2` to `h4`, so it still fits on a card. */
 const longValue = 14;
 
-/** The headline number as it reads on a card: `h2` with tabular numerals (`h4` for a long phrase), the unit after it in `body1`. */
-function FigureText({ value, unit, underline }: { value: string; unit?: string; underline: boolean }) {
+/** What the estimated marker's tooltip says, and what the figure's name adds: “Estimated by the utility”. */
+const estimatedBy = (source: string) => `Estimated by ${source}`;
+
+/**
+ * The estimated marker: the word “est.” after a value its source estimated, in `body1` and `text.secondary` as the
+ * unit is. On a figure that isn't a control it carries its own tooltip and takes keyboard focus, so the tooltip opens
+ * without a pointer; inside a figure's button, the button carries the tooltip.
+ */
+function EstimatedMarker({ source, standalone }: { source: string; standalone: boolean }) {
+  const marker = (
+    <Typography component="span" variant="body1" tabIndex={standalone ? 0 : undefined} sx={{ color: 'text.secondary', display: 'inline-block', ml: 0.5, borderRadius: 1 }}>
+      est.
+    </Typography>
+  );
+  return standalone ? <Tooltip title={estimatedBy(source)}>{marker}</Tooltip> : marker;
+}
+
+/** The headline number as it reads on a card: `h2` with tabular numerals (`h4` for a long phrase), the unit after it in `body1`, then “est.” for an estimated value. */
+function FigureText({ value, unit, underline, estimated }: { value: string; unit?: string; underline: boolean; estimated?: string }) {
   return (
     <Typography
       variant={value.length > longValue ? 'h4' : 'h2'}
@@ -214,6 +321,7 @@ function FigureText({ value, unit, underline }: { value: string; unit?: string; 
           {unit}
         </Typography>
       )}
+      {estimated && <EstimatedMarker source={estimated} standalone={!underline} />}
     </Typography>
   );
 }
@@ -225,6 +333,8 @@ export type ExplainedFigureProps = {
   value: string;
   /** The unit, shown after the value in `body1` and `text.secondary`. Defaults to none. */
   unit?: string;
+  /** For a value its source estimated, the source's name as it reads after “Estimated by”: `the utility`. The figure is followed by the word “est.” in `text.secondary`, and its tooltip and name say “Estimated by the utility”. Never Enertiv, and never for a total: a total says what it includes instead. Defaults to none. */
+  estimated?: string;
   /** What explains the figure: the dialog's content, usually a `FigureExplanation`. */
   children: ReactNode;
   /** Where View Sources goes, after the dialog closes. Defaults to none, and the action isn't shown. */
@@ -234,24 +344,25 @@ export type ExplainedFigureProps = {
 /**
  * A headline number that opens what explains it. The number is a button with a faint `border.level2`
  * underline under the number (not the unit) and the theme's `action.hover` tint on hover; it opens a
- * `Dialog` titled with the card's title that holds the explanation. Use it for any figure a card would
+ * `Dialog` titled with the card's title that holds the explanation. A value its source estimated is followed
+ * by “est.” (`estimated`). Use it for any figure a card would
  * otherwise clarify with a caption under it; `SourceFigure` fills the dialog with where the figure comes
  * from, and `PlainFigure` sets a figure with nothing to explain in the same type.
  *
  * @summary A card's headline number as a button that opens a dialog explaining it.
  * @import import { ExplainedFigure } from 'src/components/SourceFigure';
  */
-export function ExplainedFigure({ title, value, unit, children, onViewSources }: ExplainedFigureProps) {
+export function ExplainedFigure({ title, value, unit, estimated, children, onViewSources }: ExplainedFigureProps) {
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const close = () => setOpen(false);
   return (
     <>
-      <Tooltip title={`View source: ${title}`}>
+      <Tooltip title={estimated ? `${estimatedBy(estimated)}. View source: ${title}` : `View source: ${title}`}>
         <ButtonBase
           focusRipple
           // The visible figure leads the name, so speech input can say what's on screen.
-          aria-label={`${unit ? `${value} ${unit}` : value}, view source for ${title}`}
+          aria-label={`${unit ? `${value} ${unit}` : value}${estimated ? `, estimated by ${estimated}` : ''}, view source for ${title}`}
           aria-haspopup="dialog"
           onClick={() => setOpen(true)}
           sx={{
@@ -267,7 +378,7 @@ export function ExplainedFigure({ title, value, unit, children, onViewSources }:
             '&:hover': { bgcolor: 'action.hover' },
           }}
         >
-          <FigureText value={value} unit={unit} underline />
+          <FigureText value={value} unit={unit} underline estimated={estimated} />
         </ButtonBase>
       </Tooltip>
       <Dialog open={open} onClose={close} fullWidth maxWidth="sm" aria-labelledby={titleId}>
@@ -306,19 +417,22 @@ export type PlainFigureProps = {
   value: string;
   /** The unit, shown after the value in `body1` and `text.secondary`. Defaults to none. */
   unit?: string;
+  /** For a value its source estimated, the source's name as it reads after “Estimated by”: `the utility`. The figure is followed by the word “est.” in `text.secondary`, which takes keyboard focus and shows “Estimated by the utility” in a tooltip. Defaults to none. */
+  estimated?: string;
 };
 
 /**
  * A headline number with nothing to explain: the same type as `ExplainedFigure` (`h2` with tabular
  * numerals, the unit after it in `body1` and `text.secondary`), as a paragraph rather than a control.
+ * A value its source estimated is followed by “est.” (`estimated`), with the source in its tooltip.
  *
  * @summary A card's headline number, with its unit, that isn't a control.
  * @import import { PlainFigure } from 'src/components/SourceFigure';
  */
-export function PlainFigure({ value, unit }: PlainFigureProps) {
+export function PlainFigure({ value, unit, estimated }: PlainFigureProps) {
   return (
     <Typography component="p" sx={{ m: 0 }}>
-      <FigureText value={value} unit={unit} underline={false} />
+      <FigureText value={value} unit={unit} underline={false} estimated={estimated} />
     </Typography>
   );
 }
@@ -330,11 +444,13 @@ export type SourceFigureProps = {
   value: string;
   /** The unit, shown after the value in `body1` and `text.secondary`. Defaults to none. */
   unit?: string;
-  /** Where the figure comes from: the dialog's Calculation shows How, Period, Scope and Includes, and its Sources the source with its last update. */
+  /** For a value its source estimated, the source's name as it reads after “Estimated by”: `the utility`. The figure is followed by the word “est.” in `text.secondary`, its tooltip and name say “Estimated by the utility”, and the dialog's Estimated by Source row says so too unless `source.estimatedBySource` says more. Never Enertiv, and never for a total. Defaults to none. */
+  estimated?: string;
+  /** Where the figure comes from: the dialog's rows, in the provenance popover's order. */
   source: FigureSource;
   /** What clarifies the number (what it counts, how sure it is): the dialog's description, at the top; an array shows one line each. Defaults to none. */
   note?: string | string[];
-  /** The places the data comes from, as links, in place of `source.source`; the last update moves to Calculation. Defaults to none. */
+  /** The places the data comes from, as links under Built From, in place of `source.source`. Defaults to none. */
   sources?: FigureLink[];
   /** Where View Sources goes, after the dialog closes. Defaults to none, and the action isn't shown. */
   onViewSources?: () => void;
@@ -342,40 +458,30 @@ export type SourceFigureProps = {
 
 /**
  * A headline number that opens its source: an `ExplainedFigure` whose dialog is a `FigureExplanation`,
- * with `note` as the description, Calculation (How, Period, Scope, Includes) and Sources, and an
- * optional View Sources action. The card carries no caption under the figure; what would have gone
- * there goes in `note`.
+ * with `note` as the description and then the rows the provenance popover lists (`ProvenanceFigure`), in
+ * the same order: Built From, Period, Calculation (with Show the Figures where `source.figures` is given),
+ * Includes (the scope, then what it leaves out), Estimated by Source, Awaiting Bill, Last Updated and
+ * ENERGY STAR Last Push, with an optional View Sources action. A value its source estimated is followed
+ * by “est.” (`estimated`). The card carries no caption under the figure; what would have gone there goes
+ * in `note`.
  *
- * @summary A card's headline number that opens a dialog with its description, calculation and sources.
+ * @summary A card's headline number that opens a dialog with its description and where it comes from.
  * @import import { SourceFigure } from 'src/components/SourceFigure';
  */
-export function SourceFigure({ title, value, unit, source, note, sources, onViewSources }: SourceFigureProps) {
-  const terms = [
-    ['How', source.calculation],
-    ['Period', source.period],
-    ['Scope', source.scope],
-    ['Includes', source.coverage],
-    ...(sources ? [['Last updated', source.updated]] : []),
-  ];
+export function SourceFigure({ title, value, unit, estimated, source, note, sources, onViewSources }: SourceFigureProps) {
   return (
-    <ExplainedFigure title={title} value={value} unit={unit} onViewSources={onViewSources}>
+    <ExplainedFigure title={title} value={value} unit={unit} estimated={estimated} onViewSources={onViewSources}>
       <FigureExplanation
         description={note}
-        calculation={
-          <Stack component="dl" sx={{ gap: 1.5, m: 0 }}>
-            {terms.map(([term, detail]) => (
-              <div key={term}>
-                <Typography component="dt" variant="caption" sx={{ color: 'text.secondary' }}>
-                  {term}
-                </Typography>
-                <Typography component="dd" variant="body2" sx={{ m: 0 }}>
-                  {detail}
-                </Typography>
-              </div>
-            ))}
-          </Stack>
-        }
-        sources={sources ?? [{ label: source.source, detail: `Last updated ${source.updated}` }]}
+        sources={sources ?? [{ label: source.source }]}
+        period={source.period}
+        calculation={source.calculation}
+        figures={source.figures}
+        includes={[source.scope, source.coverage]}
+        estimatedBySource={source.estimatedBySource ?? (estimated ? `This value is estimated by ${estimated}` : undefined)}
+        awaitingBill={source.awaitingBill}
+        updated={source.updated}
+        energyStarPush={source.energyStarPush}
       />
     </ExplainedFigure>
   );

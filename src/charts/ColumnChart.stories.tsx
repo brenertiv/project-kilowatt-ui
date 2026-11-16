@@ -35,6 +35,12 @@ const supplyDelivery = [
   { field: 'delivery', name: 'Delivery', slot: 0, striped: true },
 ];
 
+/** January to October, with October billed for 11 of the 18 properties in scope so far: under nine in ten, so still being billed. */
+const billedSoFar = monthlySupplyDelivery
+  .slice(0, 10)
+  .map((row) => (row.month === 'Oct' ? { ...row, supply: Math.round((row.supply * 11) / 18), delivery: Math.round((row.delivery * 11) / 18) } : row));
+const octoberBilling = [{ month: 'Oct', billed: 11, properties: 18 }];
+
 /**
  * Kilowatt's reference column chart: amCharts 5 through `useChart`, colored from the palette.
  * Each story shows it in a `Card` under a `CardHeader`, as it ships.
@@ -120,5 +126,25 @@ export const GroupedIntoOther: Story = {
     stacked: true,
     height: 280,
     summary: `${usd.format(plannedTotal)} of capital spend is planned across ${plannedProperties.length} properties from 2027 to 2031; the five largest are shown, the rest grouped as Other.`,
+  },
+};
+
+/** A trailing month still being billed: `stillBilling` draws its columns as dashed outlines in their own hue and says how many properties are billed so far, in the tooltip and under the chart. */
+export const StillBeingBilled: Story = {
+  name: 'Still being billed',
+  parameters: { card: { title: 'Electricity Cost' } },
+  args: {
+    unit: 'USD',
+    data: billedSoFar,
+    categoryField: 'month',
+    series: supplyDelivery,
+    stacked: true,
+    stillBilling: octoberBilling,
+    summary: `Electricity cost by month, January to October; cost peaked in ${peakMonth.month}. October is still being billed: 11 of 18 properties have a bill so far.`,
+  },
+  play: async ({ canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /October is still being billed/ });
+    await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
+    await expect(canvas.getByText('Still being billed: 11 of 18 properties')).toBeVisible();
   },
 };

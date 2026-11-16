@@ -64,6 +64,7 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - **Format every value with `Intl`.** One number of decimals per column, so the column lines up.
 - **Units sit in the header.** “Energy (kWh)” in the header and bare numbers in the cells, unless the units differ by row.
 - **A missing reading is a dash.** Show “–”, never 0, and keep it last when sorting: it has no place in the order. A missing fact that was never measured (a property with no floor area on record) says so in words instead, “Not recorded” in `text.secondary`, never a bare dash and never 0, as `ScopePicker`'s filter table does.
+- **An estimated value is marked est.** A value its source estimated (a utility's estimated read, a bill marked estimated) is the value as its source reported it, followed by the word **est.** in `text.secondary`: “1,240 est.”. The marker is a word, not an icon or a color, so it reads without a tooltip and in an export. It carries a `Tooltip` saying “Estimated by {source}” (never “estimated” alone, and never Enertiv), on hover and on keyboard focus, and where the cell's number opens its provenance, the marker opens it too. A total never takes one mark for the estimates inside it; it says what it includes instead.
 - **Headers are sentence case**, and name what's in the column. Set each in `HeaderLabel`, so it stays on one line, truncated with a tooltip, and its column is at least its longest word.
 
 ## Variants

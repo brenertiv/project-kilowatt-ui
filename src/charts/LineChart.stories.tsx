@@ -57,6 +57,14 @@ const year = (date: number) => new Date(date).getUTCFullYear();
 const firstDay = dailyUseAndTemperature[0];
 const lastDay = dailyUseAndTemperature[dailyUseAndTemperature.length - 1];
 
+/** Synthetic utility cost by month, November 2025 to October 2026, in US dollars. The last two months are still being billed, so they hold only part of their cost. */
+const monthlyCost = [41200, 44800, 47100, 45300, 42600, 39800, 43900, 49700, 52300, 50100, 38400, 21700].map((cost, i) => ({ date: Date.UTC(2025, 10 + i, 1), cost }));
+const costSeries = [{ field: 'cost', name: 'Utility cost', markers: 'all' as const }];
+const stillBilling = [
+  { month: Date.UTC(2026, 8, 1), billed: 15, properties: 18 },
+  { month: Date.UTC(2026, 9, 1), billed: 9, properties: 18 },
+];
+
 /**
  * Kilowatt's reference line chart: amCharts 5 through `useChart`, colored from the palette.
  * Each story shows it in a `Card` under a `CardHeader`, as it ships.
@@ -227,5 +235,25 @@ export const Pathways: Story = {
     interval: 'year',
     height: 320,
     summary: `With its planned projects the portfolio falls under the CRREM 1.5 °C pathway in ${year(crossing.date)}; without them it stays above it through 2050.`,
+  },
+};
+
+/** Trailing months still being billed: `stillBilling` dashes the line into them, hollows their markers and says how many properties are billed so far, in the tooltip and under the chart. */
+export const StillBeingBilled: Story = {
+  name: 'Still being billed',
+  parameters: { card: { title: 'Utility Cost' } },
+  args: {
+    unit: 'USD',
+    data: monthlyCost,
+    series: costSeries,
+    interval: 'month',
+    stillBilling,
+    summary:
+      'Utility cost by month, November 2025 to October 2026, peaking in July 2026. September and October 2026 are still being billed: 15 and 9 of 18 properties have a bill so far.',
+  },
+  play: async ({ canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /still being billed/ });
+    await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
+    await expect(canvas.getByText(/^Still being billed: .+, 15 of 18 properties; .+, 9 of 18 properties$/)).toBeVisible();
   },
 };

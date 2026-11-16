@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { stillBillingCaption, stillBillingDash, stillBillingNote, type StillBilling } from './stillBilling';
 import { axisUnit, legend, seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
@@ -30,6 +32,8 @@ export type ColumnChartProps = {
   stacked?: boolean;
   /** Lays the bars out horizontally, categories down the left in `data` order and values along the bottom: a ranking, or categories with long names. Sort `data` largest first for a ranking. Default `false`. */
   horizontal?: boolean;
+  /** The trailing months still being billed, oldest first, each named by its label in `categoryField`: fewer than nine in ten of the properties in scope have a bill for it (`isStillBilling` from `src/charts/stillBilling`). Every column of the month is a dashed outline in its series' hue, and "Still being billed: 9 of 18 properties" is in its tooltip and in a line under the chart. Keep it stable, like `data`. Default none. */
+  stillBilling?: StillBilling[];
   /** The name of the series that groups the smallest series when there are more than six colored ones. Default `'Other'`. */
   otherLabel?: string;
   /** The plot's height in pixels. Default `240`. */
@@ -37,6 +41,8 @@ export type ColumnChartProps = {
   /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
   inset?: ChartInset;
 };
+
+const noMonths: StillBilling[] = [];
 
 /** The most colored series a chart shows: the number of `chart.series` colors (Rules → Charts). */
 const maxSeries = 6;
@@ -60,7 +66,8 @@ function grouped(data: ColumnChartProps['data'], series: ColumnSeries[], otherLa
  * reference implementation that Enertiv's app rebuilds. Series take `chart.series` colors in
  * order, or a fixed `slot`; a `striped` series is a variant that keeps its hue. Past six colored
  * series, the smallest are grouped into one neutral series. `horizontal` turns the columns into bars
- * for a ranking. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
+ * for a ranking. A trailing month still being billed (`stillBilling`) is a dashed outline that says so in its tooltip
+ * and under the chart. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
  * @summary A column chart of values across categories, side by side or stacked, themed from the palette.
  * @import import { ColumnChart } from 'src/charts/ColumnChart';
@@ -73,6 +80,7 @@ export function ColumnChart({
   summary,
   stacked = false,
   horizontal = false,
+  stillBilling = noMonths,
   otherLabel = 'Other',
   height = 240,
   inset = 2,
@@ -107,6 +115,9 @@ export function ColumnChart({
       }
       const { rows, sets: drawn } = grouped(data, series, otherLabel);
       const fills = seriesColors(drawn, colors);
+      // A month still being billed, by its category label.
+      const billing = new Map(stillBilling.map((month) => [String(month.month), month]));
+      const billingOf = (target: am5.Graphics) => billing.get(String((target.dataItem?.dataContext as Record<string, string | number> | undefined)?.[categoryField]));
       const sets = drawn.map(({ field, name, striped }, i) => {
         const set = chart.series.push(
           am5xy.ColumnSeries.new(root, {
@@ -133,19 +144,39 @@ export function ColumnChart({
           // and side-by-side columns line up, with no outline. (amCharts centers a stroke on the edge, which widens a column.)
           set.columns.template.set('fillPattern', am5.LinePattern.new(root, { color: colors.surface, rotation: 45, strokeWidth: 1, gap: 4 }));
         }
+        if (billing.size) {
+          // A month still being billed is its columns' outlines, dashed in the series' own hue with no fill, and its
+          // tooltip says how many properties are billed so far: the state reads by pattern and in words, not by color.
+          const columns = set.columns.template.adapters;
+          columns.add('fillOpacity', (value, target) => (billingOf(target) ? 0 : value));
+          columns.add('fillPattern', (value, target) => (billingOf(target) ? undefined : value));
+          columns.add('strokeOpacity', (value, target) => (billingOf(target) ? 1 : value));
+          columns.add('strokeWidth', (value, target) => (billingOf(target) ? 2 : value));
+          columns.add('strokeDasharray', (value, target) => (billingOf(target) ? stillBillingDash : value));
+          columns.add('tooltipText', (value, target) => {
+            const month = billingOf(target);
+            return month && value ? `${value}\n${stillBillingNote(month)}` : value;
+          });
+        }
         return set;
       });
       categoryAxis.data.setAll(rows);
       if (sets.length > 1) chart.children.push(legend(root)).data.setAll(sets);
       for (const set of sets) set.data.setAll(rows);
     },
-    [data, categoryField, series, unit, stacked, horizontal, otherLabel],
+    [data, categoryField, series, unit, stacked, horizontal, stillBilling, otherLabel],
   );
   const ref = useChart(build);
+  const caption = stillBillingCaption(stillBilling, String);
 
   return (
     <Box component="figure" aria-label={summary} sx={{ m: 0, px: inset, pb: inset }}>
       <Box ref={ref} sx={{ height }} />
+      {caption && (
+        <Typography component="figcaption" variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+          {caption}
+        </Typography>
+      )}
     </Box>
   );
 }

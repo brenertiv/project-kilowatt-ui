@@ -78,7 +78,7 @@ Put it first in the page, directly in `main`, with the content after it. The con
 ## MUI departures
 
 - `card-radius`: the property bar is an outlined `Card`, so it rounds at 16px, concentric with the 8px photo inside it.
-- `card-min-height`: the property bar is at least 160px tall, like every card.
+- `card-min-height`: the property bar opts out of the 160px card floor (`minHeight: 0`). It is a bar, one row of content with no header, so it is as tall as its row.
 - `paper-surface-levels`: the property bar sits on `background.level3`, a step above the page.
 
 None of Kilowatt's departures change `Typography` or `Fade` directly.

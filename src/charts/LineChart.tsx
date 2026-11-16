@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { stillBillingCaption, stillBillingDash, stillBillingNote, type StillBilling } from './stillBilling';
 import {
   axisUnit,
   legend,
@@ -41,7 +43,7 @@ export type LineSeries = SeriesColor & {
   right?: boolean;
   /** The UTC timestamp from which the line's values are projected rather than measured: from there on it's drawn dashed in the same hue, and its tooltip says "projected". Default none. */
   projectedFrom?: number;
-  /** What the tooltip says about the stretch from `projectedFrom`: `incomplete` for a month still being billed. Default `'projected'`. */
+  /** What the tooltip says about the stretch from `projectedFrom`, where it's provisional rather than projected. A month still being billed is the chart's `stillBilling`, not this. Default `'projected'`. */
   projectedNote?: string;
   /** Marks points with a dot: `'last'` for the latest reading, `'all'` for sparse data where each point matters. Default none. */
   markers?: 'last' | 'all';
@@ -72,6 +74,8 @@ export type LineChartProps = {
   references?: ReferenceLine[];
   /** Stretches of time to mark as bands behind the lines (Rules → Charts: range bands are `action.hover`), each named inside at the top right. Keep it stable, like `data`. Default none. */
   ranges?: TimeRange[];
+  /** The trailing months still being billed, oldest first, each named by its UTC timestamp in `dateField`: fewer than nine in ten of the properties in scope have a bill for it (`isStillBilling` from `src/charts/stillBilling`). Every line that isn't `neutral` runs dashed in its own hue from the last month billed in full, a marker on such a month is hollow, and "Still being billed: 9 of 18 properties" is in its tooltip and in a line under the chart. For a monthly chart (`interval="month"`). Keep it stable, like `data`. Default none. */
+  stillBilling?: StillBilling[];
   /** One sentence on what the chart shows, with the numbers that matter. It isn't shown: it's the figure's accessible name, the chart's text alternative for screen readers. */
   summary: string;
   /** The field in each row that holds the UTC timestamp. Default `'date'`. */
@@ -89,6 +93,10 @@ export type LineChartProps = {
 const dash = [4, 4];
 const noReferences: ReferenceLine[] = [];
 const noRanges: TimeRange[] = [];
+const noMonths: StillBilling[] = [];
+
+/** A still-being-billed month's name under the chart, as the date axis writes a month. */
+const monthName = new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 /** Draws an axis range's own grid and label only when asked: a series range uses the range to mask its strokes, not to mark the axis. */
 function quietRange(item: am5.DataItem<am5xy.IAxisDataItem>) {
@@ -104,7 +112,8 @@ function quietRange(item: am5.DataItem<am5xy.IAxisDataItem>) {
  * chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  * Two units at most: lines marked `right` plot on a second value axis in `rightUnit`.
  * Targets are dashed `references`; stretches of time are named `ranges`; a forecast continues its line
- * dashed from `projectedFrom`; a score takes the intents band by band through `bands`.
+ * dashed from `projectedFrom`; a trailing month still being billed is dashed and counted through `stillBilling`;
+ * a score takes the intents band by band through `bands`.
  *
  * @summary A line chart of values over time, themed from the palette, named by a one-line summary for screen readers.
  * @import import { LineChart } from 'src/charts/LineChart';
@@ -116,6 +125,7 @@ export function LineChart({
   rightUnit,
   references = noReferences,
   ranges = noRanges,
+  stillBilling = noMonths,
   summary,
   dateField = 'date',
   interval = 'day',
@@ -171,8 +181,11 @@ export function LineChart({
       }
 
       const last = data.length ? data[data.length - 1][dateField] : 0;
+      // The months still being billed, by timestamp, and the first of them.
+      const billing = new Map(stillBilling.map((month) => [Number(month.month), month]));
+      const billingFrom = billing.size ? Math.min(...billing.keys()) : undefined;
       const strokes = seriesColors(series, colors);
-      const lines = series.map(({ field, name, dashed, right, projectedFrom, projectedNote = 'projected', markers, bands = [] }, i) => {
+      const lines = series.map(({ field, name, dashed, right, neutral, projectedFrom, projectedNote = 'projected', markers, bands = [] }, i) => {
         const lineUnit = right && rightUnit ? rightUnit : unit;
         const line = chart.series.push(
           am5xy.LineSeries.new(root, {
@@ -214,6 +227,17 @@ export function LineChart({
           quietRange(item);
         }
 
+        // A month still being billed continues the line dashed the same way, from the last month billed in full. A
+        // neutral line (a baseline, the previous period) isn't this period's billing, so it stays as it is.
+        const billed = neutral ? undefined : billingFrom;
+        if (billed !== undefined) {
+          const step = xAxis.baseDuration();
+          const item = xAxis.makeDataItem({ value: billed - step / 2, endValue: last + step });
+          const range = line.createAxisRange(item) as am5xy.ILineSeriesAxisRange;
+          range.strokes?.template.setAll({ stroke: strokes[i], strokeWidth: 2, strokeDasharray: stillBillingDash });
+          quietRange(item);
+        }
+
         // The tooltip says in words what the dash and the band color show.
         const tooltip = line.get('tooltip');
         tooltip?.label.adapters.add('text', (text) => {
@@ -221,15 +245,19 @@ export function LineChart({
           if (!context || !text) return text;
           const band = bandOf(context[field]);
           const notes = [band?.label, projectedFrom !== undefined && context[dateField] >= projectedFrom ? projectedNote : undefined].filter(Boolean);
-          return notes.length ? `${text} (${notes.join(', ')})` : text;
+          const month = billed === undefined ? undefined : billing.get(context[dateField]);
+          return `${notes.length ? `${text} (${notes.join(', ')})` : text}${month ? `\n${stillBillingNote(month)}` : ''}`;
         });
 
         if (markers) {
           line.bullets.push((bulletRoot, _series, dataItem) => {
             const context = dataItem.dataContext as Record<string, number>;
             if (markers === 'last' && context[dateField] !== last) return undefined;
+            // A month still being billed has a hollow dot, so it shows even with no point before it to dash from.
+            const hollow = billed !== undefined && billing.has(context[dateField]);
+            const color = statusColor(context[field]);
             return am5.Bullet.new(bulletRoot, {
-              sprite: am5.Circle.new(bulletRoot, { radius: 4, fill: statusColor(context[field]), stroke: colors.surface, strokeWidth: 2 }),
+              sprite: am5.Circle.new(bulletRoot, { radius: 4, fill: hollow ? colors.surface : color, stroke: hollow ? color : colors.surface, strokeWidth: 2 }),
             });
           });
         }
@@ -239,13 +267,19 @@ export function LineChart({
       if (lines.length > 1) chart.children.push(legend(root)).data.setAll(lines);
       for (const line of lines) line.data.setAll(data);
     },
-    [data, series, unit, rightUnit, references, ranges, dateField, interval, max],
+    [data, series, unit, rightUnit, references, ranges, stillBilling, dateField, interval, max],
   );
   const ref = useChart(build);
+  const caption = stillBillingCaption(stillBilling, (month) => monthName.format(Number(month)));
 
   return (
     <Box component="figure" aria-label={summary} sx={{ m: 0, px: inset, pb: inset }}>
       <Box ref={ref} sx={{ height }} />
+      {caption && (
+        <Typography component="figcaption" variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+          {caption}
+        </Typography>
+      )}
     </Box>
   );
 }

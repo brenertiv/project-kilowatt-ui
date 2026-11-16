@@ -47,7 +47,7 @@ const sections: AppShellSection[] = [
         { id: 'insights', label: 'Insights', icon: 'lightbulb' },
         { id: 'activity', label: 'Activity', icon: 'schedule' },
         { id: 'property-alerts', label: 'Property Alerts', icon: 'warning' },
-        { id: 'data-health', label: 'Data Health', icon: 'error' },
+        { id: 'data-health', label: 'Data Health', icon: 'fact_check' },
         { id: 'app-updates', label: 'App Updates', icon: 'info' },
       ],
     },
@@ -105,7 +105,7 @@ const sections: AppShellSection[] = [
   {
     id: 'assets',
     label: 'Assets',
-    icon: 'apartment',
+    icon: 'location_city',
     panel: {
       items: [
         { id: 'overview', label: 'Overview', icon: 'dashboard' },
@@ -121,7 +121,7 @@ const sections: AppShellSection[] = [
   {
     id: 'data-sources',
     label: 'Data Sources',
-    icon: 'database',
+    icon: 'hub',
     panel: {
       items: [
         { id: 'overview', label: 'Overview', icon: 'dashboard' },
@@ -147,7 +147,7 @@ const sections: AppShellSection[] = [
     },
   },
   { id: 'tenant-billing', label: 'Tenant Billing', icon: 'receipt_long', missing: true, hideOnPhone: true },
-  { id: 'maintenance', label: 'Maintenance', icon: 'handyman', missing: true, hideOnPhone: true },
+  { id: 'maintenance', label: 'Maintenance', icon: 'build', missing: true, hideOnPhone: true },
   {
     id: 'account',
     label: 'My Account',
@@ -412,7 +412,7 @@ export const Account: Story = {
   },
 };
 
-/** A Missing section, one the account doesn't have: a plus in the disabled color, its name as its tooltip, no badge and no panel; it opens its upgrade page. */
+/** A Missing section, one the account doesn't have: the `upgrade` icon in the disabled color, its name as its tooltip, no badge and no panel; it opens its upgrade page. */
 export const Missing: Story = {
   args: { section: 'tenant-billing' },
   play: async ({ canvas, userEvent }) => {

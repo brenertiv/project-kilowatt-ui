@@ -21,7 +21,7 @@ const source: FigureSource = {
 
 /** The places a figure's data comes from, as links. */
 const sources = [
-  { label: 'Utility bills', detail: `Last updated ${source.updated}`, href: '#utility-bills' },
+  { label: 'Utility bills', detail: '42 properties, 12 bills each', href: '#utility-bills' },
   { label: 'Interval meter data', href: '#meter-data' },
 ];
 
@@ -38,7 +38,7 @@ const meta = {
   component: SourceFigure,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
-  parameters: { muiComponents: ['Accordion', 'ButtonBase', 'Dialog', 'Tooltip', 'Typography'] },
+  parameters: { muiComponents: ['ButtonBase', 'Dialog', 'Tooltip', 'Typography', 'Button', 'Collapse'] },
   args: { title: 'Energy Use Intensity', value: intensity.format(64.2), unit: 'kBtu/ft²', source },
   render: (args) => (
     <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
@@ -69,22 +69,57 @@ export const Plain: Story = {
   },
 };
 
-/** The figure opens its source: a faint underline under the number, the hover tint, and a dialog titled with the card's title, Calculation and Sources collapsed. */
+/** A plain figure its source estimated: the word “est.” follows the value in `text.secondary`, and takes focus to show “Estimated by the utility” in a tooltip. */
+export const PlainEstimated: Story = {
+  name: 'Plain, estimated',
+  render: (args) => (
+    <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
+      <CardHeader title={<TruncatedText>{args.title}</TruncatedText>} />
+      <CardContent sx={{ mt: 'auto' }}>
+        <PlainFigure value={args.value} unit={args.unit} estimated="the utility" />
+      </CardContent>
+    </Card>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const marker = canvas.getByText('est.');
+    await expect(marker).toBeVisible();
+    await userEvent.tab();
+    await expect(marker).toHaveFocus();
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Estimated by the utility');
+  },
+};
+
+/** The figure opens its source: a faint underline under the number, the hover tint, and a dialog titled with the card's title that lists the provenance popover's rows in its order, Built From first. */
 export const WithSource: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: '64.2 kBtu/ft², view source for Energy Use Intensity' }));
     const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
-    const calculation = await within(dialog).findByRole('button', { name: 'Calculation' });
-    await expect(calculation).toHaveAttribute('aria-expanded', 'false');
-    await userEvent.click(calculation);
-    await waitFor(() => expect(within(dialog).getByText('Includes')).toBeVisible());
-    await waitFor(() => expect(within(dialog).getByText(source.period)).toBeVisible());
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Sources' }));
     await waitFor(() => expect(within(dialog).getByText(source.source)).toBeVisible());
+    // The popover's rows, under its names and in its order; a row that isn't given is left out.
+    const terms = [...dialog.querySelectorAll('dt')].map((term) => term.textContent);
+    await expect(terms).toEqual(['Built From', 'Period', 'Calculation', 'Includes', 'Last Updated']);
+    await expect(within(dialog).getByText(source.period)).toBeVisible();
+    await expect(within(dialog).getByText(source.coverage)).toBeVisible();
+    await expect(within(dialog).queryByRole('button', { name: 'Show the Figures' })).toBeNull();
     await expect(within(dialog).queryByRole('button', { name: 'View Sources' })).toBeNull();
     await expect(within(dialog).queryByRole('button', { name: 'Done' })).toBeNull();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  },
+};
+
+/** A value its source estimated: `estimated` names the source, the word “est.” follows the value in `text.secondary`, the tooltip and the button's name say “Estimated by the utility”, and the dialog's Estimated by Source row says so too. */
+export const Estimated: Story = {
+  args: { estimated: 'the utility' },
+  play: async ({ canvas, userEvent }) => {
+    const figure = canvas.getByRole('button', { name: '64.2 kBtu/ft², estimated by the utility, view source for Energy Use Intensity' });
+    await expect(within(figure).getByText('est.')).toBeVisible();
+    await userEvent.hover(figure);
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent('Estimated by the utility. View source: Energy Use Intensity');
+    await userEvent.click(figure);
+    const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
+    await waitFor(() => expect(within(dialog).getByText('Estimated by Source')).toBeVisible());
+    await expect(within(dialog).getByText('This value is estimated by the utility')).toBeVisible();
   },
 };
 
@@ -102,15 +137,48 @@ export const WithNote: Story = {
   },
 };
 
-/** `sources` lists where the data comes from as links, in place of `source.source`; the last update moves under Calculation. */
+/** `sources` lists where the data comes from as links under Built From, in place of `source.source`. */
 export const WithSourceLinks: Story = {
   args: { sources },
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use Intensity/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
-    await userEvent.click(await within(dialog).findByRole('button', { name: 'Sources' }));
     await waitFor(() => expect(within(dialog).getByRole('link', { name: 'Utility bills' })).toBeVisible());
     await expect(within(dialog).getByRole('link', { name: 'Interval meter data' })).toHaveAttribute('href', '#meter-data');
+  },
+};
+
+/** Every row the dialog can list, with the figures behind the calculation: synthetic values. */
+const everyRow: FigureSource = {
+  ...source,
+  figures: { formula: ['Site energy use: 2,696,400 kBtu', 'Gross floor area: 42,000 ft²', '2,696,400 kBtu ÷ 42,000 ft² = 64.2 kBtu/ft²'] },
+  estimatedBySource: 'December gas use for 3 properties, from the utility’s estimated read',
+  awaitingBill: 'December 2025 gas, 3 properties',
+  energyStarPush: 'January 15, 2026',
+};
+
+/** Every row, in the provenance popover's order, with Show the Figures under the calculation laying out the formula and the values used. */
+export const EveryRow: Story = {
+  name: 'Every row',
+  args: { source: everyRow },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use Intensity/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
+    await waitFor(() => expect(within(dialog).getByText('Awaiting Bill')).toBeVisible());
+    await expect([...dialog.querySelectorAll('dt')].map((term) => term.textContent)).toEqual([
+      'Built From',
+      'Period',
+      'Calculation',
+      'Includes',
+      'Estimated by Source',
+      'Awaiting Bill',
+      'Last Updated',
+      'ENERGY STAR Last Push',
+    ]);
+    const show = within(dialog).getByRole('button', { name: 'Show the Figures' });
+    await expect(show).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(show);
+    await waitFor(() => expect(within(dialog).getByText('2,696,400 kBtu ÷ 42,000 ft² = 64.2 kBtu/ft²')).toBeVisible());
   },
 };
 
@@ -130,7 +198,6 @@ export const WithRecords: Story = {
     openRecord.mockClear();
     await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use Intensity/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
-    await userEvent.click(await within(dialog).findByRole('button', { name: 'Sources' }));
     const records = await within(dialog).findByRole('list', { name: 'Records' });
     await waitFor(() => expect(within(records).getAllByRole('button')).toHaveLength(6));
     await waitFor(() => expect(within(records).getByText('and 2 more')).toBeVisible());
@@ -140,7 +207,7 @@ export const WithRecords: Story = {
   },
 };
 
-/** A figure that isn't a `SourceFigure`: an `ExplainedFigure` holding a `FigureExplanation`. Whatever is empty stays out, here Sources. */
+/** A figure that isn't a `SourceFigure`: an `ExplainedFigure` holding a `FigureExplanation`. Whatever isn't given stays out, here every row but Calculation. */
 export const WithExplanation: Story = {
   render: (args) => (
     <Card variant="outlined" sx={{ maxWidth: 360, display: 'flex', flexDirection: 'column' }}>
@@ -155,8 +222,8 @@ export const WithExplanation: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: /view source for Properties Reporting/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Properties Reporting' });
-    await within(dialog).findByRole('button', { name: 'Calculation' });
-    await expect(within(dialog).queryByRole('button', { name: 'Sources' })).toBeNull();
+    await waitFor(() => expect(within(dialog).getByText('Properties with twelve months of data, out of the 45 in scope.')).toBeVisible());
+    await expect([...dialog.querySelectorAll('dt')].map((term) => term.textContent)).toEqual(['Calculation']);
   },
 };
 

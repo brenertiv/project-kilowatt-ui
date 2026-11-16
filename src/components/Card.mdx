@@ -83,8 +83,9 @@ function EnergyUseChart() {
 A metric card leads with one headline number. Set it with `SourceFigure`, `ExplainedFigure` or `PlainFigure` from `src/components/SourceFigure`, which share one type; see [Data display → SourceFigure](?path=/docs/data-display-sourcefigure--docs).
 
 - **The figure is `h2` with tabular numerals.** The unit follows it in `body1` and `text.secondary`, and the value is formatted with `Intl.NumberFormat`. A value that's a phrase rather than a number (longer than 14 characters, such as “4 on track, 2 at risk”) steps down to `h4`, so it still fits.
-- **The figure sits at the card's foot, 32px or more under the title.** Every card is at least 160px tall (`card-min-height`). Make the card a flex column and give its `CardContent` `mt: 'auto'`, so single-figure cards in a row hold one height and their figures line up along the bottom. The content keeps its 16px top padding (don't set `pt: 0`), so the figure sits 32px under the title, the header's 16px and its own, even in a card that holds more than the figure.
+- **The figure sits at the card's foot, 32px or more under the title.** Every card is at least 160px tall (`card-min-height`), but for two that were never meant to hold a figure and set `minHeight: 0`: a card that is a bar (one row of content, no header, such as `PageHeader`'s property bar) and a folding card while it is folded. Nothing else opts out. Make the card a flex column and give its `CardContent` `mt: 'auto'`, so single-figure cards in a row hold one height and their figures line up along the bottom. The content keeps its 16px top padding (don't set `pt: 0`), so the figure sits 32px under the title, the header's 16px and its own, even in a card that holds more than the figure.
 - **The metric sits above any chart.** When a card has both, the figure comes first, in `CardContent`, and the chart follows, straight in the card.
+- **An estimated figure is marked est.** A figure its source estimated is the value as its source reported it, followed by the word **est.** in `text.secondary`, after the unit: “64.2 kBtu/ft² est.”. Pass the source's name as `estimated` (`estimated="the utility"`) to `SourceFigure`, `ExplainedFigure` or `PlainFigure`: the marker's tooltip says “Estimated by the utility”, and on a `SourceFigure` the figure opens its provenance, whose Estimated by Source row says the same. A total never takes the mark; its dialog says what it includes.
 - **No caption under the figure.** A figure that needs clarifying opens its explanation instead: `SourceFigure` opens a dialog with its calculation and sources, with what would have been the caption as its `note`, and `ExplainedFigure` opens one with a `FigureExplanation`. A figure with nothing to explain is a `PlainFigure`, not a control.
 
 ```tsx
@@ -133,7 +134,7 @@ The `Card` has no padding of its own. Each kind of content owns its inset, so a 
 
 `CardHeader` sets a title, a `subheader` and an `action` (an icon button or menu) in one row. `CardContent` pads the content, and `CardActions` lays out text buttons along the bottom. `CardActionArea` turns the whole card into one button, for a card that only opens its subject: a card whose title would be a link is a whole-card link instead, named for what it opens, with its title as plain text. It holds no other control, so a figure inside it is a `PlainFigure`, and the page it opens explains the figure. There is no title-as-link card.
 
-A card can fold to its header, for a long table that's there when the reader needs it: put an `IconButton` with `expand_more` in the header's `action`, named for what it does ("Expand Meter Readings") with `aria-expanded` and `aria-controls`, and the body in MUI's `Collapse`. The icon turns over when the card is open. Choose whether it starts open or closed by how often the content is needed. It keeps the card's 16px radius, which an `Accordion` wouldn't.
+A card can fold to its header, for a long table that's there when the reader needs it: put an `IconButton` with `expand_more` in the header's `action`, named for what it does ("Expand Meter Readings") with `aria-expanded` and `aria-controls`, and the body in MUI's `Collapse`. The icon turns over when the card is open. While it is folded the card sets `minHeight: 0`, so it is as tall as its header rather than the 160px card floor; open, it takes the floor again. Choose whether it starts open or closed by how often the content is needed. It keeps the card's 16px radius, which an `Accordion` wouldn't.
 
 <Canvas of={CardStories.Collapsible} />
 
@@ -161,7 +162,8 @@ A card can fold to its header, for a long table that's there when the reader nee
 - Don't pad the `Card` itself, or nudge a header action into place with margins; its position comes from `card-header-layout`.
 - Do wrap header titles and subtitles in `TruncatedText`, and keep them short enough to fit a typical card.
 - Don't let a title wrap or set `noWrap` on it yourself; the theme keeps it on one line, and `TruncatedText` shows the rest. A title that is the card's point (an outcome, a next step) is the one allowance, at two lines.
-- Do fold a card to its header with an expand button and `Collapse`, for content the reader opens only when they need it.
+- Do fold a card to its header with an expand button and `Collapse`, for content the reader opens only when they need it, and set `minHeight: 0` on it while it is folded.
+- Don't set `minHeight: 0` on any other card to make it shorter; only a bar (one row, no header) and a folded card opt out of the floor.
 - Don't use an `Accordion` for a folding card; it loses the card's radius and header. Keep `Accordion` for stacked sections of a form or a page.
 - Do let the card take its surface and its 16px radius from the theme.
 - Don't set the card's `backgroundColor` or `borderRadius` with `sx`; the surface comes from its elevation and the radius from `card-radius`.
@@ -173,7 +175,7 @@ A card can fold to its header, for a long table that's there when the reader nee
 - `card-header-layout`: a `CardHeader` action is pulled out 8px at the top, right and bottom instead of MUI's 4px and 8px, so its icon sits level with a one-line title and 16px from the right edge; contents align to the top instead of the center, so a title keeps its place with or without a subtitle; titles and subtitles stay on one line and truncate.
 - `card-content-padding`: `CardContent` is 16px on every side instead of 24px at the bottom of the last one.
 - `card-radius`: cards round at twice the theme radius, 16px instead of MUI's one radius, because their header action and `CardActions` buttons sit 8px from the corners.
-- `card-min-height`: every card is at least 160px tall (20 spacing units) instead of as tall as its content, so cards in a grid hold one height and a single-figure card has room for its figure at the foot.
+- `card-min-height`: every card is at least 160px tall (20 spacing units) instead of as tall as its content, so cards in a grid hold one height and a single-figure card has room for its figure at the foot. A card that is a bar (one row of content, no header) and a folding card while it is folded set `minHeight: 0`; nothing else does.
 - `paper-surface-levels`: a card, outlined or raised, sits on surface `background.level3` in both schemes, a step above the level2 frame it's laid out on, in place of MUI's white light surface and its dark-scheme white overlay.
 - `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue (brand 700 in light, brand 200 in dark), 2px outside the control, instead of MUI's background tint alone. A clickable card's `CardActionArea` shows it.
 

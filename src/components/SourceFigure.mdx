@@ -8,7 +8,7 @@ import * as SourceFigureStories from './SourceFigure.stories';
 
 # SourceFigure
 
-`SourceFigure` sets a card's headline number and lets people see where it comes from. The number is a button, with a faint underline under the number and the hover tint, and it opens MUI's `Dialog` (`@mui/material`, Material UI v9), titled with the card's title, that reads the same way for every figure: a description, then Calculation and Sources as outlined, collapsed accordions, each left out when empty. `ExplainedFigure` is the same button and dialog with any explanation inside, `FigureExplanation` is that description and those accordions for a figure that isn't a `SourceFigure`, and `PlainFigure` sets a number with nothing to explain in the same type, as text. They're Kilowatt's own components, built from MUI's `Accordion`, `ButtonBase`, `Dialog`, `Tooltip` and `Typography`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/), [Dialog API](https://mui.com/material-ui/api/dialog/) and [Accordion API](https://mui.com/material-ui/api/accordion/).
+`SourceFigure` sets a card's headline number and lets people see where it comes from. The number is a button, with a faint underline under the number and the hover tint, and it opens MUI's `Dialog` (`@mui/material`, Material UI v9), titled with the card's title, that reads the same way for every figure, and the same way as a number cited in text (`ProvenanceFigure`): a description, then the provenance popover's rows under its names and in its order (Built From, Period, Calculation, Includes, Estimated by Source, Awaiting Bill, Last Updated and ENERGY STAR Last Push), each left out when it isn't given. The dialog only has more room. `ExplainedFigure` is the same button and dialog with any explanation inside, `FigureExplanation` is that description and those rows for a figure that isn't a `SourceFigure`, and `PlainFigure` sets a number with nothing to explain in the same type, as text. They're Kilowatt's own components, built from MUI's `ButtonBase`, `Dialog`, `Tooltip`, `Typography`, `Button` and `Collapse`; see the [ButtonBase API](https://mui.com/material-ui/api/button-base/), [Dialog API](https://mui.com/material-ui/api/dialog/) and [Collapse API](https://mui.com/material-ui/api/collapse/).
 
 <Canvas of={SourceFigureStories.WithSource} />
 
@@ -51,7 +51,7 @@ const intensity = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, max
 </Card>
 ```
 
-Pass the card's title as `title`: it titles the dialog and names the button. Format `value` with `Intl.NumberFormat` before passing it, and pass the unit on its own. The dialog's lines are each one short sentence; format `updated` with `Intl.DateTimeFormat`.
+Pass the card's title as `title`: it titles the dialog and names the button. Format `value` with `Intl.NumberFormat` before passing it, and pass the unit on its own. The dialog's lines are each one short sentence; format `updated` with `Intl.DateTimeFormat`. `source.figures` (the formula with the values used, a line per step, and for an emissions figure the factor applied per fuel with its source and year and a link to the building's factors table), `source.estimatedBySource`, `source.awaitingBill` and `source.energyStarPush` are optional.
 
 For a number that isn't a `SourceFigure`, put a `FigureExplanation` in an `ExplainedFigure`. Whatever is empty stays out:
 
@@ -61,8 +61,8 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 <ExplainedFigure title="Properties Reporting" value="42">
   <FigureExplanation
     description="Properties with a full year of bills or meter data."
-    calculation="Properties with twelve months of data, out of the 45 in scope."
     sources={[{ label: 'Utility bills', href: '/sources/bills' }]}
+    calculation="Properties with twelve months of data, out of the 45 in scope."
   />
 </ExplainedFigure>
 ```
@@ -70,12 +70,14 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 ## Variants
 
 - **`PlainFigure`:** the number in `h2` with tabular numerals and the unit after it in `body1`, `text.secondary`. Not a control.
-- **`SourceFigure`:** the same type, as a button. Its dialog has the optional `note` as its description, one line per entry, then Calculation (How, Period, Scope and Includes, as a description list, `dl`) and Sources (`source.source` with its last update).
-- **With source links:** pass `sources` to list where the data comes from as links, each with an optional line under it. The last update moves under Calculation.
+- **`SourceFigure`:** the same type, as a button. Its dialog has the optional `note` as its description, one line per entry, then one description list (`dl`) of the provenance popover's rows in its order: Built From (`source.source`), Period, Calculation, Includes (`source.scope`, then `source.coverage`), Estimated by Source, Awaiting Bill, Last Updated and ENERGY STAR Last Push. A row that isn't given is left out.
+- **With source links:** pass `sources` to list where the data comes from as links under Built From, each with an optional line under it.
+- **Show the Figures:** with `source.figures`, a Show the Figures button sits under the calculation's sentence, folded by default, and lays out the formula with the values used; for an emissions figure it also lists the factor applied per fuel with its source and year, and links to the building's factors table. It is the provenance popover's own control (`ShowTheFigures`).
 - **With records:** a source's `records` are the records the figure is built from (the properties, meters or accounts it counts), each a link under the source's detail that opens its record: six are listed, then “and N more”. A record link closes the explanation as it opens, so the record drawer isn't behind the dialog.
+- **Estimated:** pass the source's name as `estimated` (`estimated="the utility"`) for a value its source estimated. The word “est.” follows the value and its unit in `body1` and `text.secondary`; on a `SourceFigure` or `ExplainedFigure` the button's tooltip and name say “Estimated by the utility”, and a `SourceFigure`'s dialog says so under Estimated by Source unless `source.estimatedBySource` says more (which values, which source). On a `PlainFigure` the marker itself takes keyboard focus and shows the tooltip.
 - **With View Sources:** pass `onViewSources`, and the dialog gets a View Sources action, for a page that has a sources view. It closes the dialog first. Without it the dialog has no actions: the close button and Escape close it.
 - **`ExplainedFigure`:** the same button and dialog with your own content in `children`, usually a `FigureExplanation`.
-- **`FigureExplanation`:** `description`, `calculation` and `sources`, each left out when empty. `calculation` is a sentence or your own content.
+- **`FigureExplanation`:** `description`, then `sources` (Built From), `period`, `calculation` (with `figures`), `includes`, `estimatedBySource`, `awaitingBill`, `updated` and `energyStarPush`, each left out when it isn't given. `calculation` is a sentence or your own content.
 - **A long value:** a value longer than 14 characters (a phrase such as “4 on track, 2 at risk”) steps down to `h4`, so it still fits on one or two lines.
 
 ## Do and don't
@@ -88,15 +90,25 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 - Don't put the unit in `value`; pass it as `unit`, so it takes its type and stays out of the underline.
 - Do format the value and dates with `Intl`, and write the source lines with real punctuation (“ ” ’ – —).
 - Don't style the figure with `sx` or a different variant; the h2-to-h4 step is the one size change.
+- Do mark a value its source estimated with `estimated`, naming the source.
+- Don't write “est.” or “estimated” into `value`, `unit` or a caption, mark an estimate with an icon or a color, or mark a total; a total's dialog says what it includes.
 - Do keep the dialog's lines to one short sentence each, about the figure on screen.
 - Don't write your own dialog content for a figure with a calculation or sources; `FigureExplanation` keeps every figure's dialog reading the same way.
+- Do keep the rows in the provenance popover's order, which `FigureExplanation` does for you, so a number reads the same on a card and in a sentence.
+- Don't lead the dialog with the calculation, fold its rows away or rename them; Show the Figures is the one thing folded.
 - Do list the records a figure is built from under its source, so a person can go from the number to one of the things it counts.
 - Don't list more than six records; past that the line says how many more, and the page's table is where to find them.
 
 ## MUI departures
 
+- `button-text-case`: Show the Figures and View Sources are shown as written, in Title Case, not uppercased.
+- `button-text-weight`: Show the Figures and View Sources are at the regular weight.
+- `control-outlines`: Show the Figures and View Sources are text buttons, so they show no outline; a primary outlined button would take `palette.control.border`.
+- `flat-buttons`: Show the Figures and View Sources are text buttons, so they have no shadow to remove; a contained button would be flat.
 - `focus-ring`: the figure is a `ButtonBase`, so keyboard focus is the theme's 2px ring in `palette.control.focus`, 2px outside the figure's rounded hover area. The component adds no focus style of its own.
-- `paper-surface-levels`: the dialog sits on its elevation's surface level, as every `Dialog` does, in place of MUI's white light surface and its dark-scheme overlay. Calculation and Sources take the flat `Accordion` surface in their outlined variant.
+- `icons`: the `close` icon on the dialog's button, the arrow on a source's link and the `expand_more` on Show the Figures are `Icon` from `src/icons`, Material Symbols at weight 300.
+- `medium-size`: Show the Figures, View Sources and the dialog's Close button stay at medium, the default.
+- `paper-surface-levels`: the dialog sits on its elevation's surface level, as every `Dialog` does, in place of MUI's white light surface and its dark-scheme overlay.
 
 The figure's underline (`border.level2`), its hover tint (`action.hover`) and its type (`h2` and `h4` on the compact heading scale, `type-scale`) are existing theme roles. Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
 
@@ -104,9 +116,10 @@ The figure's underline (`border.level2`), its hover tint (`action.hover`) and it
 
 - The figure is a `button` (`aria-haspopup="dialog"`) named for its value and the card: “64.2 kBtu/ft², view source for Energy Use Intensity”. The value leads the name, so people using speech input can say what they see. A tooltip repeats “View source: {title}” on hover and focus.
 - The underline and the hover tint are visual cues only; the button role and its name tell screen readers the number opens something.
+- An estimated figure's name says who estimated it (“64.2 kBtu/ft², estimated by the utility, view source for Energy Use Intensity”), and its tooltip leads with it. On a `PlainFigure`, which isn't a control, the word “est.” takes keyboard focus so its tooltip opens without a pointer, as `TruncatedText`'s does. The marker is a word in `text.secondary`, which passes 4.5:1, so it never rests on color.
 - MUI's `Dialog` moves focus into the dialog, traps it there, closes on Escape and returns focus to the figure. The dialog is labelled by its title (`aria-labelledby`), and the close button is named Close.
 - A source's records are a list named Records, each a link button; following one closes the dialog first, so focus lands in the record it opened rather than behind the dialog.
-- Calculation and Sources are MUI's `Accordion`s: each summary is a button that says whether it's expanded, inside a heading. Calculation's lines are a description list, so screen readers read each label with its line, and Sources is a list named Sources.
+- The rows are a description list (`dl`), so screen readers read each term with its detail, and Built From's sources are a list named Built From. Show the Figures is a `button` with `aria-expanded` and `aria-controls`; the formula is a list named Formula and the factors a list named Emission Factors.
 - The hover tint fades in over the theme's shortest duration, which CssBaseline stills under reduced motion (`reduced-motion`).
 
 ## Related

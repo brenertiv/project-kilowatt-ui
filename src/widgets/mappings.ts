@@ -1,6 +1,7 @@
 import type { DonutSlice } from '../charts/DonutChart';
 import type { HeatmapCell } from '../charts/Heatmap';
 import { meaningColor, utilitySlots, workOrderStatusIntents, workOrderTypeSlots } from '../charts/meanings';
+import { isStillBilling, type StillBilling } from '../charts/stillBilling';
 import type { Segment } from '../components/SegmentedBar';
 import {
   budgetStatusIds,
@@ -328,9 +329,12 @@ export function utilityCostBreakdown(logs: SubmeterLog[]) {
 
 /**
  * Recovery by billing month: what tenants were billed over what the utilities charged, in percent with one
- * decimal, across every building billed that month. When the latest month has fewer buildings billed than
- * the month before, it's incomplete: `incompleteFrom` marks it, so the line can dash it rather than show a
- * partial month as a real change. Also each building's recovery in the latest complete month, lowest first.
+ * decimal, across every building billed that month. A trailing month is still being billed while fewer than
+ * nine in ten of the properties in scope have a bill for it (`isStillBilling`, Rules → Charts), and complete
+ * once it passes: `stillBilling` lists those months with their counts, for the chart's `stillBilling`, and
+ * `incompleteFrom` is the first of them, so the line dashes them rather than show a partial month as a real
+ * change. The properties in scope are the buildings billed at any time in the window. Also each building's
+ * recovery in the latest complete month, lowest first.
  *
  * @param logs - Submeter logs with `properties`.
  */
@@ -345,16 +349,21 @@ export function recoveryByMonth(logs: SubmeterLog[]) {
     return value === null ? [] : [{ date: Date.parse(`${month}-01T00:00:00Z`), recovery: value }];
   });
   const counts = buildingsByMonth(logs);
-  const last = months[months.length - 1];
-  const before = months[months.length - 2];
-  const incomplete = Boolean(last && before && counts.get(last)!.size < counts.get(before)!.size);
-  const complete = incomplete ? before : last;
+  const properties = new Set(logs.map((log) => log.properties!['Building Name'])).size;
+  // Only trailing months are still being billed: a month before a complete one is as billed as it will get.
+  let open = months.length;
+  while (open > 0 && isStillBilling(counts.get(months[open - 1]!)!.size, properties)) open -= 1;
+  const complete = months[open - 1];
+  const stillBilling = months.slice(open).flatMap((month): StillBilling[] => {
+    const date = Date.parse(`${month}-01T00:00:00Z`);
+    return rows.some((row) => row.date === date) ? [{ month: date, billed: counts.get(month)!.size, properties }] : [];
+  });
   const byProperty = complete
     ? [...counts.get(complete)!]
         .map((building) => ({ building, recovery: recovery(logs.filter((log) => billingMonth(log) === complete && log.properties!['Building Name'] === building))! }))
         .sort((a, b) => a.recovery - b.recovery)
     : [];
-  return { rows, incompleteFrom: incomplete ? rows[rows.length - 1]!.date : undefined, completeMonth: complete, byProperty };
+  return { rows, stillBilling, incompleteFrom: stillBilling[0]?.month as number | undefined, completeMonth: complete, byProperty };
 }
 
 /** The most slices a donut shows (Rules → Charts). */

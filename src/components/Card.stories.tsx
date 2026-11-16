@@ -351,13 +351,13 @@ export const LongTitle: Story = {
   },
 };
 
-/** A card that folds to its header: the header's expand button and the content under it in a `Collapse`. */
+/** A card that folds to its header: the header's expand button and the content under it in a `Collapse`. Folded, it opts out of the card floor (`card-min-height`), so it is as tall as its header. */
 function FoldingCard({ defaultExpanded }: { defaultExpanded: boolean }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const id = useId();
   const title = 'Meter Readings';
   return (
-    <Card variant="outlined" sx={{ maxWidth: 360 }}>
+    <Card variant="outlined" sx={{ maxWidth: 360, ...(!expanded && { minHeight: 0 }) }}>
       <CardHeader
         title={<TruncatedText>{title}</TruncatedText>}
         action={
@@ -382,11 +382,14 @@ function FoldingCard({ defaultExpanded }: { defaultExpanded: boolean }) {
 /**
  * A card that folds to its header, for a long table the reader opens when they need it: MUI's Card expand pattern, an
  * icon button in the header's `action` that names what it does and sets `aria-expanded`, and the body in a `Collapse`.
+ * While it is folded it sets `minHeight: 0`, so it is as tall as its header, not the 160px card floor.
  */
 export const Collapsible: Story = {
   render: () => <FoldingCard defaultExpanded={false} />,
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas, canvasElement, userEvent }) => {
     await expect(canvas.queryByText(meters[0].name)).toBeNull();
+    // Folded, the card is its header's height, under the 160px floor every other card has.
+    await expect(canvasElement.querySelector('.MuiCard-root')!.getBoundingClientRect().height).toBeLessThan(160);
     await userEvent.click(canvas.getByRole('button', { name: 'Expand Meter Readings' }));
     await expect(canvas.getByRole('button', { name: 'Collapse Meter Readings' })).toHaveAttribute('aria-expanded', 'true');
     await waitFor(() => expect(canvas.getByText(meters[0].name)).toBeVisible());

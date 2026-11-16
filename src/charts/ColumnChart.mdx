@@ -45,6 +45,7 @@ Each row of `data` is one category: its label in `categoryField` and a number pe
 - **Ranking.** `horizontal` lays the bars out across, categories down the left in `data` order and values along the bottom, so long names fit. Sort `data` largest first, and keep one color.
 - **Grouped into Other.** Past six colored series, the five with the largest totals keep their colors and the rest are summed into one neutral series named `otherLabel`.
 - **Striped.** `striped` marks a variant of another series (delivery beside supply, estimated beside actual). Give both the same `slot`: they keep one hue, and the stripes tell them apart.
+- **Still being billed.** On a chart by month, `stillBilling` names the trailing months with bills for fewer than nine in ten of the properties in scope (`isStillBilling` from `src/charts/stillBilling` holds the rule), each with its count: `{ month: 'Oct', billed: 11, properties: 18 }`. Every column of such a month is a dashed outline in its series' hue with no fill, its tooltip adds "Still being billed: 11 of 18 properties", and the same line sits under the chart. Leave a month out once it passes nine in ten, and it draws solid.
 
 ## Do and don't
 
@@ -54,6 +55,8 @@ Each row of `data` is one category: its label in `categoryField` and a number pe
 - Don't color each column differently to make the chart livelier; color then suggests a meaning that isn't there.
 - Do stripe a variant in its series' hue, with the same `slot`.
 - Don't give supply and delivery, or actual and estimated, two different hues; they're one meaning.
+- Do mark a trailing month with `stillBilling` while fewer than nine in ten of the properties in scope have a bill for it.
+- Don't draw a month still being billed in a lighter tint, with a ≈ sign or as a solid column; a partial month then reads as a drop.
 - Do stack only parts that add up to a meaningful total.
 - Don't stack values in different units, or values that overlap.
 - Do write `summary` as one sentence with the numbers that matter.
@@ -87,6 +90,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
 - `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
 - `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
+- `still-being-billed`: `stillBilling` draws a trailing month's columns as dashed outlines in their own hue, with the count of properties billed in the tooltip and under the chart.
 
 ## Accessibility
 
@@ -94,6 +98,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the legend and columns.
 - Series are told apart by name in the legend and tooltip as well as color, and a striped variant by pattern too.
+- A month still being billed is told by its dashed outline, by its tooltip and by the line under the chart, a `figcaption` screen readers reach. Say it in `summary` too, since the summary is what names the chart.
 - For detailed values, offer the data as a table beside the chart.
 
 ## Related

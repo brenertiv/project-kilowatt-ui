@@ -65,6 +65,9 @@ import { scoreBands } from 'src/charts/meanings';
 // Measured, then projected: one line, dashed from the first projected month.
 <LineChart data={emissions} series={[{ field: 'emissions', name: 'Emissions', projectedFrom: Date.UTC(2026, 10, 1) }]} unit="tCO₂e" interval="month" summary="…" />
 
+// By month, with the trailing month still being billed: dashed, with its count in the tooltip and under the chart.
+<LineChart data={cost} series={[{ field: 'cost', name: 'Utility cost', markers: 'all' }]} unit="USD" interval="month" stillBilling={[{ month: Date.UTC(2026, 9, 1), billed: 9, properties: 18 }]} summary="…" />
+
 // A score in its bands, with today's score marked.
 <LineChart data={scores} series={[{ field: 'score', name: 'Maintenance score', bands: scoreBands, markers: 'last' }]} unit="pts" summary="…" />
 ```
@@ -80,7 +83,8 @@ Product meanings take their color from `src/charts/meanings`: spread `meaningCol
 - **Two units.** A measure on the left axis and what it's read against on the right (`right`, `rightUnit`), each axis labeled with its unit. Draw the context line `neutral`.
 - **Target.** A goal or benchmark the line is read against: `references`, a dashed line in `text.secondary` labeled with its name and full value inside the plot. Set `labelBelow` on a reference whose label would cover the data just above its line.
 - **Time ranges.** A stretch of time the line is read in, such as the window a finding is about: `ranges`, a band in `action.hover` behind the lines (Rules → Charts), named inside at the top right in `text.secondary`. A name wider than its band runs left over the plot.
-- **Projected.** One line measured up to a date and projected after it: `projectedFrom` continues the line dashed in its own hue, and the tooltip says "projected". For a stretch that's provisional rather than projected (a month still being billed), set `projectedNote` to what the tooltip should say instead: `incomplete`.
+- **Projected.** One line measured up to a date and projected after it: `projectedFrom` continues the line dashed in its own hue, and the tooltip says "projected". For a stretch that's provisional rather than projected, set `projectedNote` to what the tooltip should say instead.
+- **Still being billed.** On a chart by month (`interval="month"`), `stillBilling` names the trailing months with bills for fewer than nine in ten of the properties in scope (`isStillBilling` from `src/charts/stillBilling` holds the rule), each by its timestamp with its count: `{ month: Date.UTC(2026, 9, 1), billed: 9, properties: 18 }`. Every line that isn't `neutral` runs dashed in its own hue from the last month billed in full, a marker on such a month is hollow, its tooltip adds "Still being billed: 9 of 18 properties", and the same line sits under the chart, naming each month when there are several. Leave a month out once it passes nine in ten, and it draws solid.
 - **Score bands.** A score colored by status, band by band (`bands`, usually `scoreBands`), with the band named in the tooltip; `markers: 'last'` marks the latest reading. A chart colored by status has no other colored line. Set `max={100}` for a score or a percentage, so the axis always runs to the ceiling.
 - **Pathways.** Scenarios years ahead against a pathway (`interval="year"`): each scenario in a series color, the pathway `neutral`. Keep to one neutral line, so the legend tells every line apart. Rows can also be a `quarter` apart.
 
@@ -100,6 +104,8 @@ Product meanings take their color from `src/charts/meanings`: spread `meaningCol
 - Don't put a third unit on a chart, or two scales of one quantity (kW and MW); split the chart or convert to one unit.
 - Do draw a forecast with `projectedFrom` on the line it continues.
 - Don't draw a forecast as a second series in a second color; a variant keeps its hue.
+- Do mark a trailing month with `stillBilling` while fewer than nine in ten of the properties in scope have a bill for it.
+- Don't mark a month still being billed with `projectedFrom`, a ≈ sign or a lighter color; it isn't a projection, and it says how many properties are billed.
 - Do read a score against `scoreBands`, so every score chart bands alike.
 - Don't color a score by status and add another colored line; color a chart by series or by status.
 - Do group or switch to a table past six lines.
@@ -135,6 +141,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
 - `reference-lines`: `references` are dashed `text.secondary` lines, labeled with name, full value and unit inside the plot on the card surface.
 - `projected-segments`: `projectedFrom` continues a line dashed in its own hue, with "projected" in the tooltip.
+- `still-being-billed`: `stillBilling` dashes each line from the last month billed in full and hollows its markers, with the count of properties billed in the tooltip and under the chart.
 - `status-bands`: `bands` color a line and its markers by intent, band by band, and name the band in the tooltip.
 - `point-markers`: no markers by default; `markers` marks the last point or every point with a 4px dot ringed in the card surface.
 
