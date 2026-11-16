@@ -104,12 +104,12 @@ const sections: AppShellSection[] = [
   },
   {
     id: 'assets',
-    label: 'Assets',
+    label: 'Portfolio',
     icon: 'location_city',
     panel: {
       items: [
         { id: 'overview', label: 'Overview', icon: 'dashboard' },
-        { id: 'portfolio', label: 'Portfolio', icon: 'apartment', count: 48 },
+        { id: 'properties', label: 'Properties', icon: 'apartment', count: 48 },
         { id: 'areas', label: 'Areas', icon: 'layers' },
         { id: 'equipment', label: 'Equipment', icon: 'devices' },
         { id: 'utilities', label: 'Utilities', icon: 'receipt_long' },
@@ -372,7 +372,7 @@ export const Default: Story = {
 export const PanelCounts: Story = {
   args: { section: 'assets' },
   play: async ({ canvas, userEvent }) => {
-    await expect(canvas.getByRole('navigation', { name: 'Assets' })).toHaveTextContent('48');
+    await expect(canvas.getByRole('navigation', { name: 'Portfolio' })).toHaveTextContent('48');
     await userEvent.click(canvas.getByRole('button', { name: 'People' }));
     await expect(canvas.getByRole('navigation', { name: 'People' })).toBeVisible();
   },
