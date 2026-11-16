@@ -209,7 +209,7 @@ export const EdgeToEdge: Story = {
       />
       <List>
         {meters.map((meter) => (
-          <ListItem key={meter.name} secondaryAction={<Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>{kWh.format(meter.reading)}\u00a0kWh</Typography>}>
+          <ListItem key={meter.name} secondaryAction={<Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>{`${kWh.format(meter.reading)}\u00a0kWh`}</Typography>}>
             <ListItemText primary={meter.name} />
           </ListItem>
         ))}
@@ -369,7 +369,7 @@ function FoldingCard({ defaultExpanded }: { defaultExpanded: boolean }) {
       <Collapse in={expanded} id={id} unmountOnExit>
         <List>
           {meters.map((meter) => (
-            <ListItem key={meter.name} secondaryAction={<Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>{kWh.format(meter.reading)}\u00a0kWh</Typography>}>
+            <ListItem key={meter.name} secondaryAction={<Typography sx={{ fontVariantNumeric: 'tabular-nums' }}>{`${kWh.format(meter.reading)}\u00a0kWh`}</Typography>}>
               <ListItemText primary={meter.name} />
             </ListItem>
           ))}
