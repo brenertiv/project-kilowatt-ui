@@ -59,7 +59,7 @@ function levels<T extends Record<string, number>>(scheme: ColorScheme, steps: T)
   return Object.fromEntries(Object.entries(steps).map(([level, step]) => [level, ramp[step]])) as Record<keyof T, string>;
 }
 
-/** The surface level each Paper elevation sits on: flat surfaces, app bars and snackbars, menus, drawers and dialogs. Cards sit on level3 at any elevation (`paper-surface-levels`). */
+/** The surface level each Paper elevation sits on: flat surfaces, app bars and snackbars, menus, drawers and dialogs. Cards are outlined and sit on level3 (`paper-surface-levels`). */
 export const elevationSurfaces: { elevations: [number, number]; level: keyof typeof surfaceSteps.light; uses: string }[] = [
   { elevations: [0, 1], level: 'level2', uses: 'The frame and page, flat Paper, Accordion' },
   { elevations: [2, 6], level: 'level3', uses: 'AppBar, Snackbar, and every Card' },
@@ -649,7 +649,7 @@ export const departures: Departure[] = [
     components: ['Paper', 'Card', 'Accordion', 'AppBar', 'Snackbar', 'Menu', 'Popover', 'Drawer', 'Dialog'],
     area: 'Components',
     title: 'Paper takes its surface from its elevation',
-    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level2, app bars on level3, menus on level4, drawers and dialogs on level5. Cards, outlined or raised, sit on level3, a step above the level2 frame they're laid out on, so a card reads as a surface on the page rather than only its border. In the dark scheme the overlays (menus, popovers, drawers and dialogs) sit on level2 instead, with the `divider` as their edge: level4 and level5 read pale against the dark page, and level2 with the divider is the frame's own surface and edge, so an overlay matches the frame it opens over. Level2 rather than level3 because the dark divider is close to level3's step, so a bordered level3 overlay would show almost no edge. The light scheme keeps the elevation's level and MUI's shadows. A snackbar's text takes `text.primary`: MUI colors it for its own inverted surface, which would be white on white on these levels.",
+    why: "Paper's background steps up the surface levels with its elevation, in both schemes, in place of MUI's white light surfaces and its dark-scheme white overlay. Flat Paper and accordions sit on level2, app bars on level3, menus on level4, drawers and dialogs on level5. Cards, always outlined, sit on level3, a step above the level2 frame they're laid out on, so a card reads as a surface on the page rather than only its border. In the dark scheme the overlays (menus, popovers, drawers and dialogs) sit on level2 instead, with the `divider` as their edge: level4 and level5 read pale against the dark page, and level2 with the divider is the frame's own surface and edge, so an overlay matches the frame it opens over. Level2 rather than level3 because the dark divider is close to level3's step, so a bordered level3 overlay would show almost no edge. The light scheme keeps the elevation's level and MUI's shadows. A snackbar's text takes `text.primary`: MUI colors it for its own inverted surface, which would be white on white on these levels.",
     options: () => ({
       components: {
         MuiPaper: {
@@ -667,7 +667,7 @@ export const departures: Departure[] = [
             },
           },
         },
-        // Two classes, to outrank the elevation rules above, which a raised card also matches.
+        // Two classes, to outrank the elevation rules above, which a card left on MUI's default variant would also match.
         MuiCard: { styleOverrides: { root: { '&.MuiPaper-root': { backgroundColor: 'var(--mui-palette-background-level3)' } } } },
         // Two classes, to outrank MUI's own rule.
         MuiSnackbarContent: { styleOverrides: { root: { '&.MuiPaper-root': { color: 'var(--mui-palette-text-primary)' } } } },

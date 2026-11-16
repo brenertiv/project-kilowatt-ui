@@ -36,9 +36,8 @@ const meta = {
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
   parameters: { muiComponents: ['Card', 'CardHeader', 'CardContent', 'CardActions', 'CardActionArea'] },
-  argTypes: {
-    variant: { control: 'inline-radio', options: ['elevation', 'outlined'] },
-  },
+  // Every card is outlined; Kilowatt has no card with a shadow.
+  args: { variant: 'outlined' },
   render: (args) => (
     <Card {...args} sx={{ maxWidth: 360 }}>
       <CardContent>
@@ -62,13 +61,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** MUI's basic card: content, then text-button actions. It sits on surface level3, a step above the frame, with MUI's elevation 1 shadow. */
+/** The basic card: content, then text-button actions. It's `variant="outlined"`, as every card is: a border (`divider`) on surface level3, a step above the frame, with no shadow. */
 export const Basic: Story = {};
-
-/** `variant="outlined"`: a border instead of a shadow, for cards in a dense grid or on a surface that already has depth. */
-export const Outlined: Story = {
-  args: { variant: 'outlined' },
-};
 
 /** Stands in for opening the building; the Clickable story's play function checks it. */
 const openBuilding = fn();
