@@ -263,7 +263,7 @@ export function shapeMarkdown() {
 
 /** Elevations MUI's own components use by default. */
 const componentElevations: [string, number][] = [
-  ['Paper, Card, Accordion', 1],
+  ['Paper, Accordion', 1],
   ['AppBar', 4],
   ['Snackbar', 6],
   ['Menu, Popover', 8],
