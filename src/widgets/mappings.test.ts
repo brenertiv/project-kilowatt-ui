@@ -178,14 +178,35 @@ describe('tenant billing and tickets', () => {
     expect(utilityCostBreakdown([])).toBeUndefined();
   });
 
-  it('marks a month with fewer buildings billed as incomplete, and ranks the last complete month by property', () => {
+  it('marks a trailing month with bills for fewer than nine in ten properties as still being billed, and ranks the last complete month by property', () => {
     const recovery = recoveryByMonth(logs);
     expect(recovery.rows).toHaveLength(12);
     expect(recovery.incompleteFrom).toBe(Date.UTC(2026, 9, 1));
+    const buildings = new Set(logs.map((log) => log.properties!['Building Name'])).size;
+    expect(recovery.stillBilling).toEqual([{ month: Date.UTC(2026, 9, 1), billed: expect.any(Number), properties: buildings }]);
+    expect(recovery.stillBilling[0]!.billed).toBeLessThan(buildings * 0.9);
     expect(recovery.completeMonth).toBe('2026-09');
     expect(recovery.byProperty[0]).toEqual(expect.objectContaining({ building: '200 Vesey Street' }));
     expect(recovery.byProperty[0]!.recovery).toBeLessThan(70);
     expect(recoveryByMonth(logs.filter((log) => log.properties!['Billing Period End'] < '2026-10-01')).incompleteFrom).toBeUndefined();
+  });
+
+  it('draws a trailing month solid once nine in ten properties have a bill, whatever the month before held', () => {
+    const names = [...new Set(logs.map((log) => log.properties!['Building Name']))];
+    const enough = Math.ceil(names.length * 0.9);
+    const october = (log: SubmeterLog) => log.properties!['Billing Period End'] >= '2026-10-01';
+    const year = logs.filter((log) => !october(log));
+    const september = year.filter((log) => log.properties!['Billing Period End'] >= '2026-09-01');
+    // October as a copy of September's bills, for the first `count` buildings.
+    const billedFor = (count: number) =>
+      september
+        .filter((log) => names.indexOf(log.properties!['Building Name']) < count)
+        .map((log): SubmeterLog => ({ ...log, properties: { ...log.properties!, 'Billing Period End': '2026-10-31' } }));
+    expect(recoveryByMonth([...year, ...billedFor(enough)]).stillBilling).toEqual([]);
+    expect(recoveryByMonth([...year, ...billedFor(enough)]).completeMonth).toBe('2026-10');
+    const short = recoveryByMonth([...year, ...billedFor(enough - 1)]);
+    expect(short.stillBilling).toEqual([{ month: Date.UTC(2026, 9, 1), billed: enough - 1, properties: names.length }]);
+    expect(short.completeMonth).toBe('2026-09');
   });
 
   it('folds uncategorized tickets into one Other, and keeps to six slices', () => {

@@ -390,6 +390,19 @@ export const chartDepartures: ChartDeparture[] = [
     check: /projectedFrom/,
   },
   {
+    id: 'still-being-billed',
+    kind: 'convention',
+    title: 'A month still being billed is dashed and counted',
+    why: 'amCharts draws every period alike, so a trailing month with bills for only some of the properties reads as a drop in use or cost. A month still being billed is a variant of its own series (Rules → Charts → Variants don\'t get colors): while fewer than nine in ten of the properties in scope have a bill for it, Kilowatt draws it dashed in its own hue and says "Still being billed: 9 of 18 properties" in its tooltip and under the chart, so the state reads by pattern and in words, never by color alone. Once the month passes nine in ten it draws solid.',
+    charts: ['LineChart', 'MonthLinesChart', 'ColumnChart'],
+    convention: {
+      amchartsDefault: 'Every period drawn alike, however much of it has been billed',
+      kilowatt: "`stillBilling` on the chart: a column as a dashed outline with no fill, a line dashed from the last month billed in full with a hollow marker, each in the series' hue, and the count of properties billed in the tooltip and in a caption under the plot",
+      where: 'Every monthly chart of billed data whose trailing months may still be billed',
+    },
+    check: /stillBilling/,
+  },
+  {
     id: 'status-bands',
     kind: 'convention',
     title: 'A score colored by its bands',

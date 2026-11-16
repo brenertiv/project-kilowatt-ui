@@ -55,3 +55,20 @@ export const OneYear: Story = {
   parameters: { card: { title: 'Electricity by Month' } },
   args: { series: [series[2]], summary: 'Electricity by month, 2025: peaking in August at 81,400 kWh; March and November have no data.' },
 };
+
+const octoberBilling = [{ month: 'Oct', billed: 11, properties: 18 }];
+
+/** A trailing month still being billed: `stillBilling` dashes the newest year's line into it, hollows its dot and says how many properties are billed so far, in the tooltip and under the chart. */
+export const StillBeingBilled: Story = {
+  name: 'Still being billed',
+  parameters: { card: { title: 'Electricity by Month' } },
+  args: {
+    stillBilling: octoberBilling,
+    summary:
+      'Electricity by month, 2023 to 2025: each year lower than the one before; March 2025 has no data, and October 2025 is still being billed, with bills for 11 of 18 properties so far.',
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('figure', { name: /October 2025 is still being billed/ })).toBeVisible();
+    await expect(canvas.getByText('Still being billed: 11 of 18 properties')).toBeVisible();
+  },
+};

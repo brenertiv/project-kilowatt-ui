@@ -50,7 +50,7 @@ Inventory ids in brackets. A widget is built when its recipe and stories exist; 
 | Carbon Budget Burn Rate [48] | `LinearProgress` | `BurnRateWidget` | `/project/`, `/budget/` | Built |
 | Tickets Pending Approval by Category [14] | `DonutChart`, grouped into Other | `TicketsPendingApprovalWidget` | `/action_request/count/?group_by=action_category_id`, `/action_category/` | Built |
 | Utility Cost Breakdown [21] | `DonutChart` and the balance | `UtilityCostBreakdownWidget` | `/submeter_log/` | Built |
-| Portfolio Recovery [22] | `LineChart`, incomplete month dashed, and a table | `PortfolioRecoveryWidget` | `/submeter_log/` | Built; the table shows the last complete month rather than following the pointer |
+| Portfolio Recovery [22] | `LineChart`, the month still being billed dashed and counted, and a table | `PortfolioRecoveryWidget` | `/submeter_log/` | Built; the table shows the last complete month rather than following the pointer |
 | Total Expenditures Breakdown [27] | `ColumnChart` `horizontal` | `ExpendituresBreakdownWidget` | `/project/`, `/budget/` | Built; no details popup yet |
 | Total Annual Expenditures [28] | `ColumnChart` stacked, grouped into Other | `AnnualExpendituresWidget` | `/project/`, `/budget/` | Built |
 | Spend and Savings [55] | `ColumnChart` side by side | `SpendSavingsWidget` | `/client/{id}/carbon_planner/`, `/budget/{id}/carbon_planner/chart-data/` | Built |
@@ -73,7 +73,7 @@ The other 35 widgets are KPI tiles, label–value lists, tables and maps: phase 
 - **Scores are shown 0 to 100.** The API serves them 0 to 1; `toPoints` converts them. Read scores against `scoreBands`.
 - **Coverage is days with bills.** A day is covered when every meter active that day has a bill for it, or a utility account does; a month is its covered days over its expected days, averaged over the units (a utility at a building). A retired meter and its replacement read as continuous, a silent second meter leaves its days uncovered, and the month still being billed isn't drawn (`coverageByMonth`).
 - **Count what's committed.** Capital and carbon recipes count only projects in approved budgets (`approvedProjects`), and only approved carbon plans; plans under review or declined are proposals, not commitments.
-- **Say when a month is incomplete.** A billing month with fewer buildings billed than the month before is still being billed: dash it (`projectedFrom` with `projectedNote`), and say how many buildings are in it, so a smaller month doesn't read as a drop.
+- **Say when a month is still being billed.** A trailing month with bills for fewer than nine in ten of the properties in scope is still being billed (`isStillBilling` from `src/charts/stillBilling`; Rules → Charts): hand it to the chart as `stillBilling` with its count, so it's dashed and says "Still being billed: 9 of 18 properties", and a smaller month doesn't read as a drop. Once it passes nine in ten it's a complete month.
 - **Running totals become yearly amounts.** The Carbon Planner reports savings and avoided CO₂ as running totals (`cumulative_cost_savings`, `cumulative_co2_reduction`). A year's amount is the total's change from the year before; never subtract a running total from a yearly figure.
 - **Compare like with like.** Scale a partial month by its `coverage` before comparing it, and leave out buildings with gaps from a total over time, saying under the chart which ones.
 - **Meanings by API name.** Look up colors with the API's name for the thing (`Natural Gas`, `Requires Attention`), then show it in sentence case. A translated label never reaches a lookup.
@@ -84,11 +84,11 @@ The other 35 widgets are KPI tiles, label–value lists, tables and maps: phase 
 
 Where a widget broke the chart rules, Kilowatt redesigns it rather than adding a color (Rules → Charts):
 
-- **Projections** are one line dashed from the first projected point, not a second series in a status color (Emissions Forecast, GRESB Score Projection, Portfolio Recovery's incomplete month).
+- **Projections** are one line dashed from the first projected point, not a second series in a status color (Emissions Forecast, GRESB Score Projection, Portfolio Recovery's month still being billed, through `stillBilling`).
 - **More than six series** are grouped into Other (Total Annual Expenditures drew one per property).
 - **A horizontal ranking** is one series in one color, not one series per bar (Total Expenditures Breakdown).
 - **Category axes of dates** become date axes (Emissions Pathways, Portfolio Recovery).
-- **Portfolio Recovery's incomplete month** is one line dashed from that month, with "incomplete month" in the tooltip, not a second series. Its "Recovery by property" panel followed the pointer in the app; Kilowatt shows the last complete month's table under the chart, lowest first, so it's readable without a pointer.
+- **Portfolio Recovery's month still being billed** is one line dashed from that month, with "Still being billed" and its count of properties in the tooltip and under the chart, not a second series. Its "Recovery by property" panel followed the pointer in the app; Kilowatt shows the last complete month's table under the chart, lowest first, so it's readable without a pointer.
 - **Data coverage units.** The app treats a building's ENERGY STAR meters and its utility accounts as one unit, linking them through the location's ENERGY STAR property (`locationpmproperty_set`). The mock doesn't serve that link, so Kilowatt's recipe counts meters by ENERGY STAR property and accounts by building, as separate units. That's exact for a building reported through one or the other, as in the sample; serve the link before using the recipe where a building has both. Supply-and-delivery account pairs aren't modelled either.
 - **Tickets with no category** and categories past the five largest form one Other, merged with the category the API names Other, so a donut never shows two.
 - **Seven work-order statuses** take four intents and neutral, and the legend names each; seven types take six slots, with Survey neutral.

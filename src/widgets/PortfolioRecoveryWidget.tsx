@@ -27,14 +27,18 @@ export type PortfolioRecoveryWidgetProps = {
   title?: string;
 };
 
+const series = [{ field: 'recovery', name: 'Recovery', markers: 'all' as const }];
+const whole = new Intl.NumberFormat();
+
 /** One decimal always, so the table's column lines up. */
 const percent = new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /**
  * How much of their utility cost buildings recover from tenants, month by month, and by property: the
  * recipe for Portfolio Recovery. It asks `/submeter_log/` for the window, maps it with `recoveryByMonth`,
- * and draws a `LineChart` in percent, dashed for a month still being billed (fewer buildings than the month
- * before), with a table of each property's recovery in the last complete month, lowest first.
+ * and draws a `LineChart` in percent, dashed for a trailing month still being billed (bills for fewer than nine
+ * in ten of the properties in scope), with its count in the tooltip and under the chart, and a table of each
+ * property's recovery in the last complete month, lowest first.
  *
  * @summary Monthly tenant recovery of utility cost, with recovery by property, fetched and mapped from the API.
  * @import import { PortfolioRecoveryWidget } from 'src/widgets/PortfolioRecoveryWidget';
@@ -42,20 +46,20 @@ const percent = new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, max
 export function PortfolioRecoveryWidget({ scope, from, to, title = 'Portfolio Recovery' }: PortfolioRecoveryWidgetProps) {
   const { logs, state } = useBilledLogs(scope, from, to);
   const recovery = useMemo(() => (logs ? recoveryByMonth(logs) : undefined), [logs]);
-  const series = useMemo(() => [{ field: 'recovery', name: 'Recovery', projectedFrom: recovery?.incompleteFrom, projectedNote: 'incomplete month', markers: 'all' as const }], [recovery?.incompleteFrom]);
   const rows = recovery?.rows ?? [];
   const complete = recovery?.completeMonth ? billingMonthName(recovery.completeMonth) : '';
   const lowest = recovery?.byProperty[0];
+  const open = recovery?.stillBilling[recovery.stillBilling.length - 1];
   const latest = rows.find(({ date }) => date === Date.parse(`${recovery?.completeMonth}-01T00:00:00Z`));
   const summary = latest && lowest
-    ? `Tenants were billed ${percent.format(latest.recovery)}% of utility cost in ${complete}; ${lowest.building} recovered the least, ${percent.format(lowest.recovery)}%.${recovery?.incompleteFrom ? ' The latest month is still being billed.' : ''}`
+    ? `Tenants were billed ${percent.format(latest.recovery)}% of utility cost in ${complete}; ${lowest.building} recovered the least, ${percent.format(lowest.recovery)}%.${open ? ` The latest month is still being billed: ${whole.format(open.billed)} of ${whole.format(open.properties)} properties have a bill so far.` : ''}`
     : '';
 
   return (
     <Card variant="outlined">
       <CardHeader title={<TruncatedText>{title}</TruncatedText>} />
       <AsyncContent state={state} height={480} loadingLabel="Loading tenant billing" emptyText="No billing in this period.">
-        <LineChart data={rows} series={series} unit="%" interval="month" summary={summary} />
+        <LineChart data={rows} series={series} unit="%" interval="month" stillBilling={recovery?.stillBilling} summary={summary} />
         {recovery && recovery.byProperty.length > 0 && (
           <CardContent sx={{ pt: 0 }}>
             <Typography variant="subtitle2" component="h3" id="recovery-by-property">
