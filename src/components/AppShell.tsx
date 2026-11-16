@@ -122,7 +122,7 @@ export type AppShellSection = {
   panel?: AppShellPanel;
   /** Leaves the section out of the phone menu, for one that's rarely used on a phone. Default `false`. */
   hideOnPhone?: boolean;
-  /** A section the account doesn't have but can upgrade to: a plus in the disabled color in place of its icon, its name as its tooltip, no badge and no panel. Choosing it opens its upgrade page through `onSectionChange`. To hide one, leave it out of `sections`. Default `false`. */
+  /** A section the account doesn't have but can upgrade to: the `upgrade` icon in the disabled color in place of its icon, its name as its tooltip, no badge and no panel. Choosing it opens its upgrade page through `onSectionChange`. To hide one, leave it out of `sections`. Default `false`. */
   missing?: boolean;
 } & (
   | {
@@ -686,8 +686,9 @@ function SectionGlyph({ section }: { section: AppShellSection }) {
       {section.initials}
     </Avatar>
   ) : section.missing ? (
-    // A section the account doesn't have: one circled plus in the disabled color, quieter than the sections it has.
-    <Icon name="add_circle" sx={{ color: 'text.disabled' }} />
+    // A section the account doesn't have: the upgrade icon in the disabled color, quieter than the sections it has.
+    // A plus (`add`) means Create and nothing else.
+    <Icon name="upgrade" sx={{ color: 'text.disabled' }} />
   ) : (
     <Icon name={section.icon} />
   );

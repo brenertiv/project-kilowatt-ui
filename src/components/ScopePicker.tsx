@@ -118,7 +118,7 @@ export type ScopePickerProps = {
   shortcut?: string | false;
 };
 
-const levelIcon = { portfolio: 'account_tree', group: 'folder_open', saved: 'folder_special', property: 'apartment' } satisfies Record<Scope['level'], IconName>;
+const levelIcon = { portfolio: 'location_city', group: 'folder', saved: 'folder_special', property: 'apartment' } satisfies Record<Scope['level'], IconName>;
 
 function sameScope(a: Scope, b: Scope) {
   return a.level === b.level && (a.level === 'portfolio' || (b.level !== 'portfolio' && a.id === b.id));
