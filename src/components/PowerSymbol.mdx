@@ -1,0 +1,88 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as PowerSymbolStories from './PowerSymbol.stories';
+
+<Meta
+  of={PowerSymbolStories}
+  summary="Kilowatt's PowerSymbol, the six symbols of an electrical one-line diagram (utility, transformer, utility meter, disconnect, panel, bus trough), drawn in currentColor: diagram marks, the one drawn set beside the icon font."
+/>
+
+# PowerSymbol
+
+`PowerSymbol` draws one symbol of an electrical one-line diagram: the utility's supply, a transformer, a utility meter with its current transformer, a disconnect, a panel or a bus trough. They are diagram marks, not icons. Material Symbols has none of them, so they are the one set Kilowatt draws (Rules → Icons): each is an inline SVG in `currentColor`, in a slot two thirds as wide as it is tall, with the diagram's wire running down its middle. It's Kilowatt's own component, in MUI's `Box` (`@mui/material`, Material UI v9; see the [Box API](https://mui.com/material-ui/api/box/)). The diagram's layout, its wires and the power model behind it are the page's, not this component's.
+
+<Canvas of={PowerSymbolStories.Legend} />
+
+## When to use
+
+- Use it for a node on a one-line diagram of a building's electrical service, and for that diagram's legend.
+- For an icon anywhere else (a rail item, a button, a row, a status), use `Icon` from `src/icons`; every icon is a glyph of the font, and these symbols are never icons.
+- For an equipment type, a utility or a data source outside a diagram, use the closest glyph in the icon font or the name alone (Rules → Icons).
+- For a diagram's data state (estimated, missing), say it in words beside the node; the symbol says only what the node is.
+
+## Usage
+
+```tsx
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { PowerSymbol } from 'src/components/PowerSymbol';
+
+<Stack direction="row" sx={{ alignItems: 'center', gap: 1.5, color: 'text.secondary' }}>
+  <PowerSymbol kind="meter" ct />
+  <Typography variant="body2" sx={{ color: 'text.primary' }}>
+    Utility Meter M-1
+  </Typography>
+</Stack>
+```
+
+The symbol takes its color from the text color around it (`currentColor`): set `color` on its container with a theme role, `text.secondary` for a diagram at rest. `size` is its height in pixels: 84 by default, a node's slot on the diagram, and 32 in a legend. Its closed shapes are filled with the surface the symbol sits on, so the wire shows behind them rather than through them: pass `surface` when that isn't a card (`surface="level2"` on the page, `surface="level5"` in a dialog). `powerSymbolKinds` lists the six kinds in the order power flows through them, for a legend.
+
+## Variants
+
+- **`utility`:** the utility's supply, a wave in a box.
+- **`transformer`:** two windings either side of a core.
+- **`meter`:** a circle holding an M. `ct` draws its current transformer on the wire above it.
+- **`disconnect`:** an open switch between two contacts.
+- **`panel`:** an upright rectangle, in a heavier line.
+- **`bus`:** a bus trough, one heavy bar across the wire.
+
+<Canvas of={PowerSymbolStories.MeterWithCurrentTransformer} />
+
+<Canvas of={PowerSymbolStories.OnAWire} />
+
+## States
+
+- **Dashed:** `dashed` draws the symbol in a dashed line, for a node nobody has confirmed on site. The dash is never the only signal: the node says so in words beside it.
+
+<Canvas of={PowerSymbolStories.Dashed} />
+
+## Do and don't
+
+- Do use these six symbols for a one-line diagram and its legend, and nowhere else.
+- Don't use one as an icon in a button, a rail item, a chip or a table row; use `Icon`, or the name alone where the font has no glyph.
+- Do set the symbol's color on its container with a theme role, so it follows the color scheme.
+- Don't pass a hex color or a ramp step, or color a symbol by status; a node's state is said in words.
+- Do name every node in text beside its symbol, and give a diagram a legend.
+- Don't rely on the shape to say what a node is; the symbol is decorative to assistive technology.
+- Do pass `surface` when the symbol sits on anything but a card, so its shapes match what's behind them.
+- Don't draw a new symbol in a page; a symbol the diagram needs is added here, with the docs' icon list naming it.
+
+## MUI departures
+
+None of Kilowatt's departures change `Box`.
+
+Theme-wide departures (the surface levels a symbol's shapes are filled with, the text colors it takes through `currentColor`) apply too; see Foundations → MUI departures. Drawing these six is the one exception to the `icons` departure's font-only rule: they are diagram marks (Rules → Icons).
+
+## Accessibility
+
+- The symbol is decorative (`aria-hidden`): the node's name beside it, and the legend's names, carry its meaning.
+- It takes `currentColor`, so it holds the contrast of the text role it's given; `text.secondary` passes 3:1 as a graphic on every surface level.
+- A dashed symbol is paired with words (“Not confirmed on site”), so the state doesn't rest on the line style.
+- It isn't a control and takes no focus; a node that opens something is the page's button or link, with the symbol inside it.
+
+## Related
+
+- `Icon` (`src/icons`) for every icon; Rules → Icons for the font rule these symbols are the exception to.
+- `Card` for the outlined card a diagram sits in.
+- `SchematicPreview` for a page's layout in miniature.
+
+<Stories includePrimary={false} />
