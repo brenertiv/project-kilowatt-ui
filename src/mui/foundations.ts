@@ -209,7 +209,7 @@ export function typographyMarkdown() {
     ),
     'Roboto loads from Google Fonts at 400, 500, 600 and 700. MUI\'s installation guide also loads 300, for `fontWeightLight`, which Kilowatt doesn\'t use. Instrument Serif loads at 400, for the `brand` variant only.',
     '## Variants',
-    'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`. `brand` is Kilowatt\'s own, in Instrument Serif, for branded moments only: a first login\'s and the upgrade pages\' headings, and report titles, which `PageHeader` sets at `h1`\'s size (`titleVariant="brand"`). It is 40px from `sm` up (the size below is under `sm`), and no component takes it by default.',
+    'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`. `brand` is Kilowatt\'s own, in Instrument Serif, for branded moments only: a first login\'s and the upgrade pages\' headings, and report titles, which `PageHeader` sets a step down, at 40px (`titleVariant="brand"`). It is 48px from `sm` up (the size below is under `sm`), and no component takes it by default.',
     table(
       ['Variant', 'Element', 'Size', 'Weight', 'Line height', 'Letter spacing', 'Case', 'Source'],
       variants.map((variant) => {

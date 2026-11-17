@@ -22,7 +22,7 @@ export type PageHeaderProperty = {
 export type PageHeaderProps = {
   /** The page's title, as an `h1`, and the condensed line once the header has scrolled away. */
   title: string;
-  /** The title's type style: `'h3'` for a page, `'brand'` for a report, which sets the serif at `h1`'s size (`h2`'s below `sm`). The condensed line is the same either way. Default `'h3'`. */
+  /** The title's type style: `'h3'` for a page, `'brand'` for a report, which sets the serif a step under its own size, at 40px (`h1`'s size below `sm`). The condensed line is the same either way. Default `'h3'`. */
   titleVariant?: 'h3' | 'brand';
   /** The page's own controls: at the header's right, and at the condensed line's right once it's pinned. Default none. */
   actions?: ReactNode;
@@ -88,8 +88,8 @@ export function PageHeader({ title, titleVariant = 'h3', actions, filters, descr
   const [sentinel, setSentinel] = useState<HTMLElement | null>(null);
   const [lineElement, setLineElement] = useState<HTMLElement | null>(null);
   const pinned = usePinned(sentinel, lineElement);
-  // A report's title: the brand serif a step under its own size, at the theme's `h1` size, and `h2`'s on a phone.
-  const titleSize = titleVariant === 'brand' ? { fontSize: { xs: theme.typography.h2.fontSize, sm: theme.typography.h1.fontSize } } : {};
+  // A report's title: the brand serif a step under its own size, at its phone size (40px), and the theme's `h1` size on a phone.
+  const titleSize = titleVariant === 'brand' ? { fontSize: { xs: theme.typography.h1.fontSize, sm: theme.typography.brand.fontSize } } : {};
   // At property scope the condensed line reads "Page title — Property name · address".
   const condensed = property ? `${title} — ${property.name} · ${property.details}` : title;
 
