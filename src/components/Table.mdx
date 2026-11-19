@@ -3,7 +3,7 @@ import * as TableStories from './Table.stories';
 
 <Meta
   of={TableStories}
-  summary="MUI's Table for rows of the same fields that people read, compare, sort or select; straight in an outlined Card, with text left, numbers right, and a dash for a missing reading."
+  summary="MUI's Table for rows of the same fields that people read, compare, sort or select; straight in an outlined Card, with text left, numbers right, and the missing mark for a value that isn't there."
 />
 
 # Table
@@ -63,19 +63,23 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - **Text left, numbers right.** Set `align="right"` on a number's header and cells, so digits line up by place. The theme sets tabular figures on every cell.
 - **Format every value with `Intl`.** One number of decimals per column, so the column lines up.
 - **Units sit in the header.** “Energy (kWh)” in the header and bare numbers in the cells, unless the units differ by row.
-- **A missing reading is a dash.** Show “–”, never 0, and keep it last when sorting: it has no place in the order. A missing fact that was never measured (a property with no floor area on record) says so in words instead, “Not recorded” in `text.secondary`, never a bare dash and never 0, as `ScopePicker`'s filter table does.
+- **A missing value shows the missing mark.** A cell with no value shows `DataMark` (`src/components/DataMark`): a dash with a marker, and the state and reason in its tooltip and accessible name. Never a bare dash, never a blank cell and never 0. It sorts as zero, so it comes first ascending and last descending, and it keeps its mark wherever it lands. A missing fact that was never recorded (a property with no floor area on record) says so in words instead, “Not recorded” in `text.secondary`, as `ScopePicker`'s filter table does.
 - **An estimated value is marked est.** A value its source estimated (a utility's estimated read, a bill marked estimated) is the value as its source reported it, followed by the word **est.** in `text.secondary`: “1,240 est.”. The marker is a word, not an icon or a color, so it reads without a tooltip and in an export. It carries a `Tooltip` saying “Estimated by {source}” (never “estimated” alone, and never Enertiv), on hover and on keyboard focus, and where the cell's number opens its provenance, the marker opens it too. A total never takes one mark for the estimates inside it; it says what it includes instead.
 - **Headers are sentence case**, and name what's in the column. Set each in `HeaderLabel`, so it stays on one line, truncated with a tooltip, and its column is at least its longest word.
 
 ## Variants
 
-- **Sortable.** Put `TableSortLabel` in the header and set `sortDirection` on its `TableCell`. The arrow shows on the active column, and on hover for the others.
+- **Sortable.** Put `TableSortLabel` in the header and set `sortDirection` on its `TableCell`. The arrow shows on the active column, and on hover for the others. A header click cycles three steps: ascending, descending, then off, which returns the list to its own order and leaves `sortDirection` unset. Text compares in the locale, numbers by value, and a missing value sorts as zero.
 
 <Canvas of={TableStories.Sortable} />
 
-- **Selectable.** Put a `Checkbox` in a `padding="checkbox"` cell, set `selected` on the row, and give the header checkbox `indeterminate` when some rows are chosen. Use it when a bulk action follows.
+- **Selectable.** Put a `Checkbox` in a `padding="checkbox"` cell, set `selected` on the row, and give the header checkbox `indeterminate` when some rows are chosen. Use it when a bulk action follows. While rows are chosen, a bar above the table counts them in a `role="status"` line (“3 properties selected”) and holds their actions, the main one `contained`; with none chosen the bar isn't there.
 
 <Canvas of={TableStories.Selectable} />
+
+- **Active filters.** Show every filter in force as a `Chip` above the table, its words the filter and its value (“City: New York”), with `onDelete` clearing that one filter, and a text `Button` Clear All with the `filter_alt_off` icon beside them. Put them in a `role="group"` named “Active filters”. With no filter set, show nothing. The filters themselves are chosen in `FilterBar`.
+
+<Canvas of={TableStories.ActiveFilters} />
 
 - **Sticky header.** Set `stickyHeader` on the `Table` and a height on the `TableContainer`, for a long list in a fixed space.
 
@@ -84,6 +88,10 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - **Wide.** With more columns than fit, the `TableContainer` scrolls sideways inside the card. To keep each row on one line, set `whiteSpace: 'nowrap'` on the cells (`'& .MuiTableCell-root'`), not on the table: cells set their own wrapping (`text-wrap`), so they don't inherit it.
 
 <Canvas of={TableStories.Wide} />
+
+- **Pinned name column.** Below `md`, pin the column that names the row: `position: 'sticky'` and `left: 0` on its header and cells, on `background.level3`, the card's surface, so the cells passing under it don't show through, and at most 40% of the viewport wide (`maxWidth: '40vw'`), its text on one line. The other columns scroll sideways in the `TableContainer`, a named, focusable region. From `md` up the column is an ordinary one.
+
+<Canvas of={TableStories.PinnedColumn} />
 
 - **Tinted cells.** A cell tinted by its value, for when every number must show: the `Heatmap` chart keeps its numbers in tooltips, and this stays readable at a glance and in print. It takes `heatmap-scale`'s roles. Each cell is one end color as a transparent overlay at an opacity of its change over the cap, full from the cap on and fading to the bare card at no change: `chart.diverging` for a comparison where neither side is worse (below in brand blue, above in parchment), or `error` on the worse side and `chart.neutral` on the better for a deviation (Rules → Charts → Deviation from a midpoint). Take the opacity and the text from `heatColors` in `src/charts/deviation`: the text stays `text.primary` while it holds 4.5:1 over the blend, then flips to `chart.diverging.contrastText`. Pick the cap for the data, pass it as a prop, and name it at both ends of the legend under the table, a gradient of the two ends meeting at the card. A cell with nothing to compare stays a dash on the bare surface, and every cell takes a `Tooltip` with its full statement, which is also its accessible name. For a whole grid of tinted cells, rows by months, use `HeatmapTable`, which draws this with its legend and paging.
 
@@ -103,6 +111,10 @@ import { TruncatedText } from 'src/components/TruncatedText';
 
 <Canvas of={TableStories.Paged} />
 
+- **Paged and sorted, searched or filtered.** Changing the sort, the search or a filter returns to the first page. Pass `usePagedRows` a second argument, a value that names the list's sort, search and filters (a string of them is enough): when it changes, the hook goes back to page one. Without it, a reader on page three of a list sees page three of the new order.
+
+<Canvas of={TableStories.PagedAndSorted} />
+
 - **Load more.** Lists from the API are cursor paged, so they take this rather than the pager. Add rows with `useInfiniteQuery`, show the running count in a `role="status"` line, and put a text `Button` under the table, with `loading` while the next page arrives. `fromQuery` gives `fetching` during that fetch, and `AsyncContent` keeps the table mounted, so its rows and scroll position stay put. When the last page arrives the button goes, so move focus to the table.
 
 <Canvas of={TableStories.LoadMore} />
@@ -121,8 +133,10 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - Don't let a long header wrap or set a column's width to fit it; `HeaderLabel` truncates it, with the full text in a tooltip.
 - Do page rows you already hold with `usePagedRows`, and a cursor-paged list with Load More.
 - Don't mix the two in one table, or show a pager at ten rows or fewer.
-- Do show a dash for a missing reading and keep it last when sorting.
-- Don't show 0 for a reading that doesn't exist; 0 is a value, and a dash means there isn't one.
+- Do show `DataMark` for a missing value, and sort it as zero with its mark kept.
+- Don't show 0, a blank or a bare dash for a value that doesn't exist; 0 is a value, and a bare dash gives no reason.
+- Do return to the first page when the sort, search or a filter changes, by passing `usePagedRows` its reset key.
+- Don't leave a reader on a later page of a list whose order or rows just changed; they'd miss its start.
 - Do leave `size` off; tables are `medium` like every other component.
 - Don't set `size="small"` for a whole screen to fit more in; drop a column or let the table scroll, and keep `small` for a one-off with a comment saying why.
 - Do use `hover` on a row only when clicking the row does something.
@@ -152,6 +166,8 @@ Theme-wide departures (CSS variables, the theme radius, surface and border level
 - Mark each row's first cell `component="th"` and `scope="row"`, so a cell reads with its row's name.
 - `TableSortLabel` is a button, with keyboard activation and the Kilowatt focus ring. Set `sortDirection` on its cell, which sets `aria-sort`.
 - Give each row's `Checkbox` a label that names the row: “Select 120 Broadway”.
+- A missing value's `DataMark` is a tab stop named with its state and reason, so a keyboard and a screen reader reach why the cell is empty.
+- The selection bar's count and a filtered list's count sit in `role="status"` lines, and the chips' group and the bar are named (`role="group"` with an `aria-label`).
 - A `TableContainer` that scrolls needs `role="region"`, an `aria-label` and `tabIndex={0}`, or a keyboard can't scroll it.
 - Results that arrive on their own are announced: `AsyncContent` announces its states, and a load-more count sits in a `role="status"` line.
 
@@ -162,6 +178,8 @@ Theme-wide departures (CSS variables, the theme radius, surface and border level
 - `Heatmap` for a grid read by color, with its numbers in tooltips.
 - `Checkbox` for selecting rows.
 - `HeaderLabel` for a column header's text.
+- `DataMark` for a cell with no value.
+- `FilterBar` for choosing the filters the chips show.
 - Rules → One border per edge for how a table meets its card.
 
 <Stories includePrimary={false} />
