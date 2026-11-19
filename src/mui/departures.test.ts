@@ -278,3 +278,10 @@ describe('chart palette', () => {
     expect(contrasts.at(-1)).toBeGreaterThanOrEqual(graphic);
   });
 });
+
+describe('count color', () => {
+  it.each(schemes)('holds its text at 4.5:1 in the %s scheme', (scheme) => {
+    const { count } = createSchemeTheme(scheme).palette;
+    expect(getContrastRatio(count.contrastText, count.main)).toBeGreaterThanOrEqual(text);
+  });
+});

@@ -14,6 +14,7 @@ import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import ButtonBase from '@mui/material/ButtonBase';
 import CircularProgress from '@mui/material/CircularProgress';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Dialog from '@mui/material/Dialog';
@@ -26,6 +27,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import ListSubheader from '@mui/material/ListSubheader';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
@@ -83,10 +85,24 @@ export type AppShellItemAction = {
   onClick: () => void;
 };
 
+/** A labelled part of a panel's list, such as one type of workspace: its label collapses its rows. */
+export type AppShellPanelGroup = {
+  /** Identifies the part. */
+  id: string;
+  /** The part's name, in Title Case, on a button that collapses and expands its rows: "Reports". */
+  label: string;
+  /** The part's pages, in order. A part with none keeps its label, so its `add` button stays. */
+  items: AppShellPanelItem[];
+  /** A plus at the label's end for adding to the part, named by `label` ("New Report"): shown on hover, on focus, and always on a touch screen. Left out of the phone menu, so put the same action in the page too. Default none: no button. */
+  add?: { label: string; onClick: () => void };
+};
+
 /** A section's panel: its pages, with search. */
 export type AppShellPanel = {
-  /** The pages, in order. */
+  /** The pages, in order. With `groups`, the pages that belong to no part, listed before the parts. */
   items: AppShellPanelItem[];
+  /** Labelled parts of the list after `items`, in order, each label a button that collapses its rows; what is collapsed lasts while the panel is mounted. For a section that sorts its pages by kind, as Home sorts workspaces by type. Default none: one list. */
+  groups?: AppShellPanelGroup[];
   /** Controls under the panel's header, such as a New button. Left out of the phone menu, so put the same action in the page too. */
   actions?: ReactNode;
   /** Content under the list, such as the company name. */
@@ -122,7 +138,7 @@ export type AppShellSection = {
   panel?: AppShellPanel;
   /** Leaves the section out of the phone menu, for one that's rarely used on a phone. Default `false`. */
   hideOnPhone?: boolean;
-  /** A section the account doesn't have but can upgrade to: the `upgrade` icon in the disabled color in place of its icon, its name as its tooltip, no badge and no panel. Choosing it opens its upgrade page through `onSectionChange`. To hide one, leave it out of `sections`. Default `false`. */
+  /** A section the account doesn't have but can upgrade to: the circled plus (`add_circle`) in the disabled color in place of its icon, its name as its tooltip, no badge and no panel. Choosing it opens its upgrade page through `onSectionChange`. To hide one, leave it out of `sections`. Default `false`. */
   missing?: boolean;
 } & (
   | {
@@ -159,8 +175,10 @@ export type AppShellCompany = {
   name: string;
   /** A second line in the switcher, such as the person's role there. */
   detail?: string;
-  /** The company's mark, as an image URL, shown on a white tile (marks are drawn for white). Without one, the company's initials stand in. */
+  /** The company's mark, as an image URL, shown edge to edge on a white tile (marks are drawn for white). Without one, the company's initials stand in. */
   logo?: string;
+  /** The company's mark for the dark scheme, as an image URL, shown on a black tile in place of `logo` there. Default none: `logo` in both schemes. */
+  logoDark?: string;
 };
 
 export type AppShellProps = {
@@ -370,7 +388,7 @@ function PageRow({ item, tooltips, secondaryVariant }: { item: AppShellPanelItem
         />
       )}
       {item.count !== undefined && (
-        <Typography variant="caption" color="text.secondary" sx={{ ml: 1, fontVariantNumeric: 'tabular-nums' }}>
+        <Typography variant="caption" color="textSecondary" sx={{ ml: 1, fontVariantNumeric: 'tabular-nums' }}>
           {new Intl.NumberFormat().format(item.count)}
         </Typography>
       )}
@@ -393,7 +411,28 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
   const [kind, setKind] = useState<string | null>(null);
   const [filterButton, setFilterButton] = useState<HTMLElement | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
-  const items = panel.items.filter((item) => kind === null || item.kind === kind);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const groupId = useId();
+  const byKind = (item: AppShellPanelItem) => kind === null || item.kind === kind;
+  const items = panel.items.filter(byKind);
+  // A part with nothing in it keeps its label, and so its plus, unless the filter is what emptied it.
+  const groups = (panel.groups ?? [])
+    .map((group) => ({ ...group, items: group.items.filter(byKind) }))
+    .filter((group) => group.items.length > 0 || kind === null);
+  const shown = items.length + groups.reduce((count, group) => count + group.items.length, 0);
+  const row = (item: AppShellPanelItem) => (
+    <ListItem key={item.id} disablePadding {...rowItemProps(item)}>
+      <ListItemButton
+        selected={item.id === page}
+        aria-current={item.id === page ? 'page' : undefined}
+        onClick={() => onChoose(item.id)}
+        {...(item.href ? { component: 'a', href: item.href } : {})}
+        sx={{ borderRadius: 1 }}
+      >
+        <PageRow item={item} tooltips secondaryVariant="caption" />
+      </ListItemButton>
+    </ListItem>
+  );
   const chosen = panel.filter?.options.find((option) => option.value === kind);
   const filterName = panel.filter && (chosen ? `${panel.filter.label}: ${chosen.label}` : panel.filter.label);
   return (
@@ -413,7 +452,7 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
                 onClick={() => setFilterOpen(true)}
               >
                 <Badge variant="dot" color="secondary" invisible={kind === null}>
-                  <Icon name="filter_list" />
+                  <Icon name="tune" />
                 </Badge>
               </IconButton>
             </Tooltip>
@@ -477,22 +516,78 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
       )}
       {/* MUI's dense list: tighter rows for a desktop sidebar, with body2 text. */}
       <List dense sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 1, py: 0 }}>
-        {items.map((item) => (
-          <ListItem key={item.id} disablePadding {...rowItemProps(item)}>
-            <ListItemButton
-              selected={item.id === page}
-              aria-current={item.id === page ? 'page' : undefined}
-              onClick={() => onChoose(item.id)}
-              {...(item.href ? { component: 'a', href: item.href } : {})}
-              sx={{ borderRadius: 1 }}
-            >
-              <PageRow item={item} tooltips secondaryVariant="caption" />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {items.map(row)}
+        {groups.map((group, index) => {
+          const open = !collapsed[group.id];
+          return (
+            // A part of the list: its label, a button across the row that collapses its rows, with a chevron after its
+            // words; the plus lies over the button's end as a button of its own.
+            <li key={group.id}>
+              <Box
+                sx={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  mt: index > 0 || items.length > 0 ? 1 : 0,
+                  // The plus hides until the label's row is hovered or holds focus, as a row's More Actions button does,
+                  // and always shows on a touch screen.
+                  '& .group-add': { opacity: 0 },
+                  '&:hover .group-add, &:focus-within .group-add': { opacity: 1 },
+                  '@media (hover: none)': { '& .group-add': { opacity: 1 } },
+                }}
+              >
+                <ButtonBase
+                  aria-expanded={open}
+                  aria-controls={open ? `${groupId}-${group.id}-list` : undefined}
+                  onClick={() => setCollapsed((state) => ({ ...state, [group.id]: open }))}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    justifyContent: 'flex-start',
+                    gap: 0.5,
+                    pl: 2,
+                    // Room for the plus.
+                    pr: group.add ? 5 : 1,
+                    py: 0.75,
+                    borderRadius: 1,
+                    typography: 'caption',
+                    // Secondary, not tertiary: the label is a control, and tertiary text is under 4.5:1.
+                    color: 'text.secondary',
+                    '&:hover': { bgcolor: 'action.hover' },
+                    '&.Mui-focusVisible': { bgcolor: 'action.focus' },
+                  }}
+                >
+                  <Box component="span" id={`${groupId}-${group.id}`} sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {group.label}
+                  </Box>
+                  <Icon name={open ? 'expand_more' : 'chevron_right'} fontSize="small" />
+                </ButtonBase>
+                {group.add && (
+                  // Small, as a one-off: it sits in a caption-height row.
+                  <Tooltip title={group.add.label}>
+                    <IconButton
+                      className="group-add"
+                      size="small"
+                      aria-label={group.add.label}
+                      onClick={group.add.onClick}
+                      sx={{ position: 'absolute', right: (theme) => theme.spacing(1) }}
+                    >
+                      <Icon name="add" fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+              {open && (
+                <List dense disablePadding id={`${groupId}-${group.id}-list`} aria-labelledby={`${groupId}-${group.id}`}>
+                  {group.items.map(row)}
+                </List>
+              )}
+            </li>
+          );
+        })}
       </List>
-      {items.length === 0 && (
-        <Typography variant="body2" color="text.secondary" role="status" sx={{ px: 2, pb: 2 }}>
+      {shown === 0 && chosen && (
+        <Typography variant="body2" color="textSecondary" role="status" sx={{ px: 2, pb: 2 }}>
           Nothing here is {chosen?.label.toLowerCase()}.
         </Typography>
       )}
@@ -536,7 +631,7 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose, onSearch,
   const term = query.trim().toLowerCase();
   const results = term
     ? sections.flatMap((section) =>
-        (section.panel?.items ?? [])
+        (section.panel ? panelItems(section.panel) : [])
           .filter((item) => item.label.toLowerCase().includes(term))
           .map((item) => ({ section, item })),
       )
@@ -583,7 +678,7 @@ function SearchDialog({ open, sections, fullScreen, onClose, onChoose, onSearch,
           }}
         />
       </Box>
-      <Typography role="status" variant="body2" color="text.secondary" sx={{ px: 3, py: 1 }}>
+      <Typography role="status" variant="body2" color="textSecondary" sx={{ px: 3, py: 1 }}>
         {!term
           ? onSearch
             ? 'Find a page in any section, or a file at any building.'
@@ -635,7 +730,7 @@ function ColorSchemeControl() {
   const labelId = useId();
   return (
     <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, p: 2 }}>
-      <Typography id={labelId} variant="body2" color="text.secondary">
+      <Typography id={labelId} variant="body2" color="textSecondary">
         Appearance
       </Typography>
       <ToggleButtonGroup
@@ -655,6 +750,9 @@ function ColorSchemeControl() {
     </Stack>
   );
 }
+
+/** Every page in a panel: its own, then each part's. */
+const panelItems = (panel: AppShellPanel) => [...panel.items, ...(panel.groups ?? []).flatMap((group) => group.items)];
 
 const hasPanel = (section?: AppShellSection): section is AppShellSection & { panel: AppShellPanel } =>
   Boolean(section?.panel);
@@ -681,14 +779,14 @@ const skipLink = (
 function SectionGlyph({ section }: { section: AppShellSection }) {
   return section.initials !== undefined ? (
     <Avatar
-      sx={{ width: 32, height: 32, bgcolor: 'primary.main', color: 'primary.contrastText', typography: 'caption' }}
+      sx={{ width: 32, height: 32, bgcolor: 'info.main', color: 'info.contrastText', typography: 'caption' }}
     >
       {section.initials}
     </Avatar>
   ) : section.missing ? (
-    // A section the account doesn't have: the upgrade icon in the disabled color, quieter than the sections it has.
-    // A plus (`add`) means Create and nothing else.
-    <Icon name="upgrade" sx={{ color: 'text.disabled' }} />
+    // A section the account doesn't have: the circled plus in the disabled color, quieter than the sections it has.
+    // The bare plus (`add`) stays Create.
+    <Icon name="add_circle" sx={{ color: 'text.disabled' }} />
   ) : (
     <Icon name={section.icon} />
   );
@@ -779,21 +877,34 @@ const initialsOf = (name: string) =>
     .map((word) => word[0].toUpperCase())
     .join('');
 
-/** A company's mark on a white tile, fitted inside with a little room (marks are drawn for white), or its initials without one. */
+/**
+ * A company's mark on a white tile, fitted edge to edge inside a `divider` border (marks are drawn for white), or its
+ * initials without one. A company with a mark for dark surfaces shows it in the dark scheme, on black: both are drawn,
+ * and the scheme shows one.
+ */
 function CompanyMark({ company, size }: { company: AppShellCompany; size: number }) {
-  return company.logo ? (
-    <Avatar
-      variant="rounded"
-      src={company.logo}
-      alt=""
-      sx={{
-        width: size,
-        height: size,
-        bgcolor: 'common.white',
-        borderRadius: 1,
-        '& img': { objectFit: 'contain', p: size >= 48 ? 0.75 : 0.5, boxSizing: 'border-box' },
-      }}
-    />
+  const tile = {
+    width: size,
+    height: size,
+    bgcolor: 'common.white',
+    borderRadius: 1,
+    border: 1,
+    borderColor: 'divider',
+    boxSizing: 'border-box',
+    '& img': { objectFit: 'contain' },
+  } as const;
+  return company.logo && company.logoDark ? (
+    <>
+      <Avatar variant="rounded" src={company.logo} alt="" sx={(theme) => ({ ...tile, ...theme.applyStyles('dark', { display: 'none' }) })} />
+      <Avatar
+        variant="rounded"
+        src={company.logoDark}
+        alt=""
+        sx={(theme) => ({ ...tile, bgcolor: 'common.black', display: 'none', ...theme.applyStyles('dark', { display: 'flex' }) })}
+      />
+    </>
+  ) : company.logo ? (
+    <Avatar variant="rounded" src={company.logo} alt="" sx={tile} />
   ) : (
     // Decorative: the company's name is always beside it or in its control's name.
     <Avatar
@@ -1058,25 +1169,44 @@ function PhoneShell({
     </>
   );
 
+  const menuRow = (item: AppShellPanelItem) => {
+    const selected = levelSection?.id === section && item.id === page;
+    return (
+      <ListItem key={item.id} disablePadding {...rowItemProps(item)}>
+        <ListItemButton
+          selected={selected}
+          aria-current={selected ? 'page' : undefined}
+          onClick={() => hideMenu(() => levelSection && onPageChange?.(item.id, levelSection.id))}
+          {...(item.href ? { component: 'a', href: item.href } : {})}
+          sx={{ borderRadius: 1 }}
+        >
+          <PageRow item={item} tooltips={false} />
+        </ListItemButton>
+      </ListItem>
+    );
+  };
+
   const pagesView = hasPanel(levelSection) && (
     <>
       <List sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 1, py: 0 }}>
-        {levelSection.panel.items.map((item) => {
-          const selected = levelSection.id === section && item.id === page;
-          return (
-            <ListItem key={item.id} disablePadding {...rowItemProps(item)}>
-              <ListItemButton
-                selected={selected}
-                aria-current={selected ? 'page' : undefined}
-                onClick={() => hideMenu(() => onPageChange?.(item.id, levelSection.id))}
-                {...(item.href ? { component: 'a', href: item.href } : {})}
-                sx={{ borderRadius: 1 }}
+        {levelSection.panel.items.map(menuRow)}
+        {/* A part's label, without its plus or its collapse; a part with nothing in it is left out, since it would be a bare label. */}
+        {(levelSection.panel.groups ?? [])
+          .filter((group) => group.items.length > 0)
+          .map((group) => (
+            <li key={group.id}>
+              <List
+                disablePadding
+                subheader={
+                  <ListSubheader component="div" disableSticky sx={{ bgcolor: 'transparent' }}>
+                    {group.label}
+                  </ListSubheader>
+                }
               >
-                <PageRow item={item} tooltips={false} />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
+                {group.items.map(menuRow)}
+              </List>
+            </li>
+          ))}
       </List>
       {levelSection.panel.colorScheme && <ColorSchemeControl />}
       {levelSection.panel.footer && <Box sx={{ p: 2 }}>{levelSection.panel.footer}</Box>}
@@ -1091,7 +1221,7 @@ function PhoneShell({
         position="sticky"
         color="inherit"
         elevation={0}
-        sx={{ top: 0, bgcolor: 'background.level2', borderBottom: 1, borderColor: 'divider' }}
+        sx={{ top: 0, bgcolor: 'background.level2' }}
       >
         {/* The page's 16px inset; the icon buttons at either end overhang it by their 8px padding, so their glyphs sit on the content's edge. */}
         <Toolbar disableGutters sx={{ gap: 0.5, px: 2 }}>
@@ -1603,7 +1733,25 @@ export function AppShell({
               {item.missing ? (
                 glyph
               ) : item.count ? (
-                <Badge badgeContent={item.count} color="secondary" max={99}>
+                // The count: a circle in `count.main` (the `count-color` departure), a quarter of its size off the
+                // icon's corner, so a two-digit count stays inside the 48px button.
+                <Badge
+                  badgeContent={item.count}
+                  max={99}
+                  sx={(theme) => ({
+                    '& .MuiBadge-badge': {
+                      transform: `scale(1) translate(calc(25% + ${theme.spacing(0.25)}), calc(-25% - ${theme.spacing(0.25)}))`,
+                      width: theme.spacing(2.25),
+                      height: theme.spacing(2.25),
+                      minWidth: 0,
+                      p: 0,
+                      borderRadius: '50%',
+                      fontSize: theme.typography.pxToRem(10),
+                      bgcolor: 'count.main',
+                      color: 'count.contrastText',
+                    },
+                  })}
+                >
                   {glyph}
                 </Badge>
               ) : (

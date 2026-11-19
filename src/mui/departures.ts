@@ -601,6 +601,13 @@ export const departures: Departure[] = [
     },
   },
   {
+    id: 'count-color',
+    area: 'Palette',
+    title: 'A count on a rail icon',
+    why: "MUI's Badge takes an intent color. The count on an AppShell rail icon is a bright green instead, chosen in review so it stands out on the rail in both schemes: green 300 (the dark scheme's success step) with black text, which holds 4.5:1 on it. It is a role of its own, `count` (`main` and `contrastText`), so no component reads a ramp step, and it isn't an intent: it doesn't say success. It fills AppShell's rail count and nothing else; a count in running text stays text.",
+    options: () => ({ palette: { count: { main: green[300], contrastText: '#000' } } }),
+  },
+  {
     id: 'chart-palette',
     area: 'Palette',
     title: 'Chart colors',

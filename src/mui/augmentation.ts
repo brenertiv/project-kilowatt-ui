@@ -41,6 +41,9 @@ export type ChartColors = {
   diverging: DivergingColors;
 };
 
+/** A count on a rail icon (`count-color`): the fill and the text on it, the same in both schemes. */
+export type CountColors = { main: string; contrastText: string };
+
 /**
  * Basemap colors the surface roles don't cover (Rules → Maps): `land`, a step past the page;
  * `water`, a step past the land; and `road` and `boundary`, for the lines CARTO draws at low zoom.
@@ -65,12 +68,14 @@ declare module '@mui/material/styles' {
     control: ControlColors;
     chart: ChartColors;
     map: MapColors;
+    count: CountColors;
   }
   interface PaletteOptions {
     border?: Partial<BorderLevels>;
     control?: ControlColors;
     chart?: ChartColors;
     map?: MapColors;
+    count?: CountColors;
   }
 }
 
