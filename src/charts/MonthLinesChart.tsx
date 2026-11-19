@@ -3,6 +3,7 @@ import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { missingPeriodClicks } from './missingPeriod';
 import { stillBillingCaption, stillBillingDash, stillBillingNote, type StillBilling } from './stillBilling';
 import { axisUnit, legend, seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
@@ -32,6 +33,8 @@ export type MonthLinesChartProps = {
   height?: number;
   /** The padding around the chart inside its card, in theme spacing units. Default `2` (16px). */
   inset?: ChartInset;
+  /** Called with a month's row when its place in the plot is clicked and none of the years has a value in it, so a page can open what explains the gap. Pointer only: offer the same way through as a control or a table row. Keep it stable (`useCallback`). Default none. */
+  onMissingClick?: (row: Record<string, string | number>) => void;
 };
 
 const noMonths: StillBilling[] = [];
@@ -42,12 +45,13 @@ const noMonths: StillBilling[] = [];
  * `chart.series` order through `seriesColors`, the unit above the value axis on the right, a legend past one line, the
  * full value in each tooltip, a dot on every month so a lone month with data still shows, and a gap where a month has
  * no data, never a line across it. A trailing month still being billed (`stillBilling`) is dashed on the newest year's
- * line and says so in its tooltip and under the chart. It sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
+ * line and says so in its tooltip and under the chart. With `onMissingClick`, a month no year has a value for hands its
+ * row back when clicked. It sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
  * @summary A line per year across January to December, for comparing years month by month.
  * @import import { MonthLinesChart } from 'src/charts/MonthLinesChart';
  */
-export function MonthLinesChart({ data, categoryField, series, unit, summary, stillBilling = noMonths, height = 240, inset = 2 }: MonthLinesChartProps) {
+export function MonthLinesChart({ data, categoryField, series, unit, summary, stillBilling = noMonths, height = 240, inset = 2, onMissingClick }: MonthLinesChartProps) {
   const build = useCallback(
     ({ root, colors }: ChartContext) => {
       const chart = root.container.children.push(am5xy.XYChart.new(root, { layout: root.verticalLayout, paddingLeft: 0, paddingRight: 0 }));
@@ -117,8 +121,13 @@ export function MonthLinesChart({ data, categoryField, series, unit, summary, st
       xAxis.data.setAll(data);
       if (lines.length > 1) chart.children.push(legend(root)).data.setAll(lines);
       for (const line of lines) line.data.setAll(data);
+      if (onMissingClick) {
+        // A month with no value draws no dot, so the click is the plot's: the month under the pointer.
+        const rowAt = (across: number) => data[xAxis.axisPositionToIndex(xAxis.toAxisPosition(across))];
+        missingPeriodClicks(chart, rowAt, series.map(({ field }) => field), onMissingClick);
+      }
     },
-    [data, categoryField, series, unit, stillBilling],
+    [data, categoryField, series, unit, stillBilling, onMissingClick],
   );
   const ref = useChart(build);
   const caption = stillBillingCaption(stillBilling, String);

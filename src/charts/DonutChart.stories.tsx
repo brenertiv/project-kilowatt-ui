@@ -17,6 +17,11 @@ const propertyTypes = [
   { category: 'Industrial', value: 11 },
   { category: 'Hotel', value: 6 },
 ];
+/** A portfolio's properties by where they are in setup: synthetic counts. Live is the positive part, Onboarding its negative. */
+const propertyStatus = [
+  { category: 'Live', value: 86, slot: 0 },
+  { category: 'Onboarding', value: 29, negative: true },
+];
 const propertyTotal = propertyTypes.reduce((sum, row) => sum + row.value, 0);
 const electricity = utilityCost[0];
 const byType = workOrdersByType.map(({ type, count }) => ({ category: type, value: count, ...meaningColor(workOrderTypeSlots, type) }));
@@ -75,6 +80,30 @@ export const Meanings: Story = {
     data: byType,
     unit: 'work orders',
     summary: `${openTotal} work orders are open; ${workOrdersByType[0].count} of them (${share(byType, workOrdersByType[0].count)}) are reactive.`,
+  },
+};
+
+/** A positive part and its negative: Live in slot 0, brand blue, and Onboarding with `negative`, drawn in `chart.seriesShade`, a shade off the card, so only the positive reads as data. */
+export const PositiveAndNegative: Story = {
+  name: 'Positive and negative',
+  parameters: { card: { title: 'Properties by Status' } },
+  args: {
+    data: propertyStatus,
+    unit: 'properties',
+    summary: `${propertyStatus[0].value} of ${propertyStatus[0].value + propertyStatus[1].value} properties are live (${share(propertyStatus, propertyStatus[0].value)}); the other ${propertyStatus[1].value} are onboarding.`,
+  },
+  play: async ({ canvas }) => {
+    const dot = (label: HTMLElement) => label.closest('li')!.querySelector('[aria-hidden]') as HTMLElement;
+    const entry = (name: string) => canvas.getByText((_, element) => element?.tagName === 'P' && (element.textContent ?? '').startsWith(name));
+    const paletteColor = (name: string) => {
+      const probe = document.body.appendChild(document.createElement('span'));
+      probe.style.color = `var(--mui-palette-${name})`;
+      const { color } = getComputedStyle(probe);
+      probe.remove();
+      return color;
+    };
+    await expect(getComputedStyle(dot(entry('Onboarding'))).backgroundColor).toBe(paletteColor('chart-seriesShade'));
+    await expect(getComputedStyle(dot(entry('Live'))).backgroundColor).toBe(paletteColor('chart-series-0'));
   },
 };
 

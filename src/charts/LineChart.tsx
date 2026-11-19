@@ -3,6 +3,7 @@ import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { missingPeriodClicks, rowAtDate } from './missingPeriod';
 import { stillBillingCaption, stillBillingDash, stillBillingNote, type StillBilling } from './stillBilling';
 import {
   axisUnit,
@@ -88,6 +89,8 @@ export type LineChartProps = {
   height?: number;
   /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
   inset?: ChartInset;
+  /** Called with a period's row when its place in the plot is clicked and none of the lines has a value in it (the row is in `data` with its date and no series field), so a page can open what explains the gap. Pointer only: offer the same way through as a control or a table row. Keep it stable (`useCallback`). Default none. */
+  onMissingClick?: (row: Record<string, number>) => void;
 };
 
 const dash = [4, 4];
@@ -113,7 +116,8 @@ function quietRange(item: am5.DataItem<am5xy.IAxisDataItem>) {
  * Two units at most: lines marked `right` plot on a second value axis in `rightUnit`.
  * Targets are dashed `references`; stretches of time are named `ranges`; a forecast continues its line
  * dashed from `projectedFrom`; a trailing month still being billed is dashed and counted through `stillBilling`;
- * a score takes the intents band by band through `bands`.
+ * a score takes the intents band by band through `bands`. With `onMissingClick`, a period with no value
+ * hands its row back when clicked.
  *
  * @summary A line chart of values over time, themed from the palette, named by a one-line summary for screen readers.
  * @import import { LineChart } from 'src/charts/LineChart';
@@ -132,6 +136,7 @@ export function LineChart({
   max,
   height = 240,
   inset = 2,
+  onMissingClick,
 }: LineChartProps) {
   const build = useCallback(
     ({ root, colors }: ChartContext) => {
@@ -266,8 +271,13 @@ export function LineChart({
       chart.set('cursor', am5xy.XYCursor.new(root, { behavior: 'none' }));
       if (lines.length > 1) chart.children.push(legend(root)).data.setAll(lines);
       for (const line of lines) line.data.setAll(data);
+      if (onMissingClick) {
+        // A period with no value draws no point, so the click is the plot's: the row whose interval is under the pointer.
+        const rowAt = (across: number) => rowAtDate(data, dateField, xAxis.positionToValue(xAxis.toAxisPosition(across)), xAxis.baseDuration());
+        missingPeriodClicks(chart, rowAt, series.map(({ field }) => field), onMissingClick);
+      }
     },
-    [data, series, unit, rightUnit, references, ranges, stillBilling, dateField, interval, max],
+    [data, series, unit, rightUnit, references, ranges, stillBilling, dateField, interval, max, onMissingClick],
   );
   const ref = useChart(build);
   const caption = stillBillingCaption(stillBilling, (month) => monthName.format(Number(month)));

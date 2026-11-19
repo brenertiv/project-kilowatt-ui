@@ -40,14 +40,14 @@ const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFrac
 
 /**
  * Each scheme's label color for a rectangle, by its slot: the palette's contrast text for that series
- * color (`getContrastText`), dark on the light hues and light on the dark ones, and for `chart.neutral`.
+ * color (`getContrastText`), dark on the light hues and light on the dark ones, and for `chart.neutral` and `chart.seriesShade`.
  */
 const labelColors = Object.fromEntries(
   (['light', 'dark'] as const).map((scheme) => {
     const { palette } = createSchemeTheme(scheme);
-    return [scheme, { series: palette.chart.series.map((color) => palette.getContrastText(color)), neutral: palette.getContrastText(palette.chart.neutral) }];
+    return [scheme, { series: palette.chart.series.map((color) => palette.getContrastText(color)), neutral: palette.getContrastText(palette.chart.neutral), negative: palette.getContrastText(palette.chart.seriesShade) }];
   }),
-) as Record<'light' | 'dark', { series: string[]; neutral: string }>;
+) as Record<'light' | 'dark', { series: string[]; neutral: string; negative: string }>;
 
 /** The most rectangles a treemap shows: the number of `chart.series` colors (Rules → Charts). */
 const maxParts = 6;
@@ -113,7 +113,7 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 16
       const fills = seriesColors(kept, colors);
       const slots = seriesSlots(kept, colors.series.length);
       const labels = labelColors[scheme];
-      const label = (slot: number | 'neutral') => am5.color(slot === 'neutral' ? labels.neutral : labels.series[slot]);
+      const label = (slot: number | 'neutral' | 'negative') => am5.color(typeof slot === 'string' ? labels[slot] : labels.series[slot]);
       series.data.setAll([
         {
           category: 'Whole',

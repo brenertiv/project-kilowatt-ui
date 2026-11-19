@@ -3,6 +3,7 @@ import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { missingPeriodClicks } from './missingPeriod';
 import { stackOrder } from './stackOrder';
 import { stillBillingCaption, stillBillingDash, stillBillingNote, type StillBilling } from './stillBilling';
 import { axisUnit, legend, seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
@@ -21,8 +22,10 @@ export type ColumnSeries = SeriesColor & {
 export type ColumnChartProps = {
   /** The rows to plot, one per category, each with the category's label in `categoryField` and a number per series. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
   data: Record<string, string | number>[];
-  /** The field in each row that holds the category's label. */
+  /** The field in each row that holds the category: its label on the axis, and its key, so it's unique to the row. */
   categoryField: string;
+  /** The field that holds the label to show on the axis and in the tooltip, where it differs from the key in `categoryField`: two buildings with one name stay two bars when `categoryField` holds their ids and this their names. Default: `categoryField`. */
+  categoryLabelField?: string;
   /** The series, in legend order. Up to six colored series, plus any `neutral` ones. Keep it stable, like `data`. */
   series: ColumnSeries[];
   /** The unit of the values, shown above the value axis and in the tooltip: `kWh`, `USD`. */
@@ -41,6 +44,12 @@ export type ColumnChartProps = {
   height?: number;
   /** The padding at the chart's sides and bottom, in theme spacing units (`ChartInset`): `2` (16px) to line up with `CardContent` and the card's title, `1` (8px) for a tighter fit, `0` to run edge to edge. Default `2`. */
   inset?: ChartInset;
+  /** Whole-number ticks on the value axis, for a count of records (work orders, alerts), where half of one means nothing. Default `false`. */
+  integerValues?: boolean;
+  /** Called with a category's row when one of its columns is clicked, so a page can narrow to the records behind it; the columns take a hand pointer. A grouped chart's row carries the summed `other` field. Pointer only: offer the same way through as a control or a table row. Keep it stable (`useCallback`). Default none. */
+  onCategoryClick?: (row: Record<string, string | number>) => void;
+  /** Called with a category's row when its place in the plot is clicked and none of the series has a value in it, so a page can open what explains the gap. Pointer only, as `onCategoryClick` is. Keep it stable (`useCallback`). Default none. */
+  onMissingClick?: (row: Record<string, string | number>) => void;
 };
 
 const noMonths: StillBilling[] = [];
@@ -69,7 +78,8 @@ function grouped(data: ColumnChartProps['data'], series: ColumnSeries[], otherLa
  * series, the smallest are grouped into one neutral series. A `stacked` chart orders each stack dark to
  * light by color, whatever order `series` is in. `horizontal` turns the columns into bars
  * for a ranking. A trailing month still being billed (`stillBilling`) is a dashed outline that says so in its tooltip
- * and under the chart. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
+ * and under the chart. With `onCategoryClick` a column hands its row back when clicked, and with `onMissingClick` a
+ * category with no value does. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
  * @summary A column chart of values across categories, side by side or stacked, themed from the palette.
  * @import import { ColumnChart } from 'src/charts/ColumnChart';
@@ -77,6 +87,7 @@ function grouped(data: ColumnChartProps['data'], series: ColumnSeries[], otherLa
 export function ColumnChart({
   data,
   categoryField,
+  categoryLabelField = categoryField,
   series,
   unit,
   summary,
@@ -86,6 +97,9 @@ export function ColumnChart({
   otherLabel = 'Other',
   height = 240,
   inset = 2,
+  integerValues = false,
+  onCategoryClick,
+  onMissingClick,
 }: ColumnChartProps) {
   const build = useCallback(
     ({ root, scheme, colors }: ChartContext) => {
@@ -103,8 +117,8 @@ export function ColumnChart({
         valueAxis.get('renderer').labels.template.set('maxPosition', 0.97);
         // The unit sits at the value axis's end, under its numbers, as it sits above a vertical one.
         valueAxis.children.push(am5.Label.new(root, { text: unit, x: am5.p100, centerX: am5.p100, paddingTop: 4, paddingRight: 0 }));
-        // Long category names (building addresses) truncate; the bar's tooltip names the category in full.
-        categoryAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'truncate', maxWidth: 160, centerX: 0, paddingLeft: 0 });
+        // Long category names (building addresses) truncate at 160px, or at two fifths of a narrow chart so the bars keep the rest; the bar's tooltip names the category in full.
+        categoryAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'truncate', maxWidth: Math.min(160, root.width() * 0.4), centerX: 0, paddingLeft: 0 });
       } else {
         categoryAxis = chart.xAxes.push(
           am5xy.CategoryAxis.new(root, { categoryField, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30, ...cells }) }),
@@ -115,6 +129,12 @@ export function ColumnChart({
         // Long category names (building addresses) wrap under their column instead of running into the next one.
         categoryAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'wrap', maxWidth: 88, textAlign: 'center' });
       }
+      // A count of records has no halves.
+      if (integerValues) valueAxis.set('maxPrecision', 0);
+      // The axis and the tooltip show the label, while the category stays keyed by `categoryField`.
+      const labeled = categoryLabelField !== categoryField;
+      if (labeled) categoryAxis.get('renderer').labels.template.set('text', `{${categoryLabelField}}`);
+      const tooltipCategory = labeled ? categoryLabelField : horizontal ? 'categoryY' : 'categoryX';
       const { rows, sets: drawn } = grouped(data, series, otherLabel);
       const fills = seriesColors(drawn, colors);
       // A month still being billed, by its category label.
@@ -137,10 +157,15 @@ export function ColumnChart({
           [horizontal ? 'height' : 'width']: am5.percent(stacked ? 70 : 90),
           strokeOpacity: 0,
           // Each column shows its full value on hover, since the axis rounds to compact numbers.
-          tooltipText: horizontal
-            ? `{name}, {categoryY}: {valueX.formatNumber('${tooltipNumberFormat}')} ${unit}`
-            : `{name}, {categoryX}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
+          tooltipText: `{name}, {${tooltipCategory}}: {${horizontal ? 'valueX' : 'valueY'}.formatNumber('${tooltipNumberFormat}')} ${unit}`,
         });
+        if (onCategoryClick) {
+          set.columns.template.set('cursorOverStyle', 'pointer');
+          set.columns.template.events.on('click', ({ target }) => {
+            const row = target.dataItem?.dataContext as Record<string, string | number> | undefined;
+            if (row) onCategoryClick(row);
+          });
+        }
         if (striped) {
           // The series color with stripes of the card surface over it: the same shape as a solid column, so stacked
           // and side-by-side columns line up, with no outline. (amCharts centers a stroke on the edge, which widens a column.)
@@ -170,8 +195,13 @@ export function ColumnChart({
       categoryAxis.data.setAll(rows);
       if (sets.length > 1) chart.children.push(legend(root)).data.setAll(sets);
       for (const set of sets) set.data.setAll(rows);
+      if (onMissingClick) {
+        // A category with no value draws no column, so the click is the plot's: the row under the pointer, along the category axis.
+        const rowAt = (across: number, down: number) => rows[categoryAxis.axisPositionToIndex(categoryAxis.toAxisPosition(horizontal ? down : across))];
+        missingPeriodClicks(chart, rowAt, drawn.map(({ field }) => field), onMissingClick);
+      }
     },
-    [data, categoryField, series, unit, stacked, horizontal, stillBilling, otherLabel],
+    [data, categoryField, categoryLabelField, series, unit, stacked, horizontal, stillBilling, otherLabel, integerValues, onCategoryClick, onMissingClick],
   );
   const ref = useChart(build);
   const caption = stillBillingCaption(stillBilling, String);

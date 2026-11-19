@@ -34,7 +34,7 @@ import { DonutChart } from 'src/charts/DonutChart';
 
 Props, with their defaults:
 
-- `data`: the parts, `{ category, value }`, with an optional `slot` or `neutral` (`SeriesColor`).
+- `data`: the parts, `{ category, value }`, with an optional `slot`, `neutral` or `negative` (`SeriesColor`).
 - `unit`: under the total and in the tooltip.
 - `summary`: one sentence, the figure's accessible name.
 - `fill`: one color for every slice, stepped down in opacity slice by slice, and for the total. A palette key, as `sx` takes one (`'secondary.main'`), which follows the color scheme; or a solid CSS color (hex or `rgb()`), not a CSS variable, since the chart draws on a canvas. Default none: slices take `chart.series`.
@@ -50,6 +50,7 @@ Props, with their defaults:
 - **Parts.** Up to six slices, largest first, in `chart.series` order, with the total in the middle and each part's name and share in the legend under the ring, marked by a small dot in the slice's color.
 - **Grouped into Other.** With more than six parts, the five largest keep their slices and the rest are summed into one slice in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
 - **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each slice, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
+- **Positive and negative.** Two parts of one quantity (live and onboarding, leased and vacant, metered and not metered): the positive takes brand blue (`slot: 0`) or aquaverde (`slot: 1`), and the other part takes `negative`, which draws its slice and its legend dot in `chart.seriesShade`, a shade darker than the card in light and lighter than it in dark, as `SegmentedBar` draws its negative part. It takes no slot and comes after the other parts whatever its size, so only the positive reads as data. The dot has no edge of its own: the shade is a step off the card in both schemes, and the legend names the part.
 - **Filter.** With `onSelect`, the chart filters what's beside it (the map, a table): each legend entry becomes a toggle button, pressed while its part is selected, and a click on a slice or its entry passes its category to `onSelect`. The page keeps the selection and passes it back as `selected`. While anything is selected, the other slices and swatches step back. Without `onSelect`, the legend is read-only text.
 - **One color.** With `fill` (a palette key such as `'secondary.main'`), every slice takes that one color, stepping down in opacity from the largest, and the total takes it too: for a chart on a colored surface, where the series colors would clash. The legend's swatches repeat each slice's step.
 - **Inner radius.** `innerRadius` sets the hole, in percent of the ring's radius: the default 82 is a thin ring that leaves room for the total; lower it for a thicker ring where the slices need more weight.
@@ -62,6 +63,8 @@ Props, with their defaults:
 - Don't use a donut for values that overlap or don't sum, such as averages or rates.
 - Do let the chart group the smallest parts into "Other" past six, and name them in the summary.
 - Don't raise the slice count or add colors to fit more parts; use a table instead.
+- Do mark the other part of a positive-and-negative pair `negative`, and give the positive `slot: 0` or `slot: 1`.
+- Don't give the negative part a series color, `chart.neutral` or a surface color of your own; a second hue reads as a second category, and `negative` is the one shade for it.
 - Do give slices that stand for product meanings their `slot` from `src/charts/meanings`.
 - Don't let a work-order type change color between charts because its rank changed.
 - Do write `summary` as one sentence with the share that matters.
@@ -73,7 +76,7 @@ Props, with their defaults:
 
 ## MUI departures
 
-- `chart-palette`: slices take `chart.series` in order, largest first, and the grouped slice takes `chart.neutral`; the legend's swatches repeat each slice's color from the same palette roles.
+- `chart-palette`: slices take `chart.series` in order, largest first, the grouped slice takes `chart.neutral`, and a `negative` part takes `chart.seriesShade`; the legend's swatches repeat each slice's color from the same palette roles.
 - `selected-fills-icons`, `focus-ring` and `toggle-button-text`: a filter's legend entries are MUI's `ToggleButton` with Kilowatt's selected fill, focus ring and text.
 
 Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
@@ -96,6 +99,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - Every point, column or slice shows its exact value and unit in a tooltip on hover, since axis numbers are rounded to compact form (1.5K).
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - The total and the legend are text, so screen readers read them after the summary; the dot between a part and its share is hidden from them, so an entry reads "Office 42%".
+- A negative part's shade is faint by design (about 1.6:1 against the card); its name and share in the legend, and the total in the middle, carry it, so say both parts in `summary`.
 - Slices are told apart by the legend (name, share and a swatch in the slice's color) as well as color, and by their order, largest first.
 - A filter's legend entries are toggle buttons, named by their part and share, at least 24px tall, reachable by Tab and announcing whether each part is selected (`aria-pressed`); the slices themselves respond to the pointer only, so the buttons are the way in for keyboard and screen-reader users.
 - For exact values, offer the data as a table beside the chart.

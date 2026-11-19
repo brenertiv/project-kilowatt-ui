@@ -10,7 +10,7 @@ import { createSchemeTheme } from '../mui/theme';
 import { seriesColors, seriesSlots, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
-/** One part of the whole, and how it takes its color: a fixed `slot` for a product meaning (`meaningColor` from `src/charts/meanings`), `neutral`, or neither for the next free slot, largest first. */
+/** One part of the whole, and how it takes its color: a fixed `slot` for a product meaning (`meaningColor` from `src/charts/meanings`), `neutral`, `negative` for the other part of a positive-and-negative pair, or none of them for the next free slot, largest first. */
 export type DonutSlice = SeriesColor & {
   /** The part's name, shown in the legend and the tooltip, in sentence case. */
   category: string;
@@ -19,7 +19,7 @@ export type DonutSlice = SeriesColor & {
 };
 
 export type DonutChartProps = {
-  /** The parts of the whole, in any order; the chart sorts them largest first. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
+  /** The parts of the whole, in any order; the chart sorts them largest first, with a `negative` part after the others. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
   data: DonutSlice[];
   /** What one unit of value is, shown under the total in the middle and in the tooltip: `properties`, `kWh`, `USD`. */
   unit: string;
@@ -64,11 +64,12 @@ const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFrac
 const maxSlices = 6;
 
 /**
- * The parts, largest first. Past six, the five largest keep their slices and the rest are
- * summed into one `otherLabel` slice, drawn in `chart.neutral`.
+ * The parts, largest first, with a `negative` part after the others, as `SegmentedBar` puts its negative part after
+ * its positive. Past six, the five largest keep their slices and the rest are summed into one `otherLabel`
+ * slice, drawn in `chart.neutral`.
  */
 function slices(data: DonutSlice[], otherLabel: string): DonutSlice[] {
-  const sorted = [...data].sort((a, b) => b.value - a.value);
+  const sorted = [...data].sort((a, b) => Number(a.negative ?? false) - Number(b.negative ?? false) || b.value - a.value);
   if (sorted.length <= maxSlices) return sorted;
   const rest = sorted.slice(maxSlices - 1);
   return [...sorted.slice(0, maxSlices - 1), { category: otherLabel, value: rest.reduce((sum, part) => sum + part.value, 0), neutral: true }];
@@ -79,7 +80,8 @@ function slices(data: DonutSlice[], otherLabel: string): DonutSlice[] {
  * reference implementation that Enertiv's app rebuilds. A thin ring with the total in the middle
  * (the number large, the unit under it), and a legend under the ring naming each part and its
  * share; the slices have no labels. Slices take `chart.series` colors, largest first, or a fixed
- * `slot` for a product meaning, or every one the same `fill` at stepped opacities. Past six parts,
+ * `slot` for a product meaning, or every one the same `fill` at stepped opacities; a `negative` part
+ * (Onboarding beside Live) takes `chart.seriesShade`, a shade off the card. Past six parts,
  * the smallest are grouped into one neutral slice. The chart sits in a `figure` named by `summary`.
  * With `onSelect` it's a filter: a slice, or its legend entry (a toggle button), selects its part.
  * Put it in a `Card` under a `CardHeader`.
@@ -161,7 +163,7 @@ export function DonutChart({
             height: 8,
             flex: 'none',
             borderRadius: '50%',
-            bgcolor: fill ?? (slot === 'neutral' ? chart.neutral : chart.series[slot]),
+            bgcolor: fill ?? (slot === 'negative' ? chart.seriesShade : slot === 'neutral' ? chart.neutral : chart.series[slot]),
             opacity: (fill ? stepOpacity(i) : 1) * (dimmed(category) ? dimmedOpacity : 1),
           };
         }}

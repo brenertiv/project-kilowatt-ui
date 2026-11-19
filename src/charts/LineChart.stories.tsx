@@ -1,7 +1,7 @@
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { LineChart } from 'src/charts/LineChart';
 import { scoreBands } from 'src/charts/meanings';
 import {
@@ -17,6 +17,7 @@ import {
   scoreBenchmark,
   yearlyPathways,
 } from 'src/fixtures/charts';
+import { clickPlot, hasPlot } from 'src/stories/chartClicks';
 import { inCard } from 'src/stories/decorators';
 
 const kWh = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
@@ -255,5 +256,38 @@ export const StillBeingBilled: Story = {
     const figure = canvas.getByRole('figure', { name: /still being billed/ });
     await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
     await expect(canvas.getByText(/^Still being billed: .+, 15 of 18 properties; .+, 9 of 18 properties$/)).toBeVisible();
+  },
+};
+
+/** Water use by month, synthetic, with no reading for March 2026: the row is there with its date and no value. */
+const waterByMonth: Record<string, number>[] = [3120, 2980, undefined, 3340, 3610, 3890].map((water, i) => ({
+  date: Date.UTC(2026, i, 1),
+  ...(water === undefined ? {} : { water }),
+}));
+const waterSeries = [{ field: 'water', name: 'Water use', markers: 'all' as const }];
+
+/** A month with no value breaks the line; with `onMissingClick`, a click on its place in the plot hands back its row, so the page can open what explains the gap. */
+export const MissingPeriod: Story = {
+  name: 'Missing period',
+  parameters: { card: { title: 'Water Use' } },
+  args: {
+    unit: 'gal',
+    data: waterByMonth,
+    series: waterSeries,
+    interval: 'month',
+    onMissingClick: fn(),
+    summary: 'Water use by month, January to June 2026, rising to 3,890 gallons in June; March has no reading.',
+  },
+  play: async ({ args, canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /March has no reading/ });
+    await waitFor(() => expect(hasPlot(figure)).toBe(true));
+    // January has a value, so a click on it is not a missing period's; March, the third of six, has none.
+    // The axis may still be settling when the plot first has a width, so click until the missing period answers.
+    await waitFor(() => {
+      clickPlot(figure, 2.5 / 6);
+      expect(args.onMissingClick).toHaveBeenCalledWith({ date: Date.UTC(2026, 2, 1) });
+    });
+    clickPlot(figure, 0.5 / 6);
+    await expect(args.onMissingClick).not.toHaveBeenCalledWith(expect.objectContaining({ date: Date.UTC(2026, 0, 1) }));
   },
 };
