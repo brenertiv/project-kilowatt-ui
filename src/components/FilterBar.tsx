@@ -8,10 +8,13 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { Icon, type IconName } from '../icons';
 import { useContentUp } from './contentWidth';
 import { PeriodPicker, type PeriodPickerProps } from './PeriodPicker';
@@ -46,6 +49,10 @@ export type FilterBarProps<T extends string> = {
   period?: Omit<PeriodPickerProps, 'fullWidth' | 'size'>;
   /** The chosen view and every view it offers, to the right of the period. Default none. */
   view?: { value: T; options: FilterBarView<T>[]; onChange: (next: T) => void };
+  /** Always fold the filters into the Filters field, whatever the width. Default `false`. */
+  fold?: boolean;
+  /** A control at the row's start that takes its free width, a small search field; with it the bar is folded and leaves no margin under itself. Default none. */
+  before?: ReactNode;
 };
 
 /** The least a filter takes on the bar's one row. Set it as each filter's `minWidth` when `render` draws them inline. */
@@ -56,23 +63,25 @@ export const filterWidth = 220;
 const periodWidth = 260;
 const viewWidth = 40;
 const filtersFieldWidth = 140;
+/** The most the Filters field takes where it has the row to itself: the period field's width, so it never spans the page. */
+const filtersFieldMax = periodWidth;
 const barGap = 16;
 /** Below this page width the period takes a row of its own: the period at its narrowest, the Filters field and the view. */
 const compactRow = 200 + barGap + filtersFieldWidth + barGap + viewWidth;
 
 /** The Filters field: a read-only field, as the period's is, so the row is one height. Its value says how many are set, and `aria-expanded` whether its sheet is open. */
-function FiltersField({ set, expanded, onOpen, grow }: { set: number; expanded: boolean; onOpen: () => void; grow: boolean }) {
+function FiltersField({ set, expanded, onOpen, grow }: { set: number; expanded: boolean; onOpen: (anchor: HTMLElement) => void; grow: boolean }) {
   return (
     <TextField
       // Small with the rest of the bar (Rules → Component size: a filter bar may take small, together).
       size="small"
       label="Filters"
       value={set === 0 ? 'None' : `${new Intl.NumberFormat().format(set)} set`}
-      onClick={onOpen}
+      onClick={(event) => onOpen(event.currentTarget)}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
           event.preventDefault();
-          onOpen();
+          onOpen(event.currentTarget);
         }
       }}
       slotProps={{
@@ -88,7 +97,7 @@ function FiltersField({ set, expanded, onOpen, grow }: { set: number; expanded: 
         // A combobox, as the period's field is, so it may say whether its sheet is open.
         htmlInput: { role: 'combobox', 'aria-haspopup': 'dialog', 'aria-expanded': expanded, sx: { cursor: 'pointer' } },
       }}
-      sx={{ width: filtersFieldWidth, flexShrink: 0, flexGrow: grow ? 1 : 0 }}
+      sx={{ width: filtersFieldWidth, maxWidth: filtersFieldMax, flexShrink: 0, flexGrow: grow ? 1 : 0 }}
     />
   );
 }
@@ -145,17 +154,27 @@ function ViewMenu<T extends string>({ value, options, onChange }: NonNullable<Fi
  * right of the period. Any part can be missing: filters alone stay on the left, and the period and the
  * view alone stay on the right. By the page's width, not the window's (`useContentUp`), it folds
  * rather than wraps: where every control no longer fits on one row, the filters become one Filters
- * field saying how many are set, which opens them in a bottom sheet with Clear All and Done; narrower
- * still, the period takes a row of its own. Every control is small, together, so the bar is 40px tall.
+ * field saying how many are set, which opens them with Clear All and Done; narrower still, the period
+ * takes a row of its own.
+ *
+ * The folded filters open in a popover under the Filters field from `sm` up, two to a row, since a sheet across the
+ * whole window is only useful on a small device; a phone keeps the bottom sheet. The Filters field has a most width,
+ * so with no period beside it, it sits at the left and never spans the page. Every control is small, together, so the
+ * bar is 40px tall.
  *
  * @summary The page's filters, period and view on one row, folding into one Filters field by the page's width.
  * @import import { FilterBar } from 'src/components/FilterBar';
  */
-export function FilterBar<T extends string = string>({ label = 'Filters', filters, period, view }: FilterBarProps<T>) {
+export function FilterBar<T extends string = string>({ label = 'Filters', filters, period, view, fold = false, before }: FilterBarProps<T>) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const theme = useTheme();
+  // The window's size, not the page's: the sheet is for a small device.
+  const phone = useMediaQuery(theme.breakpoints.down('sm'));
   const sheetTitleId = useId();
   const needed = (filters ? filters.count * (filterWidth + barGap) : 0) + (period ? periodWidth + barGap : 0) + (view ? viewWidth : 0);
-  const compact = !useContentUp(needed);
+  const wide = useContentUp(needed);
+  const compact = fold || Boolean(before) || !wide;
   const periodOwnRow = !useContentUp(compactRow);
   const viewMenu = view && <ViewMenu {...view} />;
 
@@ -166,17 +185,59 @@ export function FilterBar<T extends string = string>({ label = 'Filters', filter
           direction="row"
           role="group"
           aria-label={label}
-          sx={{ gap: 2, rowGap: 1.5, flexWrap: periodOwnRow ? 'wrap' : 'nowrap', alignItems: 'center', justifyContent: 'flex-end', mb: 3 }}
+          sx={{ gap: 2, rowGap: 1.5, flexWrap: periodOwnRow ? 'wrap' : 'nowrap', alignItems: 'center', justifyContent: period ? 'flex-end' : 'flex-start', mb: before ? 0 : 3 }}
         >
+          {before && <Box sx={{ flex: 1, minWidth: 0 }}>{before}</Box>}
           {period && (
             <Box sx={{ flex: periodOwnRow ? '1 0 100%' : 1, minWidth: 0 }}>
               <PeriodPicker {...period} fullWidth size="small" />
             </Box>
           )}
-          {filters && <FiltersField set={filters.set} expanded={sheetOpen} onOpen={() => setSheetOpen(true)} grow={periodOwnRow || !period} />}
+          {filters && (
+            <FiltersField
+              set={filters.set}
+              expanded={sheetOpen}
+              onOpen={(field) => {
+                setAnchor(field);
+                setSheetOpen(true);
+              }}
+              grow={!before && (periodOwnRow || !period)}
+            />
+          )}
           {viewMenu}
         </Stack>
-        {filters && (
+        {filters && !phone && (
+          <Popover
+            open={sheetOpen && Boolean(anchor)}
+            anchorEl={anchor}
+            onClose={() => setSheetOpen(false)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: period || before ? 'right' : 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: period || before ? 'right' : 'left' }}
+            slotProps={{ paper: { role: 'dialog', 'aria-labelledby': sheetTitleId, sx: { mt: 1, width: (t) => `min(${t.spacing(70)}, calc(100vw - ${t.spacing(4)}))` } } }}
+          >
+            <Stack direction="row" sx={{ alignItems: 'center', gap: 1, p: 1, pl: 2 }}>
+              <Typography id={sheetTitleId} variant="h6" component="h2" sx={{ flex: 1 }}>
+                Filters
+              </Typography>
+              <IconButton aria-label="Close" onClick={() => setSheetOpen(false)}>
+                <Icon name="close" />
+              </IconButton>
+            </Stack>
+            <Stack sx={{ px: 2, pt: 1, pb: 2, gap: 2 }}>
+              {/* Two to a row; a filter alone on the last row keeps its column. */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 2 }}>{filters.render(true)}</Box>
+              <Stack direction="row" sx={{ gap: 1, justifyContent: 'flex-end' }}>
+                <Button onClick={filters.onClear} disabled={filters.set === 0}>
+                  Clear All
+                </Button>
+                <Button variant="contained" onClick={() => setSheetOpen(false)}>
+                  Done
+                </Button>
+              </Stack>
+            </Stack>
+          </Popover>
+        )}
+        {filters && phone && (
           <Drawer
             anchor="bottom"
             open={sheetOpen}
