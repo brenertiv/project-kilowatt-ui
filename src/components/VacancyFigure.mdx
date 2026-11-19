@@ -51,7 +51,7 @@ Pass the floor area of every space in scope and of the spaces with a tenant, in 
 
 ## Do and don't
 
-- Do keep leased and vacant in one hue: both take the first series slot, Vacant in its darker shade, as the component draws them.
+- Do keep leased and vacant as one quantity: Leased takes the first series slot, brand blue, and Vacant `chart.seriesShade`, a shade off the card, as the component draws them.
 - Don't give Vacant an intent or a second series slot; a positive and its negative are one quantity, and a red Vacant would claim a status the figure doesn't have.
 - Do leave the state to the words: the figure says “vacant”, and the legend names Leased and Vacant with their areas.
 - Don't drop the bar's legend or the figure's unit to save height; the bar is decorative, and the words are what everyone reads.
@@ -72,13 +72,13 @@ Pass the floor area of every space in scope and of the spaces with a tenant, in 
 - `card-header-layout`: the header's title sits 16px from the card's edges, in line with the figure and the bar below, and `action` sits in line with the content.
 - `card-content-padding`: the figure and the bar sit in `CardContent`, padded 16px on every side (the top padding kept, so the figure sits 32px under the title), pushed to the foot of the card's 160px floor with `mt: 'auto'`.
 
-The figure's type and underline are `SourceFigure`'s, and the bar's colors are `SegmentedBar`'s (`chart.series` and `chart.seriesDark` from `chart-palette`). Theme-wide departures (CSS variables, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
+The figure's type and underline are `SourceFigure`'s, and the bar's colors are `SegmentedBar`'s (`chart.series` and `chart.seriesShade` from `chart-palette`). Theme-wide departures (CSS variables, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
 
 ## Accessibility
 
 - The figure is a `button` named for its value and the card (“15% vacant, view source for Vacancy”) that opens a `Dialog` with the figure's description, calculation and sources, as every `SourceFigure` does.
 - The bar is hidden from screen readers; its legend is a list naming Leased and Vacant, each with its area in sq ft and its share, inside a `figure` named Floor Area by Lease.
-- Leased and its darker Vacant are told apart by their names in the legend and by the figure's unit, so color is never the only signal.
+- Leased and Vacant are told apart by their names in the legend and by the figure's unit, so color is never the only signal.
 - The empty state says in the figure's dialog that nothing is on record, rather than showing a bar with nothing in it.
 
 ## Related
