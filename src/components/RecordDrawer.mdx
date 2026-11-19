@@ -50,10 +50,12 @@ Map each kind of object onto `RecordDrawerRecord` with an adapter, so the drawer
 
 - **A field to confirm** (`confirm` with `onConfirm`): Confirm and Correct on the value's own row, for a value the client should verify. Correct opens the group's form.
 - **A notice** (`notice`): an `Alert` over the groups, such as that edits are a demo.
-- **An action** (`action`): a text button in the header to where the object's figures are shown.
+- **An action** (`action`): a text button in the header to where the object's figures are shown, or to the object's own page.
+- **A main action** (`mainAction`): the object's main action (Fix Login, Open PDF) as an outlined button above the groups, under any `notice`. Use it when the header's `action` is the way through to the object's page, so the main action doesn't go into `notice`. The drawer asks about unsaved changes before it runs.
 - **A value that links** (`link`, `links`): a field's `link` makes its value a link that opens what it names (a meter's page, the bill behind a charge), and `links` list the objects a value names under it (a space's accounts and meters, its tenant), each opening another record in the same drawer or a page. The drawer asks about unsaved changes before following one.
 - **Images under a value** (`media`): the property's photos or a logo, each with its `alt`, 128px wide at 4:3 under the value.
-- **Exceptions to the weekly hours** (`input: { kind: 'exceptions' }`): the one-off exceptions to a building's standing hours (a holiday, a closure) as rows of a date, a reason and the hours that day or closed, with Add Exception and a Remove on each. The value is `HoursException[]`; the standing week itself is a read-only field.
+- **The weekly hours** (`input: { kind: 'hours' }`): a building's standing week as a row per day, each a switch for open or closed with its opening and closing times. The value is `WeeklyHours`, a day's hours or `null` for closed under each of `mon` to `sun`; `display` is the app's own text for the week.
+- **Exceptions to the weekly hours** (`input: { kind: 'exceptions' }`): the one-off exceptions to a building's standing hours (a holiday, a closure) as rows of a date, a reason and the hours that day or closed, with Add Exception and a Remove on each. The value is `HoursException[]`.
 - **A deep link** (`initialEdit`): a group's id opens it ready to edit, once per record, for a link that goes straight to a value to fix.
 
 <Canvas of={RecordDrawerStories.ConfirmAValue} />
@@ -76,6 +78,8 @@ Map each kind of object onto `RecordDrawerRecord` with an adapter, so the drawer
 - Don't turn the whole record into one form; a save would reach more than the person meant to change.
 - Do warn before replacing a surveyed value, and say what the survey recorded.
 - Don't warn on every edit; keep the dialog for values an edit overwrites.
+- Do keep the header to one `action`, and give the object's main action to `mainAction` when the header's is the way to its page.
+- Don't put a button in `notice`; it is for a note, and `mainAction` holds the button.
 - Do say after a save what it reaches elsewhere, in a `Snackbar`.
 - Don't close the drawer on Save; the person may want the next group.
 
@@ -85,12 +89,12 @@ Map each kind of object onto `RecordDrawerRecord` with an adapter, so the drawer
 - `table-sticky-header`: not used; the groups' tables have no header row.
 - `table-last-row`: a group's last field has no bottom line.
 - `link-underline`: a value's link and the links under it have no underline; they're told apart by color.
-- `selected-fills-icons`: not used; the exceptions' switches have no icons.
+- `selected-fills-icons`: not used; the weekly hours' and exceptions' switches have no icons.
 - `button-text-case`: the tabs' and buttons' labels are shown as written, in Title Case.
 - `button-text-weight`: the tabs' labels are regular weight.
 - `control-outlines`: the form's fields take `palette.control.border` at rest.
 - `focus-ring`: the tabs, buttons and fields show the 2px focus ring in `palette.control.focus`.
-- `medium-size`: the fields, buttons, the exceptions' switches and tabs stay at medium; the kind chip and the Confirm and Correct pair are `small`, one-offs beside a heading and in a table cell.
+- `medium-size`: the fields, buttons, the weekly hours' and exceptions' switches and tabs stay at medium; the kind chip and the Confirm and Correct pair are `small`, one-offs beside a heading and in a table cell.
 - `paper-surface-levels`: the warning dialogs take their surface from their elevation.
 - `tabular-numerals`: values use tabular figures.
 
@@ -102,6 +106,7 @@ Theme-wide departures (the surface levels, the intents, the theme radius) apply 
 - The tabs are MUI's `Tabs`, each controlling its `tabpanel`.
 - Each group is a `section` named by its heading; its fields are a table whose first cell is the row header.
 - A value's links are link buttons named by what they open; following one asks about unsaved changes first, as Close does.
+- Each day's switch in the weekly hours is named for its day ("Monday open"), and the week is a `fieldset` named by the field's label.
 - Each exception's open switch is named for its date ("Open on 2026-11-26"), and its Remove names the date too.
 - Each Edit is named for its group ("Edit Building details"); a disabled one's reason is in a tooltip on a wrapper, since a disabled button fires no events.
 - The dialogs are named by their titles and described by their text.

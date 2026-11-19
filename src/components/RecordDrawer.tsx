@@ -29,22 +29,27 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { Icon } from '../icons';
 
-/** How a field is edited, when it is: a text, number or date field, a select, a multiple select, or the exceptions to a building's weekly hours. */
+/** How a field is edited, when it is: a text, number or date field, a select, a multiple select, a building's standing weekly hours, or the exceptions to them. */
 export type RecordFieldInput =
   | { kind: 'text' }
   | { kind: 'number'; unit?: string; min?: number }
   | { kind: 'date' }
   | { kind: 'select'; options: { value: string; label: string }[] }
   | { kind: 'multi'; options: { value: string; label: string }[] }
+  | { kind: 'hours' }
   | { kind: 'exceptions' };
 
 /** A day's opening and closing times, as `HH:MM`. */
 export type HoursSpan = { open: string; close: string };
+/** A day of the week, as the key of its hours in `WeeklyHours`. */
+export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+/** A building's standing week: each day's hours, `null` closed. */
+export type WeeklyHours = Record<Weekday, HoursSpan | null>;
 /** A one-off exception to the weekly hours: a date (`YYYY-MM-DD`), what it is ("Thanksgiving"), and the hours that day, `null` closed. */
 export type HoursException = { date: string; name: string; hours: HoursSpan | null };
 
-/** A field's value as recorded: a string (a date as `YYYY-MM-DD`), a number, the chosen values of a multiple select, the exceptions to the weekly hours, or `null` for nothing on record. */
-export type RecordFieldValue = string | number | string[] | HoursException[] | null;
+/** A field's value as recorded: a string (a date as `YYYY-MM-DD`), a number, the chosen values of a multiple select, the standing weekly hours, the exceptions to them, or `null` for nothing on record. */
+export type RecordFieldValue = string | number | string[] | HoursException[] | WeeklyHours | null;
 
 /** A link from a field's value: another record, which opens in the same drawer, or a page. */
 export type RecordLink = {
@@ -122,6 +127,8 @@ export type RecordDrawerProps = {
   onConfirm?: (field: RecordField) => void;
   /** A button in the header that goes to where the object's figures are shown: `{ label: 'View Property', onClick }`. Default none. */
   action?: { label: string; onClick: () => void };
+  /** The object's main action (Fix Login, Open PDF), as an outlined button above the groups, for a drawer whose header `action` is the way through to the object's page. The drawer asks about unsaved changes first. Default none. */
+  mainAction?: { label: string; onClick: () => void };
   /** Content above the groups, such as an `Alert` that edits are simulated. Default none. */
   notice?: ReactNode;
   /** A group's id to open ready to edit, for a link that goes straight to a value to fix. Default none. */
@@ -131,6 +138,18 @@ export type RecordDrawerProps = {
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 const same = (a: RecordFieldValue, b: RecordFieldValue) => JSON.stringify(a) === JSON.stringify(b);
 const isExceptions = (value: RecordFieldValue): value is HoursException[] => Array.isArray(value) && value.every((item) => typeof item === 'object');
+
+const isWeek = (value: RecordFieldValue): value is WeeklyHours => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+const weekdays: { day: Weekday; label: string }[] = [
+  { day: 'mon', label: 'Monday' },
+  { day: 'tue', label: 'Tuesday' },
+  { day: 'wed', label: 'Wednesday' },
+  { day: 'thu', label: 'Thursday' },
+  { day: 'fri', label: 'Friday' },
+  { day: 'sat', label: 'Saturday' },
+  { day: 'sun', label: 'Sunday' },
+];
+const emptyWeek: WeeklyHours = { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null };
 
 type Draft = Record<string, RecordFieldValue>;
 
@@ -144,7 +163,7 @@ type Draft = Record<string, RecordFieldValue>;
  * @summary An object's record beside the page: grouped fields with their provenance, edited one group at a time.
  * @import import { RecordDrawer } from 'src/components/RecordDrawer';
  */
-export function RecordDrawer({ record, onClose, onSave, onConfirm, action, notice, initialEdit }: RecordDrawerProps) {
+export function RecordDrawer({ record, onClose, onSave, onConfirm, action, mainAction, notice, initialEdit }: RecordDrawerProps) {
   const id = useId();
   const [tab, setTab] = useState<'record' | 'activity'>('record');
   const [editing, setEditing] = useState<string | null>(null);
@@ -229,6 +248,13 @@ export function RecordDrawer({ record, onClose, onSave, onConfirm, action, notic
         {tab === 'record' ? (
           <Stack sx={{ gap: 3 }}>
             {notice}
+            {mainAction && (
+              <Box>
+                <Button variant="outlined" onClick={() => guard(mainAction.onClick)}>
+                  {mainAction.label}
+                </Button>
+              </Box>
+            )}
             {record.groups.map((group) => (
               <GroupView
                 key={group.id}
@@ -347,7 +373,7 @@ function GroupView({ group, editing, draft, setDraft, onEdit, onSave, onCancel, 
               <FieldInput key={field.id} field={field} input={field.input} value={draft[field.id] ?? null} onChange={(value) => setDraft({ ...draft, [field.id]: value })} />
             ) : (
               <div key={field.id}>
-                <Typography variant="caption" component="p" color="text.secondary">
+                <Typography variant="caption" component="p" color="textSecondary">
                   {field.label}
                 </Typography>
                 <Typography variant="body2" component="p">
@@ -399,7 +425,7 @@ function GroupView({ group, editing, draft, setDraft, onEdit, onSave, onCancel, 
                       ))}
                     </Stack>
                   )}
-                  <Typography variant="caption" component="p" color="text.secondary">
+                  <Typography variant="caption" component="p" color="textSecondary">
                     {field.provenance}
                   </Typography>
                   {field.confirm && group.editable && onConfirm && (
@@ -476,12 +502,14 @@ function FieldInput({ field, input, value, onChange }: { field: RecordField; inp
         </TextField>
       );
     }
+    case 'hours':
+      return <HoursInput label={field.label} value={isWeek(value) ? value : emptyWeek} onChange={onChange} />;
     case 'exceptions':
       return <ExceptionsInput label={field.label} value={isExceptions(value) ? value : []} onChange={onChange} />;
   }
 }
 
-/** An exception's open switch beside its state, then its opening and closing times, disabled while closed. */
+/** A day's or an exception's open switch beside its name or state, then its opening and closing times, disabled while closed. */
 function DayHours({ name, switchLabel, hours, onChange }: { name: string; switchLabel: string; hours: HoursSpan | null; onChange: (hours: HoursSpan | null) => void }) {
   return (
     <Stack direction="row" sx={{ gap: 1.5, alignItems: 'center' }}>
@@ -491,6 +519,20 @@ function DayHours({ name, switchLabel, hours, onChange }: { name: string; switch
       </Box>
       <TextField type="time" label="Opens" value={hours?.open ?? ''} disabled={!hours} onChange={(event) => hours && onChange({ ...hours, open: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} sx={{ flex: 1 }} />
       <TextField type="time" label="Closes" value={hours?.close ?? ''} disabled={!hours} onChange={(event) => hours && onChange({ ...hours, close: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} sx={{ flex: 1 }} />
+    </Stack>
+  );
+}
+
+/** The standing week: a row per day, each open or closed with its opening and closing times. */
+function HoursInput({ label, value, onChange }: { label: string; value: WeeklyHours; onChange: (value: WeeklyHours) => void }) {
+  return (
+    <Stack component="fieldset" sx={{ gap: 1.5, border: 0, p: 0, m: 0 }}>
+      <Typography component="legend" variant="caption" color="textSecondary" sx={{ mb: 1 }}>
+        {label}
+      </Typography>
+      {weekdays.map(({ day, label: name }) => (
+        <DayHours key={day} name={name.slice(0, 3)} switchLabel={`${name} open`} hours={value[day]} onChange={(hours) => onChange({ ...value, [day]: hours })} />
+      ))}
     </Stack>
   );
 }
@@ -510,11 +552,11 @@ function ExceptionsInput({ label, value, onChange }: { label: string; value: Hou
   const set = (index: number, next: HoursException) => onChange(value.map((exception, i) => (i === index ? next : exception)));
   return (
     <Stack component="fieldset" sx={{ gap: 1.5, border: 0, p: 0, m: 0 }}>
-      <Typography component="legend" variant="caption" color="text.secondary" sx={{ mb: 1 }}>
+      <Typography component="legend" variant="caption" color="textSecondary" sx={{ mb: 1 }}>
         {label}
       </Typography>
       {value.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="textSecondary">
           No exceptions. Add one for a holiday or a closure.
         </Typography>
       )}
@@ -543,7 +585,7 @@ function ExceptionsInput({ label, value, onChange }: { label: string; value: Hou
 function ActivityView({ entries }: { entries: RecordActivityEntry[] }) {
   if (entries.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="textSecondary">
         Nothing has happened to this record yet.
       </Typography>
     );
