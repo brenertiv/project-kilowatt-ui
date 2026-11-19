@@ -47,12 +47,12 @@ Don't default to light with `scheme ?? 'light'` or `scheme === 'dark' ? 'dark' :
 
 ## Load the fonts
 
-The theme names Roboto and Instrument Serif and the `Icon` component uses Material Symbols Outlined, but none is bundled. In this repository they load from `.storybook/preview-head.html`, which an app doesn't get. Put these in the page's `<head>`, Roboto at the four weights the theme uses (400, 500, 600, 700) and Instrument Serif at regular. An app that never uses the `brand` type style can leave Instrument Serif out:
+The theme names Roboto and Instrument Serif and the `Icon` component uses Material Symbols Outlined, but none is bundled. In this repository they load from `.storybook/preview-head.html`, which an app doesn't get. Put these in the page's `<head>`, Roboto at the two weights the theme uses (400, 500) and Instrument Serif at regular. An app that never uses the `brand` type style can leave Instrument Serif out:
 
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap" rel="stylesheet" />
 <link
   href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"

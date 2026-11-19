@@ -200,13 +200,13 @@ export function typographyMarkdown() {
     '## Font',
     table(
       ['Theme path', 'Value', 'Source'],
-      ['fontFamily', 'fontSize', 'htmlFontSize', 'fontWeightLight', 'fontWeightRegular', 'fontWeightMedium', 'fontWeightSemibold', 'fontWeightBold'].map((key) => [
+      ['fontFamily', 'fontSize', 'htmlFontSize', 'fontWeightLight', 'fontWeightRegular', 'fontWeightMedium', 'fontWeightBold'].map((key) => [
         code(`typography.${key}`),
         code(read(themes.light, `typography.${key}`)),
         sourceOf(`typography.${key}`),
       ]),
     ),
-    'Roboto loads from Google Fonts at 400, 500, 600 and 700. MUI\'s installation guide also loads 300, for `fontWeightLight`, which Kilowatt doesn\'t use. Instrument Serif loads at 400, for the `brand` variant only.',
+    'Roboto loads from Google Fonts at 400 and 500. MUI\'s installation guide also loads 300 and 700, for `fontWeightLight`, which Kilowatt doesn\'t use, and for bold, which Kilowatt sets to medium (`medium-weight`). Instrument Serif loads at 400, for the `brand` variant only.',
     '## Variants',
     'Set text with `<Typography variant="…">`. Choose the variant for its look and `component` for the element when they differ, e.g. `<Typography variant="h6" component="h2">`. `brand` is Kilowatt\'s own, in Instrument Serif, for branded moments only: a first login\'s and the upgrade pages\' headings, and report titles, which `PageHeader` sets a step down, at 40px (`titleVariant="brand"`). It is 48px from `sm` up (the size below is under `sm`), and no component takes it by default.',
     table(
@@ -356,7 +356,7 @@ export const foundationPages: { name: string; lead: string; specimen?: string; e
   },
   {
     name: 'Typography',
-    lead: "MUI's type scale: Roboto and thirteen variants, set through Typography's `variant`. The headings `h1` to `h6` depart to a compact scale, 32px down to 16px, and stay regular weight, as do body text and `button`; the subheadings `subtitle1` and `subtitle2` are semibold. Button labels are shown as written. A fourteenth variant, `brand`, sets branded moments in Instrument Serif, a serif.",
+    lead: "MUI's type scale: Roboto and thirteen variants, set through Typography's `variant`. The headings `h1` to `h6` depart to a compact scale, 32px down to 16px, and stay regular weight, as do body text and `button`; the subheadings `subtitle1` and `subtitle2` are medium. Button labels are shown as written. A fourteenth variant, `brand`, sets branded moments in Instrument Serif, a serif.",
     specimen: 'Typography_',
     markdown: typographyMarkdown,
   },

@@ -52,12 +52,9 @@ declare module '@mui/material/styles' {
   interface TypeBackground extends SurfaceLevels {}
   interface TypographyVariants {
     brand: CSSProperties;
-    /** 600, for subheadings and data that has to stand out (`semibold-weight`). */
-    fontWeightSemibold: CSSProperties['fontWeight'];
   }
   interface TypographyVariantsOptions {
     brand?: CSSProperties;
-    fontWeightSemibold?: CSSProperties['fontWeight'];
   }
   interface TypeText {
     /** The quietest text: metadata, timestamps, units. Below 4.5:1 by design decision (`text-colors`). */

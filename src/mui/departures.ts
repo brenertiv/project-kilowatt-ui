@@ -394,14 +394,6 @@ export const departures: Departure[] = [
     options: () => ({ components: { MuiTableCell: { styleOverrides: { root: { borderBottomColor: 'var(--mui-palette-divider)' } } } } }),
   },
   {
-    id: 'table-head-weight',
-    area: 'Components',
-    components: ['Table'],
-    title: 'Table header cells at semibold',
-    why: "MUI sets header cells at medium (500). Kilowatt sets them at semibold (600, `fontWeightSemibold`), the weight of the subheading that usually names the table, so a card doesn't set three weights in a few lines (a regular title, a semibold subheading, a medium header) that differ by a step too small to read as intended.",
-    options: () => ({ components: { MuiTableCell: { styleOverrides: { head: { fontWeight: 600 } } } } }),
-  },
-  {
     id: 'table-sticky-header',
     area: 'Components',
     components: ['Table'],
@@ -427,7 +419,7 @@ export const departures: Departure[] = [
     id: 'regular-weight',
     area: 'Typography',
     title: 'Headings and body at regular weight',
-    why: "MUI sets `h1` and `h2` light (300) and `h6` medium (500), so weight shifts between neighbouring headings. Kilowatt sets the headings and body styles at regular (400, `fontWeightRegular`): size and color carry the hierarchy, and a headline number reads at the same weight as the text around it. `button` is regular through `button-text-weight`; the subheadings are semibold (`semibold-weight`). The weight tokens (`fontWeightLight` to `fontWeightBold`) keep MUI's values, for the components that use them directly and for `strong`.",
+    why: "MUI sets `h1` and `h2` light (300) and `h6` medium (500), so weight shifts between neighbouring headings. Kilowatt sets the headings and body styles at regular (400, `fontWeightRegular`): size and color carry the hierarchy, and a headline number reads at the same weight as the text around it. `button` is regular through `button-text-weight`; the subheadings are medium (`medium-weight`). The weight tokens keep MUI's values, for the components that use them directly, except `fontWeightBold`, which `medium-weight` sets to medium.",
     options: () => ({
       typography: {
         h1: { fontWeight: 400 },
@@ -444,15 +436,14 @@ export const departures: Departure[] = [
     options: (scheme) => (scheme === 'dark' ? { palette: { action: { selectedOpacity: 0.1 } } } : {}),
   },
   {
-    id: 'semibold-weight',
+    id: 'medium-weight',
     area: 'Typography',
-    title: 'A semibold weight for subheadings and data',
-    why: "MUI's weights are light (300), regular (400), medium (500) and bold (700), and it sets `subtitle1` regular and `subtitle2` medium. Kilowatt adds `fontWeightSemibold` (600) for small text that has to stand out without growing: the subheadings, `subtitle1` and `subtitle2`, which label a section inside a card or drawer and sit at body size or smaller, and data a reader looks for first (a total, a key reading), through `sx={{ fontWeight: 'fontWeightSemibold' }}`. Headings stay regular (`regular-weight`), so weight marks the small labels, not the large ones. Table header cells are semibold too (`table-head-weight`); MUI's other components that use medium (alert titles, tooltips) keep it.",
+    title: 'Medium is the one emphasis weight',
+    why: "MUI's weights are light (300), regular (400), medium (500) and bold (700); it sets `subtitle1` regular and `subtitle2` medium, and `strong` bold. Kilowatt emphasizes with medium only (`fontWeightMedium`), for small text that has to stand out without growing: `subtitle1` joins `subtitle2` at medium, so both subheadings, which label a section inside a card or drawer and sit at body size or smaller, weigh the same, and `fontWeightBold` is 500, so `strong` matches them. Data a reader looks for first (a total, a key reading) takes it through `sx={{ fontWeight: 'fontWeightMedium' }}`. Headings stay regular (`regular-weight`), so weight marks the small labels, not the large ones, and a card never sets more than two weights. MUI's components that use medium (table header cells, alert titles, tooltips) keep it.",
     options: () => ({
       typography: {
-        fontWeightSemibold: 600,
-        subtitle1: { fontWeight: 600 },
-        subtitle2: { fontWeight: 600 },
+        fontWeightBold: 500,
+        subtitle1: { fontWeight: 500 },
       },
     }),
   },
@@ -798,7 +789,7 @@ export const departures: Departure[] = [
     id: 'font-synthesis',
     area: 'Typography',
     title: 'No synthesized bold or italic',
-    why: "When a weight or style isn't loaded, browsers fake it by smearing or slanting the nearest one. Kilowatt loads Roboto at 400, 500, 600 and 700 and no italics (`fontWeightLight`, 300, is unused, so it isn't loaded), so CssBaseline sets `font-synthesis: none` on the page: text renders only in the cuts that exist, and emphasis comes from weight, not a faked slant.",
+    why: "When a weight or style isn't loaded, browsers fake it by smearing or slanting the nearest one. Kilowatt loads Roboto at 400 and 500, the two weights the theme uses (`medium-weight`), and no italics, so CssBaseline sets `font-synthesis: none` on the page: text renders only in the cuts that exist, and emphasis comes from weight, not a faked slant.",
     options: () => ({ components: { MuiCssBaseline: { styleOverrides: { body: { fontSynthesis: 'none' } } } } }),
   },
   {
