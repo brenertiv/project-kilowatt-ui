@@ -146,7 +146,7 @@ export function PeriodPicker({
       <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
       <Divider sx={{ display: { sm: 'none' } }} />
       <Stack role="group" aria-label="Custom range" sx={{ p: 2, gap: 2, minWidth: 260 }}>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="textSecondary">
           Custom range, whole months
         </Typography>
         <TextField select label="From" value={from} onChange={(event) => changeFrom(event.target.value)}>
