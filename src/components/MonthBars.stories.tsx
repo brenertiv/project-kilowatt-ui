@@ -11,11 +11,43 @@ import { MonthBars, MonthBarsLegend, type MonthState } from 'src/components/Mont
 import { inCard } from 'src/stories/decorators';
 
 /** Twelve months of a synthetic feed: complete but for a partial month, a gap, and two months still awaited. */
-const year: MonthState[] = ['complete', 'complete', 'gap', 'complete', 'complete', 'partial', 'complete', 'complete', 'complete', 'complete', 'awaiting', 'awaiting'];
-const summary = 'Electricity, Jan–Dec 2025: 8 of 10 months complete, 1 partial; no data in March; November and December awaited.';
+const year: MonthState[] = [
+  'complete',
+  'complete',
+  'gap',
+  'complete',
+  'complete',
+  'partial',
+  'complete',
+  'complete',
+  'complete',
+  'complete',
+  'awaiting',
+  'awaiting',
+];
+const summary =
+  'Electricity, Jan–Dec 2025: 8 of 10 months complete, 1 partial; no data in March; November and December awaited.';
+
+/** Twelve months of a synthetic steam feed that show every drawing: estimates, a vacancy, an overlap and months outside the sold scope. */
+const everyState: MonthState[] = [
+  'not-sold',
+  'not-sold',
+  'complete',
+  'estimated',
+  'estimated',
+  'gap',
+  'vacant',
+  'vacant',
+  'overlap',
+  'partial',
+  'complete',
+  'awaiting',
+];
+const everyStateSummary =
+  'Steam, Jan–Dec 2025: 4 of 9 months in scope have data, 2 of them estimated by the utility; 1 partial; no data in June; vacant in July and August; two bills overlap in September; December awaited; January and February are outside the sold scope.';
 
 /**
- * Kilowatt's `MonthBars`: a strip of equal bars, one per month, colored by how completely a feed reported. Each story
+ * Kilowatt's `MonthBars`: a strip of equal bars, one per month, each drawn by how completely a feed reported. Each story
  * shows it in a `Card`, under `CardContent`, as it ships.
  */
 const meta = {
@@ -38,7 +70,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A feed's year at a glance: 4px bars, the state of each month in its color, the sentence in the tooltip and the name. */
+/** A feed's year at a glance: 4px bars, each month drawn by its state, the sentence in the tooltip and the name. */
 export const Year: Story = {
   parameters: { card: { title: 'Electricity Completeness' } },
   play: async ({ canvas }) => {
@@ -52,15 +84,47 @@ export const Stretched: Story = {
   args: { stretch: true },
 };
 
+/** Every state's fixed drawing, stretched so the est. tag and the overlap's warning glyph show, with the legend naming each. */
+export const EveryState: Story = {
+  name: 'Every state',
+  parameters: { card: { title: 'Steam Completeness' } },
+  args: { months: everyState, summary: everyStateSummary, stretch: true },
+  render: (args) => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <MonthBars {...args} />
+      <MonthBarsLegend inline />
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('figure', { name: everyStateSummary })).toBeVisible();
+    await expect(canvas.getByText('Not in sold scope')).toBeVisible();
+    await expect(canvas.getByText('Estimated')).toBeVisible();
+  },
+};
+
 /** In a table cell, a strip per feed, with the legend in the row under the table. */
 export const InATable: Story = {
   parameters: { card: { title: 'Data Sources' } },
   render: () => {
     const rows: { name: string; months: MonthState[]; summary: string; placeholder?: string; overlay?: string }[] = [
       { name: 'Harbor Point', months: year, summary },
-      { name: 'Maple Court', months: Array(12).fill('complete'), summary: 'Electricity, Jan–Dec 2025: all 12 months complete.' },
-      { name: 'Riverside Lofts', months: Array(12).fill('gap'), summary: 'Electricity, Jan–Dec 2025: no source connected.', overlay: 'No source' },
-      { name: 'Cedar Annex', months: [], summary: 'Gas, Jan–Dec 2025: not applicable, the property has no gas service.', placeholder: 'Not applicable' },
+      {
+        name: 'Maple Court',
+        months: Array(12).fill('complete'),
+        summary: 'Electricity, Jan–Dec 2025: all 12 months complete.',
+      },
+      {
+        name: 'Riverside Lofts',
+        months: Array(12).fill('gap'),
+        summary: 'Electricity, Jan–Dec 2025: no source connected.',
+        overlay: 'No source',
+      },
+      {
+        name: 'Cedar Annex',
+        months: [],
+        summary: 'Gas, Jan–Dec 2025: not applicable, the property has no gas service.',
+        placeholder: 'Not applicable',
+      },
     ];
     return (
       <Box sx={{ mx: -2 }}>
@@ -102,7 +166,11 @@ export const NoSource: Story = {
 /** `placeholder`: a feed the property doesn't have draws no bars, only a quiet label, so it never looks like a problem. */
 export const NotApplicable: Story = {
   parameters: { card: { title: 'Gas Completeness' } },
-  args: { placeholder: 'Not applicable', months: [], summary: 'Gas, Jan–Dec 2025: not applicable, the property has no gas service.' },
+  args: {
+    placeholder: 'Not applicable',
+    months: [],
+    summary: 'Gas, Jan–Dec 2025: not applicable, the property has no gas service.',
+  },
 };
 
 /** `focusable={false}`, for a strip inside a clickable card: a button can't hold a focusable element, so the strip takes no focus and the card carries its sentence; the tooltip still shows on hover. */
