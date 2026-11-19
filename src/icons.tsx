@@ -131,6 +131,7 @@ export const iconNames = [
   'star',
   'storefront',
   'support_agent',
+  'sync_alt',
   'table_rows',
   'tablet',
   'task_alt',
