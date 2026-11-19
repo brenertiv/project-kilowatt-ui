@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { useContentWidth } from 'src/components/contentWidth';
@@ -40,6 +42,17 @@ const filterGroups: ScopeGroup[] = [
   { id: 'north', name: 'North Region', propertyIds: ['lake-works', 'pine-court'] },
 ];
 const savedPortfolio: ScopeGroup = { id: 'saved-1', name: 'Austin offices', propertyIds: ['harbor-tower', 'elm-plaza'] };
+
+/** A user who can open two of Canal District's nine properties and all of Ridgeline's. Foundry Lofts was sold. */
+const partProperties: ScopeProperty[] = [
+  { id: 'quarry-hall', name: 'Quarry Hall', city: 'Portland, OR', address: '18 Slate Row' },
+  { id: 'foundry-lofts', name: 'Foundry Lofts', city: 'Portland, OR', address: '402 Anvil Street', inactive: true },
+  { id: 'ridgeline-one', name: 'Ridgeline One', city: 'Boise, ID', address: '77 Summit Road' },
+];
+const partGroups: ScopeGroup[] = [
+  { id: 'canal', name: 'Canal District', propertyIds: ['quarry-hall', 'foundry-lofts'], total: 9 },
+  { id: 'ridgeline', name: 'Ridgeline', propertyIds: ['ridgeline-one'] },
+];
 
 /** Measures its box as AppShell measures the header's start, so a story shows the picker in a header of that width whatever the window is. */
 function InHeaderOf({ width, children }: { width: number; children: ReactNode }) {
@@ -276,6 +289,85 @@ export const Locked: Story = {
     await userEvent.tab();
     await expect(crumb).toHaveFocus();
     await expect(await screen.findByRole('tooltip')).toHaveTextContent('This report keeps the properties it was written for.');
+  },
+};
+
+/** `locked.menu` gives the owner the fixed scope's actions: the locked crumb becomes a menu button, and its tooltip hides while the menu is open. */
+export const LockedWithMenu: Story = {
+  name: 'Locked with a menu',
+  args: {
+    value: { level: 'group', id: 'west' },
+    locked: {
+      type: 'Report scope',
+      reason: 'This report keeps the properties it was written for.',
+      menu: [
+        { label: 'Edit Properties', onClick: fn() },
+        { label: 'Edit Period', onClick: fn() },
+      ],
+    },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    const crumb = canvas.getByRole('button', { name: 'Report scope West Region, locked' });
+    await expect(crumb).toHaveAttribute('aria-haspopup', 'menu');
+    await userEvent.click(crumb);
+    await expect(crumb).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Edit Properties' }));
+    await expect(args.locked?.menu?.[0].onClick).toHaveBeenCalledOnce();
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+  },
+};
+
+/** `total` on a group the user can open only part of: its row, the Properties column's header and search read “2 of 9 properties”. The row still chooses the group, narrowed to their properties. */
+export const PartlyAccessibleGroup: Story = {
+  name: 'Partly accessible group',
+  args: { groups: partGroups, properties: partProperties },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    const portfolios = within(dialog).getByRole('list', { name: 'Portfolios' });
+    await expect(within(portfolios).getByRole('button', { name: /^Canal District/ })).toHaveTextContent('2 of 9 properties');
+    await expect(within(portfolios).getByRole('button', { name: /^Ridgeline/ })).toHaveTextContent('1 property');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Browse Canal District' }));
+    await expect(within(dialog).getByText('Canal District · 2 of 9 properties')).toBeVisible();
+  },
+};
+
+/** `inactive` on a sold or inactive property: an outlined Inactive chip after its name in the Properties column and in search. It is listed and chosen like any other, never greyed. */
+export const InactiveProperty: Story = {
+  name: 'Inactive property',
+  args: { groups: partGroups, properties: partProperties, onChange: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Portfolio' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Browse Canal District' }));
+    const row = within(within(dialog).getByRole('list', { name: 'Canal District' })).getByRole('button', { name: /Foundry Lofts/ });
+    await expect(row).toHaveTextContent('Inactive');
+    await expect(row).toBeEnabled();
+    await userEvent.click(row);
+    await expect(args.onChange).toHaveBeenCalledWith({ level: 'property', id: 'foundry-lofts', groupId: 'canal' });
+  },
+};
+
+/** `trigger="button"` for a form that asks for properties: one outlined button across the form's width, as tall as the medium text field beside it. It opens Change Scope. */
+export const FormButton: Story = {
+  name: 'Form button',
+  args: { trigger: 'button', value: { level: 'group', id: 'east' }, shortcut: false },
+  render: function Render(args) {
+    const [value, setValue] = useState<Scope>(args.value);
+    return (
+      <Stack sx={{ gap: 2, width: 360, maxWidth: '100%' }}>
+        <ScopePicker {...args} value={value} onChange={setValue} />
+        <TextField label="Report Name" defaultValue="Quarterly Energy Review" />
+      </Stack>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    const button = canvas.getByRole('button', { name: 'Portfolio East Region. Change Scope' });
+    await expect(button.getBoundingClientRect().height).toBe(canvas.getByRole('textbox', { name: 'Report Name' }).closest('.MuiInputBase-root')!.getBoundingClientRect().height);
+    await userEvent.click(button);
+    const dialog = await screen.findByRole('dialog', { name: 'Change Scope' });
+    await userEvent.click(within(within(dialog).getByRole('list', { name: 'Portfolios' })).getByRole('button', { name: /^Fund II/ }));
+    await expect(await canvas.findByRole('button', { name: 'Portfolio Fund II. Change Scope' })).toBeVisible();
   },
 };
 
