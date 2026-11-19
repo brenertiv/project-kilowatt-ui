@@ -601,6 +601,13 @@ export const departures: Departure[] = [
     },
   },
   {
+    id: 'count-color',
+    area: 'Palette',
+    title: 'A count on a rail icon',
+    why: "MUI's Badge takes an intent color. The count on an AppShell rail icon is a bright green instead, chosen in review so it stands out on the rail in both schemes: green 300 (the dark scheme's success step) with black text, which holds 4.5:1 on it. It is a role of its own, `count` (`main` and `contrastText`), so no component reads a ramp step, and it isn't an intent: it doesn't say success. It fills AppShell's rail count and nothing else; a count in running text stays text.",
+    options: () => ({ palette: { count: { main: green[300], contrastText: '#000' } } }),
+  },
+  {
     id: 'chart-palette',
     area: 'Palette',
     title: 'Chart colors',
@@ -765,10 +772,10 @@ export const departures: Departure[] = [
     id: 'brand-type',
     area: 'Typography',
     title: 'A serif for branded moments',
-    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Instrument Serif, a condensed display serif from Google Fonts, at regular (400, like every style, `regular-weight`), 48px with a line height of 1.2, and 40px below `sm`, where 48px would break a short heading over four lines. It's for branded moments only: a first login's and the upgrade pages' headings, and every report's title, which `PageHeader` sets in it a step down, at 40px and `h1`'s size below `sm` (`titleVariant=\"brand\"`). A screen asks for `variant=\"brand\"` and sets the element with `component`; no component takes it by default. Everything else stays Roboto.",
+    why: "MUI's type scale is one family. Kilowatt adds one variant to it, `brand`: Besley, a Clarendon-style serif from Google Fonts, at regular (400, like every style, `regular-weight`), 40px with a line height of 1.2, and 32px below `sm`, where 40px would break a short heading over four lines. It's for branded moments only: a first login's and the upgrade pages' headings, and every report's title, which `PageHeader` sets in it at `h1`'s size (`titleVariant=\"brand\"`). A screen asks for `variant=\"brand\"` and sets the element with `component`; no component takes it by default. Everything else stays Roboto.",
     options: () => ({
       typography: {
-        brand: { fontFamily: '"Instrument Serif", serif', fontWeight: 400, fontSize: '2.5rem', lineHeight: 1.2, '@media (min-width:600px)': { fontSize: '3rem' } },
+        brand: { fontFamily: '"Besley", serif', fontWeight: 400, fontSize: '2rem', lineHeight: 1.2, '@media (min-width:600px)': { fontSize: '2.5rem' } },
       },
     }),
   },

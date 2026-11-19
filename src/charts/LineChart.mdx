@@ -68,6 +68,9 @@ import { scoreBands } from 'src/charts/meanings';
 // By month, with the trailing month still being billed: dashed, with its count in the tooltip and under the chart.
 <LineChart data={cost} series={[{ field: 'cost', name: 'Utility cost', markers: 'all' }]} unit="USD" interval="month" stillBilling={[{ month: Date.UTC(2026, 9, 1), billed: 9, properties: 18 }]} summary="…" />
 
+// A month with no value: the row is there with its date and no series field, and a click on its place hands the row back.
+<LineChart data={water} series={[{ field: 'water', name: 'Water use', markers: 'all' }]} unit="gal" interval="month" onMissingClick={openWhatExplainsIt} summary="…" />
+
 // A score in its bands, with today's score marked.
 <LineChart data={scores} series={[{ field: 'score', name: 'Maintenance score', bands: scoreBands, markers: 'last' }]} unit="pts" summary="…" />
 ```
@@ -85,6 +88,7 @@ Product meanings take their color from `src/charts/meanings`: spread `meaningCol
 - **Time ranges.** A stretch of time the line is read in, such as the window a finding is about: `ranges`, a band in `action.hover` behind the lines (Rules → Charts), named inside at the top right in `text.secondary`. A name wider than its band runs left over the plot.
 - **Projected.** One line measured up to a date and projected after it: `projectedFrom` continues the line dashed in its own hue, and the tooltip says "projected". For a stretch that's provisional rather than projected, set `projectedNote` to what the tooltip should say instead.
 - **Still being billed.** On a chart by month (`interval="month"`), `stillBilling` names the trailing months with bills for fewer than nine in ten of the properties in scope (`isStillBilling` from `src/charts/stillBilling` holds the rule), each by its timestamp with its count: `{ month: Date.UTC(2026, 9, 1), billed: 9, properties: 18 }`. Every line that isn't `neutral` runs dashed in its own hue from the last month billed in full, a marker on such a month is hollow, its tooltip adds "Still being billed: 9 of 18 properties", and the same line sits under the chart, naming each month when there are several. Leave a month out once it passes nine in ten, and it draws solid.
+- **Missing period.** A period with no value breaks the line, never a zero and never a line across it. With `onMissingClick`, a click on that period's place in the plot calls the handler with its row (the row is in `data` with its date and no series field), and the pointer is a hand there, so a page can open what explains the gap. Keep the handler stable (`useCallback`), since the chart is rebuilt when it changes; with several lines, a period counts as missing only when none of them has a value in it.
 - **Score bands.** A score colored by status, band by band (`bands`, usually `scoreBands`), with the band named in the tooltip; `markers: 'last'` marks the latest reading. A chart colored by status has no other colored line. Set `max={100}` for a score or a percentage, so the axis always runs to the ceiling.
 - **Pathways.** Scenarios years ahead against a pathway (`interval="year"`): each scenario in a series color, the pathway `neutral`. Keep to one neutral line, so the legend tells every line apart. Rows can also be a `quarter` apart.
 
@@ -110,6 +114,8 @@ Product meanings take their color from `src/charts/meanings`: spread `meaningCol
 - Don't color a score by status and add another colored line; color a chart by series or by status.
 - Do group or switch to a table past six lines.
 - Don't show more than six colored lines; the hues stop being told apart.
+- Do give `onMissingClick` a second way through that isn't the pointer, such as the same periods in a table.
+- Don't send a missing value as 0 to make it clickable; leave the row with its date and no number, and the line breaks there.
 
 ## MUI departures
 
@@ -150,6 +156,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - Every point, column or slice shows its exact value and unit in a tooltip on hover, since axis numbers are rounded to compact form (1.5K).
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the legend and data points.
+- `onMissingClick` answers the pointer only: a gap isn't reachable by keyboard. Offer the same way through as a control or a table row beside the chart, and name the missing period in `summary`.
 - Lines are told apart by color and by name in the legend and tooltip; a dashed line is told apart by pattern too.
 - A projected stretch is dashed and its tooltip says "projected"; a banded score's tooltip names its band; a reference line and a time range are labeled in text. None of them rests on color alone. Say the target, the range, the projection or the band in `summary` when it matters.
 - With two units, each legend name carries its unit ("Energy use (kWh)"), so which axis a line reads against doesn't depend on color. Say both units in `summary`.

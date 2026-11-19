@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Fade from '@mui/material/Fade';
@@ -20,9 +20,9 @@ export type PageHeaderProperty = {
 };
 
 export type PageHeaderProps = {
-  /** The page's title, as an `h1`, and the condensed line once the header has scrolled away. */
+  /** The page's title, as an `h1`, and the page in the condensed line ("Section / Page" under a `PageHeaderSection`) once the header has scrolled away. */
   title: string;
-  /** The title's type style: `'h3'` for a page, `'brand'` for a report, which sets the serif a step under its own size, at 40px (`h1`'s size below `sm`). The condensed line is the same either way. Default `'h3'`. */
+  /** The title's type style: `'h3'` for a page, `'brand'` for a report, which sets the serif at `h1`'s size (`h2`'s below `sm`). The condensed line is the same either way. Default `'h3'`. */
   titleVariant?: 'h3' | 'brand';
   /** The page's own controls: at the header's right, and at the condensed line's right once it's pinned. Default none. */
   actions?: ReactNode;
@@ -71,13 +71,24 @@ function PropertyBar({ property }: { property: PageHeaderProperty }) {
 }
 
 /**
+ * The section the page is in: its name is drawn over the title in `overline`, and leads the condensed line as
+ * "Section / Page". The app provides the current section's name once, round its pages. A header whose title is
+ * the section's own name shows none, and neither does a header with no provider. Default none.
+ *
+ * @summary The name of the section a page is in, shown over its `PageHeader` title.
+ * @import import { PageHeaderSection } from 'src/components/PageHeader';
+ */
+export const PageHeaderSection = createContext<string | undefined>(undefined);
+
+/**
  * A page's title that shrinks on scroll. The full header scrolls away with the page, and as it goes a
  * one-line condensed title pins at the top of the page, with the page's filters under it. The line and
  * the filters share one sticky band that overlaps the header's foot by the line's height, so the line
  * has room without moving anything, and it shows only once the band is pinned. Neither the page nor the
  * band changes height on scroll, so nothing jumps and the trigger can't flicker. A `summary` sits on the
  * title's line, a `description` under it, and at property scope a `property` bar and a `byline` under
- * the header; all of them scroll away with it. Use it inside `AppShell`, which says what scrolls the page.
+ * the header; all of them scroll away with it. Under a `PageHeaderSection` the section's name sits over the title
+ * and leads the condensed line. Use it inside `AppShell`, which says what scrolls the page.
  *
  * @summary A page's title that shrinks to one pinned line, with the page's filters under it, as the page scrolls.
  * @import import { PageHeader } from 'src/components/PageHeader';
@@ -88,15 +99,23 @@ export function PageHeader({ title, titleVariant = 'h3', actions, filters, descr
   const [sentinel, setSentinel] = useState<HTMLElement | null>(null);
   const [lineElement, setLineElement] = useState<HTMLElement | null>(null);
   const pinned = usePinned(sentinel, lineElement);
-  // A report's title: the brand serif a step under its own size, at its phone size (40px), and the theme's `h1` size on a phone.
-  const titleSize = titleVariant === 'brand' ? { fontSize: { xs: theme.typography.h1.fontSize, sm: theme.typography.brand.fontSize } } : {};
+  // A report's title: the brand serif a step under its own size, at the theme's `h1` size, and `h2`'s on a phone.
+  const titleSize = titleVariant === 'brand' ? { fontSize: { xs: theme.typography.h2.fontSize, sm: theme.typography.h1.fontSize } } : {};
   // At property scope the condensed line reads "Page title — Property name · address".
   const condensed = property ? `${title} — ${property.name} · ${property.details}` : title;
+  // The section over the title; none where the title is the section's own name.
+  const section = useContext(PageHeaderSection);
+  const overline = section && section !== title ? section : undefined;
 
   return (
     <>
       <Stack direction={{ xs: 'column', sm: 'row' }} sx={{ gap: 2, alignItems: { sm: 'flex-start' }, justifyContent: 'space-between', mb: 3 }}>
         <Box sx={{ minWidth: 0, maxWidth: '65ch' }}>
+          {overline && (
+            <Typography variant="overline" component="p" sx={{ display: 'block', color: 'text.secondary' }}>
+              {overline}
+            </Typography>
+          )}
           {summary ? (
             // The summary sits on the title's line, centred on it, and widens into the space after it.
             <Stack direction="row" sx={{ gap: 1, alignItems: 'center', mb: description ? 1 : 0 }}>
@@ -111,7 +130,7 @@ export function PageHeader({ title, titleVariant = 'h3', actions, filters, descr
             </Typography>
           )}
           {description && (
-            <Typography variant="body1" color="text.secondary" component="div">
+            <Typography variant="body1" color="textSecondary" component="div">
               {description}
             </Typography>
           )}
@@ -139,8 +158,21 @@ export function PageHeader({ title, titleVariant = 'h3', actions, filters, descr
       >
         <Fade in={pinned}>
           <Stack ref={setLineElement} direction="row" sx={{ height: (t) => t.spacing(line), gap: 1, alignItems: 'center' }}>
-            <Typography variant="subtitle1" component="p" sx={{ flex: 1, minWidth: 0 }}>
-              <TruncatedText>{condensed}</TruncatedText>
+            {/* A breadcrumb in the overline's type: "Section / Page", the section and slash in `text.secondary`, only the page truncating. */}
+            <Typography variant="overline" component="p" sx={{ flex: 1, minWidth: 0, display: 'flex', gap: 1 }}>
+              {overline && (
+                <>
+                  <Box component="span" sx={{ flexShrink: 0, color: 'text.secondary' }}>
+                    {overline}
+                  </Box>
+                  <Box component="span" aria-hidden sx={{ flexShrink: 0, color: 'text.secondary' }}>
+                    /
+                  </Box>
+                </>
+              )}
+              <Box component="span" sx={{ minWidth: 0 }}>
+                <TruncatedText>{condensed}</TruncatedText>
+              </Box>
             </Typography>
             {actions && <Stack direction="row" sx={{ gap: 1, flexShrink: 0 }}>{actions}</Stack>}
           </Stack>

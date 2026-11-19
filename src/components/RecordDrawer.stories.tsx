@@ -5,7 +5,7 @@ import Snackbar from '@mui/material/Snackbar';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
-import { RecordDrawer, type HoursException, type RecordChange, type RecordDrawerProps, type RecordDrawerRecord, type RecordGroup } from 'src/components/RecordDrawer';
+import { RecordDrawer, type HoursException, type RecordChange, type RecordDrawerProps, type RecordDrawerRecord, type RecordGroup, type WeeklyHours } from 'src/components/RecordDrawer';
 import { sampleRecord } from 'src/fixtures/records';
 
 /** Applies a group's changes to the record, as the app would after saving, with the new provenance. */
@@ -69,6 +69,32 @@ const hoursRecord: RecordDrawerRecord = {
         { id: 'weekly', label: 'Weekly hours', value: 'Mon–Thu 8:00–18:00, Fri 8:00–17:00, closed weekends', display: 'Mon–Thu 8:00–18:00, Fri 8:00–17:00, closed weekends', provenance: 'Recorded at setup, Feb 3, 2025' },
         { id: 'exceptions', label: 'Exceptions', value: exceptions, display: '1 exception: Thanksgiving, closed', provenance: 'Changed by Avery Lin, Oct 2, 2025, 3:14 PM', input: { kind: 'exceptions' } },
       ],
+    },
+  ],
+  activity: [],
+};
+
+const week: WeeklyHours = {
+  mon: { open: '07:30', close: '18:30' },
+  tue: { open: '07:30', close: '18:30' },
+  wed: { open: '07:30', close: '18:30' },
+  thu: { open: '07:30', close: '18:30' },
+  fri: { open: '07:30', close: '16:00' },
+  sat: null,
+  sun: null,
+};
+
+/** A synthetic property whose standing week is editable: the value is `WeeklyHours`, the display the app's own text. */
+const weekRecord: RecordDrawerRecord = {
+  id: 'prop-alder-court',
+  name: 'Alder Court',
+  kind: 'Property',
+  groups: [
+    {
+      id: 'hours',
+      label: 'Occupied hours',
+      editable: true,
+      fields: [{ id: 'weekly', label: 'Weekly hours', value: week, display: 'Mon–Thu 7:30–18:30, Fri 7:30–16:00, closed weekends', provenance: 'Recorded at setup, Apr 14, 2025', input: { kind: 'hours' } }],
     },
   ],
   activity: [],
@@ -180,6 +206,21 @@ export const WithNoticeAndAction: Story = {
   },
 };
 
+/** `mainAction`: the object's main action as an outlined button above the groups, when the header's `action` is the way through to its page. */
+export const WithMainAction: Story = {
+  name: 'With a main action',
+  args: {
+    action: { label: 'Open Page', onClick: fn() },
+    mainAction: { label: 'Open PDF', onClick: fn() },
+  },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Open PDF' }));
+    await expect(args.mainAction?.onClick).toHaveBeenCalledOnce();
+    await userEvent.click(canvas.getByRole('button', { name: 'Open Page' }));
+    await expect(args.action?.onClick).toHaveBeenCalledOnce();
+  },
+};
+
 /** A field's `link` makes its value a link, and `links` list the objects it names under it, each opening another record in the drawer or a page; `media` shows the property's photos under its value. */
 export const FieldLinks: Story = {
   name: 'Field links and images',
@@ -209,6 +250,21 @@ export const HoursExceptions: Story = {
     await expect(canvas.getAllByRole('textbox', { name: 'Reason' })).toHaveLength(1);
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(args.onSave).toHaveBeenCalledWith(expect.objectContaining({ id: 'hours' }), [expect.objectContaining({ fieldId: 'exceptions', value: [expect.objectContaining({ name: 'Inventory day', hours: null })] })]);
+  },
+};
+
+/** The standing week (`input: { kind: 'hours' }`): a row per day, each a switch for open or closed with its opening and closing times. */
+export const WeeklyHoursInput: Story = {
+  name: 'Weekly hours',
+  args: { record: weekRecord },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Edit Occupied hours' }));
+    await expect(canvas.getByRole('switch', { name: 'Monday open' })).toBeChecked();
+    const saturday = canvas.getByRole('switch', { name: 'Saturday open' });
+    await expect(saturday).not.toBeChecked();
+    await userEvent.click(saturday);
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(args.onSave).toHaveBeenCalledWith(expect.objectContaining({ id: 'hours' }), [expect.objectContaining({ fieldId: 'weekly', value: expect.objectContaining({ sat: { open: '08:00', close: '18:00' }, sun: null }) })]);
   },
 };
 

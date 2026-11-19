@@ -244,7 +244,7 @@ export function SiteMap({ sites, unit, summary, height = 320, onSelect, sized = 
           <Paper elevation={8} sx={{ px: 1.5, py: 1 }}>
             <Typography variant="body2">{hover.site.name}</Typography>
             {detail(hover.site) && (
-              <Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+              <Typography variant="caption" color="textSecondary" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                 {detail(hover.site)}
               </Typography>
             )}

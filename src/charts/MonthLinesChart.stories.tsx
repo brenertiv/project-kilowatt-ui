@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { MonthLinesChart } from 'src/charts/MonthLinesChart';
+import { clickPlot, hasPlot } from 'src/stories/chartClicks';
 import { inCard } from 'src/stories/decorators';
 
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -70,5 +71,28 @@ export const StillBeingBilled: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('figure', { name: /October 2025 is still being billed/ })).toBeVisible();
     await expect(canvas.getByText('Still being billed: 11 of 18 properties')).toBeVisible();
+  },
+};
+
+/** A month no year has a value for draws no dot; with `onMissingClick`, a click on its place in the plot hands back its row, so the page can open what explains the gap. */
+export const MissingMonth: Story = {
+  name: 'Missing month',
+  parameters: { card: { title: 'Electricity by Month' } },
+  args: {
+    series: [series[2]],
+    onMissingClick: fn(),
+    summary: 'Electricity by month, 2025: peaking in August at 81,400 kWh; March, November and December have no data.',
+  },
+  play: async ({ args, canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /March, November and December have no data/ });
+    await waitFor(() => expect(hasPlot(figure)).toBe(true));
+    // February has a value, so a click on it is not a missing month's; March, the third of twelve, has none.
+    // The axis may still be settling when the plot first has a width, so click until the missing period answers.
+    await waitFor(() => {
+      clickPlot(figure, 2.5 / 12);
+      expect(args.onMissingClick).toHaveBeenCalledWith(expect.objectContaining({ month: 'Mar' }));
+    });
+    clickPlot(figure, 1.5 / 12);
+    await expect(args.onMissingClick).not.toHaveBeenCalledWith(expect.objectContaining({ month: 'Feb' }));
   },
 };

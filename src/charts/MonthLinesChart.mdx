@@ -45,6 +45,7 @@ Pass twelve rows, January first, with a field per year; leave a field out of a m
 
 - **Several years**: the lines take the series colors in order, with a legend under the plot.
 - **One year**: one line in the first series color, no legend.
+- **Missing month**: a month with no data has no dot and breaks its year's line. With `onMissingClick`, a click on the place of a month that no year has a value for calls the handler with its row (`{ month: 'Mar' }`), and the pointer is a hand there, so a page can open what explains the gap. Keep the handler stable (`useCallback`).
 - **Still being billed**: `stillBilling` names the newest year's trailing months with bills for fewer than nine in ten of the properties in scope (`isStillBilling` from `src/charts/stillBilling` holds the rule), each with its count: `{ month: 'Oct', billed: 11, properties: 18 }`. The last line runs dashed into such a month in its own hue, the month's dot is hollow, its tooltip adds "Still being billed: 11 of 18 properties", and the same line sits under the chart. Leave a month out once it passes nine in ten, and it draws solid.
 
 <Canvas of={MonthLinesChartStories.OneYear} />
@@ -57,6 +58,7 @@ Pass twelve rows, January first, with a field per year; leave a field out of a m
 - Don't leave a month still being billed solid, or mark it with a ≈ sign or a lighter color; a partial month then reads as a drop.
 - Do leave a month out where there's no data.
 - Don't fill a missing month with 0; the line breaks there instead.
+- Do give `onMissingClick` a second way through that isn't the pointer, such as the same months in a table.
 - Do keep to six years at most.
 - Don't add a seventh color; past six years, show a table.
 
@@ -94,6 +96,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - The chart draws on a canvas; the `figure` around it is named by `summary`, one sentence with the numbers that matter and the months without data.
 - Every point's tooltip names its year and month and gives the full value with its unit.
 - The years are told apart by the legend's names as well as by color.
+- `onMissingClick` answers the pointer only: a gap isn't reachable by keyboard. Offer the same way through as a control or a table row beside the chart.
 - A month still being billed is told by its dash and hollow dot, by its tooltip and by the line under the chart, a `figcaption` screen readers reach. Say it in `summary` too.
 
 ## Related

@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { LineChart } from 'src/charts/LineChart';
-import { AsyncContent } from 'src/components/AsyncContent';
+import { AsyncContent, SupportLink } from 'src/components/AsyncContent';
 import { dailyUse } from 'src/fixtures/charts';
 import { inCard } from 'src/stories/decorators';
 
@@ -46,6 +46,16 @@ export const Loading: Story = {
   args: { state: { status: 'loading' } },
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('progressbar', { name: 'Loading energy use' })).toBeVisible();
+  },
+};
+
+/** A load that runs past 3 seconds says so under the skeleton, "Still loading energy use.", with no time given. */
+export const StillLoading: Story = {
+  args: { state: { status: 'loading' } },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText('Still loading energy use.')).toBeNull();
+    // The line arrives after the 3-second threshold (`stillLoadingAfter`).
+    await expect(await canvas.findByText('Still loading energy use.', undefined, { timeout: 5000 })).toBeVisible();
   },
 };
 
@@ -133,6 +143,31 @@ export const Failed: Story = {
     await expect(canvas.getByRole('alert')).toHaveTextContent('The energy data didn’t load.');
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.state.onRetry).toHaveBeenCalledOnce();
+  },
+};
+
+/** After a second failed retry the error says so and adds Email Support, a link to the mail address the app provides through `SupportLink`. */
+export const FailedAgain: Story = {
+  name: 'Failed after two retries',
+  render: function Render(args) {
+    // Each Retry loads for a moment and fails again, as a request that keeps failing does.
+    const [status, setStatus] = useState<'error' | 'loading'>('error');
+    const retry = () => {
+      setStatus('loading');
+      setTimeout(() => setStatus('error'), 100);
+    };
+    return (
+      <SupportLink value={(failedAt) => `mailto:support@example.com?subject=${encodeURIComponent(`Energy Use didn’t load, ${failedAt.toISOString()}`)}`}>
+        <AsyncContent {...args} state={{ status, error: 'The energy data didn’t load.', onRetry: retry }} />
+      </SupportLink>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(await canvas.findByRole('button', { name: 'Retry' }));
+    await expect(canvas.queryByRole('link', { name: 'Email Support' })).toBeNull();
+    await userEvent.click(await canvas.findByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(canvas.getByRole('alert')).toHaveTextContent('The energy data didn’t load. It failed again after two retries.'));
+    await expect(canvas.getByRole('link', { name: 'Email Support' })).toHaveAttribute('href', expect.stringContaining('mailto:support@example.com'));
   },
 };
 

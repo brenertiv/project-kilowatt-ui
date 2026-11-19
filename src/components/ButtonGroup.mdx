@@ -35,6 +35,10 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 
 `variant` (`outlined`, MUI's default; `contained`; `text`), `color` and `size` are set once on the group and apply to every button. `size` stays `medium`, the default, except for a one-off instance (Rules → Component size). `orientation="vertical"` stacks the buttons. MUI squares the corners where buttons meet, so the group's outer corners keep the theme radius.
 
+An outlined split button that sits on a panel surface (`background.level1`, a docked panel) takes `background.level5`, the lightest surface, under both halves (`sx={{ bgcolor: 'background.level5' }}` on the group), so the panel's one creating action stands out on it. The buttons stay outlined and transparent, so each half's hover tint still shows over the fill. On the page or a card an outlined group has no fill.
+
+<Canvas of={ButtonGroupStories.SplitButtonOnAPanel} />
+
 ## States
 
 - `disabled` on the group disables every button; on one `Button`, only that one. Say why nearby.
@@ -50,6 +54,8 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 - Do shorten a split button's label to fit (New) and keep the full words in its accessible name (New Workspace), which starts with the visible label.
 - Don't truncate a split button's label with an ellipsis; shorten the words instead.
 - Don't open a split button's menu as a modal `Menu` with a backdrop; use the non-modal `Popper` menu, as wide as the group.
+- Do fill an outlined split button on a panel surface with `background.level5`, set once on the group.
+- Don't fill each button, or use a color of your own; a fill on the buttons hides their hover tint.
 - Don't add a shadow to a contained group; groups sit flat like buttons.
 
 ## MUI departures

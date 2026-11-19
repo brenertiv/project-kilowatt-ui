@@ -1,7 +1,9 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import Button from '@mui/material/Button';
 import CardActions from '@mui/material/CardActions';
 import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -20,7 +22,9 @@ import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { fetchList } from 'src/api/queries';
 import { heatColors, heatEnd, type HeatEnd } from 'src/charts/deviation';
 import { fromQuery } from 'src/api/state';
+import { Icon } from 'src/icons';
 import { AsyncContent } from 'src/components/AsyncContent';
+import { DataMark } from 'src/components/DataMark';
 import { HeaderLabel } from 'src/components/HeaderLabel';
 import { usePagedRows } from 'src/components/usePagedRows';
 import { monthlyUseGrid, monthlyVariance, monthNames, varianceBuildings } from 'src/fixtures/charts';
@@ -30,7 +34,7 @@ import { inCard } from 'src/stories/decorators';
 
 type Building = { name: string; city: string; state: string; area: number; energy: number | null; cost: number | null; emissions: number | null };
 
-/** Sample buildings. A building with no reading this period has `null`, shown as a dash, never 0. */
+/** Sample buildings. A building with no reading this period has `null`, shown as the missing mark, never a bare dash and never 0. */
 const buildings: Building[] = [
   { name: '120 Broadway', city: 'New York', state: 'NY', area: 1800000, energy: 61240, cost: 11023, emissions: 18.4 },
   { name: '1 World Trade Center', city: 'New York', state: 'NY', area: 3000000, energy: 98410, cost: 17714, emissions: 29.5 },
@@ -51,8 +55,9 @@ const tonnes = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximu
 const intensity = new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-/** The cell text for a reading: the formatted number, or a dash when there isn't one. */
-const reading = (value: number | null, format: Intl.NumberFormat = number) => (value === null ? '–' : format.format(value));
+/** The cell for a reading: the formatted number, or the missing mark (`DataMark`) when there isn't one. */
+const reading = (value: number | null, format: Intl.NumberFormat = number): ReactNode =>
+  value === null ? <DataMark reason="No reading has arrived for this period." /> : format.format(value);
 
 /**
  * MUI's `Table` with its `TableContainer`, `TableHead`, `TableBody`, `TableRow`, `TableCell`, `TableFooter`
@@ -75,7 +80,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A read-only table: text left, numbers right, each header aligned with its column. A missing reading is a dash, never 0. */
+/** A read-only table: text left, numbers right, each header aligned with its column. A missing reading is the missing mark, never 0. */
 export const Basic: Story = {
   render: () => (
     <TableContainer>
@@ -107,43 +112,55 @@ export const Basic: Story = {
     const table = canvas.getByRole('table', { name: 'Building energy' });
     await expect(table).toBeVisible();
     await expect(canvas.getByRole('rowheader', { name: '120 Broadway' })).toBeVisible();
-    await expect(canvas.getAllByText('–')).toHaveLength(2);
+    await expect(canvas.getAllByRole('img', { name: /^Missing\./ })).toHaveLength(2);
   },
 };
 
 type SortKey = 'name' | 'energy';
-const compare = (a: string | number | null, b: string | number | null) => {
-  if (typeof a === 'string' && typeof b === 'string') return a.localeCompare(b);
-  return Number(a) - Number(b);
+type Sort = { key: SortKey; direction: 'asc' | 'desc' } | null;
+
+/** A header click: a new column sorts ascending, then descending, then off, back to the list's own order. */
+const nextSort = (current: Sort, key: SortKey): Sort => {
+  if (current?.key !== key) return { key, direction: 'asc' };
+  return current.direction === 'asc' ? { key, direction: 'desc' } : null;
+};
+
+/** The rows in the sort's order, or as given with no sort. A missing value sorts as zero: first ascending, last descending. */
+const sortRows = (rows: Building[], sort: Sort) => {
+  if (!sort) return rows;
+  const sign = sort.direction === 'asc' ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    const x = a[sort.key];
+    const y = b[sort.key];
+    if (typeof x === 'string' && typeof y === 'string') return sign * x.localeCompare(y, undefined, { numeric: true });
+    return sign * (Number(x ?? 0) - Number(y ?? 0));
+  });
 };
 
 function SortableTable() {
-  const [orderBy, setOrderBy] = useState<SortKey>('name');
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-  const rows = useMemo(() => {
-    const shown = buildings.slice(0, 5);
-    const known = shown.filter((building) => building[orderBy] !== null);
-    const missing = shown.filter((building) => building[orderBy] === null);
-    known.sort((a, b) => compare(a[orderBy], b[orderBy]) * (order === 'asc' ? 1 : -1));
-    // A building with no reading has no place in the order: it stays last either way.
-    return [...known, ...missing];
-  }, [orderBy, order]);
-  const sortBy = (key: SortKey) => {
-    setOrder(orderBy === key && order === 'asc' ? 'desc' : 'asc');
-    setOrderBy(key);
-  };
+  const [sort, setSort] = useState<Sort>(null);
+  const rows = useMemo(() => sortRows(buildings.slice(0, 5), sort), [sort]);
+  const direction = (key: SortKey) => (sort?.key === key ? sort.direction : false);
   return (
     <TableContainer>
       <Table aria-label="Building energy">
         <TableHead>
           <TableRow>
-            <TableCell sortDirection={orderBy === 'name' ? order : false}>
-              <TableSortLabel active={orderBy === 'name'} direction={orderBy === 'name' ? order : 'asc'} onClick={() => sortBy('name')}>
+            <TableCell sortDirection={direction('name')}>
+              <TableSortLabel
+                active={sort?.key === 'name'}
+                direction={direction('name') || 'asc'}
+                onClick={() => setSort(nextSort(sort, 'name'))}
+              >
                 Property
               </TableSortLabel>
             </TableCell>
-            <TableCell align="right" sortDirection={orderBy === 'energy' ? order : false}>
-              <TableSortLabel active={orderBy === 'energy'} direction={orderBy === 'energy' ? order : 'asc'} onClick={() => sortBy('energy')}>
+            <TableCell align="right" sortDirection={direction('energy')}>
+              <TableSortLabel
+                active={sort?.key === 'energy'}
+                direction={direction('energy') || 'asc'}
+                onClick={() => setSort(nextSort(sort, 'energy'))}
+              >
                 Energy (kWh)
               </TableSortLabel>
             </TableCell>
@@ -164,7 +181,7 @@ function SortableTable() {
   );
 }
 
-/** Rows people compare: `TableSortLabel` in the header, and `sortDirection` on its cell so screen readers hear the order. */
+/** Rows people compare: a header click sorts ascending, then descending, then off. A missing value sorts as zero and keeps its mark. */
 export const Sortable: Story = {
   render: () => <SortableTable />,
   play: async ({ canvas }) => {
@@ -172,9 +189,16 @@ export const Sortable: Story = {
     await expect(energy).not.toHaveAttribute('aria-sort');
     await userEvent.click(canvas.getByRole('button', { name: 'Energy (kWh)' }));
     await waitFor(() => expect(energy).toHaveAttribute('aria-sort', 'ascending'));
+    // The building with no reading sorts as zero: first ascending.
+    await expect(canvas.getAllByRole('rowheader')[0]).toHaveTextContent('4 Times Square');
     await userEvent.click(canvas.getByRole('button', { name: 'Energy (kWh)' }));
     await waitFor(() => expect(energy).toHaveAttribute('aria-sort', 'descending'));
     await expect(canvas.getAllByRole('rowheader')[0]).toHaveTextContent('1 World Trade Center');
+    await expect(canvas.getAllByRole('rowheader')[4]).toHaveTextContent('4 Times Square');
+    // The third click turns the sort off: the list's own order.
+    await userEvent.click(canvas.getByRole('button', { name: 'Energy (kWh)' }));
+    await waitFor(() => expect(energy).not.toHaveAttribute('aria-sort'));
+    await expect(canvas.getAllByRole('rowheader')[0]).toHaveTextContent('120 Broadway');
   },
 };
 
@@ -184,49 +208,206 @@ function SelectableTable() {
   const toggle = (name: string) =>
     setSelected((names) => (names.includes(name) ? names.filter((other) => other !== name) : [...names, name]));
   return (
-    <TableContainer>
-      <Table aria-label="Building energy">
-        <TableHead>
-          <TableRow>
-            <TableCell padding="checkbox">
-              <Checkbox
-                slotProps={{ input: { 'aria-label': 'Select all buildings' } }}
-                checked={selected.length === rows.length}
-                indeterminate={selected.length > 0 && selected.length < rows.length}
-                onChange={(event) => setSelected(event.target.checked ? rows.map(({ name }) => name) : [])}
-              />
-            </TableCell>
-            <TableCell>Property</TableCell>
-            <TableCell align="right">Energy (kWh)</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map(({ name, energy }) => (
-            <TableRow key={name} selected={selected.includes(name)}>
+    <>
+      {selected.length > 0 && (
+        <Stack
+          direction="row"
+          role="group"
+          aria-label="Selected rows"
+          sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 2, px: 2, pb: 2 }}
+        >
+          <Typography variant="body2" role="status">
+            {`${number.format(selected.length)} ${selected.length === 1 ? 'property' : 'properties'} selected`}
+          </Typography>
+          <Button variant="contained">Analyse</Button>
+        </Stack>
+      )}
+      <TableContainer>
+        <Table aria-label="Building energy">
+          <TableHead>
+            <TableRow>
               <TableCell padding="checkbox">
-                <Checkbox slotProps={{ input: { 'aria-label': `Select ${name}` } }} checked={selected.includes(name)} onChange={() => toggle(name)} />
+                <Checkbox
+                  slotProps={{ input: { 'aria-label': 'Select all buildings' } }}
+                  checked={selected.length === rows.length}
+                  indeterminate={selected.length > 0 && selected.length < rows.length}
+                  onChange={(event) => setSelected(event.target.checked ? rows.map(({ name }) => name) : [])}
+                />
               </TableCell>
-              <TableCell component="th" scope="row">
-                {name}
-              </TableCell>
-              <TableCell align="right">{reading(energy)}</TableCell>
+              <TableCell>Property</TableCell>
+              <TableCell align="right">Energy (kWh)</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {rows.map(({ name, energy }) => (
+              <TableRow key={name} selected={selected.includes(name)}>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    slotProps={{ input: { 'aria-label': `Select ${name}` } }}
+                    checked={selected.includes(name)}
+                    onChange={() => toggle(name)}
+                  />
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  {name}
+                </TableCell>
+                <TableCell align="right">{reading(energy)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </>
   );
 }
 
-/** Rows chosen for a bulk action: a `Checkbox` in a `padding="checkbox"` cell, `selected` on the row. */
+/** Rows chosen for a bulk action: a `Checkbox` in a `padding="checkbox"` cell, `selected` on the row, and a bar above the table that counts them and holds their actions. */
 export const Selectable: Story = {
   render: () => <SelectableTable />,
   play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole('checkbox', { name: 'Select 350 Park Avenue' }));
     await expect(canvas.getByRole('checkbox', { name: 'Select 350 Park Avenue' })).toBeChecked();
-    await expect(canvas.getByRole('checkbox', { name: 'Select all buildings' })).toHaveAttribute('data-indeterminate', 'true');
+    await expect(canvas.getByRole('checkbox', { name: 'Select all buildings' })).toHaveAttribute(
+      'data-indeterminate',
+      'true',
+    );
+    await expect(canvas.getByRole('status')).toHaveTextContent('1 property selected');
+    await expect(canvas.getByRole('button', { name: 'Analyse' })).toBeVisible();
     await userEvent.click(canvas.getByRole('checkbox', { name: 'Select all buildings' }));
     await expect(canvas.getByRole('checkbox', { name: 'Select 120 Broadway' })).toBeChecked();
+    await expect(canvas.getByRole('status')).toHaveTextContent('5 properties selected');
+  },
+};
+
+type FilterKey = 'city' | 'reading';
+const filterLabels: Record<FilterKey, string> = { city: 'City: New York', reading: 'Has a reading' };
+
+function FilteredTable() {
+  const [filters, setFilters] = useState<FilterKey[]>(['city', 'reading']);
+  const rows = buildings.filter(
+    (building) =>
+      (!filters.includes('city') || building.city === 'New York') &&
+      (!filters.includes('reading') || building.energy !== null),
+  );
+  return (
+    <>
+      {filters.length > 0 && (
+        <Stack
+          direction="row"
+          role="group"
+          aria-label="Active filters"
+          sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1, px: 2, pb: 2 }}
+        >
+          {filters.map((key) => (
+            <Chip
+              key={key}
+              label={filterLabels[key]}
+              onDelete={() => setFilters((current) => current.filter((other) => other !== key))}
+            />
+          ))}
+          <Button startIcon={<Icon name="filter_alt_off" />} onClick={() => setFilters([])}>
+            Clear All
+          </Button>
+        </Stack>
+      )}
+      <Typography variant="body2" role="status" sx={{ color: 'text.secondary', px: 2, pb: 1 }}>
+        {`${number.format(rows.length)} of ${number.format(buildings.length)} buildings`}
+      </Typography>
+      <TableContainer>
+        <Table aria-label="Building energy">
+          <TableHead>
+            <TableRow>
+              <TableCell>Property</TableCell>
+              <TableCell>City</TableCell>
+              <TableCell align="right">Energy (kWh)</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.map(({ name, city, energy }) => (
+              <TableRow key={name}>
+                <TableCell component="th" scope="row">
+                  {name}
+                </TableCell>
+                <TableCell>{city}</TableCell>
+                <TableCell align="right">{reading(energy)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </>
+  );
+}
+
+/** Filters in force: each one a `Chip` above the table that clears it, with Clear All beside them, and the count of rows left. */
+export const ActiveFilters: Story = {
+  render: () => <FilteredTable />,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('status')).toHaveTextContent('10 of 12 buildings');
+    // A chip's delete icon clears that one filter.
+    const chips = canvas.getByRole('group', { name: 'Active filters' });
+    await userEvent.click(chips.querySelector('.MuiChip-deleteIcon')!);
+    await waitFor(() => expect(canvas.getByRole('status')).toHaveTextContent('11 of 12 buildings'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Clear All' }));
+    await waitFor(() => expect(canvas.getByRole('status')).toHaveTextContent('12 of 12 buildings'));
+    await expect(canvas.queryByRole('group', { name: 'Active filters' })).toBeNull();
+  },
+};
+
+/** The name column below `md`: pinned at the left on the card's surface, at most 40% of the viewport, its text on one line. */
+const pinnedColumn: SxProps<Theme> = {
+  position: { xs: 'sticky', md: 'static' },
+  left: 0,
+  zIndex: { xs: 1, md: 'auto' },
+  bgcolor: { xs: 'background.level3', md: 'transparent' },
+  maxWidth: { xs: '40vw', md: 'none' },
+  overflow: { xs: 'hidden', md: 'visible' },
+  textOverflow: 'ellipsis',
+};
+
+/** On a phone: the name column stays pinned at the left while the other columns scroll sideways in the table's own named region. */
+export const PinnedColumn: Story = {
+  globals: { viewport: { value: 'phone' } },
+  render: () => (
+    <TableContainer role="region" aria-label="Building energy, scrollable" tabIndex={0}>
+      <Table aria-label="Building energy" sx={{ '& .MuiTableCell-root': { whiteSpace: 'nowrap' } }}>
+        <TableHead>
+          <TableRow>
+            <TableCell sx={pinnedColumn}>Property</TableCell>
+            <TableCell>City</TableCell>
+            <TableCell align="right">Area (sq ft)</TableCell>
+            <TableCell align="right">Energy (kWh)</TableCell>
+            <TableCell align="right">Cost</TableCell>
+            <TableCell align="right">Emissions (tCO₂e)</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {buildings.slice(0, 5).map(({ name, city, area, energy, cost, emissions }) => (
+            <TableRow key={name}>
+              <TableCell component="th" scope="row" sx={pinnedColumn}>
+                {name}
+              </TableCell>
+              <TableCell>{city}</TableCell>
+              <TableCell align="right">{number.format(area)}</TableCell>
+              <TableCell align="right">{reading(energy)}</TableCell>
+              <TableCell align="right">{reading(cost, dollars)}</TableCell>
+              <TableCell align="right">{reading(emissions, tonnes)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  ),
+  play: async ({ canvas }) => {
+    const region = canvas.getByRole('region', { name: 'Building energy, scrollable' });
+    await expect(region).toHaveAttribute('tabindex', '0');
+    const name = canvas.getByRole('rowheader', { name: '120 Broadway' });
+    await expect(getComputedStyle(name).position).toBe('sticky');
+    // Scrolled sideways, the name is still at the region's left edge.
+    region.scrollLeft = region.scrollWidth;
+    await waitFor(() =>
+      expect(Math.round(name.getBoundingClientRect().left)).toBe(Math.round(region.getBoundingClientRect().left)),
+    );
   },
 };
 
@@ -544,6 +725,62 @@ function PagedTable() {
     </>
   );
 }
+
+function PagedSortedTable() {
+  const [sort, setSort] = useState<Sort>(null);
+  const rows = useMemo(() => sortRows(buildings, sort), [sort]);
+  // The sort is the reset key: a new order starts again from the first page.
+  const { shown, pager } = usePagedRows(rows, sort ? `${sort.key}-${sort.direction}` : '');
+  const direction = sort?.key === 'energy' ? sort.direction : false;
+  return (
+    <>
+      <TableContainer>
+        <Table aria-label="Building energy">
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <HeaderLabel>Property</HeaderLabel>
+              </TableCell>
+              <TableCell align="right" sortDirection={direction}>
+                <TableSortLabel
+                  active={Boolean(direction)}
+                  direction={direction || 'asc'}
+                  onClick={() => setSort(nextSort(sort, 'energy'))}
+                >
+                  <HeaderLabel inButton>Energy (kWh)</HeaderLabel>
+                </TableSortLabel>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {shown.map(({ name, energy }) => (
+              <TableRow key={name}>
+                <TableCell component="th" scope="row">
+                  {name}
+                </TableCell>
+                <TableCell align="right">{reading(energy)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {pager}
+    </>
+  );
+}
+
+/** Paged rows that can be sorted: pass the sort to `usePagedRows` as its reset key, so a new order returns to the first page. */
+export const PagedAndSorted: Story = {
+  render: () => <PagedSortedTable />,
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /next page/i }));
+    await waitFor(() => expect(canvas.getAllByRole('rowheader')).toHaveLength(2));
+    await userEvent.click(canvas.getByRole('button', { name: 'Energy (kWh)' }));
+    // Back on the first page, in the new order: the building with no reading sorts as zero, first ascending.
+    await waitFor(() => expect(canvas.getAllByRole('rowheader')).toHaveLength(10));
+    await expect(canvas.getAllByRole('rowheader')[0]).toHaveTextContent('4 Times Square');
+  },
+};
 
 /** Rows already in hand: 10, 25 or 50 a page, the pager shown only past ten rows, and each header on one line in `HeaderLabel`. */
 export const Paged: Story = {

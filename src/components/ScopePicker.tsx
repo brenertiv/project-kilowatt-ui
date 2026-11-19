@@ -50,6 +50,11 @@ export type ScopeGroup = {
   name: string;
   /** The properties in the group. A property may sit in more than one group. */
   propertyIds: string[];
+  /**
+   * How many properties the whole group holds, for a group the user can access only part of: `propertyIds` holds the
+   * ones they can open, and the count reads "3 of 12 properties". Default none: the count is `propertyIds`' length.
+   */
+  total?: number;
 };
 
 /** A property the user can choose as the scope. */
@@ -70,6 +75,11 @@ export type ScopeProperty = {
   type?: string;
   /** The floor area in ft², which the filter narrows by. */
   area?: number;
+  /**
+   * A sold or inactive property: listed and chosen like any other, never greyed, with an outlined Inactive chip after
+   * its name in the Properties column and in search. Default `false`.
+   */
+  inactive?: boolean;
 };
 
 /** What every section works in: the whole portfolio, one group, one of the user's saved portfolios, or one property. */
@@ -97,7 +107,15 @@ export type ScopePickerProps = {
    * lock in place of the level's icon and no chevron or close button. `type` is the line over the name ("Report
    * scope"); `reason` says why it's fixed, in the crumb's tooltip. Default none: the scope can change.
    */
-  locked?: { type: string; reason: string };
+  locked?: {
+    type: string;
+    reason: string;
+    /**
+     * The owner's actions on the fixed scope, such as changing a report's properties. With it the crumb is a menu
+     * button that opens these items; without it the crumb opens nothing. Default none.
+     */
+    menu?: { label: string; onClick: () => void }[];
+  };
   /** The user's saved portfolios, newest first, listed under Your Portfolios at the top of the Portfolios column. Each is a fixed set of properties, shaped as a group. Default none. */
   portfolios?: ScopeGroup[];
   /** The filter the dialog browses with (`emptyFilter` from `src/components/scopeFilterModel` when nothing is set). Default none. */
@@ -116,6 +134,12 @@ export type ScopePickerProps = {
    * `'s'`; `false` turns the shortcut off.
    */
   shortcut?: string | false;
+  /**
+   * How the picker is drawn. `'crumbs'` is the header's crumbs. `'button'` is one outlined button across its
+   * container's width, naming the current level, for a form that asks for properties; it is as tall as a medium text
+   * field and opens Change Scope at that level, as the phone's one button does. Default `'crumbs'`.
+   */
+  trigger?: 'crumbs' | 'button';
 };
 
 const levelIcon = { portfolio: 'location_city', group: 'folder', saved: 'folder_special', property: 'apartment' } satisfies Record<Scope['level'], IconName>;
@@ -135,8 +159,8 @@ function countProperties(count: number) {
  */
 const crumbRadius = 2;
 
-/** The crumb frame: the crumb radius, with no border, so the crumbs and the header's buttons sit on their fill alone. */
-const crumbFrame = { borderRadius: crumbRadius } as const;
+/** The crumb frame: the control outline at the crumb radius, as on the selects and outlined buttons (`control.border`). */
+const crumbFrame = { border: 1, borderColor: 'control.border', borderRadius: crumbRadius } as const;
 
 /**
  * A crumb: a surface, split flush into the level's button and one icon button, each the crumb's
@@ -324,16 +348,37 @@ function PropertyAvatar({ property }: { property: ScopeProperty }) {
  * The locked state: one crumb drawn as the portfolio crumb is, with a lock where the level's icon goes and
  * nothing to open. It's a status, not a control, but focusable, so the keyboard reaches the tooltip's reason.
  */
-function LockedCrumb({ type, name, reason }: { type: string; name: string; reason: string }) {
+function LockedCrumb({ type, name, reason, menu }: { type: string; name: string; reason: string; menu?: { label: string; onClick: () => void }[] }) {
+  // With a menu, the crumb is a menu button for the owner.
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const menuId = useId();
+  const opens = Boolean(menu?.length);
+  const open = (element: HTMLElement) => opens && setAnchor(element);
   return (
-    // `describeChild`: the reason describes the crumb; its name stays the scope.
-    <Tooltip title={reason} describeChild>
+    <>
+    {/* `describeChild`: the reason describes the crumb; its name stays the scope. No tooltip over the open menu. */}
+    <Tooltip title={anchor ? '' : reason} describeChild>
       <Stack
         direction="row"
-        role="group"
+        role={opens ? 'button' : 'group'}
         tabIndex={0}
         aria-label={`${type} ${name}, locked`}
+        {...(opens
+          ? {
+              'aria-haspopup': 'menu' as const,
+              'aria-expanded': Boolean(anchor),
+              'aria-controls': anchor ? menuId : undefined,
+              onClick: (event: React.MouseEvent<HTMLElement>) => open(event.currentTarget),
+              onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
+                if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+                  event.preventDefault();
+                  open(event.currentTarget);
+                }
+              },
+            }
+          : {})}
         sx={{
+          ...(opens ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}),
           ...crumbFrame,
           alignItems: 'center',
           minWidth: 0,
@@ -352,6 +397,22 @@ function LockedCrumb({ type, name, reason }: { type: string; name: string; reaso
         </CrumbContent>
       </Stack>
     </Tooltip>
+    {opens && (
+      <Menu id={menuId} anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
+        {menu!.map((item) => (
+          <MenuItem
+            key={item.label}
+            onClick={() => {
+              setAnchor(null);
+              item.onClick();
+            }}
+          >
+            {item.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    )}
+    </>
   );
 }
 
@@ -361,7 +422,9 @@ function LockedCrumb({ type, name, reason }: { type: string; name: string; reaso
  * level as the scope, and its chevron opens the Change Scope dialog at that level, on the groups or on
  * the portfolio's properties. One close button after the active crumb goes up a level: from a property
  * to its portfolio, from a group to all properties. A single-property account shows the property and
- * opens nothing, and `locked` fixes the scope for an item that keeps its own: one crumb with a lock.
+ * opens nothing, and `locked` fixes the scope for an item that keeps its own: one crumb with a lock, which is a
+ * menu button for the item's owner when `locked.menu` lists actions. In a form, `trigger="button"` draws the picker
+ * as one outlined button at a text field's height.
  * Below `md`, and where the header's start is narrower than the crumbs need (372px), the crumbs are one
  * button naming the current level, and the close button's job is the dialog's first row; below 140px the
  * button is the level's icon alone, named in its tooltip.
@@ -369,7 +432,7 @@ function LockedCrumb({ type, name, reason }: { type: string; name: string; reaso
  * @summary The global scope as split-button breadcrumbs, with a dialog to search and browse groups and properties.
  * @import import { ScopePicker } from 'src/components/ScopePicker';
  */
-export function ScopePicker({ groups, properties, value, onChange, recent = [], locked, portfolios = [], filter, onFilterChange, onSavePortfolio, onUpdatePortfolio, onDeletePortfolio, shortcut = 's' }: ScopePickerProps) {
+export function ScopePicker({ groups, properties, value, onChange, recent = [], locked, portfolios = [], filter, onFilterChange, onSavePortfolio, onUpdatePortfolio, onDeletePortfolio, shortcut = 's', trigger = 'crumbs' }: ScopePickerProps) {
   // The level the dialog opens at, or null while it's closed.
   const [step, setStep] = useState<DialogStep | null>(null);
   const theme = useTheme();
@@ -412,7 +475,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
       value.level === 'portfolio'
         ? 'All properties'
         : ((value.level === 'group' ? groupById.get(value.id) : value.level === 'saved' ? savedById.get(value.id) : propertyById.get(value.id))?.name ?? '');
-    return <LockedCrumb type={locked.type} name={name} reason={locked.reason} />;
+    return <LockedCrumb type={locked.type} name={name} reason={locked.reason} menu={locked.menu} />;
   }
 
   if (properties.length === 1) {
@@ -527,6 +590,31 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
       onChoose={choose}
     />
   );
+
+  // In a form: MUI's outlined button at the field's full width, the level's icon before its name and the chevron at its
+  // end, as tall as a medium text field (56px) with its 16px text, so it lines up with the fields it sits among.
+  if (trigger === 'button') {
+    return (
+      <>
+        <Button
+          variant="outlined"
+          fullWidth
+          startIcon={<Icon name={here.icon} />}
+          endIcon={<Icon name="expand_all" />}
+          aria-label={`${here.type} ${here.name}${here.parent ? `, in ${here.parent}` : ''}. Change Scope`}
+          aria-haspopup="dialog"
+          aria-expanded={step !== null}
+          onClick={() => setStep(property ? 'properties' : 'groups')}
+          sx={{ justifyContent: 'flex-start', minHeight: (theme) => theme.spacing(7), typography: 'body1', '& .MuiButton-endIcon': { ml: 'auto' } }}
+        >
+          <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {here.name}
+          </Box>
+        </Button>
+        {dialog}
+      </>
+    );
+  }
 
   // On phones, and where the header can't hold the crumbs, the scope is one button naming the current level, which
   // opens Change Scope at that level. No path of crumbs and no close button: going up a level is the dialog's first row.
@@ -794,7 +882,7 @@ function ScopeFilterView({ properties, value, onChange, compact }: ScopeFilterVi
                   {/* A missing area says so in words, never a bare dash and never 0 (Table → Content). */}
                   <TableCell align="right">
                     {property.area === undefined ? (
-                      <Typography component="span" variant="body2" color="text.secondary">
+                      <Typography component="span" variant="body2" color="textSecondary">
                         Not recorded
                       </Typography>
                     ) : (
@@ -895,7 +983,9 @@ function NameDialog({ open, title, initial, confirmLabel, onCancel, onConfirm }:
 }
 
 /** A count against the filter: "4 of 10 properties" while it narrows, else "10 properties". */
-function countAgainst(propertyIds: string[], allowed: Set<string> | null) {
+function countAgainst(propertyIds: string[], allowed: Set<string> | null, total?: number) {
+  // A group the user can access only part of says so.
+  if (!allowed && total !== undefined) return `${new Intl.NumberFormat().format(propertyIds.length)} of ${countProperties(total)}`;
   if (!allowed) return countProperties(propertyIds.length);
   return `${new Intl.NumberFormat().format(propertyIds.filter((id) => allowed.has(id)).length)} of ${countProperties(propertyIds.length)}`;
 }
@@ -1012,7 +1102,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
    * filter keeps of it, and a portfolio the filter keeps none of is disabled, not hidden. A saved portfolio adds
    * a More actions button before its chevron.
    */
-  const portfolioRow = (scope: Scope, name: string, propertyIds: string[], groupId: string | null, saved?: ScopeGroup) => {
+  const portfolioRow = (scope: Scope, name: string, propertyIds: string[], groupId: string | null, saved?: ScopeGroup, total?: number) => {
     const disabled = groupId !== null && noneKept({ propertyIds });
     return (
       <ListItem
@@ -1037,7 +1127,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
           <ListItemIcon sx={{ minWidth: 36 }}>
             <Icon name={saved ? levelIcon.saved : groupId ? levelIcon.group : levelIcon.portfolio} />
           </ListItemIcon>
-          <ListItemText primary={name} secondary={countAgainst(propertyIds, allowed)} />
+          <ListItemText primary={name} secondary={countAgainst(propertyIds, allowed, total)} />
           {check(scope)}
         </ListItemButton>
       </ListItem>
@@ -1056,7 +1146,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
       {portfolios.length > 0 && <ListSubheader disableSticky>Your Portfolios</ListSubheader>}
       {portfolios.map((portfolio) => portfolioRow({ level: 'saved', id: portfolio.id }, portfolio.name, portfolio.propertyIds, portfolio.id, portfolio))}
       {portfolios.length > 0 && groups.length > 0 && <ListSubheader disableSticky>Company Portfolios</ListSubheader>}
-      {groups.map((group) => portfolioRow({ level: 'group', id: group.id }, group.name, group.propertyIds, group.id))}
+      {groups.map((group) => portfolioRow({ level: 'group', id: group.id }, group.name, group.propertyIds, group.id, undefined, group.total))}
     </List>
   );
 
@@ -1069,7 +1159,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
           </IconButton>
         )}
         <Typography variant="body2" color="textSecondary" sx={{ flex: 1, minWidth: 0 }}>
-          {openGroup ? `${openGroup.name} · ${countAgainst(openGroup.propertyIds, allowed)}` : allowed ? `All properties · ${countAgainst(properties.map((property) => property.id), allowed)}` : `All ${countProperties(properties.length)}`}
+          {openGroup ? `${openGroup.name} · ${countAgainst(openGroup.propertyIds, allowed, openGroup.total)}` : allowed ? `All properties · ${countAgainst(properties.map((property) => property.id), allowed)}` : `All ${countProperties(properties.length)}`}
         </Typography>
       </Stack>
       <List aria-label={openGroup ? openGroup.name : 'All properties'} sx={{ p: 1 }}>
@@ -1087,6 +1177,8 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
                   <Icon name={levelIcon.property} />
                 </ListItemIcon>
                 <ListItemText primary={property.name} secondary={property.city} />
+                {/* A sold or inactive property says so after its name. */}
+                {property.inactive && <Chip size="small" variant="outlined" label="Inactive" sx={{ ml: 1 }} />}
                 {check(scope)}
               </ListItemButton>
             </ListItem>
@@ -1099,7 +1191,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
   // While a filter is on, a line under the search says so in a filter's words, with the ways to save it, change it or clear it.
   const filterLine = filterSetIds && (
     <Stack direction="row" sx={{ alignItems: 'center', columnGap: 1, flexWrap: 'wrap' }}>
-      <Icon name="filter_list" color="action" />
+      <Icon name="tune" color="action" />
       <Typography role="status" variant="body2" sx={{ mr: 'auto' }}>
         Filtered to {new Intl.NumberFormat().format(filterSetIds.length)} of {countProperties(properties.length)}
       </Typography>
@@ -1169,7 +1261,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
           />
           {onFilterChange && (
             // As tall as the search field beside it, so the two read as one row.
-            <Button variant="outlined" startIcon={<Icon name="filter_list" />} aria-haspopup="dialog" onClick={() => setFiltering(true)} sx={{ flexShrink: 0, alignSelf: 'stretch' }}>
+            <Button variant="outlined" startIcon={<Icon name="tune" />} aria-haspopup="dialog" onClick={() => setFiltering(true)} sx={{ flexShrink: 0, alignSelf: 'stretch' }}>
               {filterSetIds ? `Filter · ${new Intl.NumberFormat().format(filterSetIds.length)}` : 'Filter'}
             </Button>
           )}
@@ -1189,7 +1281,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
                       <ListItemIcon sx={{ minWidth: 36 }}>
                         <Icon name={levelIcon[scope.level]} />
                       </ListItemIcon>
-                      <ListItemText primary={group.name} secondary={countAgainst(group.propertyIds, allowed)} />
+                      <ListItemText primary={group.name} secondary={countAgainst(group.propertyIds, allowed, group.total)} />
                       {check(scope)}
                     </ListItemButton>
                   </ListItem>
@@ -1204,6 +1296,8 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
                         <Icon name={levelIcon.property} />
                       </ListItemIcon>
                       <ListItemText primary={property.name} secondary={[group?.name, property.address ?? property.city].filter(Boolean).join(' · ')} />
+                      {/* A sold or inactive property says so after its name. */}
+                      {property.inactive && <Chip size="small" variant="outlined" label="Inactive" sx={{ ml: 1 }} />}
                       {check(scope)}
                     </ListItemButton>
                   </ListItem>
@@ -1256,7 +1350,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
     <>
       <Stack direction="row" sx={{ alignItems: 'center', gap: 1, p: 1 }}>
         <IconButton aria-label={editing ? 'Cancel and Go Back' : 'Back to Browsing'} onClick={leaveFilter}>
-          <Icon name="arrow_back" />
+          <Icon name="chevron_left" />
         </IconButton>
         <Typography id={titleId} variant="h5" component="h2" sx={{ flex: 1, minWidth: 0 }} noWrap>
           {editing ? `Edit ${editing.portfolio.name}` : 'Filter Properties'}

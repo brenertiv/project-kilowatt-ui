@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { ColumnChart } from 'src/charts/ColumnChart';
 import {
   buildingRanking,
@@ -9,6 +9,7 @@ import {
   yearlyCapitalSpend,
   yearlySpendSavings,
 } from 'src/fixtures/charts';
+import { clickColumn, clickPlot, hasColumns, hasPlot } from 'src/stories/chartClicks';
 import { inCard } from 'src/stories/decorators';
 
 const kWh = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
@@ -40,6 +41,26 @@ const billedSoFar = monthlySupplyDelivery
   .slice(0, 10)
   .map((row) => (row.month === 'Oct' ? { ...row, supply: Math.round((row.supply * 11) / 18), delivery: Math.round((row.delivery * 11) / 18) } : row));
 const octoberBilling = [{ month: 'Oct', billed: 11, properties: 18 }];
+
+/** Open alerts by building, most first: synthetic counts. Two buildings share a name, so each row has its own id. */
+const openAlerts = [
+  { id: 'b-104', building: 'Canal Works', alerts: 4 },
+  { id: 'b-221', building: 'Foundry Row', alerts: 3 },
+  { id: 'b-187', building: 'Canal Works', alerts: 2 },
+  { id: 'b-090', building: 'Tannery Yard', alerts: 1 },
+];
+const alertSeries = [{ field: 'alerts', name: 'Open alerts' }];
+
+/** Gas use by month, synthetic, with no reading for April: the row is there with its month and no value. */
+const gasByMonth: Record<string, string | number>[] = [
+  { month: 'Jan', gas: 1840 },
+  { month: 'Feb', gas: 1710 },
+  { month: 'Mar', gas: 1390 },
+  { month: 'Apr' },
+  { month: 'May', gas: 760 },
+  { month: 'Jun', gas: 540 },
+];
+const gasSeries = [{ field: 'gas', name: 'Gas use' }];
 
 /**
  * Kilowatt's reference column chart: amCharts 5 through `useChart`, colored from the palette.
@@ -146,5 +167,84 @@ export const StillBeingBilled: Story = {
     const figure = canvas.getByRole('figure', { name: /October is still being billed/ });
     await waitFor(() => expect(figure.querySelector('canvas')).not.toBeNull());
     await expect(canvas.getByText('Still being billed: 11 of 18 properties')).toBeVisible();
+  },
+};
+
+/** A chart that narrows what's beside it: `onCategoryClick` hands back the row of the column that was clicked, and the columns take a hand pointer. */
+export const CategoryClick: Story = {
+  name: 'Category click',
+  parameters: { card: { title: 'Open Alerts by Building' } },
+  args: {
+    unit: 'alerts',
+    data: openAlerts,
+    categoryField: 'id',
+    categoryLabelField: 'building',
+    series: alertSeries,
+    horizontal: true,
+    integerValues: true,
+    onCategoryClick: fn(),
+    summary: 'Open alerts by building: one Canal Works building has the most, 4; Tannery Yard the fewest, 1.',
+  },
+  play: async ({ args, canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /Open alerts by building/ });
+    await waitFor(() => expect(hasColumns(figure)).toBe(true));
+    clickColumn(figure, 1);
+    await expect(args.onCategoryClick).toHaveBeenCalledWith(expect.objectContaining({ id: 'b-221', building: 'Foundry Row' }));
+  },
+};
+
+/** A count of records: `integerValues` keeps the value axis to whole numbers, since half an alert means nothing. */
+export const WholeNumbers: Story = {
+  name: 'Whole numbers',
+  parameters: { card: { title: 'Open Alerts by Building' } },
+  args: {
+    unit: 'alerts',
+    data: openAlerts.filter(({ id }) => id !== 'b-187'),
+    categoryField: 'building',
+    series: alertSeries,
+    integerValues: true,
+    summary: 'Open alerts by building: Canal Works has 4, Foundry Row 3 and Tannery Yard 1.',
+  },
+};
+
+/** Two categories with one name: `categoryField` holds each row's id and `categoryLabelField` the name to show, so the two Canal Works buildings stay two bars. */
+export const CategoryLabels: Story = {
+  name: 'Category labels',
+  parameters: { card: { title: 'Open Alerts by Building' } },
+  args: {
+    unit: 'alerts',
+    data: openAlerts,
+    categoryField: 'id',
+    categoryLabelField: 'building',
+    series: alertSeries,
+    horizontal: true,
+    integerValues: true,
+    summary: 'Open alerts by building: the two Canal Works buildings have 4 and 2, Foundry Row 3 and Tannery Yard 1.',
+  },
+};
+
+/** A month with no value draws no column; with `onMissingClick`, a click on its place in the plot hands back its row, so the page can open what explains the gap. */
+export const MissingPeriod: Story = {
+  name: 'Missing period',
+  parameters: { card: { title: 'Gas Use' } },
+  args: {
+    unit: 'therms',
+    data: gasByMonth,
+    categoryField: 'month',
+    series: gasSeries,
+    onMissingClick: fn(),
+    summary: 'Gas use by month, January to June, falling from 1,840 therms in January to 540 in June; April has no reading.',
+  },
+  play: async ({ args, canvas }) => {
+    const figure = canvas.getByRole('figure', { name: /April has no reading/ });
+    await waitFor(() => expect(hasPlot(figure)).toBe(true));
+    // March has a value, so a click on it is not a missing period's; April, the fourth of six, has none.
+    // The axis may still be settling when the plot first has a width, so click until the missing period answers.
+    await waitFor(() => {
+      clickPlot(figure, 3.5 / 6);
+      expect(args.onMissingClick).toHaveBeenCalledWith({ month: 'Apr' });
+    });
+    clickPlot(figure, 2.5 / 6);
+    await expect(args.onMissingClick).not.toHaveBeenCalledWith(expect.objectContaining({ month: 'Mar' }));
   },
 };

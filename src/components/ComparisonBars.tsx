@@ -51,7 +51,7 @@ export function ComparisonBars({ rows, unit, label }: ComparisonBarsProps) {
           <Stack component="li" key={row.label} sx={{ gap: 0.5 }}>
             <Stack direction="row" sx={{ justifyContent: 'space-between', gap: 1 }}>
               {/* A long label truncates with its full text in a tooltip (Rules → Content and layout). */}
-              <Typography variant="caption" color="text.secondary" component="div" sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="textSecondary" component="div" sx={{ minWidth: 0 }}>
                 <TruncatedText>{row.label}</TruncatedText>
               </Typography>
               <Typography variant="caption" sx={{ fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>

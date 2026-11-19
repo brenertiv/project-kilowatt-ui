@@ -37,14 +37,25 @@ const series = [
 
 Each row of `data` is one category: its label in `categoryField` and a number per series. Keep `data` and `series` stable (constants or `useMemo`), since the chart is rebuilt when they change.
 
+Props beyond those, with their defaults:
+
+- `categoryLabelField`: the field that holds the label to show on the axis and in the tooltip, where `categoryField` holds a key instead. Default: `categoryField`.
+- `integerValues`: whole-number ticks on the value axis, for a count of records. Default `false`.
+- `onCategoryClick`: called with a category's row when one of its columns is clicked. Default none.
+- `onMissingClick`: called with a category's row when its place in the plot is clicked and no series has a value in it. Default none.
+
 ## Variants
 
 - **Categories.** One measure across categories. Every column takes one color: the categories are named on the axis, so coloring them apart adds nothing.
 - **Side by side.** Up to six series per category, told apart by `chart.series` color.
 - **Stacked.** `stacked` puts the series in one column per category, for parts that add up to a total. The chart orders each stack by color, dark to light across the whole stack: darkest at the bottom of a column and lightest at the top, lightest at the left of a `horizontal` bar and darkest at the right, both reversed in dark. Every series keeps its color, the neutral Other takes its place by its lightness like the rest, and the legend keeps the order of `series`.
-- **Ranking.** `horizontal` lays the bars out across, categories down the left in `data` order and values along the bottom, so long names fit. Sort `data` largest first, and keep one color.
+- **Ranking.** `horizontal` lays the bars out across, categories down the left in `data` order and values along the bottom, so long names fit. Sort `data` largest first, and keep one color. A name longer than 160px truncates, or than two fifths of the chart's width where the chart is narrow (a phone), so the bars keep the rest; the tooltip gives it in full.
 - **Grouped into Other.** Past six colored series, the five with the largest totals keep their colors and the rest are summed into one neutral series named `otherLabel`.
 - **Striped.** `striped` marks a variant of another series (delivery beside supply, estimated beside actual). Give both the same `slot`: they keep one hue, and the stripes tell them apart.
+- **Category click.** `onCategoryClick` makes the chart narrow what's beside it (a table of the records behind a ranking): a click on a column calls it with that category's row, as `data` gave it (a grouped chart's row also carries the summed `other` field), and the columns take a hand pointer. The page does the narrowing. Keep the handler stable (`useCallback`), since the chart is rebuilt when it changes.
+- **Whole numbers.** `integerValues` keeps the value axis to whole numbers, for a count of records (alerts, work orders), where amCharts would otherwise tick at 0.5.
+- **Category labels.** A category axis keys its rows by `categoryField`, so two rows with one label would share a bar. Where labels can repeat (two buildings with one name), put a unique key in `categoryField` and the name in `categoryLabelField`: the axis and the tooltip show the name, and each row keeps its own bar.
+- **Missing period.** A category with no value draws no column, never a zero. With `onMissingClick`, a click on its place in the plot calls the handler with its row (the row is in `data` with its label and no series field), and the pointer is a hand there, so a page can open what explains the gap. Keep the handler stable, like `onCategoryClick`.
 - **Still being billed.** On a chart by month, `stillBilling` names the trailing months with bills for fewer than nine in ten of the properties in scope (`isStillBilling` from `src/charts/stillBilling` holds the rule), each with its count: `{ month: 'Oct', billed: 11, properties: 18 }`. Every column of such a month is a dashed outline in its series' hue with no fill, its tooltip adds "Still being billed: 11 of 18 properties", and the same line sits under the chart. Leave a month out once it passes nine in ten, and it draws solid.
 
 ## Do and don't
@@ -60,6 +71,12 @@ Each row of `data` is one category: its label in `categoryField` and a number pe
 - Do stack only parts that add up to a meaningful total.
 - Don't order `series` to put a part at the bottom of a stack; the chart orders a stack by color, and its order can differ between light and dark.
 - Don't stack values in different units, or values that overlap.
+- Do give `onCategoryClick` and `onMissingClick` a second way through that isn't the pointer: the same rows as a table, or a control beside the chart.
+- Don't make a column or a gap the only way to reach something; the chart draws on a canvas, and its columns take no keyboard focus.
+- Do use `integerValues` only for counts.
+- Don't round a measured value's axis with it; a measure has fractions.
+- Do leave a category with no value in `data` with its label and no number.
+- Don't send a missing value as 0; a zero draws as a reading of nothing.
 - Do write `summary` as one sentence with the numbers that matter.
 - Do use `horizontal` bars for a ranking or for long category names, sorted largest first.
 - Don't color each bar of a ranking or draw each one as its own series; one series in one color reads as one measure.
@@ -99,6 +116,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - Every point, column or slice shows its exact value and unit in a tooltip on hover, since axis numbers are rounded to compact form (1.5K).
 - The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. The summary isn't shown on screen; it's the chart's text alternative.
 - amCharts adds keyboard focus and screen-reader announcements for the legend and columns.
+- `onCategoryClick` and `onMissingClick` answer the pointer only: a column and a gap aren't reachable by keyboard. Offer the same rows as a table or as controls beside the chart, and name a missing period in `summary`.
 - Series are told apart by name in the legend and tooltip as well as color, and a striped variant by pattern too.
 - A month still being billed is told by its dashed outline, by its tooltip and by the line under the chart, a `figcaption` screen readers reach. Say it in `summary` too, since the summary is what names the chart.
 - For detailed values, offer the data as a table beside the chart.

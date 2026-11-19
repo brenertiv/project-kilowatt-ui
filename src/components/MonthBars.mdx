@@ -3,12 +3,12 @@ import * as MonthBarsStories from './MonthBars.stories';
 
 <Meta
   of={MonthBarsStories}
-  summary="Kilowatt's MonthBars, a strip of equal bars, one per month of a period, colored by how completely a data feed reported in each: complete, partial, gap or awaiting."
+  summary="Kilowatt's MonthBars, a strip of equal bars, one per month of a period, each with a fixed drawing for how completely a data feed reported: complete, partial, estimated, gap, vacant, overlap, not in sold scope or awaiting."
 />
 
 # MonthBars
 
-`MonthBars` draws one bar per month of a period, showing how completely a data feed reported in each. Every bar is the same height, so the strip reads as the state of the data rather than as usage. The state is the bar's color, by status, the same for every feed: Complete is `success`, Partial `warning`, a Gap the disabled background (`action.disabledBackground`, as a disabled control is), so a missing month is a mark rather than a hole, and Awaiting (a month after the latest entry, still within the billing lag) is an outline with no fill. `MonthBarsLegend` is its key. It's Kilowatt's own component, built from MUI's `Box`, `Tooltip` and `Typography` (`@mui/material`, Material UI v9; MUI documents their props): a table of 48 properties by four feeds is 192 strips, too many canvases for amCharts.
+`MonthBars` draws one bar per month of a period, showing how completely a data feed reported in each. Every bar is the same height, so the strip reads as the state of the data rather than as usage. Each state has a fixed drawing beyond its color, the same for every feed, so a strip reads without color: Complete is a solid `success` bar, Partial a solid `warning` bar, Estimated a solid bar with a small est. tag, a Gap an empty cell with a dash, so a missing month is a mark rather than a hole, Vacant a hatched cell, an Overlap two stacked bars with a warning glyph, Not in sold scope a dotted outline, and Awaiting (a month after the latest entry, still within the billing lag) a dashed one. `MonthBarsLegend` is its key. It's Kilowatt's own component, built from MUI's `Box`, `Tooltip` and `Typography` (`@mui/material`, Material UI v9; MUI documents their props): a table of 48 properties by four feeds is 192 strips, too many canvases for amCharts.
 
 <Canvas of={MonthBarsStories.Year} />
 
@@ -44,6 +44,23 @@ Write `summary` as one sentence with the counts and the months that matter: it's
 
 ## States
 
+Each month takes one state, and each state one drawing. The outlines, the hatch and the dash are `text.secondary`.
+
+- **Complete** (`complete`): the month's data arrived. A solid `success` bar.
+- **Partial** (`partial`): some of the feed's sources reported. A solid `warning` bar.
+- **Estimated** (`estimated`): the data arrived as its source's estimate. A solid `success` bar with a small est. tag.
+- **Gap** (`gap`): nothing arrived. An empty cell with a dash.
+- **Vacant** (`vacant`): the space was vacant, so no data is expected. A hatched cell.
+- **Overlap** (`overlap`): two sources reported the same month. Two stacked `warning` bars with a warning glyph.
+- **Not in sold scope** (`not-sold`): the month is outside what was sold. A dotted outline.
+- **Awaiting** (`awaiting`): a month after the latest entry, still within the billing lag. A dashed outline.
+
+The est. tag and the warning glyph need a wide bar: they show in a stretched strip and in the legend. In a table cell's 4px bars an estimated month looks like a complete one, so name the estimated months in `summary`.
+
+<Canvas of={MonthBarsStories.EveryState} />
+
+The strip as a whole has four more states:
+
 - **No source** (`overlay`): the feed applies but nothing is connected for it. Every month is drawn as a gap, with the label over the strip.
 - **Not applicable** (`placeholder`): the feed doesn't apply (a property with no gas). No bars, only the label in the strip's slot, so it never looks like a problem and the row stays in line.
 - **Long period**: past 24 months the bars are too thin to read, and the count of complete months stands in.
@@ -57,23 +74,25 @@ Write `summary` as one sentence with the counts and the months that matter: it's
 
 - Do keep every bar the same height.
 - Don't scale bars by usage; a short bar would read as low use, not as missing data.
-- Do color the bars by status, the same for every feed.
+- Do give each month its state and let the component draw it, the same for every feed.
 - Don't color a feed's strip in its series color; status takes the intents (Rules → Charts).
-- Do write the counts and the missing months in `summary`.
+- Do write the counts and the missing, estimated and overlapping months in `summary`.
 - Don't add a count beside the strip; the sentence carries the numbers.
 - Do mark a feed that doesn't apply with `placeholder`, and one with nothing connected with `overlay`.
 - Don't draw a feed that doesn't apply as gaps; it isn't a problem to fix.
+- Do mark a vacant month `vacant` and a month outside the sold scope `not-sold`.
+- Don't mark either as a `gap`; a gap is data that should be there.
 
 ## MUI departures
 
 None of Kilowatt's departures change `Box`, `Tooltip` or `Typography`.
 
-Theme-wide departures (the intents on surfaces that color the bars, the `focus-ring` on the focusable strip, the surface levels) apply too; see Foundations → MUI departures. The bars round at a quarter of the theme radius, the size of a 4px bar's corner.
+Theme-wide departures (the intents on surfaces that fill the bars, the `focus-ring` on the focusable strip, the surface levels) apply too; see Foundations → MUI departures. The bars round at a quarter of the theme radius, the size of a 4px bar's corner.
 
 ## Accessibility
 
 - The strip is a focusable `figure` named by `summary`, which is also its tooltip, so the sentence reaches keyboard and screen-reader users once and the bars are hidden from them. Inside a clickable card set `focusable={false}` and let the card's `aria-describedby` carry the sentence, since a button can't hold a focusable element.
-- The colors never stand alone: the sentence names the states, and the legend names each swatch.
+- The colors never stand alone: each state has its own drawing, the sentence names the states, and the legend names each drawing.
 - A placeholder or overlay is text in the strip's slot.
 
 ## Related

@@ -200,6 +200,47 @@ const homeSections: AppShellSection[] = sections.map((section) =>
     : section,
 );
 
+/** Home's workspaces in three parts by type, each with a plus that starts a new one of that type; Plans has none yet. */
+const groupedSections = (onAdd: (type: string) => void): AppShellSection[] =>
+  sections.map((section) =>
+    section.id === 'workspace' && section.panel
+      ? {
+          ...section,
+          panel: {
+            actions: section.panel.actions,
+            items: [],
+            groups: [
+              {
+                id: 'reports',
+                label: 'Reports',
+                add: { label: 'New Report', onClick: () => onAdd('report') },
+                items: [
+                  { id: 'utility-spend-review', label: 'Utility Spend Review', icon: 'description', pinned: true },
+                  { id: 'annual-energy-statement', label: 'Annual Energy Statement', icon: 'description' },
+                ],
+              },
+              {
+                id: 'dashboards',
+                label: 'Dashboards',
+                add: { label: 'New Dashboard', onClick: () => onAdd('dashboard') },
+                items: [
+                  { id: 'carbon-watch', label: 'Carbon Watch', icon: 'dashboard' },
+                  { id: 'meter-coverage', label: 'Meter Coverage', icon: 'dashboard' },
+                ],
+              },
+              { id: 'plans', label: 'Plans', add: { label: 'New Plan', onClick: () => onAdd('plan') }, items: [] },
+            ],
+          },
+        }
+      : section,
+  );
+
+/** A drawn mark for a sample company, as a data URI: a light one for white tiles and one for dark surfaces. */
+const sampleLogo = (ink: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path d="M8 36 20 14l8 12 5-7 7 17Z" fill="none" stroke="${ink}" stroke-width="3" stroke-linejoin="round"/></svg>`,
+  )}`;
+
 /** The companies the person belongs to; the first is the one they're in. */
 const companies: AppShellCompany[] = [
   { id: 'ridgeline', name: 'Ridgeline Logistics REIT', detail: 'Admin' },
@@ -252,7 +293,10 @@ const meta = {
     children: null,
   },
   render: function Render(args) {
-    const firstPage = (id: string) => args.sections.find((item) => item.id === id)?.panel?.items[0].id;
+    const firstPage = (id: string) => {
+      const panel = args.sections.find((item) => item.id === id)?.panel;
+      return panel?.items[0]?.id ?? panel?.groups?.[0]?.items[0]?.id;
+    };
     const [section, setSection] = useState(args.section);
     const [page, setPage] = useState(firstPage(args.section));
     const [assistantOpen, setAssistantOpen] = useState(args.asideOpen ?? false);
@@ -328,7 +372,7 @@ const meta = {
                 </IconButton>
               </Stack>
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ px: 2 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ px: 2 }}>
               Placeholder for the assistant.
             </Typography>
           </Stack>
@@ -343,7 +387,7 @@ const meta = {
             <Typography variant="h3" component="h1" gutterBottom>
               {title}
             </Typography>
-            <Typography color="text.secondary">
+            <Typography color="textSecondary">
               Placeholder for the {title} page at {company.name}.
             </Typography>
           </Box>
@@ -412,7 +456,7 @@ export const Account: Story = {
   },
 };
 
-/** A Missing section, one the account doesn't have: the `upgrade` icon in the disabled color, its name as its tooltip, no badge and no panel; it opens its upgrade page. */
+/** A Missing section, one the account doesn't have: the circled plus (`add_circle`) in the disabled color, its name as its tooltip, no badge and no panel; it opens its upgrade page. */
 export const Missing: Story = {
   args: { section: 'tenant-billing' },
   play: async ({ canvas, userEvent }) => {
@@ -526,6 +570,24 @@ export const HomePanel: Story = {
     // A named icon is part of its row's name: "Plan Decarbonization Plan".
     await expect(within(panel).getByRole('button', { name: /^Plan Decarbonization Plan/ })).toBeVisible();
     await expect(within(panel).queryByRole('button', { name: /Energy Overview/ })).toBeNull();
+  },
+};
+
+/** `groups`: the list in labelled parts, as Home sorts workspaces by type. A label collapses its rows; its plus adds to the part, and an empty part keeps both. */
+export const PanelGroups: Story = {
+  args: { sections: groupedSections(fn()) },
+  play: async ({ canvas, userEvent }) => {
+    const panel = canvas.getByRole('navigation', { name: 'Home' });
+    const reports = within(panel).getByRole('button', { name: 'Reports' });
+    await expect(reports).toHaveAttribute('aria-expanded', 'true');
+    await expect(within(panel).getByRole('button', { name: /^Annual Energy Statement/ })).toBeVisible();
+    await userEvent.click(reports);
+    await expect(reports).toHaveAttribute('aria-expanded', 'false');
+    await expect(within(panel).queryByRole('button', { name: /^Annual Energy Statement/ })).toBeNull();
+    // The other parts stay open, and the empty one keeps its label and its plus.
+    await expect(within(panel).getByRole('button', { name: /^Carbon Watch/ })).toBeVisible();
+    await expect(within(panel).getByRole('button', { name: 'Plans' })).toBeVisible();
+    await expect(within(panel).getByRole('button', { name: 'New Plan' })).toBeInTheDocument();
   },
 };
 
@@ -794,6 +856,19 @@ export const CompanySwitch: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Switch Company: Ridgeline Logistics REIT' }));
     await userEvent.click(await screen.findByRole('menuitemradio', { name: /^Summit Office Partners/ }));
     await expect(canvas.getByRole('button', { name: 'Switch Company: Summit Office Partners' })).toBeVisible();
+  },
+};
+
+/** A company's `logo` fills its tile edge to edge inside a `divider` border; with `logoDark`, the dark scheme shows that mark on black instead. */
+export const CompanyLogo: Story = {
+  args: {
+    company: { ...companies[0], logo: sampleLogo('#1b2a41'), logoDark: sampleLogo('#e8eef6') },
+    companies: [{ ...companies[0], logo: sampleLogo('#1b2a41'), logoDark: sampleLogo('#e8eef6') }, ...companies.slice(1)],
+  },
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole('button', { name: 'Switch Company: Ridgeline Logistics REIT' });
+    // Both marks are drawn; the scheme shows one.
+    await expect(button.querySelectorAll('img')).toHaveLength(2);
   },
 };
 

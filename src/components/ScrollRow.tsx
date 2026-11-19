@@ -102,7 +102,8 @@ export type ScrollRowProps = {
 /**
  * A row of cards that scrolls sideways, with arrows in its header (`ScrollArrows`). The list is a
  * named `ul` that snaps to a card, with a 16px gap; wheel, trackpad, touch and keyboard scroll it as
- * any overflowing box. Its state comes from `useScrollRow`, which the arrows share.
+ * any overflowing box. Its scroll bar is hidden, since the arrows show that the row scrolls. Its state comes
+ * from `useScrollRow`, which the arrows share.
  *
  * @summary A row of fixed-width cards that scrolls sideways, with Back and Forward arrows in its header.
  * @import import { ScrollArrows, ScrollRow, ScrollRowItem, useScrollRow } from 'src/components/ScrollRow';
@@ -114,7 +115,8 @@ export function ScrollRow({ row: { attach }, label, children }: ScrollRowProps) 
       component="ul"
       direction="row"
       aria-label={label}
-      sx={{ listStyle: 'none', p: 0, m: 0, gap: 2, overflowX: 'auto', scrollSnapType: 'x proximity', alignItems: 'stretch', pb: 1 }}
+      // The bar is hidden: the header's arrows show that the row scrolls, and touch, trackpad and keyboard still scroll it.
+      sx={{ listStyle: 'none', p: 0, m: 0, gap: 2, overflowX: 'auto', scrollSnapType: 'x proximity', alignItems: 'stretch', pb: 1, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}
     >
       {children}
     </Stack>

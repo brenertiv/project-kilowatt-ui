@@ -1,0 +1,73 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as DataMarkStories from './DataMark.stories';
+
+<Meta
+  of={DataMarkStories}
+  summary="Kilowatt's DataMark, the one mark for a value that isn't there: a dash with a marker where the value would be, and the state word and reason in a tooltip and the accessible name."
+/>
+
+# DataMark
+
+`DataMark` stands where a value would be when there isn't one: a dash with a marker icon, in `text.secondary`, with the state word and the reason in MUI's `Tooltip` (`@mui/material`, Material UI v9) and as its accessible name. It's Kilowatt's own component, so a missing value is drawn one way everywhere and never reads as 0. It renders a `Typography` in `body2` and takes two props, `state` and `reason`.
+
+<Canvas of={DataMarkStories.Missing} />
+
+## When to use
+
+- Use it in a table cell, a tile or a report's figure whose value doesn't exist: a month with no bill, a floor with no meter, a product the company hasn't bought.
+- For a fact that was never recorded and is shown in a sentence or a filter (a property with no floor area on record), say so in words, “Not recorded” in `text.secondary`.
+- For a value its source estimated, show the value and mark it **est.** (Table → Content); an estimate is a value, not a gap.
+- For a missing period in a chart, the chart hatches the gap itself (Rules → Charts).
+- For a region that is loading, empty or failed, use `AsyncContent`.
+
+## Usage
+
+```tsx
+import TableCell from '@mui/material/TableCell';
+import { DataMark } from 'src/components/DataMark';
+
+<TableCell align="right">
+  <DataMark reason="No bill has arrived for March 2026." />
+</TableCell>
+```
+
+`reason` is one sentence saying what is absent. `state` is the word that leads it, `'Missing'` by default.
+
+## States
+
+- **Missing:** the value should exist and hasn't arrived. The default.
+- **Never measured:** nothing has ever reported this value.
+- **Not observable:** the value can't be seen with the sources in place.
+- **Not bought:** the product that provides the value isn't part of the company's plan.
+- **Outside your access:** the value exists, and the reader's access doesn't cover it.
+
+Every state draws the same dash and marker; the state word and the reason tell them apart.
+
+<Canvas of={DataMarkStories.NotObservable} />
+
+## Do and don't
+
+- Do show `DataMark` wherever a value is absent, so a gap looks the same in every table and report.
+- Don't show a bare dash, a blank cell or 0 for a value that doesn't exist; 0 is a value, and a bare dash gives no reason.
+- Do write the reason as one full sentence naming what is absent: the bill, the reading, the meter.
+- Don't repeat the state word in the reason or leave the reason out; the mark puts the state first and the reason after it.
+- Do keep the mark in the value's own place and alignment, so a column of figures still lines up.
+- Don't sort a missing value to the end by rule; it sorts as zero and keeps its mark (Table → Variants → Sortable).
+
+## MUI departures
+
+None. `DataMark` composes MUI's `Typography` and `Tooltip` as MUI documents them. Theme-wide departures (the tooltip's surface, the type scale, the text colors) apply; see Foundations → MUI departures.
+
+## Accessibility
+
+- The mark is named with the state word and the reason (`role="img"` with an `aria-label`), so a screen reader hears why the value is absent, not “dash”.
+- It is a tab stop, and the tooltip opens on keyboard focus as well as hover; the tooltip is MUI's, which closes on Escape.
+- The marker icon is decorative; the words carry the meaning, so the mark doesn't rest on color or on the icon's shape.
+
+## Related
+
+- `Table` for the cell rules: what a missing value shows and how it sorts.
+- `MonthBars` for a month-by-month strip of arrived, missing and awaited data.
+- `AsyncContent` for a region with nothing to show.
+
+<Stories includePrimary={false} />

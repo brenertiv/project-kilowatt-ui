@@ -39,11 +39,11 @@ const row = useScrollRow();
 </ScrollRow>
 ```
 
-`useScrollRow` measures the row on mount, on every scroll, when its box resizes and when its cards change, so the arrows follow the window, a docked panel and a card being added. Each cell is 264px wide (theme spacing 33), so the row reads the same at any width, and snaps to a card.
+`useScrollRow` measures the row on mount, on every scroll, when its box resizes and when its cards change, so the arrows follow the window, a docked panel and a card being added. Each cell is 264px wide (theme spacing 33), so the row reads the same at any width, and snaps to a card. The row's horizontal scroll bar is hidden, because the header's arrows already show that the row scrolls; touch, a trackpad, the wheel and the keyboard still scroll it.
 
 ## States
 
-- **Overflowing:** the arrows show at the header's right. Back is disabled at the start and Forward at the end.
+- **Overflowing:** the arrows show at the header's right, and the row draws no scroll bar. Back is disabled at the start and Forward at the end.
 - **Fits:** no arrows.
 
 ## Do and don't
@@ -52,6 +52,8 @@ const row = useScrollRow();
 - Don't overlay arrows on the row's edges; they cover the cards and need a surface of their own.
 - Do keep wheel, trackpad, touch and keyboard scrolling: the arrows are an addition, not the only way along.
 - Don't move the row by a fixed number of cards; move one view less the gap, so the cut-off card leads.
+- Do give an overflowing row its `ScrollArrows`: the scroll bar is hidden, so the arrows are what shows there is more.
+- Don't use `ScrollRow` without the arrows; a row with neither bar nor arrows gives no sign that it scrolls.
 - Do give every card in a row the same height; the row stretches its cells to the tallest.
 
 ## MUI departures

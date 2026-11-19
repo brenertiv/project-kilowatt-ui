@@ -4,60 +4,99 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import Grid from '@mui/material/Grid';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, screen } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { AppShell } from 'src/components/AppShell';
-import { CardNextStep, NextStep } from 'src/components/NextStep';
+import { CardNextStep, NextStep, NextStepExplain } from 'src/components/NextStep';
 import { PageHeader } from 'src/components/PageHeader';
 import { PlainFigure } from 'src/components/SourceFigure';
 import { TruncatedText } from 'src/components/TruncatedText';
+import { Icon } from 'src/icons';
+
+/** Stands in for the app opening its assistant on a note; the stories' play functions check it. */
+const explain = fn();
+/** Stands in for the app's assistant mark, which the app passes as `icon`. */
+const mark = <Icon name="smart_toy" color="secondary" />;
 
 /**
- * Kilowatt's `NextStep`: one line under a page header that says where things stand and what to do
- * next, with the step as a text button. `CardNextStep` is the same step as a plain caption line on a
- * clickable Overview card.
+ * Kilowatt's `NextStep`: a note bar under a page header that says where things stand in a few words,
+ * with Explain to open the app's assistant on the whole note, and Dismiss. `CardNextStep` is a step as a
+ * plain caption line on a clickable Overview card.
  */
 const meta = {
   title: 'Data display/NextStep',
   component: NextStep,
   tags: ['!autodocs'],
   // The MUI components this page documents; docs.test.ts checks its MUI departures section against them.
-  parameters: { muiComponents: ['Button', 'Tooltip', 'Typography'] },
-  args: { state: '3 of 12 properties have no named contact.' },
+  parameters: { muiComponents: ['ButtonBase', 'IconButton', 'Tooltip', 'Typography'] },
+  args: { state: '3 of 12 properties have no named contact. Reports for them go to the account owner.', icon: mark },
+  decorators: [
+    (Story) => (
+      <NextStepExplain value={explain}>
+        <Story />
+      </NextStepExplain>
+    ),
+  ],
 } satisfies Meta<typeof NextStep>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The state, then the step as a text button that does it or opens where it is done. */
+/** A note with something to do: the whole bar is a button labelled Explain, which hands the whole `state` to the app's `NextStepExplain` handler. */
 export const WithAction: Story = {
   name: 'With action',
   args: { action: { label: 'Name the Contacts', onClick: fn() } },
   play: async ({ args, canvas, userEvent }) => {
-    await expect(canvas.getByRole('status', { name: 'Next step' })).toHaveTextContent(args.state);
-    await userEvent.click(canvas.getByRole('button', { name: 'Name the Contacts' }));
-    await expect(args.action?.onClick).toHaveBeenCalledOnce();
-  },
-};
-
-/** A step that can't be taken yet: the button is disabled, and its `reason` shows in a tooltip on hover. */
-export const Disabled: Story = {
-  args: { action: { label: 'Name the Contacts', onClick: fn(), disabled: true, reason: 'Only a portfolio owner can name contacts.' } },
-  play: async ({ args, canvas, userEvent }) => {
-    const button = canvas.getByRole('button', { name: 'Name the Contacts' });
-    await expect(button).toBeDisabled();
-    // The tooltip listens on the wrapper around the disabled button.
-    await userEvent.hover(button.parentElement!);
-    await expect(await screen.findByRole('tooltip')).toHaveTextContent(args.action?.reason ?? '');
+    explain.mockClear();
+    // The bar shows the note in a few words: the first sentence.
+    await expect(canvas.getByRole('status', { name: 'Next step' })).toHaveTextContent('3 of 12 properties have no named contact');
+    await expect(canvas.queryByText(/Reports for them/)).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: /Explain/ }));
+    await expect(explain).toHaveBeenCalledOnce();
+    await expect(explain).toHaveBeenCalledWith(args.state);
+    // The bar doesn't offer the step itself.
     await expect(args.action?.onClick).not.toHaveBeenCalled();
   },
 };
 
-/** A page with nothing to do says so in the same line, so the line is always there: the state alone, with no button. */
+/** `summary` sets the few words the bar shows, where `shortNote` would cut the state badly; Explain still hands on the whole `state`. */
+export const WithSummary: Story = {
+  name: 'With a summary',
+  args: { summary: '3 properties have no contact', action: { label: 'Name the Contacts', onClick: fn() } },
+  play: async ({ args, canvas, userEvent }) => {
+    explain.mockClear();
+    await userEvent.click(canvas.getByRole('button', { name: /3 properties have no contact/ }));
+    await expect(explain).toHaveBeenCalledOnce();
+    await expect(explain).toHaveBeenCalledWith(args.state);
+  },
+};
+
+/** `ask` gives the bar its own label and action in place of Explain: an invitation, not a note about a problem. */
+export const Ask: Story = {
+  args: { state: 'Six things need a decision this week.', ask: { label: 'Help Me Prioritize', onClick: fn() } },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /Help Me Prioritize/ }));
+    await expect(args.ask?.onClick).toHaveBeenCalledOnce();
+  },
+};
+
+/** Dismiss removes the bar until the page is opened again; nothing is stored, so a note that still holds comes back. */
+export const Dismissed: Story = {
+  name: 'Dismiss',
+  args: { action: { label: 'Name the Contacts', onClick: fn() } },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
+    await expect(canvas.queryByRole('status', { name: 'Next step' })).toBeNull();
+  },
+};
+
+/** A page with nothing to do says so in the same bar: the note alone, with no label, and not a button. Dismiss stays. */
 export const NothingToDo: Story = {
   name: 'Nothing to do',
   args: { state: 'Nothing to do here: every property has a named contact.' },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByRole('button')).toBeNull();
+    await expect(canvas.getByRole('status', { name: 'Next step' })).toHaveTextContent('Nothing to do here');
+    await expect(canvas.queryByRole('button', { name: /Explain/ })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Dismiss' })).toBeVisible();
   },
 };
 
@@ -90,8 +129,10 @@ export const UnderPageHeader: Story = {
     </AppShell>
   ),
   play: async ({ args, canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Name the Contacts' }));
-    await expect(args.action?.onClick).toHaveBeenCalledOnce();
+    explain.mockClear();
+    await userEvent.click(canvas.getByRole('button', { name: /Explain/ }));
+    await expect(explain).toHaveBeenCalledOnce();
+    await expect(explain).toHaveBeenCalledWith(args.state);
   },
 };
 

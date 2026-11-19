@@ -40,14 +40,26 @@ const query = useEnergyData('meter', meterId, params);
 
 Set `height` to what the content takes, its inset included: a 240px chart with its 16px inset is `256`. Every state holds that height, so the card doesn't jump when the data arrives. Under a chart, leave `inset` at `2`, the chart's own padding; inside `CardContent`, which pads already, set `inset={0}`.
 
+Provide the support link once, round the app, so every failing region can offer it. The function gets when the error came, and returns the link:
+
+```tsx
+import { SupportLink } from 'src/components/AsyncContent';
+
+<SupportLink value={(failedAt) => supportMailLink({ page, scope, failedAt })}>
+  {app}
+</SupportLink>
+```
+
+`supportMailLink` is the app's own: Kilowatt holds no support address.
+
 ## States
 
 - **Ready.** `children` render as they are.
-- **Loading.** The first load: a rounded `Skeleton` fills the space, announced as a progress bar named by `loadingLabel`. A region that knows what's coming may show a skeleton in the content's shape instead (below).
+- **Loading.** The first load: a rounded `Skeleton` fills the space, announced as a progress bar named by `loadingLabel`. A load that runs past 3 seconds adds one line under the skeleton, “Still loading energy use.”: the words of `loadingLabel` after “Still”, with no time given. A region that knows what's coming may show a skeleton in the content's shape instead (below).
 - **Fetching.** Newer data is on its way: the current data stays on screen under a thin `LinearProgress`, so the card doesn't blank out when the period changes. `children` stay mounted between `ready` and `fetching`, so focus, scroll position and local state survive a refetch, and a chart isn't rebuilt unless its data changes.
 - **Empty.** The request succeeded with nothing in it: `emptyText` says what has no data. Never draw zeros or an empty axis for missing data.
 - **Idle.** Nothing has been asked yet, because something must be chosen first: `idleText` says what to choose.
-- **Error.** The request failed: an error `Alert` with the state's message, and a Retry button when the state has `onRetry`.
+- **Error.** The request failed: an error `Alert` with the state's message, and a Retry button when the state has `onRetry`. After a second failed retry the message adds “It failed again after two retries.” and the alert gains an **Email Support** action, a link to the mail address the app provides through `SupportLink`. Kilowatt holds no address: without a provider there is no Email Support, and the sentence still shows. A load that works resets the count.
 - **Forbidden.** The API answered 403, because the user's account doesn't include this data: an info `Alert` with the state's message and no Retry, since asking again won't help.
 
 ### A skeleton in the content's shape
@@ -58,6 +70,8 @@ A loading region may show the shape of what's coming rather than one block: MUI'
 - A `rounded` skeleton holds a chart's, map's or image's space, inset 16px as a chart pads itself.
 - A table keeps its header and takes a skeleton row per row it will show, up to a page.
 - The whole shape is decorative: one wrapper with `role="progressbar"`, `aria-busy` and an `aria-label` names the wait. The wrapper replaces `loadingLabel`, which is `AsyncContent`'s own.
+
+A shape of your own says the still-loading line with the same pieces: `useStillLoading(loading)` is true once the load has run past 3 seconds (`stillLoadingAfter`), and `stillLoadingText(loadingLabel)` is the line. `useRepeatedFailure(status, onRetry)` gives a region of your own the counted `retry`, `repeated` and `supportHref`.
 
 These are compositions, not components: each page's shape is its own, so Kilowatt holds the convention and no skeleton pieces.
 
@@ -71,6 +85,8 @@ These are compositions, not components: each page's shape is its own, so Kilowat
 - Don't show 0, a flat line or an empty chart for data that isn't there; say so in `emptyText`.
 - Do pass `onRetry` (from `fromQuery`) for failures a retry can fix.
 - Don't offer Retry for no access; `fromQuery` turns a 403 into `forbidden`, which has none.
+- Do provide `SupportLink` once, round the app, with the app's own support address and what its support needs to know.
+- Don't write a support address into a component or an error message; the app owns it, and `SupportLink` is how it reaches every region.
 - Do name what's loading in `loadingLabel` ("Loading energy use"), since several cards load at once.
 - Don't put a skeleton in a frame of its own; use the card the content arrives in, so nothing moves when it lands.
 - Don't nest `AsyncContent` inside another for the same data; one state per request.
@@ -86,7 +102,8 @@ Theme-wide departures (the surface levels the card sits on, the theme radius, th
 - MUI's `Alert` has `role="alert"`, so an error or no-access message is announced when it appears.
 - The container is a polite live region and is `aria-busy` while loading or fetching, so a screen reader hears the result once it settles rather than every step.
 - The skeleton and the progress bar are progress bars named by `loadingLabel`.
-- Retry is a real button, reachable by keyboard.
+- Retry is a real button, reachable by keyboard, and Email Support is a link (`a` with the mail address as its `href`).
+- The still-loading line is text inside the live region, in `text.secondary`.
 - The error and no-access alerts carry an icon and a message, so their meaning doesn't rest on color.
 
 ## Related

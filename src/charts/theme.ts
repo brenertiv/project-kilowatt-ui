@@ -60,6 +60,8 @@ export function chartColors(scheme: ColorScheme) {
   return {
     series: palette.chart.series.map(color),
     neutral: color(palette.chart.neutral),
+    /** The negative part of a positive-and-negative pair (vacant beside leased): `chart.seriesShade`, a shade off the card, as `SegmentedBar` draws its `negative` part. */
+    negative: color(palette.chart.seriesShade),
     sequential: palette.chart.sequential.map(color),
     /** The card surface the chart sits on (background.level3), for a mark that shows the surface through it, such as a striped column. */
     surface: color(card),
@@ -123,35 +125,42 @@ export const tooltipNumberFormat = '#,###.##';
  */
 export type ChartInset = 0 | 1 | 2;
 
-/** How a series asks for its color: a fixed `slot` for a product meaning, `neutral` for what isn't the focus, or neither for the next free slot. */
+/** How a series asks for its color: a fixed `slot` for a product meaning, `neutral` for what isn't the focus, `negative` for the other part of a positive-and-negative pair, or none of them for the next free slot. */
 export type SeriesColor = {
   /** The `chart.series` slot, 0 to 5, for a product meaning (`meaningColor` from `src/charts/meanings`), so it's one color on every chart. Default: the next free slot. */
   slot?: number;
   /** Draws it in `chart.neutral`: context, such as a baseline or the previous period, rather than the point. Default `false`. */
   neutral?: boolean;
+  /**
+   * Marks the negative part of a positive-and-negative pair (Onboarding beside Live, Vacant beside Leased). It's drawn in
+   * `chart.seriesShade`, a shade off the card, as `SegmentedBar`'s `negative` part is, and takes no slot, so only the
+   * positive part, in slot 0 or 1, reads as data (Rules → Charts). Default `false`.
+   */
+  negative?: boolean;
 };
 
 /**
- * The color for each series, in order (Rules → Charts): `neutral` series take `chart.neutral`;
- * a series with a `slot` takes that series color; the rest take the free slots in order. Warns
+ * The color for each series, in order (Rules → Charts): `negative` series take `chart.seriesShade`
+ * and `neutral` series `chart.neutral`; a series with a `slot` takes that series color; the rest
+ * take the free slots in order. Warns
  * past six colored series, where the rules say to group or use a table instead.
  */
 export function seriesColors(series: SeriesColor[], colors: ReturnType<typeof chartColors>): am5.Color[] {
-  return seriesSlots(series, colors.series.length).map((slot) => (slot === 'neutral' ? colors.neutral : colors.series[slot]));
+  return seriesSlots(series, colors.series.length).map((slot) => (slot === 'negative' ? colors.negative : slot === 'neutral' ? colors.neutral : colors.series[slot]));
 }
 
 /**
- * The `chart.series` slot each series takes, or `'neutral'`, by the rules `seriesColors` follows: for
+ * The `chart.series` slot each series takes, or `'neutral'` or `'negative'`, by the rules `seriesColors` follows: for
  * HTML beside a chart (a swatch) that repeats a series' color from the palette.
  */
-export function seriesSlots(series: SeriesColor[], count = 6): (number | 'neutral')[] {
-  const taken = new Set(series.flatMap(({ slot, neutral }) => (neutral || slot === undefined ? [] : [slot])));
+export function seriesSlots(series: SeriesColor[], count = 6): (number | 'neutral' | 'negative')[] {
+  const taken = new Set(series.flatMap(({ slot, neutral, negative }) => (neutral || negative || slot === undefined ? [] : [slot])));
   const free = Array.from({ length: count }, (_, slot) => slot).filter((slot) => !taken.has(slot));
-  const colored = series.filter(({ neutral }) => !neutral).length;
+  const colored = series.filter(({ neutral, negative }) => !neutral && !negative).length;
   if (colored > count) {
     console.warn(`A chart has ${colored} colored series; past ${count}, group the smallest or show a table (Rules → Charts).`);
   }
-  return series.map(({ slot, neutral }) => (neutral ? 'neutral' : (slot ?? free.shift() ?? 0) % count));
+  return series.map(({ slot, neutral, negative }) => (negative ? 'negative' : neutral ? 'neutral' : (slot ?? free.shift() ?? 0) % count));
 }
 
 /** A legend below the plot that wraps into up to three columns, so six series don't squeeze the plot. */

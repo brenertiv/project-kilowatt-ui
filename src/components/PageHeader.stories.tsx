@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, waitFor } from 'storybook/test';
 import { AppShell } from 'src/components/AppShell';
 import { FilterBar, filterWidth } from 'src/components/FilterBar';
-import { PageHeader } from 'src/components/PageHeader';
+import { PageHeader, PageHeaderSection } from 'src/components/PageHeader';
 import highpoint1 from 'src/fixtures/images/highpoint-1.jpg';
 import { Icon } from 'src/icons';
 
@@ -108,6 +108,42 @@ export const WithActions: Story = {
 /** The page's `FilterBar` sits under the condensed line in the same sticky band, with a divider under the band while it's pinned. */
 export const WithFilters: Story = {
   args: { filters: <PageFilters /> },
+};
+
+/** Under a `PageHeaderSection` the section's name sits over the title in `overline`, and the pinned line reads "Section / Page", the section quieter. */
+export const WithSection: Story = {
+  args: { title: 'Utility Accounts' },
+  decorators: [
+    (Story) => (
+      <PageHeaderSection value="Data Sources">
+        <Story />
+      </PageHeaderSection>
+    ),
+  ],
+  play: async ({ canvas, canvasElement }) => {
+    const [over, crumb] = canvas.getAllByText('Data Sources');
+    await expect(over).toBeVisible();
+    await expect(crumb).not.toBeVisible();
+    scrollPage(canvasElement, 600);
+    await waitFor(() => expect(crumb).toBeVisible());
+  },
+};
+
+/** A page whose title is its section's own name shows no overline, and its pinned line is the title alone. */
+export const SectionOwnPage: Story = {
+  name: "Section's own page",
+  args: { title: 'Portfolio' },
+  decorators: [
+    (Story) => (
+      <PageHeaderSection value="Portfolio">
+        <Story />
+      </PageHeaderSection>
+    ),
+  ],
+  play: async ({ canvas }) => {
+    // The heading and the hidden condensed line: no third "Portfolio" over the title.
+    await expect(canvas.getAllByText('Portfolio')).toHaveLength(2);
+  },
 };
 
 /** A report sets its title in the brand serif (`titleVariant="brand"`), at `h1`'s size; the condensed line is unchanged. */

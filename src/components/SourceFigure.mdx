@@ -78,6 +78,7 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 - **With View Sources:** pass `onViewSources`, and the dialog gets a View Sources action, for a page that has a sources view. It closes the dialog first. Without it the dialog has no actions: the close button and Escape close it.
 - **`ExplainedFigure`:** the same button and dialog with your own content in `children`, usually a `FigureExplanation`.
 - **`FigureExplanation`:** `description`, then `sources` (Built From), `period`, `calculation` (with `figures`), `includes`, `estimatedBySource`, `awaitingBill`, `updated` and `energyStarPush`, each left out when it isn't given. `calculation` is a sentence or your own content.
+- **With a closing line:** a page that wraps its content in `ExplanationEnd` (a context holding one line, such as “Data as of Oct 15, 2026, pulled nightly (last pull 2:10 AM).”) gives every `FigureExplanation` under it, a `SourceFigure`'s dialog included, that line once, last among its description lines. A description line that repeats it is dropped, and without a provider nothing is added.
 - **A long value:** a value longer than 14 characters (a phrase such as “4 on track, 2 at risk”) steps down to `h4`, so it still fits on one or two lines.
 
 ## Do and don't
@@ -96,6 +97,8 @@ import { ExplainedFigure, FigureExplanation } from 'src/components/SourceFigure'
 - Don't write your own dialog content for a figure with a calculation or sources; `FigureExplanation` keeps every figure's dialog reading the same way.
 - Do keep the rows in the provenance popover's order, which `FigureExplanation` does for you, so a number reads the same on a card and in a sentence.
 - Don't lead the dialog with the calculation, fold its rows away or rename them; Show the Figures is the one thing folded.
+- Do set a page's closing line once, through `ExplanationEnd` round its content, so every explanation on the page ends the same way.
+- Don't write the as-of line into each figure's `note` or `description`; a line written twice still shows once, but the page is where it belongs.
 - Do list the records a figure is built from under its source, so a person can go from the number to one of the things it counts.
 - Don't list more than six records; past that the line says how many more, and the page's table is where to find them.
 

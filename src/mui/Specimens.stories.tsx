@@ -42,7 +42,7 @@ function Swatch({ color, label }: { color: string; label: string }) {
   return (
     <Stack spacing={0.5} sx={{ minWidth: 96 }}>
       <Box sx={{ height: 48, bgcolor: color, border: 1, borderColor: 'divider', borderRadius: 1 }} />
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" color="textSecondary">
         {label}
       </Typography>
     </Stack>
@@ -81,7 +81,7 @@ export const Color: Story = {
           <Stack spacing={1}>
             {['level0', 'level1', 'level2', 'level3', 'level4', 'level5'].map((surface) => (
               <Stack key={surface} direction="row" spacing={2} sx={{ bgcolor: `background.${surface}`, p: 1.5, borderRadius: 1, alignItems: 'center' }}>
-                <Typography variant="caption" color="text.secondary" sx={{ width: 56 }}>
+                <Typography variant="caption" color="textSecondary" sx={{ width: 56 }}>
                   {surface}
                 </Typography>
                 {['level0', 'level1', 'level2', 'level3'].map((border) => (
@@ -112,7 +112,7 @@ export const IntentsOnSurfaces: Story = {
     <Stack spacing={1}>
       {surfaces.map((level) => (
         <Stack key={level} direction="row" spacing={2} useFlexGap sx={{ bgcolor: `background.${level}`, p: 1.5, borderRadius: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Typography variant="caption" color="text.secondary" sx={{ width: 56 }}>
+          <Typography variant="caption" color="textSecondary" sx={{ width: 56 }}>
             {level}
           </Typography>
           {intents.map((intent) => (
@@ -143,7 +143,7 @@ export const Typography_: Story = {
       <Stack spacing={2}>
         {variants.map((variant) => (
           <Stack key={variant} direction="row" spacing={3} sx={{ alignItems: 'baseline' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ width: 80, flexShrink: 0 }}>
+            <Typography variant="caption" color="textSecondary" sx={{ width: 80, flexShrink: 0 }}>
               {variant}
             </Typography>
             <Typography variant={variant} component="p" noWrap>
@@ -165,7 +165,7 @@ export const Spacing: Story = {
         <Stack spacing={1}>
           {[0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12].map((step) => (
             <Stack key={step} direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ width: 96, flexShrink: 0 }}>
+              <Typography variant="caption" color="textSecondary" sx={{ width: 96, flexShrink: 0 }}>
                 {step} = {theme.spacing(step)}
               </Typography>
               <Box sx={{ width: theme.spacing(step), height: 16, bgcolor: 'primary.main' }} />
@@ -187,7 +187,7 @@ export const Shape: Story = {
           {[1, 2, 4].map((multiple) => (
             <Stack key={multiple} spacing={0.5} sx={{ alignItems: 'center' }}>
               <Box sx={{ width: 72, height: 72, border: 1, borderColor: 'text.secondary', borderRadius: multiple }} />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="textSecondary">
                 {multiple} = {Number(theme.shape.borderRadius) * multiple}px
               </Typography>
             </Stack>
@@ -225,7 +225,7 @@ export const Motion: Story = {
         <Stack spacing={2}>
           {easings.map((easing) => (
             <Stack key={easing} direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ width: 72, flexShrink: 0 }}>
+              <Typography variant="caption" color="textSecondary" sx={{ width: 72, flexShrink: 0 }}>
                 {easing}
               </Typography>
               <Box sx={{ flex: 1, position: 'relative', height: 16 }}>
@@ -268,7 +268,7 @@ export const Icons: Story = {
             {iconNames.map((name) => (
               <Stack key={name} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                 <Icon name={name} />
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="textSecondary">
                   {name}
                 </Typography>
               </Stack>
