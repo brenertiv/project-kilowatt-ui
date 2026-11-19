@@ -32,7 +32,7 @@ const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFrac
  * the card's foot, set by `SourceFigure` so it opens its calculation and sources, with what would have been its
  * caption (the vacant area and spaces, out of the whole) as the dialog's note. Under the figure, the floor area
  * as Leased and Vacant in one `SegmentedBar`. The two are a positive and its negative, so they don't take two
- * colors (Rules → Charts): both take the first `chart.series` slot, Vacant in its darker shade, and the words
+ * colors (Rules → Charts): Leased takes the first `chart.series` slot, brand blue, and Vacant `chart.seriesShade`, a shade off the card, and the words
  * carry the state (Rules → Accessibility). With no area on record the figure is “—”, its note says nothing is
  * on record, and there is no bar.
  *
@@ -61,7 +61,7 @@ export function VacancyCard({ title = 'Vacancy', area, leasedArea, spaces, lease
             <SegmentedBar
               segments={[
                 { label: 'Leased', value: leasedArea, slot: 0 },
-                { label: 'Vacant', value: vacant, slot: 0, shade: 'dark' },
+                { label: 'Vacant', value: vacant, negative: true },
               ]}
               unit="sq ft"
               label="Floor Area by Lease"

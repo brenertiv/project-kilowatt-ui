@@ -364,6 +364,19 @@ export const chartDepartures: ChartDeparture[] = [
     check: /legend\(root\)/,
   },
   {
+    id: 'stack-order',
+    kind: 'convention',
+    title: 'A stack ordered dark to light',
+    why: "amCharts stacks series in the order they're added, so a stack's colors fall wherever the data's order puts them. Kilowatt orders a stack by its colors' lightness in the active scheme, across the whole stack whatever the ramps (Rules → Charts → A stack runs dark to light): darkest at the bottom of a column and lightest at the top, lightest at the left of a bar and darkest at the right, both reversed in dark. Every series keeps its own color, and the legend keeps the order the series are given in.",
+    charts: ['ColumnChart'],
+    convention: {
+      amchartsDefault: 'Series stack in the order they are added',
+      kilowatt: '`stackOrder` from `src/charts/stackOrder`: a `stacked` chart adds its series by lightness, for its direction and the scheme',
+      where: 'Stacked columns and bars',
+    },
+    check: /stackOrder\(/,
+  },
+  {
     id: 'reference-lines',
     kind: 'convention',
     title: 'Targets and benchmarks as dashed lines',

@@ -27,15 +27,15 @@ export type DivergingColors = { below: string; above: string; contrastText: stri
 
 /**
  * Chart data colors (Rules → Charts): `series` tells up to six categories apart, in a fixed
- * order; `seriesDark` is a darker shade of each slot, for the negative part of a two-part bar
- * (`undefined` where a slot has none, and the slot's own color stands in); `neutral` is for what
+ * order; `seriesShade` is the negative part of a positive-and-negative pair (vacant beside leased), a
+ * shade darker than the card in light and lighter than it in dark; `neutral` is for what
  * isn't the focus (a baseline, the previous period); `sequential` shows magnitude, from the step
  * nearest the surface to the one furthest from it; `diverging` shows a comparison where neither
  * side is worse.
  */
 export type ChartColors = {
   series: string[];
-  seriesDark: (string | undefined)[];
+  seriesShade: string;
   neutral: string;
   sequential: string[];
   diverging: DivergingColors;

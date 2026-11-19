@@ -1,4 +1,4 @@
-import { alpha, decomposeColor, getContrastRatio, type CssVarsPalette } from '@mui/material/styles';
+import { alpha, decomposeColor, getContrastRatio, getLuminance, type CssVarsPalette } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
 import { deviationSteps } from '../charts/deviation';
 import { navy, slate } from './colors';
@@ -247,18 +247,16 @@ describe('chart palette', () => {
     expect(apart(better[0], midpoint), 'better step 1 and no change on the card').toBeGreaterThanOrEqual(faintestStepSeparation);
   });
 
-  it.each(schemes)('gives each %s-scheme darker series shade 3:1 on the card and 1.5:1 from its slot', (scheme) => {
+  it.each(schemes)('sets the %s-scheme negative shade a step off the card, apart from the positive slots', (scheme) => {
     const { palette } = createSchemeTheme(scheme);
     const card = palette.background.level3;
-    const { series, seriesDark } = palette.chart;
-    expect(seriesDark.length, 'a shade or a gap per slot').toBe(series.length);
-    seriesDark.forEach((shade, slot) => {
-      if (!shade) return;
-      expect(getContrastRatio(shade, card), `seriesDark[${slot}] on the card`).toBeGreaterThanOrEqual(graphic);
-      expect(getContrastRatio(shade, series[slot]), `seriesDark[${slot}] against its slot`).toBeGreaterThanOrEqual(1.5);
-    });
-    // success.dark draws a negative part beside success.main (SegmentedBar's shade: 'dark').
-    expect(getContrastRatio(palette.success.dark, card), 'success.dark on the card').toBeGreaterThanOrEqual(graphic);
+    const { series, seriesShade } = palette.chart;
+    // Darker than the card in light, lighter than it in dark, and the strongest surface border's step.
+    const [shade, surface] = [getLuminance(seriesShade), getLuminance(card)];
+    expect(scheme === 'light' ? shade < surface : shade > surface, 'seriesShade is off the card on the right side').toBe(true);
+    expect(seriesShade, 'seriesShade is the step border.level3 takes').toBe(palette.border.level3);
+    // The positive part takes slot 0 or 1, and stands out from its negative.
+    for (const slot of [0, 1]) expect(getContrastRatio(series[slot], seriesShade), `series[${slot}] against seriesShade`).toBeGreaterThanOrEqual(2);
   });
 
   it.each(schemes)('keeps the %s-scheme comparison scale readable: each end at 3:1, apart, under its contrast text', (scheme) => {

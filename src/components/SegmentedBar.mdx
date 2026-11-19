@@ -14,7 +14,7 @@ import * as SegmentedBarStories from './SegmentedBar.stories';
 
 ## When to use
 
-- Use it for a few parts of one whole in a small space, where the order matters as much as the size: work orders through their lifecycle, a budget by category.
+- Use it for a few parts of one whole in a small space: work orders by status, a budget by category.
 - For parts of a whole where the share is the point and the parts have no order, a donut chart works too.
 - For more than seven or eight parts, use a table; the segments get too thin to see.
 - For one measure against its limit, use `LinearProgress`.
@@ -37,7 +37,7 @@ const segments = statusCounts.map(({ status, count }) => ({
 </CardContent>
 ```
 
-Pass the parts in the order they should read, left to right: a lifecycle's order for statuses, largest first otherwise. Look meanings up by the API's name (`workOrderStatusIntents['In Progress']`), then show the name in sentence case.
+The bar and its legend order the parts by color, lightest at the left to darkest at the right across all of them, and the reverse in dark (Rules → Charts → A stack runs dark to light), so the order on screen isn't the order of `segments` and can differ between light and dark. A `negative` part comes last, after its positive, in both schemes. Parts of one color keep the order they're passed in, and screen readers hear the legend in that order. Look meanings up by the API's name (`workOrderStatusIntents['In Progress']`), then show the name in sentence case.
 
 ## Variants
 
@@ -46,7 +46,7 @@ Pass the parts in the order they should read, left to right: a lifecycle's order
 
 <Canvas of={SegmentedBarStories.PositiveAndNegative} />
 
-- **A positive part and its negative.** Two parts of one quantity (leased and vacant) share the positive part's color, and the negative takes `shade: 'dark'`: on a slot part, `chart.seriesDark` for that slot, or the slot's own color where the slot has none; on an intent part, the intent's `dark`.
+- **A positive part and its negative.** Two parts of one quantity (leased and vacant, sold and unsold, metered and not metered): the positive takes brand blue (`slot: 0`) or aquaverde (`slot: 1`), and the other part takes `negative`, which draws it in `chart.seriesShade`, a shade darker than the card in light and lighter than it in dark, after the positive.
 
 ## States
 
@@ -59,22 +59,21 @@ Pass the parts in the order they should read, left to right: a lifecycle's order
 - Don't make people compare segment lengths to read the numbers.
 - Do color a bar by status or by meaning.
 - Don't mix series slots and statuses in one bar; the colors would claim two kinds of meaning at once.
-- Do draw a two-part bar of a positive and its negative (leased and vacant, with and without data) in one hue: both parts take the positive part's color, the negative in its darker shade (`shade: 'dark'`), so the pair reads as one quantity with the positive part standing out.
-- Don't give a positive and its negative two intents, as if each were its own status; give each part its own intent only when they are separate statuses (Healthy, At risk, Failing).
-- Do order statuses as the lifecycle runs.
-- Don't sort a lifecycle by size; the order is part of what it says.
+- Do draw a positive and its negative (leased and vacant, with and without data) as one quantity: the positive in brand blue or aquaverde (slot 0 or 1), the other part `negative`, so only the positive reads as data and the negative as what's left over.
+- Don't give a positive and its negative two series colors or two intents, as if each were its own category or status; give each part its own intent only when they are separate statuses (Healthy, At risk, Failing).
+- Don't rely on the order of the parts to say something (a lifecycle, largest first); the bar orders them by color, so say it in the labels.
 
 ## MUI departures
 
 None of Kilowatt's departures change `Box` or `Typography`.
 
-Theme-wide departures (the `chart-palette` roles, `chart.seriesDark` among them, and the intents it colors with from `intents-on-surfaces`, whose success `dark` is a deeper green for a negative part; the theme radius on the bar's ends) apply too; see Foundations → MUI departures.
+Theme-wide departures (the `chart-palette` roles, `chart.seriesShade` among them, and the intents it colors with from `intents-on-surfaces`; the theme radius on the bar's ends) apply too; see Foundations → MUI departures.
 
 ## Accessibility
 
-- The bar is hidden from screen readers (`aria-hidden`); the legend under it is a list with every part's name, value with its unit, and share, in the bar's order.
+- The bar is hidden from screen readers (`aria-hidden`); the legend under it is a list with every part's name, value with its unit, and share. On screen the legend follows the bar's order; screen readers hear it in the order of `segments`.
 - The figure is named by `label`.
-- The legend names every part in text, so parts that share `chart.neutral`, or a positive part and its darker negative, are still told apart.
+- The legend names every part in text, so parts that share `chart.neutral`, and a negative part in its faint shade, are still told apart.
 - Values use tabular figures so the columns line up.
 
 ## Related

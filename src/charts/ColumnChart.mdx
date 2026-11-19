@@ -41,7 +41,7 @@ Each row of `data` is one category: its label in `categoryField` and a number pe
 
 - **Categories.** One measure across categories. Every column takes one color: the categories are named on the axis, so coloring them apart adds nothing.
 - **Side by side.** Up to six series per category, told apart by `chart.series` color.
-- **Stacked.** `stacked` puts the series in one column per category, for parts that add up to a total.
+- **Stacked.** `stacked` puts the series in one column per category, for parts that add up to a total. The chart orders each stack by color, dark to light across the whole stack: darkest at the bottom of a column and lightest at the top, lightest at the left of a `horizontal` bar and darkest at the right, both reversed in dark. Every series keeps its color, the neutral Other takes its place by its lightness like the rest, and the legend keeps the order of `series`.
 - **Ranking.** `horizontal` lays the bars out across, categories down the left in `data` order and values along the bottom, so long names fit. Sort `data` largest first, and keep one color.
 - **Grouped into Other.** Past six colored series, the five with the largest totals keep their colors and the rest are summed into one neutral series named `otherLabel`.
 - **Striped.** `striped` marks a variant of another series (delivery beside supply, estimated beside actual). Give both the same `slot`: they keep one hue, and the stripes tell them apart.
@@ -58,6 +58,7 @@ Each row of `data` is one category: its label in `categoryField` and a number pe
 - Do mark a trailing month with `stillBilling` while fewer than nine in ten of the properties in scope have a bill for it.
 - Don't draw a month still being billed in a lighter tint, with a ≈ sign or as a solid column; a partial month then reads as a drop.
 - Do stack only parts that add up to a meaningful total.
+- Don't order `series` to put a part at the bottom of a stack; the chart orders a stack by color, and its order can differ between light and dark.
 - Don't stack values in different units, or values that overlap.
 - Do write `summary` as one sentence with the numbers that matter.
 - Do use `horizontal` bars for a ranking or for long category names, sorted largest first.
@@ -86,6 +87,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
 - `value-axis-side`: one value axis sits on the right; two units take the left and the right.
 - `axis-units`: each value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `stack-order`: a stack runs dark to light across all its colors, ordered by lightness (`stackOrder`), reversed in dark.
 - `full-value-tooltips`: every hoverable item has a tooltip with its exact value and unit (`tooltipNumberFormat`).
 - `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
 - `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).

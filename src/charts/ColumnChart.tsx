@@ -3,6 +3,7 @@ import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { stackOrder } from './stackOrder';
 import { stillBillingCaption, stillBillingDash, stillBillingNote, type StillBilling } from './stillBilling';
 import { axisUnit, legend, seriesColors, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
@@ -28,7 +29,7 @@ export type ColumnChartProps = {
   unit: string;
   /** One sentence on what the chart shows, with the numbers that matter. It isn't shown: it's the figure's accessible name, the chart's text alternative for screen readers. */
   summary: string;
-  /** Stacks the series in one column per category, for parts that add up to a total. Default `false`, side by side. */
+  /** Stacks the series in one column per category, for parts that add up to a total. The chart orders the stack by color, dark to light across all of it (`stackOrder`): darkest at the bottom of a column and lightest at the left of a `horizontal` bar, reversed in dark. Default `false`, side by side. */
   stacked?: boolean;
   /** Lays the bars out horizontally, categories down the left in `data` order and values along the bottom: a ranking, or categories with long names. Sort `data` largest first for a ranking. Default `false`. */
   horizontal?: boolean;
@@ -65,7 +66,8 @@ function grouped(data: ColumnChartProps['data'], series: ColumnSeries[], otherLa
  * A column chart of values across categories, in Kilowatt's chart theme (Rules → Charts): a
  * reference implementation that Enertiv's app rebuilds. Series take `chart.series` colors in
  * order, or a fixed `slot`; a `striped` series is a variant that keeps its hue. Past six colored
- * series, the smallest are grouped into one neutral series. `horizontal` turns the columns into bars
+ * series, the smallest are grouped into one neutral series. A `stacked` chart orders each stack dark to
+ * light by color, whatever order `series` is in. `horizontal` turns the columns into bars
  * for a ranking. A trailing month still being billed (`stillBilling`) is a dashed outline that says so in its tooltip
  * and under the chart. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
@@ -86,7 +88,7 @@ export function ColumnChart({
   inset = 2,
 }: ColumnChartProps) {
   const build = useCallback(
-    ({ root, colors }: ChartContext) => {
+    ({ root, scheme, colors }: ChartContext) => {
       const chart = root.container.children.push(am5xy.XYChart.new(root, { layout: root.verticalLayout, paddingLeft: 0, paddingRight: 0 }));
       const cells = { cellStartLocation: 0.15, cellEndLocation: 0.85 };
       let categoryAxis: am5xy.CategoryAxis<am5xy.AxisRenderer>;
@@ -118,7 +120,7 @@ export function ColumnChart({
       // A month still being billed, by its category label.
       const billing = new Map(stillBilling.map((month) => [String(month.month), month]));
       const billingOf = (target: am5.Graphics) => billing.get(String((target.dataItem?.dataContext as Record<string, string | number> | undefined)?.[categoryField]));
-      const sets = drawn.map(({ field, name, striped }, i) => {
+      const draw = ({ field, name, striped }: ColumnSeries, i: number) => {
         const set = chart.series.push(
           am5xy.ColumnSeries.new(root, {
             name,
@@ -159,7 +161,12 @@ export function ColumnChart({
           });
         }
         return set;
-      });
+      };
+      // A stack runs dark to light across all its colors (darkest at the bottom of a column, lightest at the left of a
+      // bar, reversed in dark), so its series are added in that order; the legend keeps the order `series` gives.
+      const order = stacked ? stackOrder(fills.map((fill) => fill.toCSSHex()), scheme, horizontal) : drawn.map((_, i) => i);
+      const sets: am5xy.ColumnSeries[] = [];
+      for (const i of order) sets[i] = draw(drawn[i], i);
       categoryAxis.data.setAll(rows);
       if (sets.length > 1) chart.children.push(legend(root)).data.setAll(sets);
       for (const set of sets) set.data.setAll(rows);

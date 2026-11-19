@@ -13,10 +13,10 @@ const byStatus = workOrdersByStatus.map(({ status, count }) => ({
   status: workOrderStatusIntents[status],
 }));
 const byType = workOrdersByType.map(({ type, count }) => ({ label: type, value: count, slot: workOrderTypeSlots[type] }));
-/** A positive part and its negative: leased and vacant units, both in slot 0, the vacant part in its darker shade. */
+/** A positive part and its negative: leased units in slot 0, brand blue, and vacant units in `chart.seriesShade`, a shade off the card. */
 const occupancy = [
   { label: 'Leased', value: 412, slot: 0 },
-  { label: 'Vacant', value: 38, slot: 0, shade: 'dark' as const },
+  { label: 'Vacant', value: 38, negative: true },
 ];
 
 /** A palette CSS variable in the active scheme, as the browser computes a color (`rgb(r, g, b)`), for comparing with a computed style. */
@@ -26,6 +26,8 @@ const paletteColor = (name: string) => {
 };
 /** The legend dot beside a part's name. */
 const dot = (name: HTMLElement) => name.previousElementSibling as HTMLElement;
+/** A legend item's place in the bar's order, left to right, from its name. */
+const place = (name: HTMLElement) => Number(getComputedStyle(name.parentElement as HTMLElement).order);
 
 /**
  * Kilowatt's `SegmentedBar`: the parts of one whole in a single bar, with a legend of values and shares.
@@ -73,8 +75,8 @@ export const ByType: Story = {
 };
 
 /**
- * A positive part and its negative in one hue: both parts take the positive part's slot, and the negative
- * takes its darker shade (`shade: 'dark'`, from `chart.seriesDark`), so the pair reads as one quantity.
+ * A positive part and its negative: the positive takes brand blue (slot 0) or aquaverde (slot 1), and the `negative`
+ * takes `chart.seriesShade`, a shade darker than the card, after it, so only the positive reads as data.
  */
 export const PositiveAndNegative: Story = {
   parameters: { card: { title: 'Units by Occupancy' } },
@@ -82,17 +84,21 @@ export const PositiveAndNegative: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getAllByRole('listitem')).toHaveLength(2);
     await waitFor(() => expect(getComputedStyle(dot(canvas.getByText('Leased'))).backgroundColor).toBe(paletteColor('chart-series-0')));
-    await expect(getComputedStyle(dot(canvas.getByText('Vacant'))).backgroundColor).toBe(paletteColor('chart-seriesDark-0'));
+    await expect(getComputedStyle(dot(canvas.getByText('Vacant'))).backgroundColor).toBe(paletteColor('chart-seriesShade'));
+    // The positive part first, then its negative.
+    await expect(place(canvas.getByText('Leased'))).toBeLessThan(place(canvas.getByText('Vacant')));
   },
 };
 
-/** The same bar in the dark scheme: the bar and its legend read the active scheme's palette, so both parts take dark's shades. */
+/** The same bar in the dark scheme: the negative part is a shade lighter than the card, and still follows its positive. */
 export const PositiveAndNegativeDark: Story = {
   ...PositiveAndNegative,
   globals: { scheme: 'dark' },
   play: async ({ canvas }) => {
     await waitFor(() => expect(document.documentElement).toHaveClass('dark'));
     await waitFor(() => expect(getComputedStyle(dot(canvas.getByText('Leased'))).backgroundColor).toBe(paletteColor('chart-series-0')));
-    await expect(getComputedStyle(dot(canvas.getByText('Vacant'))).backgroundColor).toBe(paletteColor('chart-seriesDark-0'));
+    await expect(getComputedStyle(dot(canvas.getByText('Vacant'))).backgroundColor).toBe(paletteColor('chart-seriesShade'));
+    // A pair doesn't reverse in dark: the positive part first, then its negative.
+    await expect(place(canvas.getByText('Leased'))).toBeLessThan(place(canvas.getByText('Vacant')));
   },
 };
