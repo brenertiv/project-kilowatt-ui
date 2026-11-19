@@ -3,7 +3,7 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
-import { ExplainedFigure, FigureExplanation, PlainFigure, SourceFigure, type FigureSource } from 'src/components/SourceFigure';
+import { ExplainedFigure, ExplanationEnd, FigureExplanation, PlainFigure, SourceFigure, type FigureSource } from 'src/components/SourceFigure';
 import { TruncatedText } from 'src/components/TruncatedText';
 
 const intensity = new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -224,6 +224,27 @@ export const WithExplanation: Story = {
     const dialog = await screen.findByRole('dialog', { name: 'Properties Reporting' });
     await waitFor(() => expect(within(dialog).getByText('Properties with twelve months of data, out of the 45 in scope.')).toBeVisible());
     await expect([...dialog.querySelectorAll('dt')].map((term) => term.textContent)).toEqual(['Calculation']);
+  },
+};
+
+/** `ExplanationEnd` round a page's content gives every figure explanation the same closing line, once, last, after the figure's own description. */
+export const WithClosingLine: Story = {
+  name: 'With a closing line',
+  args: { note: 'Site energy per square foot, for the properties with a full year of data.' },
+  decorators: [
+    (Story) => (
+      <ExplanationEnd value="Data as of Oct 15, 2026, pulled nightly (last pull 2:10 AM).">
+        <Story />
+      </ExplanationEnd>
+    ),
+  ],
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: /view source for Energy Use Intensity/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Energy Use Intensity' });
+    const end = await within(dialog).findByText('Data as of Oct 15, 2026, pulled nightly (last pull 2:10 AM).');
+    const note = within(dialog).getByText('Site energy per square foot, for the properties with a full year of data.');
+    // The closing line comes after the figure's own description.
+    await expect(note.compareDocumentPosition(end) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   },
 };
 

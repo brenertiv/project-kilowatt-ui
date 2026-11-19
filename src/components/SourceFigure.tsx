@@ -76,6 +76,16 @@ export type FigureRecord = {
   onOpen: () => void;
 };
 
+/**
+ * The line every figure explanation on a page ends with, set by the page round its content: an as-of line such as
+ * "Data as of Oct 15, 2026, pulled nightly (last pull 2:10 AM).". `FigureExplanation` appends it once, last, to its
+ * description lines, and drops a description line that repeats it. Default none.
+ *
+ * @summary A closing line every figure explanation under it ends with.
+ * @import import { ExplanationEnd } from 'src/components/SourceFigure';
+ */
+export const ExplanationEnd = createContext<string | undefined>(undefined);
+
 /** Closes the explanation dialog a record link sits in, so the record it opens isn't behind it. */
 const CloseExplanation = createContext<() => void>(() => undefined);
 
@@ -106,7 +116,7 @@ function RecordLinks({ records }: { records: FigureRecord[] }) {
         </li>
       ))}
       {more > 0 && (
-        <Typography component="li" variant="caption" color="text.secondary">
+        <Typography component="li" variant="caption" color="textSecondary">
           and {new Intl.NumberFormat().format(more)} more
         </Typography>
       )}
@@ -129,7 +139,7 @@ function ExplanationRow({ term, children }: { term: string; children: ReactNode 
 }
 
 export type FigureExplanationProps = {
-  /** What the figure is, always shown, first; an array shows one line each. Defaults to none. */
+  /** What the figure is, always shown, first; an array shows one line each. Under an `ExplanationEnd` the page's closing line follows them. Defaults to none. */
   description?: string | string[];
   /** Built From: where the data comes from, as links where a place has one. Defaults to none, and the row is left out. */
   sources?: FigureLink[];
@@ -174,7 +184,10 @@ export function FigureExplanation({
   updated,
   energyStarPush,
 }: FigureExplanationProps) {
-  const lines = description === undefined ? [] : Array.isArray(description) ? description : [description];
+  const given = description === undefined ? [] : Array.isArray(description) ? description : [description];
+  // The page's closing line, once, last.
+  const end = useContext(ExplanationEnd);
+  const lines = end ? [...given.filter((line) => line !== end), end] : given;
   const included = includes === undefined ? [] : Array.isArray(includes) ? includes : [includes];
   const rows = sources.length > 0 || period || calculation || included.length > 0 || estimatedBySource || awaitingBill || updated || energyStarPush;
   return (
