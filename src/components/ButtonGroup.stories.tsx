@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -7,6 +8,7 @@ import MenuList from '@mui/material/MenuList';
 import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useRef, useState } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
@@ -101,11 +103,20 @@ export const SplitButton: Story = {
             <Icon name="expand_more" />
           </Button>
         </ButtonGroup>
-        <Popper open={open} anchorEl={anchor.current} placement="bottom-start" transition disablePortal sx={{ zIndex: 'modal', width: anchor.current?.offsetWidth }}>
+        <Popper
+          open={open}
+          anchorEl={anchor.current}
+          placement="bottom-start"
+          transition
+          disablePortal
+          sx={{ zIndex: 'modal', width: anchor.current?.offsetWidth }}
+        >
           {({ TransitionProps }) => (
             <Grow {...TransitionProps} style={{ transformOrigin: 'left top' }}>
               <Paper elevation={8}>
-                <ClickAwayListener onClickAway={(event) => !anchor.current?.contains(event.target as Node) && setOpen(false)}>
+                <ClickAwayListener
+                  onClickAway={(event) => !anchor.current?.contains(event.target as Node) && setOpen(false)}
+                >
                   <MenuList
                     id="export-menu"
                     autoFocusItem
@@ -114,7 +125,8 @@ export const SplitButton: Story = {
                       if (event.key === 'Escape' || event.key === 'Tab') {
                         if (event.key === 'Escape') event.preventDefault();
                         setOpen(false);
-                        if (event.key === 'Escape') anchor.current?.querySelector<HTMLButtonElement>('[aria-haspopup]')?.focus();
+                        if (event.key === 'Escape')
+                          anchor.current?.querySelector<HTMLButtonElement>('[aria-haspopup]')?.focus();
                       }
                     }}
                   >
@@ -143,6 +155,96 @@ export const SplitButton: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Choose Export Format' }));
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Export PDF' }));
     await expect(canvas.getByRole('button', { name: 'Export PDF' })).toBeVisible();
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+  },
+};
+
+/**
+ * On a panel surface (`background.level1`), an outlined split button takes `background.level5`, the lightest surface,
+ * under both halves, so it stands out on the panel; each half's hover tint still shows over the fill.
+ */
+export const SplitButtonOnAPanel: Story = {
+  name: 'Split button on a panel',
+  render: function Render(args) {
+    const anchor = useRef<HTMLDivElement>(null);
+    const [open, setOpen] = useState(false);
+    const [created, setCreated] = useState('');
+    const kinds = ['New Dashboard', 'New Report', 'New Plan'];
+    return (
+      <Box sx={{ width: 280, p: 2, bgcolor: 'background.level1' }}>
+        <ButtonGroup {...args} ref={anchor} fullWidth aria-label="New Workspace" sx={{ bgcolor: 'background.level5' }}>
+          <Button
+            aria-label="New Workspace"
+            startIcon={<Icon name="add" />}
+            onClick={() => setCreated('New Workspace')}
+            sx={{ justifyContent: 'flex-start', flex: 1, minWidth: 0 }}
+          >
+            New
+          </Button>
+          <Button
+            aria-label="Choose a Workspace Type"
+            aria-controls={open ? 'new-menu' : undefined}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            onClick={() => setOpen((wasOpen) => !wasOpen)}
+            sx={{ flex: 'none', width: 'auto', px: 1 }}
+          >
+            <Icon name="expand_more" />
+          </Button>
+        </ButtonGroup>
+        <Popper
+          open={open}
+          anchorEl={anchor.current}
+          placement="bottom-start"
+          transition
+          disablePortal
+          sx={{ zIndex: 'modal', width: anchor.current?.offsetWidth }}
+        >
+          {({ TransitionProps }) => (
+            <Grow {...TransitionProps} style={{ transformOrigin: 'left top' }}>
+              <Paper elevation={8}>
+                <ClickAwayListener
+                  onClickAway={(event) => !anchor.current?.contains(event.target as Node) && setOpen(false)}
+                >
+                  <MenuList
+                    id="new-menu"
+                    autoFocusItem
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape' || event.key === 'Tab') {
+                        if (event.key === 'Escape') event.preventDefault();
+                        setOpen(false);
+                        if (event.key === 'Escape')
+                          anchor.current?.querySelector<HTMLButtonElement>('[aria-haspopup]')?.focus();
+                      }
+                    }}
+                  >
+                    {kinds.map((label) => (
+                      <MenuItem
+                        key={label}
+                        onClick={() => {
+                          setCreated(label);
+                          setOpen(false);
+                        }}
+                      >
+                        {label}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </ClickAwayListener>
+              </Paper>
+            </Grow>
+          )}
+        </Popper>
+        <Typography role="status" variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+          {created && `Chosen: ${created}`}
+        </Typography>
+      </Box>
+    );
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Choose a Workspace Type' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'New Report' }));
+    await expect(canvas.getByRole('status')).toHaveTextContent('Chosen: New Report');
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
   },
 };
