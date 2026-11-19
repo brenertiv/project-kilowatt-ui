@@ -1,0 +1,83 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as TypePreviewStories from './TypePreview.stories';
+
+<Meta
+  of={TypePreviewStories}
+  summary="Kilowatt's TypePreview, one quiet motif per workspace type on a tint of the type's color, for the picture at the top of a workspace or template card."
+/>
+
+# TypePreview
+
+`TypePreview` draws the picture at the top of a workspace or template card: one quiet motif per type on a tint of the type's color. A dashboard is columns, a report a heading over lines of text, a plan a falling path, and a blank template a plus. It says which type the card is and nothing about its contents, which the title carries, so a gallery's titles lead and its pictures sort it by type at a glance. It's Kilowatt's own component, an SVG in MUI's `Box` (`@mui/material`, Material UI v9; MUI documents its props). The color is the type's `chart.series` slot, the one its `TypeChip` takes (`workspaceTypeSlots`: Dashboard, Report and Plan take slots 0 to 2); the shapes are that color at MUI's `action.disabledOpacity` and the tint is the color at `action.selectedOpacity`, so it follows the color scheme as the page does. 3:1, edge to edge at the top of a card.
+
+<Canvas of={TypePreviewStories.Gallery} />
+
+## When to use
+
+- Use it at the top of a workspace or template card in a gallery of mixed types, where the title should lead and the picture only needs to say the type.
+- For a picture of the page a template opens on, a shape per component, use `SchematicPreview`. Choose one of the two for a gallery, never both side by side.
+- For a type's mark in a row, a menu or a card's header, use `TypeChip`.
+- For a picture of real content (a report's cover, a photo of a building), use an image.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardActionArea from '@mui/material/CardActionArea';
+import CardHeader from '@mui/material/CardHeader';
+import { TypePreview } from 'src/components/TypePreview';
+
+<Card variant="outlined">
+  <CardActionArea>
+    <TypePreview type="report" />
+    <CardHeader title="Quarterly Utility Review" />
+  </CardActionArea>
+</Card>;
+```
+
+`type` is `dashboard`, `report` or `plan`. The component looks the color up itself, so a card never passes one.
+
+## Variants
+
+- **Dashboard** (`type="dashboard"`): columns.
+- **Report** (`type="report"`): a heading over lines of text.
+- **Plan** (`type="plan"`): a falling path with a point at each step.
+
+<Canvas of={TypePreviewStories.Report} />
+
+<Canvas of={TypePreviewStories.Plan} />
+
+## States
+
+- **Blank** (`blank`): a plus in place of the motif, for a template that starts empty. The tint still says which type it starts.
+
+<Canvas of={TypePreviewStories.Blank} />
+
+## Do and don't
+
+- Do name the card in text under the picture, with the type's name where the gallery mixes types.
+- Don't rely on the picture or its color to say the type; the color rides on the motif, and the words carry the meaning.
+- Do keep the picture the same 3:1 shape on every card in a gallery.
+- Don't mix `TypePreview` and `SchematicPreview` cards in one gallery; pick the one the gallery needs.
+- Do let the component choose the color from the type.
+- Don't tint a card's picture with a palette color of your own; a type's color is its series slot.
+
+## MUI departures
+
+None of Kilowatt's departures change `Box`.
+
+Theme-wide departures (the chart palette's series colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The picture is decorative (`aria-hidden`): the card's name carries its meaning.
+- The type is never told by color alone: each type has its own motif, and the card names the type in text where it matters.
+- It reads the color scheme on screen (`useResolvedScheme`), so the color is the scheme's own.
+
+## Related
+
+- `SchematicPreview` for a page's layout in miniature.
+- `TypeChip` for a type's icon in the same color.
+- `Card` and `CardActionArea` for the card it sits in.
+
+<Stories includePrimary={false} />

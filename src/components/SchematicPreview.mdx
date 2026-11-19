@@ -15,6 +15,7 @@ import * as SchematicPreviewStories from './SchematicPreview.stories';
 ## When to use
 
 - Use it at the top of a template or workspace card, so a gallery shows what each opens on.
+- Where the card's title should lead and the picture only needs to say the type (a gallery of mixed dashboards, reports and plans), use `TypePreview`: one quiet motif per type, with nothing of the page's contents. Choose one of the two for a gallery.
 - For a picture of real content (a report's cover, a photo of a building), use an image.
 - Don't use it to show data; a chart card shows that.
 
@@ -41,7 +42,7 @@ import { SchematicPreview } from 'src/components/SchematicPreview';
     />
     <CardHeader title="Energy Overview" />
   </CardActionArea>
-</Card>
+</Card>;
 ```
 
 List the page's components in order, each as the blocks it shows, with its width in twelfths as MUI's `Grid` counts them; they pack into rows of twelve, and what falls below the preview's edge is cut off. `previewAspect` gives the 3:1 proportions, for a card without a preview that must stand as tall as one with it.
@@ -85,6 +86,7 @@ Theme-wide departures (the surface and border levels, the chart palette's first 
 ## Related
 
 - `Card` and `CardActionArea` for the card it sits in.
+- `TypePreview` for a card's picture that says only its type.
 - `ScrollRow` for a row of template cards.
 
 <Stories includePrimary={false} />
