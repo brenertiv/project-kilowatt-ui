@@ -1,0 +1,114 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as RadarChartStories from './RadarChart.stories';
+
+<Meta
+  of={RadarChartStories}
+  summary="Kilowatt's reference radar chart: one measure across five to ten categories, each a spoke from 0 at the center, each series an outline over them."
+/>
+
+# Radar chart
+
+A radar chart shows one measure across a handful of categories as a shape: energy use intensity across eight buildings, or their ENERGY STAR scores. `RadarChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/radar`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Each category is a spoke, values start at 0 at the center, and each series is an outline around the spokes, so the shape shows which categories stand out. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={RadarChartStories.Buildings} />
+
+## When to use
+
+- Use a radar chart for one measure across five to ten categories, where the question is which stand out and how two outlines differ in shape: this year against last across a portfolio's buildings.
+- For ranking the categories or reading their values, use a horizontal column chart; lengths on one axis compare better than distances on spokes.
+- For more than ten categories, or long category names, use a column chart or a table.
+- For a measure over time, use a line chart; a radar's spokes have no order.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { RadarChart } from 'src/charts/RadarChart';
+
+const series = [
+  { field: 'current', name: 'Last 12 months' },
+  { field: 'previous', name: '12 months before', neutral: true, dashed: true },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Energy Use Intensity by Building" />
+  <RadarChart
+    data={intensity}
+    categoryField="building"
+    series={series}
+    unit="kBtu/sq ft"
+    summary="350 Park Avenue has the highest energy use intensity of eight buildings, 96 kBtu per square foot."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: one row per category, with its label in `categoryField` and a number per series. Keep it stable (a constant or `useMemo`).
+- `categoryField`: the field that holds each spoke's label.
+- `series`: `{ field, name }` in legend order, each with an optional `slot` or `neutral` (`SeriesColor`) and `dashed`.
+- `unit`: at the chart's top left and in the tooltip.
+- `summary`: one sentence, the figure's accessible name.
+- `max`: the top of the value range, for a measure with a fixed top. Default: it fits the data.
+- `height`: the chart's height in pixels, the legend included. Default `320`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Buildings.** One series: a filled outline in the first series color, every point marked. No legend, since the card's title names what it shows.
+- **Comparison.** A second series that is context (the previous period) is `neutral` and `dashed`: an outline with no fill, so the current period is the one colored shape. The legend below names both.
+- **Scores.** A measure with a fixed top takes `max`, so every spoke runs the full scale and the distance from the rim is the room to improve.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` puts it next to the numbers.
+- Do keep to five to ten categories and two or three series.
+- Don't use a radar chart to rank; sort a horizontal column chart instead.
+- Do draw a comparison `neutral` and `dashed`, so one shape is the point.
+- Don't fill more than two outlines; overlapping fills hide each other.
+- Do plot one measure in one unit.
+- Don't put different measures on different spokes; their scales differ, so the shape would mean nothing. Use a vitals gauge or metric cards.
+
+## MUI departures
+
+- `chart-palette`: series take `chart.series` in order or by `slot`, and neutral series take `chart.neutral`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every point has a tooltip with its series, category, exact value and unit (`tooltipNumberFormat`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `chart-gridlines`: the rings and spokes are full strength in `border.level2`, so they read on the card.
+- `legend-items`: legend items have no left padding, so the legend lines up with the card's title.
+- `legend-markers`: each legend item is marked by an 8px dot in its series' color, as the donut's legend is.
+- `compact-axis-numbers`: the value axis's numbers, up the first spoke, are compact in the viewer's locale.
+- `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
+- `point-markers`: every point is marked, since each spoke is one reading: a 4px dot in its series' color ringed in the card surface.
+- `level-ring-labels`: category names read level beside their spokes, and long ones wrap, rather than bending along the ring.
+- `radar-chrome`: values start at 0 at the center, the chart doesn't pan or zoom, and the unit sits at its top left.
+
+## Accessibility
+
+- Every point shows its series, category, exact value and unit in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Name the category that stands out and its value.
+- Series are told apart by the legend and by line style (a comparison is dashed with no fill), not by color alone.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Column, `horizontal`, for a ranking of the same categories.
+- Charts → Vitals gauge for a few readings on different scales.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />

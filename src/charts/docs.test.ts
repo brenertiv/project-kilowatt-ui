@@ -19,6 +19,13 @@ const charts: ChartName[] = [
   'Heatmap',
   'IntervalChart',
   'Treemap',
+  'GaugeChart',
+  'VitalsGauge',
+  'RadarChart',
+  'PartitionChart',
+  'AnnotatedChart',
+  'ComboChart',
+  'RangeChart',
 ];
 
 /** The body of one `## heading` section. */

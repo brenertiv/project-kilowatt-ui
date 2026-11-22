@@ -16,7 +16,22 @@ import type { Theme } from '@mui/material/styles';
  */
 
 /** Kilowatt's reference charts, by component name. */
-export type ChartName = 'LineChart' | 'MonthLinesChart' | 'ColumnChart' | 'DonutChart' | 'Sparkline' | 'Heatmap' | 'IntervalChart' | 'Treemap';
+export type ChartName =
+  | 'LineChart'
+  | 'MonthLinesChart'
+  | 'ColumnChart'
+  | 'DonutChart'
+  | 'Sparkline'
+  | 'Heatmap'
+  | 'IntervalChart'
+  | 'Treemap'
+  | 'GaugeChart'
+  | 'VitalsGauge'
+  | 'RadarChart'
+  | 'PartitionChart'
+  | 'AnnotatedChart'
+  | 'ComboChart'
+  | 'RangeChart';
 
 /** What a theme entry's `apply` works with, for one chart root and color scheme. */
 export type ChartThemeContext = {
@@ -84,8 +99,26 @@ export const dateLabelFormats = {
   tooltip: { millisecond: fullTime, second: fullTime, minute: fullTime, hour: fullTime, day: fullDay, week: fullDay, month: monthYear, year },
 } satisfies Record<string, Record<am5.time.TimeUnit, Intl.DateTimeFormatOptions>>;
 
-const all: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'DonutChart', 'Sparkline', 'Heatmap', 'IntervalChart', 'Treemap'];
-const xy: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'IntervalChart'];
+const all: ChartName[] = [
+  'LineChart',
+  'MonthLinesChart',
+  'ColumnChart',
+  'DonutChart',
+  'Sparkline',
+  'Heatmap',
+  'IntervalChart',
+  'Treemap',
+  'GaugeChart',
+  'VitalsGauge',
+  'RadarChart',
+  'PartitionChart',
+  'AnnotatedChart',
+  'ComboChart',
+  'RangeChart',
+];
+const xy: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'IntervalChart', 'ComboChart'];
+/** Charts off the XY grid that still draw gridlines, write axis numbers or carry a legend. */
+const gridded: ChartName[] = [...xy, 'RadarChart'];
 
 export const chartDepartures: ChartDeparture[] = [
   {
@@ -140,7 +173,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Gridlines at full strength',
     why: "amCharts draws gridlines at a low opacity of its grid color. Kilowatt draws them at full strength in `border.level2`, a step past the divider (`border.level1`): asked for in review, so a chart's lines read on the card.",
-    charts: xy,
+    charts: gridded,
     apply: ({ theme }) => {
       theme.rule('Grid').setAll({ strokeOpacity: 1 });
     },
@@ -182,7 +215,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Legend items flush left',
     why: "amCharts pads each legend item 5px on every side. Kilowatt drops the left padding, so the first column's markers line up with the axis numbers and the card's title; the right padding keeps columns apart, and the top and bottom keep the hit area.",
-    charts: xy,
+    charts: gridded,
     apply: ({ theme }) => {
       theme.rule('Container', ['legend', 'item', 'itemcontainer']).setAll({ paddingLeft: 0 });
     },
@@ -192,7 +225,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Legend markers are small dots',
     why: "amCharts marks each legend item with an 18px square rounded at 3px. Kilowatt marks it with an 8px dot in the series' color, as the donut's and the segmented bar's legends mark their parts, so every legend reads the same and the marker doesn't outweigh its name.",
-    charts: xy,
+    charts: gridded,
     apply: ({ theme }) => {
       theme.rule('Container', ['legend', 'marker']).setAll({ width: 8, height: 8 });
       theme.rule('RoundedRectangle', ['legend', 'marker', 'rectangle']).setAll({ cornerRadiusTL: 4, cornerRadiusTR: 4, cornerRadiusBL: 4, cornerRadiusBR: 4 });
@@ -218,7 +251,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Compact axis numbers',
     why: "amCharts writes axis numbers in full with its own number format. Kilowatt writes them in `Intl.NumberFormat`'s compact notation in the viewer's locale (1.5K, 60K), so long numbers don't take the plot's width. It's the root's default number format, which value axes use; tooltips set their own and show the full value (`full-value-tooltips`).",
-    charts: xy,
+    charts: [...gridded, 'GaugeChart', 'VitalsGauge', 'RangeChart'],
     apply: ({ root }) => {
       root.numberFormatter.set('numberFormat', axisNumberFormat);
     },
@@ -241,7 +274,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: "Dates in the viewer's locale",
     why: "amCharts writes a date axis's labels and tooltips with its own format strings in English (\"Sep 07\", \"HH:mm\"), whatever the viewer's locale. Kilowatt writes them with `Intl.DateTimeFormat` in the viewer's locale (`dateLabelFormats`), as the app writes every other date, and in UTC like the data (amCharts ignores `root.utc` for `Intl` formats, so each format sets its time zone).",
-    charts: ['LineChart', 'IntervalChart', 'Sparkline'],
+    charts: ['LineChart', 'IntervalChart', 'Sparkline', 'ComboChart'],
     apply: ({ theme }) => {
       theme.rule('DateAxis').setAll({
         dateFormats: dateLabelFormats.axis,
@@ -355,7 +388,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'A legend below, up to three columns',
     why: "amCharts lays a legend out in one row that runs off the edge. Kilowatt's legend sits below the plot, full width, and wraps into up to three columns (`legend` from `src/charts/theme`), and appears only with more than one series.",
-    charts: xy,
+    charts: gridded,
     convention: {
       amchartsDefault: 'A single-row legend wherever it is pushed',
       kilowatt: '`legend(root)` below the plot, for two or more series',
@@ -433,7 +466,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'Markers only where they say something',
     why: "amCharts draws no markers until a bullet is added, and charts then tend to mark every point. Kilowatt draws none by default; `markers: 'last'` marks the latest reading, and `'all'` marks every point of sparse data, where each point is a reading, as `MonthLinesChart` marks every month so a lone month with data still shows. A marker is a 4px dot in the line's color (or its band's) ringed in the card surface, so it stays legible where lines cross.",
-    charts: ['LineChart', 'MonthLinesChart', 'Sparkline'],
+    charts: ['LineChart', 'MonthLinesChart', 'Sparkline', 'RadarChart', 'ComboChart'],
     convention: {
       amchartsDefault: 'No bullets; when added, usually on every point',
       kilowatt: "`markers: 'last' | 'all'` on a `LineChart` series, and the last point of every `Sparkline`: a 4px dot ringed in the card surface",
@@ -493,5 +526,109 @@ export const chartDepartures: ChartDeparture[] = [
       where: 'Every zoomable chart',
     },
     check: /zoomOutButton\.set\('forceHidden', true\)/,
+  },
+  {
+    id: 'gauge-status-arc',
+    kind: 'convention',
+    title: "A gauge's arc runs through the intents, with the reading in words",
+    why: "amCharts' gauge fills its arc with a gradient of its own positive, warning and negative colors and shows the reading only by the needle. A reading on a scale of worse to better is status, so Kilowatt runs the arc through the intents (`error`, `warning`, `success`, reversed where less is better) and writes the number, its unit and the name of its band under the arc as text, so nothing rests on the color or the needle's angle. A threshold is a tick across the arc in `text.secondary`, named under the gauge.",
+    charts: ['GaugeChart'],
+    convention: {
+      amchartsDefault: "A `strokeGradient` of amCharts' interface colors; the value read off the needle",
+      kilowatt: "`colors.status` as the gradient's stops; the reading, unit and band as text under the arc; `references` as ticks named under it; the needle moves to a new `value` in place",
+      where: 'Every gauge of one reading',
+    },
+    check: /colors\.status/,
+  },
+  {
+    id: 'gauge-parts',
+    kind: 'convention',
+    title: 'Each part of a gauge takes a series color and is named in a legend',
+    why: "amCharts' multi-part gauge colors each scale from its own color set, a step apart and translucent, and names none of them. The parts are categories, so Kilowatt gives each arc and its needle a `chart.series` color in order (or a `slot`), solid, and names every reading with its value and unit in a legend under the ring, as the donut's legend names its parts, so a reading doesn't rest on its color.",
+    charts: ['VitalsGauge'],
+    convention: {
+      amchartsDefault: '`ColorSet` with `step: 2`, each arc at 0.8 opacity, no labels beyond the scales',
+      kilowatt: '`seriesColors` for the arcs and needles; an HTML legend under the ring with each name, value and unit; two to four parts; needles move to new values in place',
+      where: 'Every gauge of several readings',
+    },
+    check: /seriesColors\(/,
+  },
+  {
+    id: 'level-ring-labels',
+    kind: 'convention',
+    title: 'Labels around a ring read level',
+    why: "amCharts bends a circular axis's labels along the ring, so half of them read sideways or upside down and a long category name wraps around the chart. Kilowatt sets them level beside the ring (`textType: 'adjusted'`), and a radar's long category names wrap under themselves, so every label reads like the rest of the page.",
+    charts: ['GaugeChart', 'VitalsGauge', 'RadarChart'],
+    convention: {
+      amchartsDefault: "`textType: 'circular'` on a circular axis's labels",
+      kilowatt: "`textType: 'adjusted'` on the circular renderer's label template, a few pixels off the ring",
+      where: 'Every circular axis',
+    },
+    check: /textType: 'adjusted'/,
+  },
+  {
+    id: 'radar-chrome',
+    kind: 'convention',
+    title: 'A radar starts at zero, marks every point and stays still',
+    why: "amCharts' radar fits its value axis to the data, pans and zooms on the wheel and by dragging, and shows values through a cursor. Kilowatt starts the value axis at 0 at the center, as every value axis does, so a distance reads as an amount; marks every point with a dot that carries its full-value tooltip, since each spoke is one reading; and doesn't pan or zoom, since only interval charts do. The unit sits at the chart's top left, read level, as it sits above a value axis.",
+    charts: ['RadarChart'],
+    convention: {
+      amchartsDefault: "A fitted value axis, `wheelY: 'zoomX'`, a `RadarCursor` that zooms, no unit",
+      kilowatt: '`min: 0` on the radial axis, no wheel, pan or cursor, a ringed dot with a tooltip on every point, the unit as a label at the top left',
+      where: 'Every radar chart',
+    },
+    check: /min: 0/,
+  },
+  {
+    id: 'branch-colors',
+    kind: 'convention',
+    title: 'A hierarchy is colored by branch',
+    why: "amCharts gives every node of a hierarchy its own color from the color set, so a partition's levels run through more colors than the palette has and a color means nothing. Kilowatt colors a partition by branch: each child of the whole takes a `chart.series` color (or a `slot`) and its descendants keep it, the whole takes `chart.neutral`, and rectangles are parted by 2px of the card surface. Color then names the branch and the column names the level. Labels take the palette's contrast text and are hidden where they don't fit, rather than turned sideways.",
+    charts: ['PartitionChart'],
+    convention: {
+      amchartsDefault: 'A color per node from the `ColorSet`; labels rotated in narrow rectangles',
+      kilowatt: "`fillField` set from the branch's series color through every level, `chart.neutral` for the whole, `colors.contrast` for labels, `oversizedBehavior: 'hide'`",
+      where: 'Every hierarchy chart with more than one level',
+    },
+    check: /colors\.contrast/,
+  },
+  {
+    id: 'annotate-button',
+    kind: 'convention',
+    title: 'Annotating opens from an MUI button, on Kilowatt surfaces',
+    why: "amCharts opens its annotator from an item in its export menu, a control of its own over the chart, and MarkerJS draws its toolbars in its own dark style with its own ink colors. Kilowatt opens it from an MUI button under the chart (Annotate, then Done), beside a Clear annotations button, as it replaces amCharts' zoom-out button with an MUI one; MarkerJS's toolbars take the menu surface and `text.primary`, and its inks are `text.primary` and the intents, never a series color, since an annotation is a remark on the data.",
+    charts: ['AnnotatedChart'],
+    convention: {
+      amchartsDefault: "An `ExportingMenu` item that toggles the `Annotator`; MarkerJS's default toolbar style and color set",
+      kilowatt: 'No export menu; MUI buttons under the chart call the `Annotator`; `markerStyleSettings` and `markerSettings` from the palette',
+      where: 'Every chart people can annotate',
+    },
+    check: /markerStyleSettings/,
+  },
+  {
+    id: 'target-columns',
+    kind: 'convention',
+    title: 'A target stands behind its columns, in neutral',
+    why: "amCharts' combined chart draws the target as a wider column in a second series color at half opacity, zooms on the wheel and adds a scrollbar. A target is context for the amount read against it, so Kilowatt draws it as a wider column in `chart.neutral` behind the measured one, which keeps the series color; the lines on the second axis are marked at every period with a hollow dot, which stays apart from the column behind it; and the chart doesn't zoom or scroll, since only interval charts do.",
+    charts: ['ComboChart'],
+    convention: {
+      amchartsDefault: 'Two `clustered: false` column series in two colors, the wider at 0.5 opacity; `XYChartScrollbar` and wheel zoom',
+      kilowatt: '`target` on a column series: `chart.neutral`, 90% of the period wide, behind a 50% column in its series color; no scrollbar, wheel or cursor zoom',
+      where: 'Every column read against a target for the same period',
+    },
+    check: /clustered: false/,
+  },
+  {
+    id: 'range-track',
+    kind: 'convention',
+    title: 'A range chart is one reading on a track, against its benchmark',
+    why: "amCharts' range bullet chart compares several categories, each a translucent bar between two large dots with a triangle at the average and a legend above. Kilowatt's is one property's reading: a track from 0 divided into bands (below, within and above the expected range), each tinted with its intent, since a reading judged against a benchmark is status; the benchmark is a tick across the track in `text.secondary`, named under it; and the reading is a dot in its band's intent, ringed in the card surface. Only the track's ends and the benchmark are labeled, and the reading, its unit, the benchmark and the band's name are text above the track, so nothing rests on the color.",
+    charts: ['RangeChart'],
+    convention: {
+      amchartsDefault: 'A floating column per category with circle bullets at its ends, a triangle at the average and a legend above the plot',
+      kilowatt: "One row: `bands` as columns tinted with `colors.status`, rounded at the track's ends with the theme radius; an axis range at `benchmark`; a dot at `value` in its band's intent; no axis numbers but the ends; the reading as text above",
+      where: 'Every reading shown against a benchmark and an expected range',
+    },
+    check: /colors\.status/,
   },
 ];

@@ -1,0 +1,114 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as GaugeChartStories from './GaugeChart.stories';
+
+<Meta
+  of={GaugeChartStories}
+  summary="Kilowatt's reference gauge: one reading on a fixed scale of worse to better, as a half-circle arc through the intents with a needle, and the number, unit and band as text under it."
+/>
+
+# Gauge chart
+
+A gauge shows where one reading sits on a fixed scale that runs from worse to better: an ENERGY STAR score from 1 to 100, a data coverage percentage. `GaugeChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/radar`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). The arc runs through the intents, since a reading judged from worse to better is status; the number, its unit and the name of its band are text under the arc. Enertiv's app rebuilds its gauges from this one rather than importing it.
+
+<Canvas of={GaugeChartStories.Score} />
+
+## When to use
+
+- Use a gauge for one reading on a scale with fixed ends, where the question is how good it is right now: an ENERGY STAR score, a maintenance score, data coverage.
+- For which way the reading is heading, use a sparkline under the number, or a line chart colored by its bands.
+- For several readings on different scales, use a vitals gauge; on one scale, a column chart.
+- For a reading with no fixed scale or no worse and better end (energy use in kWh), show the number alone, with a sparkline.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { GaugeChart } from 'src/charts/GaugeChart';
+
+const bands = [
+  { from: 75, to: 100, status: 'success', label: 'Eligible for certification' },
+  { from: 50, to: 75, status: 'warning', label: 'Above the national median' },
+  { from: 0, to: 50, status: 'error', label: 'Below the national median' },
+];
+const certification = [{ value: 75, label: 'Certification' }];
+
+<Card variant="outlined">
+  <CardHeader title="ENERGY STAR Score" />
+  <GaugeChart
+    value={77}
+    name="ENERGY STAR score"
+    unit="pts"
+    bands={bands}
+    references={certification}
+    summary="The ENERGY STAR score is 77, above the certification threshold of 75."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `value`: the reading. When it changes, the needle moves; the chart isn't rebuilt.
+- `name`: what the reading is, in the needle's tooltip.
+- `unit`: after the number under the gauge and in the tooltip.
+- `summary`: one sentence, the figure's accessible name.
+- `min`, `max`: the ends of the scale. Default `0` and `100`.
+- `bands`: the bands the reading is read in (`StatusBand`, as `scoreBands` in `src/charts/meanings`); the band's name shows under the number. Default none.
+- `references`: up to two thresholds, `{ value, label }`, each a tick across the arc and a line under the gauge. Default none.
+- `lowerIsBetter`: reverses the arc for a reading where less is better. Default `false`.
+- `height`: the gauge's height in pixels, the text under it not included. Default `160`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Score.** More is better: the arc runs from `error` at the low end through `warning` to `success` at the high end. The band the reading falls in is named under the number, and a threshold is ticked on the arc.
+- **Lower is better.** With `lowerIsBetter`, the arc runs from `success` to `error`, for energy use intensity, cost per square foot or emissions.
+- **Live.** A new `value` swings the needle to it and the number follows; under reduced motion it moves at once.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` puts it next to the numbers.
+- Do give the gauge `bands`, so the reading's standing is written under the number.
+- Don't rely on the arc's color to say whether the reading is good; without `bands`, say it in the card or the summary.
+- Do use a gauge for a scale with a worse and a better end.
+- Don't use a gauge for an amount with no fixed scale; show the number and a sparkline.
+- Do keep to two `references`.
+- Don't add a second needle to compare two readings; use two gauges side by side at one height, or a column chart.
+
+## MUI departures
+
+- `chart-palette`: the gauge takes no `chart.series` color: its arc is the intents, since the reading is status.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the scale's numbers and the needle take the palette's roles (`text.secondary`, `text.primary`), and the arc takes the intents.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: the needle has a tooltip with the reading's exact value and unit (`tooltipNumberFormat`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `compact-axis-numbers`: the scale's numbers are compact in the viewer's locale.
+- `gauge-status-arc`: the arc is a gradient of `error`, `warning` and `success`, reversed with `lowerIsBetter`; the number, unit and band are text under it, and `references` are ticks named under it.
+- `level-ring-labels`: the scale's numbers read level outside the arc, rather than bent along it.
+
+## Accessibility
+
+- The reading, its unit, its band and the thresholds are real text under the arc, so the value reads without the canvas and nothing rests on the arc's color.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say the reading and how it stands against its threshold.
+- The needle shows the exact reading in a tooltip on hover.
+- A reading that changes on its own should be announced where it matters: put the number in an `aria-live` region in the page, not in the chart.
+
+## Related
+
+- Charts → Vitals gauge for several readings on their own scales.
+- Charts → Sparkline for the trend behind the reading.
+- Charts → Line for a score over time, colored by its bands.
+
+<Stories includePrimary={false} />

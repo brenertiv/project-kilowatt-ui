@@ -1,0 +1,113 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as RangeChartStories from './RangeChart.stories';
+
+<Meta
+  of={RangeChartStories}
+  summary="Kilowatt's reference range chart: one property's reading on a track from 0, against a benchmark and the range it's expected to fall in, with the reading and its band as text above."
+/>
+
+# Range chart
+
+A range chart shows where one property's reading sits against a benchmark and the range it's expected to fall in: a building's site energy use intensity (EUI) against the median for its type. `RangeChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). The track runs from 0 and is divided into bands (below, within and above the expected range), each tinted with its intent; the benchmark is a tick across the track, and the reading is a dot in its band's intent. The reading, its unit, the benchmark and the band's name are text above the track. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={RangeChartStories.WithinRange} />
+
+## When to use
+
+- Use a range chart for one property's reading judged against a benchmark and an expected range around it: a site EUI in an ENERGY STAR Portfolio Manager check, cost per square foot against a budget band.
+- For a reading on a fixed scale of worse to better with no benchmark (a 0–100 score), use a gauge chart.
+- For the same measure across several properties, use a horizontal column chart, or a radar chart for its shape.
+- For the reading's history, use a sparkline or a line chart with the benchmark as a reference line.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { RangeChart } from 'src/charts/RangeChart';
+
+const benchmark = 52.9;
+const bands = [
+  { from: 0, to: benchmark * 0.5, status: 'warning', label: 'Below the expected range' },
+  { from: benchmark * 0.5, to: benchmark * 1.5, status: 'success', label: 'Within the expected range' },
+  { from: benchmark * 1.5, to: benchmark * 3, status: 'error', label: 'Above the expected range' },
+];
+
+<Card variant="outlined">
+  <CardHeader title="ENERGY STAR Portfolio Manager Check" />
+  <RangeChart
+    value={61.4}
+    name="Site EUI"
+    unit="kBtu/sq ft"
+    benchmark={benchmark}
+    bands={bands}
+    summary="350 Park Avenue's site EUI is 61.4 kBtu per square foot, within the expected range around the benchmark of 52.9."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `value`: the property's reading.
+- `name`: what the reading is, before the number and in the marker's tooltip.
+- `unit`: after the number and in the tooltips.
+- `benchmark`: the value the reading is judged against, a tick across the track.
+- `bands`: the track's ranges, `{ from, to, status, label }` (`StatusBand`). Keep it stable (a constant or `useMemo`).
+- `summary`: one sentence, the figure's accessible name.
+- `benchmarkName`: what the benchmark is, under its tick and beside the reading. Default `'Benchmark'`.
+- `max`: the top of the track. Default: the top of the highest band.
+- `height`: the track's height in pixels, its labels included. Default `56`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Within the expected range.** The reading falls in the band around the benchmark: the number and its marker take `success`, and "Within the expected range" is written under the number.
+- **Below the expected range.** A reading far below the benchmark usually means missing bills or meters rather than an efficient building, so the band is `warning`: something to check.
+- **Above the expected range.** A reading well above the benchmark takes `error`. A reading past the top of the track is marked at its end; the number above keeps the real value.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` sits after the reading and in the tooltips.
+- Do set the bands from the benchmark (half to one and a half times it, on a track to three times it), so the benchmark sits in the same place on every property's chart.
+- Don't fit the track to the reading; a track that moves with the value can't be compared across cards.
+- Do name each band for what it means (Below the expected range), since its name is written under the number.
+- Don't rely on the band's tint or the number's color to say whether the reading is in range; the band's name does.
+- Do use one chart per property and measure.
+- Don't put several properties' markers on one track; use a column chart with the benchmark as a reference.
+
+## MUI departures
+
+- `chart-palette`: the chart takes no `chart.series` color: its bands, the number and the marker take the intents, since a reading against a benchmark is status.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the track's labels and the benchmark's tick take the palette's roles (`text.secondary`), and the bands and the marker take the intents.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: the marker has a tooltip with the reading's exact value, unit and band, and each band one with its name and its ends (`tooltipNumberFormat`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `compact-axis-numbers`: the numbers at the track's ends are compact in the viewer's locale.
+- `range-track`: one row: bands tinted with the intents and rounded at the track's ends, a tick at the benchmark named under it, a dot at the reading in its band's intent, and the reading as text above.
+
+## Accessibility
+
+- The reading, its unit, the benchmark and the name of the reading's band are real text above the track, so the value and its standing read without the canvas or its colors.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say the reading, the benchmark and whether it is in range.
+- The marker shows the exact reading and its band in a tooltip on hover, and each band shows its name and its ends.
+- The benchmark is named in text under its tick.
+
+## Related
+
+- Charts → Gauge for one reading on a fixed scale of worse to better.
+- Charts → Column, `horizontal`, for one measure across several properties.
+- Charts → Sparkline for the reading's trend.
+
+<Stories includePrimary={false} />

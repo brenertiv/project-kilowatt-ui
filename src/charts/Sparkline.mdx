@@ -16,7 +16,8 @@ A sparkline shows the trend behind a headline number in a small space: a score o
 
 - Use a sparkline under a headline number in a summary card, to show which way the number is heading.
 - For a trend people need to read values off, with dates and a scale, use a line chart.
-- For more than one measure, use a line chart; a sparkline draws one line.
+- For more than one measure, use a line chart; a sparkline draws one series.
+- For a row of small charts, one per item, put sparklines in a table's cells at 32px with `inset={0}`, beside the numbers they explain.
 - For a number with no history, show the number alone.
 
 ## Usage
@@ -55,6 +56,8 @@ const benchmark = [{ value: 65, label: 'Benchmark' }];
 - **Score.** A score on its fixed range with one benchmark, which gives the line its scale.
 - **Two references.** Two thresholds at most, such as a national median and a certification level. Set `labelBelow` on a reference whose label would cover the data above its line.
 - **Fitted.** A measure with no fixed range: the line fills the height, and the headline number carries the unit.
+- **Columns.** `variant="column"` draws an amount per period as thin columns from 0, with no marker: a count or a volume where each period stands alone, rather than a level that moves.
+- **In a table.** Micro charts, one row per item: a line for the trend and `neutral` columns for a second measure, each 32px tall with `inset={0}`. The change sits beside them as signed text, since a sparkline's color never says up or down.
 
 The line takes the first `chart.series` color. Give it a `slot` when it stands for a product meaning, or `neutral` when the sparkline is context beside another chart.
 

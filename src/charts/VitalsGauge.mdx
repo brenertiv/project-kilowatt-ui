@@ -1,0 +1,100 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as VitalsGaugeStories from './VitalsGauge.stories';
+
+<Meta
+  of={VitalsGaugeStories}
+  summary="Kilowatt's reference multi-part gauge: two to four readings around one ring, each on its own arc, scale and needle, named with their values in a legend."
+/>
+
+# Vitals gauge
+
+A vitals gauge shows a few readings that don't share a unit side by side: a building's ENERGY STAR score, demand, occupancy and data coverage. `VitalsGauge` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/radar`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Each reading takes an arc of one ring with its own scale and a needle at its value; the legend under the ring names each with its value and unit. Enertiv's app rebuilds its gauges from this one rather than importing it.
+
+<Canvas of={VitalsGaugeStories.Vitals} />
+
+## When to use
+
+- Use a vitals gauge for two to four readings in different units that are read together at a glance, each against the top of its own scale.
+- For one reading judged from worse to better, use a gauge chart.
+- For readings in one unit, use a column chart, which compares them on one axis.
+- For more than four readings, or readings people look up, use a row of metric cards or a table.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { VitalsGauge } from 'src/charts/VitalsGauge';
+
+const vitals = [
+  { name: 'ENERGY STAR score', value: 77, max: 100, unit: 'pts' },
+  { name: 'Demand', value: 842, max: 1200, unit: 'kW' },
+  { name: 'Occupancy', value: 71, max: 100, unit: '%' },
+  { name: 'Data coverage', value: 94, max: 100, unit: '%' },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Building Vitals" />
+  <VitalsGauge vitals={vitals} summary="ENERGY STAR score 77, demand 842 kW of 1,200, occupancy 71% and data coverage 94%." />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `vitals`: two to four readings, clockwise from the top: `{ name, value, max, unit }`, with an optional `min` (default `0`) and `slot` (`SeriesColor`). When only the values change, the needles move; the chart isn't rebuilt.
+- `summary`: one sentence, the figure's accessible name.
+- `height`: the ring's height in pixels, the legend not included. Default `260`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Vitals.** Four readings, a quarter of the ring each, in `chart.series` order, each with its scale's numbers outside its arc.
+- **Two readings.** Each arc takes half the ring; three take a third each.
+- **Live.** New values swing each needle to its reading and the legend follows; under reduced motion they move at once.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; each reading's `unit` sits with its value in the legend and the tooltip.
+- Do keep to four readings; past four, the arcs are too short to read.
+- Don't use it to compare readings in one unit; a column chart compares them on one axis.
+- Do set each `max` to a top that means something: a capacity, a contract limit, 100 for a percentage.
+- Don't color the arcs by status; they take series colors because they are categories. For one reading's standing, use a gauge chart.
+- Do write the readings into `summary`, since the legend's values are the only other text.
+- Don't drop the legend to save space; it is what names each arc.
+
+## MUI departures
+
+- `chart-palette`: arcs and needles take `chart.series` in order, or by `slot`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every needle has a tooltip with its reading's exact value and unit (`tooltipNumberFormat`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `compact-axis-numbers`: each scale's numbers are compact in the viewer's locale (1K for 1,000 kW).
+- `gauge-parts`: each arc and its needle take a series color, solid, and the legend under the ring names every reading with its value and unit.
+- `level-ring-labels`: each scale's numbers read level outside its arc, rather than bent along it.
+
+## Accessibility
+
+- The legend under the ring is real text: each reading's name, value and unit, so the values read without the canvas and no reading rests on its color.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say every reading.
+- Each needle shows its exact reading in a tooltip on hover.
+
+## Related
+
+- Charts → Gauge for one reading on a scale of worse to better.
+- Charts → Column for readings in one unit.
+- Card → Metric for a row of headline numbers.
+
+<Stories includePrimary={false} />

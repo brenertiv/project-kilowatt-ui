@@ -25,6 +25,8 @@ export const storyDeps = [
   '@amcharts/amcharts5',
   '@amcharts/amcharts5/hierarchy',
   '@amcharts/amcharts5/percent',
+  '@amcharts/amcharts5/plugins/exporting',
+  '@amcharts/amcharts5/radar',
   '@amcharts/amcharts5/themes/Animated',
   '@amcharts/amcharts5/xy',
   '@deck.gl/layers',

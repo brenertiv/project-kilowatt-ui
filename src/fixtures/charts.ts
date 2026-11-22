@@ -191,3 +191,89 @@ export const intervalDemand = Array.from({ length: 365 * 96 }, (_, i) => {
   const noise = ((Math.sin(i * 12.9898) * 43758.5453) % 1) * 30;
   return { date, demand: Math.round((380 + 520 * occupied + 420 * summer * afternoon * (0.4 + occupied) + noise) * 10) / 10 };
 });
+
+/** A building's ENERGY STAR score today (1–100): the latest month of `monthlyEnergyStar`. */
+export const energyStarScore = monthlyEnergyStar[monthlyEnergyStar.length - 1].score;
+
+/** The ENERGY STAR score a building needs for certification. */
+export const energyStarCertification = 75;
+
+/** A building's vitals right now: four readings, each on its own scale. */
+export const buildingVitals = [
+  { name: 'ENERGY STAR score', value: energyStarScore, max: 100, unit: 'pts' },
+  { name: 'Demand', value: 842, max: 1200, unit: 'kW' },
+  { name: 'Occupancy', value: 71, max: 100, unit: '%' },
+  { name: 'Data coverage', value: 94, max: 100, unit: '%' },
+];
+
+/** The sample portfolio's buildings and two more: eight, for a radar's spokes. */
+export const radarBuildings = [...buildings, '120 Wall Street', '75 Rockefeller Plaza'];
+
+/** Each building's site energy use intensity for the last 12 months and the 12 before, in kBtu per square foot, with its ENERGY STAR score. */
+export const buildingIntensity = radarBuildings.map((building, b) => {
+  const current = Math.round(62 + 34 * Math.abs(Math.sin(b * 1.9 + 0.4)) + b * 2);
+  return { building, current, previous: Math.round(current * (1.04 + 0.05 * Math.cos(b * 1.3))), score: Math.round(92 - (current - 62) * 0.75) };
+});
+
+/** A building's energy use for September 2026 by system, then by equipment, in kWh: a hierarchy two levels deep. */
+export const energyBySystem = {
+  name: '350 Park Avenue',
+  children: [
+    {
+      name: 'HVAC',
+      children: [
+        { name: 'Chillers', value: 9_840 },
+        { name: 'Air handlers', value: 6_120 },
+        { name: 'Pumps', value: 2_960 },
+        { name: 'Cooling towers', value: 1_780 },
+      ],
+    },
+    {
+      name: 'Lighting',
+      children: [
+        { name: 'Tenant floors', value: 5_210 },
+        { name: 'Common areas', value: 2_340 },
+        { name: 'Exterior', value: 610 },
+      ],
+    },
+    {
+      name: 'Plug loads',
+      children: [
+        { name: 'Tenant floors', value: 4_480 },
+        { name: 'Data room', value: 2_050 },
+      ],
+    },
+    {
+      name: 'Vertical transport',
+      children: [
+        { name: 'Elevators', value: 1_930 },
+        { name: 'Escalators', value: 420 },
+      ],
+    },
+    { name: 'Domestic hot water', value: 1_260 },
+  ],
+};
+
+/** 2026 by month: a building's energy use against its budget (kWh), with the month's cooling degree days and their 10-year normal. */
+export const monthlyUseAndBudget = Array.from({ length: 12 }, (_, i) => {
+  const season = 0.5 - 0.5 * Math.cos(((i - 0.5) / 12) * 2 * Math.PI);
+  const normal = Math.round(420 * season ** 2);
+  const degreeDays = Math.round(normal * (1 + 0.18 * Math.sin(i * 1.7)));
+  const budget = Math.round(31_000 + 17_000 * season);
+  return { date: Date.UTC(2026, i, 1), use: Math.round(budget * (0.93 + 0.12 * Math.sin(i * 1.7) + 0.02 * Math.cos(i))), budget, degreeDays, normal };
+});
+
+/** One building's site energy use intensity for the last 12 months, in kBtu per square foot, with the benchmark for its property type: the national median for offices. */
+export const siteIntensity = { building: buildings[0], value: 61.4, benchmark: 52.9 };
+
+/** The last 30 days for each building: daily energy use (`use`, kWh) and peak demand (`peak`, kW), for a table of sparklines. */
+export const buildingTrends = radarBuildings.map((building, b) => {
+  const drift = (b % 3) - 1;
+  const rows = Array.from({ length: 30 }, (_, i) => {
+    const date = day(i);
+    const base = (isWeekend(date) ? 0.7 : 1) * (1700 - b * 160);
+    const use = Math.round(base * (1 + drift * 0.004 * i) + 60 * Math.sin(i / 2 + b));
+    return { date, use, peak: Math.round(use / 11 + 12 * Math.cos(i / 3 + b)) };
+  });
+  return { building, rows };
+});

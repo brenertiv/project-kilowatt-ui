@@ -1,0 +1,100 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as AnnotatedChartStories from './AnnotatedChart.stories';
+
+<Meta
+  of={AnnotatedChartStories}
+  summary="Kilowatt's reference annotated chart: a pie people can draw on with arrows, callouts and text through amCharts' annotator, opened by an MUI button, with the annotations saved and restored as state."
+/>
+
+# Annotated chart
+
+An annotated chart lets a person mark up what they see: an arrow at the slice that jumped, a note on why. `AnnotatedChart` is Kilowatt's reference implementation: a pie from amCharts 5 (`@amcharts/amcharts5/percent`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9), with amCharts' annotator (`@amcharts/amcharts5/plugins/exporting`, which draws with MarkerJS) over it. An MUI button under the chart opens the drawing tools; what's drawn is handed back as state to save, and saved state is drawn back over the chart. The same pattern adds annotations to any chart built with `useChart`. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={AnnotatedChartStories.Annotated} />
+
+## When to use
+
+- Use an annotated chart where people explain a chart to each other: a report someone prepares for an owner, a review of a month's bills.
+- For a note that belongs to the data (a target, a threshold, a named period), use the chart's own `references` or `ranges`, which stay with the values when the data or the size changes.
+- For a comment on the whole chart, use text beside the card.
+- For a dashboard nobody marks up, use the plain chart.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { AnnotatedChart } from 'src/charts/AnnotatedChart';
+
+<Card variant="outlined">
+  <CardHeader title="Utility Cost" />
+  <AnnotatedChart
+    data={costs}
+    unit="USD"
+    annotations={saved}
+    onAnnotationsChange={save}
+    summary="Electricity was 48,200 USD of the building's utility cost. A note on electricity says the demand charge doubled."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: up to six parts, `{ category, value }`, with an optional `slot` or `neutral` (`SeriesColor`). Keep it stable (a constant or `useMemo`).
+- `unit`: after each value in the tooltip.
+- `summary`: one sentence on the chart and on what its annotations say, the figure's accessible name.
+- `annotations`: annotations saved earlier (`Annotations`, the state MarkerJS saves), drawn over the chart when it loads. Default none.
+- `onAnnotationsChange`: called with the annotations each time the person chooses Done, and with none after Clear annotations. Default none.
+- `height`: the chart's height in pixels, the legend and buttons not included. Default `240`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Annotated.** Saved `annotations` are drawn over the chart. Annotate opens the tools to add to them or change them, and Clear annotations removes them all.
+- **Not annotated.** Only the Annotate button shows. It opens MarkerJS's toolbar over the top of the chart (shapes, arrows, text, callouts, undo) and becomes Done, which keeps what was drawn and calls `onAnnotationsChange`.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` puts it next to the numbers.
+- Do save what `onAnnotationsChange` hands you as it is, and pass it back as `annotations`.
+- Don't edit the saved state by hand; it holds positions for the size the chart was annotated at, and MarkerJS scales them to the chart's size.
+- Do write what the annotations say into `summary`.
+- Don't put anything only in an annotation; it is a picture, so a screen reader can't read it and it doesn't move when the data changes.
+- Do use the intents and the text color for annotation ink, as the tools offer.
+- Don't annotate with series colors; a note in a series color reads as data.
+
+## MUI departures
+
+- `chart-palette`: slices take `chart.series` in order or by `slot`; annotation inks are `text.primary` and the intents.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every slice has a tooltip with its exact value, unit and share (`tooltipNumberFormat`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `annotate-button`: the annotator opens from an MUI Annotate button under the chart, not amCharts' export menu; MarkerJS's toolbars take the menu surface and `text.primary`, and its inks are `text.primary` and the intents.
+
+## Accessibility
+
+- Annotations are a picture drawn on the canvas, so a screen reader can't read them: `summary`, the figure's accessible name, must say what they point out.
+- Annotate, Done and Clear annotations are MUI buttons, reached by keyboard. Drawing itself needs a pointer; MarkerJS's tools have no keyboard equivalent, so offer a text note beside the chart as the other way to comment.
+- The legend under the chart names each part and its share in text, and every slice has a tooltip with its exact value.
+- MarkerJS shows its logo in the corner of the chart while annotating unless a license key is added.
+
+## Related
+
+- Charts → Donut for the parts of a whole without annotations.
+- Charts → Line for `references` and `ranges`, notes that stay with the data.
+- Rules → Charts for chart colors and the chart theme.
+
+<Stories includePrimary={false} />
