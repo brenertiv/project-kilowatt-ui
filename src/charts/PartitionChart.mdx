@@ -1,0 +1,101 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as PartitionChartStories from './PartitionChart.stories';
+
+<Meta
+  of={PartitionChartStories}
+  summary="Kilowatt's reference partition (icicle) chart of a hierarchy: the whole at the left, each level a column further right, rectangles sized by value and colored by branch."
+/>
+
+# Partition chart
+
+A partition chart, or icicle, shows how a whole splits into parts and how each part splits again: a building's energy use by system, then by equipment. `PartitionChart` is Kilowatt's reference implementation: amCharts 5's hierarchy partition (`@amcharts/amcharts5/hierarchy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). The whole is a column at the left and each level sits a column further right, every rectangle as tall as its share; a branch keeps one color through its levels. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={PartitionChartStories.Building} />
+
+## When to use
+
+- Use a partition chart for a hierarchy two or three levels deep whose values add up at every level: a building, its systems and their equipment; a portfolio, its regions and their properties.
+- For one level of parts, use a treemap in a wide, short card or a donut in a square one.
+- For parts that change over time, use a stacked column chart.
+- For a deep or wide hierarchy, or values people look up, use a table with expandable rows.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { PartitionChart } from 'src/charts/PartitionChart';
+
+const energy = {
+  name: '350 Park Avenue',
+  children: [
+    { name: 'HVAC', children: [{ name: 'Chillers', value: 9840 }, { name: 'Air handlers', value: 6120 }] },
+    { name: 'Lighting', children: [{ name: 'Tenant floors', value: 5210 }, { name: 'Common areas', value: 2340 }] },
+    { name: 'Domestic hot water', value: 1260 },
+  ],
+};
+
+<Card variant="outlined">
+  <CardHeader title="Energy Use by System" />
+  <PartitionChart data={energy} unit="kWh" summary="HVAC was 64% of the building's energy use, led by the chillers." />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: the root node, `{ name, children }`; each child is a leaf `{ name, value }` or a group with its own `children`. A branch (a child of the root) may take a `slot` or `neutral` (`SeriesColor`). Keep it stable (a constant or `useMemo`).
+- `unit`: after each value in the tooltip.
+- `summary`: one sentence, the figure's accessible name.
+- `height`: the chart's height in pixels. Default `320`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Building.** Three columns: the whole in `chart.neutral`, its branches in `chart.series` order, and each branch's parts in their branch's color. A click on a group zooms into it; a click on the column at its left zooms back out.
+- **One level.** A root with only leaves: each is its own branch and color. For this alone a treemap or a donut usually reads better; it is here for a hierarchy that happens to be shallow.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` puts it in the tooltip, next to each value, and the summary should state it with its numbers.
+- Do use it only where every level's values add up to the level above.
+- Don't use it for values that overlap or don't sum, such as averages or rates.
+- Do keep to six branches, the number of series colors; group the smallest into an Other branch in your data.
+- Don't give each node its own color; a branch's parts share its color so color names the branch.
+- Do order branches and their children largest first in `data`.
+- Don't rely on the zoom to show small parts; name what matters in `summary`, and offer a table for the rest.
+
+## MUI departures
+
+- `chart-palette`: branches take `chart.series` in order or by `slot`, and the whole takes `chart.neutral`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and branches take `chart.series`, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every rectangle has a tooltip with its name, exact value, unit and share of the whole (`tooltipNumberFormat`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `branch-colors`: each branch keeps one series color through its levels and the whole is `chart.neutral`; labels take the palette's contrast text and are hidden where they don't fit.
+
+## Accessibility
+
+- Every rectangle shows its name, exact value, unit and share of the whole in a tooltip on hover, including the ones too small for a label.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say the largest branch and its share.
+- Rectangles are told apart by their labels, position and size as well as color; each label takes the palette's contrast text for its rectangle.
+- Zooming into a branch is by pointer only. Offer the same hierarchy as a table with expandable rows beside the chart.
+
+## Related
+
+- Charts → Treemap for one level of parts in a wide, short card.
+- Charts → Donut for one level of parts in a square card.
+- Charts → Column, stacked, for parts of a total across categories.
+
+<Stories includePrimary={false} />

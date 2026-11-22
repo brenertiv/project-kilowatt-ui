@@ -1,9 +1,14 @@
 import CardContent from '@mui/material/CardContent';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, waitFor } from 'storybook/test';
 import { Sparkline } from 'src/charts/Sparkline';
-import { dailyUse, monthlyEnergyStar, recentScore, scoreBenchmark } from 'src/fixtures/charts';
+import { buildingTrends, dailyUse, monthlyEnergyStar, recentScore, scoreBenchmark } from 'src/fixtures/charts';
 import { inCard } from 'src/stories/decorators';
 
 const whole = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
@@ -12,6 +17,13 @@ const lowestScore = Math.min(...recentScore.map((row) => row.score));
 const latestStar = monthlyEnergyStar[monthlyEnergyStar.length - 1].score;
 const firstStar = monthlyEnergyStar[0].score;
 const lastDay = dailyUse[dailyUse.length - 1].current;
+const totalUse = dailyUse.reduce((sum, row) => sum + row.current, 0);
+const signedPercent = new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+/** Each building's change in daily energy use over the 30 days: its last week's average against its first week's. */
+const trendRows = buildingTrends.map(({ building, rows }) => {
+  const mean = (list: typeof rows) => list.reduce((sum, row) => sum + row.use, 0) / list.length;
+  return { building, rows, change: mean(rows.slice(-7)) / mean(rows.slice(0, 7)) - 1 };
+});
 const benchmark = [{ value: scoreBenchmark, label: 'Benchmark' }];
 const energyStar = [
   { value: 50, label: 'National median', labelBelow: true },
@@ -91,5 +103,77 @@ export const Fitted: Story = {
     name: 'Energy use',
     unit: 'kWh',
     summary: `Energy use was ${whole.format(lastDay)} kWh on the last day, dipping on weekends through September.`,
+  },
+};
+
+/** `variant="column"`: an amount per period as thin columns from 0, with no marker, for a count or a volume where each period stands alone. */
+export const Columns: Story = {
+  parameters: { card: { title: 'Energy Use Today' } },
+  args: {
+    data: dailyUse,
+    field: 'current',
+    name: 'Energy use',
+    unit: 'kWh',
+    variant: 'column',
+    summary: `Energy use was ${whole.format(lastDay)} kWh on the last day and ${whole.format(totalUse)} kWh over September, lower on weekends.`,
+  },
+};
+
+/** Micro charts in a table: one row per building with its change as signed text, a line for the trend and neutral columns for the peaks, each 32px tall with `inset={0}`. The numbers carry the values; the sparklines only show the shape. */
+export const InATable: Story = {
+  name: 'In a table',
+  parameters: { card: { title: 'Energy Use by Building, Last 30 Days' } },
+  args: {
+    data: trendRows[0].rows,
+    field: 'use',
+    name: 'Energy use',
+    unit: 'kWh',
+    height: 32,
+    inset: 0,
+    summary: `Daily energy use at ${trendRows[0].building} over 30 days, ${signedPercent.format(trendRows[0].change)} from the first week to the last.`,
+  },
+  render: (args) => (
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>Building</TableCell>
+          <TableCell align="right">Change</TableCell>
+          <TableCell sx={{ width: '28%' }}>Energy use</TableCell>
+          <TableCell sx={{ width: '28%' }}>Peak demand</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {trendRows.map(({ building, rows, change }) => (
+          <TableRow key={building}>
+            <TableCell component="th" scope="row">
+              {building}
+            </TableCell>
+            <TableCell align="right">{signedPercent.format(change)}</TableCell>
+            <TableCell>
+              <Sparkline
+                {...args}
+                data={rows}
+                summary={`Daily energy use at ${building} over 30 days, ${signedPercent.format(change)} from the first week to the last.`}
+              />
+            </TableCell>
+            <TableCell>
+              <Sparkline
+                {...args}
+                data={rows}
+                field="peak"
+                name="Peak demand"
+                unit="kW"
+                variant="column"
+                neutral
+                summary={`Daily peak demand at ${building} over 30 days, highest at ${whole.format(Math.max(...rows.map((row) => row.peak)))} kW.`}
+              />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  ),
+  play: async ({ canvas }) => {
+    await waitFor(() => expect(canvas.getAllByRole('figure')).toHaveLength(trendRows.length * 2));
   },
 };

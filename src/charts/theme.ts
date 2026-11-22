@@ -91,6 +91,16 @@ export function chartColors(scheme: ColorScheme) {
         Object.entries(ends).map(([role, heat]) => [role, (strength: number) => am5.color(heatColors(heat, strength).fill)]),
       ) as Record<keyof typeof ends, (strength: number) => am5.Color>;
     })(),
+    /**
+     * The label color on each data fill: the palette's contrast text (`getContrastText`) for each `chart.series` color, for
+     * `chart.neutral` and for `chart.seriesShade`, dark on the light hues and light on the dark ones, for a label drawn on its mark
+     * (a treemap or partition rectangle).
+     */
+    contrast: {
+      series: palette.chart.series.map((value) => color(palette.getContrastText(value))),
+      neutral: color(palette.getContrastText(palette.chart.neutral)),
+      negative: color(palette.getContrastText(palette.chart.seriesShade)),
+    },
     /** The intents, for a chart colored by status rather than by series (a score in its bands). Never both in one chart. */
     status: {
       success: color(palette.success.main),

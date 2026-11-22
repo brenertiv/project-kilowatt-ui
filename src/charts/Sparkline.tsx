@@ -18,6 +18,8 @@ export type SparklineProps = SeriesColor & {
   references?: ReferenceLine[];
   /** One sentence on the trend, with the numbers that matter. It isn't shown: it's the figure's accessible name, the sparkline's text alternative for screen readers. */
   summary: string;
+  /** How the values are drawn: `'line'` for a trend, its latest point marked; `'column'` for an amount per period (volume, use), one thin column each from 0. Default `'line'`. */
+  variant?: 'line' | 'column';
   /** The field in each row that holds the UTC timestamp. Default `'date'`. */
   dateField?: string;
   /** The time between rows, which sets how the tooltip writes the date. Default `'day'`. */
@@ -39,7 +41,8 @@ const noReferences: ReferenceLine[] = [];
  * Kilowatt's chart theme (Rules → Charts). It's a reference implementation that Enertiv's app rebuilds.
  * It has no axes, gridlines or legend, since the headline number above it carries the value and unit;
  * the latest point is marked, every point has a full-value tooltip, and up to two dashed references
- * (a benchmark, a certification threshold) give it scale. The line takes the first `chart.series`
+ * (a benchmark, a certification threshold) give it scale. `variant="column"` draws an amount per period
+ * as thin columns from 0 instead, with no marker. The line or columns take the first `chart.series`
  * color, or a `slot`, or `neutral`. It sits in a `figure` named by `summary`.
  *
  * @summary A small trend line with no axes, under a headline number, its latest point marked.
@@ -52,6 +55,7 @@ export function Sparkline({
   unit,
   references = noReferences,
   summary,
+  variant = 'line',
   dateField = 'date',
   interval = 'day',
   min,
@@ -73,7 +77,8 @@ export function Sparkline({
         am5xy.DateAxis.new(root, { baseInterval: { timeUnit: interval, count: 1 }, renderer: am5xy.AxisRendererX.new(root, {}) }),
       );
       const yAxis = chart.yAxes.push(
-        am5xy.ValueAxis.new(root, { min, max, strictMinMax: min !== undefined && max !== undefined, renderer: am5xy.AxisRendererY.new(root, {}) }),
+        // Columns are amounts, so they stand on 0 unless the range is set; a line fits its data to show the trend.
+        am5xy.ValueAxis.new(root, { min: min ?? (variant === 'column' ? 0 : undefined), max, strictMinMax: min !== undefined && max !== undefined, renderer: am5xy.AxisRendererY.new(root, {}) }),
       );
       // No axes, gridlines or labels: the headline number above carries the value and unit, and the tooltip the exact reading.
       for (const axis of [xAxis, yAxis] as am5xy.Axis<am5xy.AxisRenderer>[]) {
@@ -83,33 +88,41 @@ export function Sparkline({
       // Labeled at the left, clear of the latest point's marker at the right.
       referenceLines(root, chart, yAxis, references, unit, colors);
       const [stroke] = seriesColors([{ slot, neutral }], colors);
-      const line = chart.series.push(
-        am5xy.LineSeries.new(root, {
-          name,
-          xAxis,
-          yAxis,
-          valueXField: dateField,
-          valueYField: field,
-          stroke,
-          fill: stroke,
-          tooltip: am5.Tooltip.new(root, {
-            labelText: `${name}, {valueX.formatDate()}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
-          }),
+      const settings = {
+        name,
+        xAxis,
+        yAxis,
+        valueXField: dateField,
+        valueYField: field,
+        stroke,
+        fill: stroke,
+        tooltip: am5.Tooltip.new(root, {
+          labelText: `${name}, {valueX.formatDate()}: {valueY.formatNumber('${tooltipNumberFormat}')} ${unit}`,
         }),
-      );
-      line.strokes.template.set('strokeWidth', 2);
-      // The latest reading, the one the headline number reports, is marked.
-      const last = data.length ? data[data.length - 1][dateField] : undefined;
-      line.bullets.push((bulletRoot, _series, dataItem) =>
-        (dataItem.dataContext as Record<string, number>)[dateField] === last
-          ? am5.Bullet.new(bulletRoot, { sprite: am5.Circle.new(bulletRoot, { radius: 4, fill: stroke, stroke: colors.surface, strokeWidth: 2 }) })
-          : undefined,
-      );
+      };
+      let line: am5xy.XYSeries;
+      if (variant === 'column') {
+        // One thin column per period, with no outline and no marker: the columns are the readings.
+        const columns = chart.series.push(am5xy.ColumnSeries.new(root, settings));
+        columns.columns.template.setAll({ width: am5.percent(70), strokeOpacity: 0 });
+        line = columns;
+      } else {
+        const trend = chart.series.push(am5xy.LineSeries.new(root, settings));
+        trend.strokes.template.set('strokeWidth', 2);
+        // The latest reading, the one the headline number reports, is marked.
+        const last = data.length ? data[data.length - 1][dateField] : undefined;
+        trend.bullets.push((bulletRoot, _series, dataItem) =>
+          (dataItem.dataContext as Record<string, number>)[dateField] === last
+            ? am5.Bullet.new(bulletRoot, { sprite: am5.Circle.new(bulletRoot, { radius: 4, fill: stroke, stroke: colors.surface, strokeWidth: 2 }) })
+            : undefined,
+        );
+        line = trend;
+      }
       chart.set('cursor', am5xy.XYCursor.new(root, { behavior: 'none' }));
       chart.get('cursor')?.lineY.set('forceHidden', true);
       line.data.setAll(data);
     },
-    [data, field, name, unit, references, dateField, interval, min, max, slot, neutral],
+    [data, field, name, unit, references, variant, dateField, interval, min, max, slot, neutral],
   );
   const ref = useChart(build);
 

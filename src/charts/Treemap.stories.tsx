@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, waitFor } from 'storybook/test';
 import { meaningColor, workOrderTypeSlots } from 'src/charts/meanings';
@@ -95,5 +96,31 @@ export const Meanings: Story = {
     data: byType,
     unit: 'work orders',
     summary: `${openTotal} work orders are open; ${workOrdersByType[0].count} of them (${share(byType, workOrdersByType[0].count)}) are reactive.`,
+  },
+};
+
+/** Live data: when only the values change, the rectangles resize in place and their shares follow, rather than the chart being rebuilt. Hand the chart a new `data` array with the same parts. */
+export const Live: Story = {
+  parameters: { card: { title: 'Demand by System, Now' } },
+  args: {
+    data: [
+      { category: 'HVAC', value: 412 },
+      { category: 'Lighting', value: 168 },
+      { category: 'Plug loads', value: 131 },
+      { category: 'Vertical transport', value: 52 },
+      { category: 'Domestic hot water', value: 27 },
+    ],
+    unit: 'kW',
+    summary: "The building's demand by system, updating as new readings arrive; HVAC is the largest.",
+  },
+  render: function LiveTreemap(args) {
+    const [step, setStep] = useState(0);
+    useEffect(() => {
+      const timer = setInterval(() => setStep((current) => current + 1), 2000);
+      return () => clearInterval(timer);
+    }, []);
+    // Each system drifts within a tenth of its reading, so the parts keep their order by size.
+    const data = useMemo(() => args.data.map((part, i) => ({ ...part, value: Math.round(part.value * (1 + 0.1 * Math.sin(step * 1.3 + i * 2))) })), [args.data, step]);
+    return <Treemap {...args} data={data} />;
   },
 };

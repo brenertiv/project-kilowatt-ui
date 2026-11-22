@@ -1,0 +1,123 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ComboChartStories from './ComboChart.stories';
+
+<Meta
+  of={ComboChartStories}
+  summary="Kilowatt's reference combined column and line chart: an amount as columns against an optional target on the left axis, and the measure that explains it as lines in a second unit on the right."
+/>
+
+# Combo chart
+
+A combo chart puts an amount and what explains it on the same periods: energy use against its budget as columns, and degree days as a line. `ComboChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Columns plot on the left axis in one unit, with an optional target as a wider neutral column behind them; lines plot on the right axis in a second unit, every period marked. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={ComboChartStories.AgainstTarget} />
+
+## When to use
+
+- Use a combo chart for an amount per period read against a target, with one measure in another unit that explains it: energy use, its budget and the weather; cost and occupancy.
+- For measures in one unit, use a column chart or a line chart; two axes are only for two units.
+- For two lines in two units with no columns, use a line chart with `rightUnit`.
+- For a period too long to draw every column, use an interval chart, which zooms; this chart doesn't.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { ComboChart } from 'src/charts/ComboChart';
+
+const columns = [
+  { field: 'budget', name: 'Budget', target: true },
+  { field: 'use', name: 'Energy use' },
+];
+const lines = [
+  { field: 'degreeDays', name: 'Cooling degree days', slot: 1 },
+  { field: 'normal', name: '10-year normal', slot: 1, dashed: true },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Energy Use, Budget and Weather" />
+  <ComboChart
+    data={months}
+    columns={columns}
+    lines={lines}
+    unit="kWh"
+    lineUnit="°F·days"
+    summary="Energy use ran over budget in 5 of 12 months, peaking in the month with the most cooling degree days."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: rows oldest first, each with a UTC timestamp in `dateField` and a number per series. Keep it stable (a constant or `useMemo`).
+- `columns`: `{ field, name }` in legend order, each with an optional `slot` (`SeriesColor`) or `target`.
+- `lines`: `{ field, name }` in legend order, each with an optional `slot` (`SeriesColor`) and `dashed`.
+- `unit`: the columns' unit, above the left axis and in the tooltip.
+- `lineUnit`: the lines' unit, above the right axis and in the tooltip.
+- `summary`: one sentence, the figure's accessible name.
+- `dateField`: the field that holds the timestamp. Default `'date'`.
+- `interval`: the time between rows, `'day'`, `'month'` or `'year'`. Default `'month'`.
+- `height`: the plot's height in pixels. Default `240`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Against a target.** A `target` series is a wider column in `chart.neutral` behind the measured one, so a column that clears its target shows above it. A `dashed` line is a variant of another line (a normal beside this year): give both one `slot`, so they share a hue and differ by the dash.
+- **Columns and a line.** One set of columns and one line, with no target. The legend names each series' unit, so a series isn't tied to its axis by color alone.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; `unit` and `lineUnit` sit above their axes and in the tooltips.
+- Do use the second axis only for a second unit.
+- Don't put two measures in one unit on two axes; their scales would differ and the comparison would mislead.
+- Do keep to one measured column series and its target, and one or two lines.
+- Don't stack or cluster more columns here; use a column chart.
+- Do give a variant line its sibling's `slot` and `dashed`.
+- Don't give a target or a normal its own series color; a target is neutral and a variant shares its hue.
+
+## MUI departures
+
+- `chart-palette`: columns and lines take `chart.series` in order or by `slot`, and a target takes `chart.neutral`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and series take `chart.series` in order, used as they are.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: value-axis numbers are left-aligned, 8px from the plot, so a left axis lines up with the card's title.
+- `legend-items`: legend items have no left padding, so the legend lines up with the card's title.
+- `legend-markers`: each legend item is marked by an 8px dot in its series' color, as the donut's legend is.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `date-labels`: the date axis and the tooltips write dates with `Intl.DateTimeFormat` in the viewer's locale, in UTC.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: two units take the left and the right: the columns' axis on the left, the lines' on the right.
+- `axis-units`: each value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `full-value-tooltips`: every column and every line point has a tooltip with its series, date, exact value and unit (`tooltipNumberFormat`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `legend-layout`: the legend sits below the plot in up to three columns, and names each series' unit.
+- `point-markers`: every period of a line is marked, since each is one reading: a hollow dot ringed in the line's color, which stays apart from the column behind it; a dashed variant's points are smaller solid dots.
+- `target-columns`: a `target` is a wider `chart.neutral` column behind the measured one, and the chart has no scrollbar or zoom.
+
+## Accessibility
+
+- Every column and line point shows its series, date, exact value and unit in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say how the amount stands against its target and what drives it.
+- The legend names each series and its unit, a target differs from its column by width and position as well as color, and a variant line is dashed.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Column for values in one unit, side by side or stacked.
+- Charts → Line, Two units, for two lines in two units.
+- Charts → Interval for readings people zoom into.
+
+<Stories includePrimary={false} />

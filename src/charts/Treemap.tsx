@@ -1,8 +1,7 @@
-import { useCallback } from 'react';
-import * as am5 from '@amcharts/amcharts5';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import type * as am5 from '@amcharts/amcharts5';
 import * as am5hierarchy from '@amcharts/amcharts5/hierarchy';
 import Box from '@mui/material/Box';
-import { createSchemeTheme } from '../mui/theme';
 import { seriesColors, seriesSlots, tooltipNumberFormat, type ChartInset, type SeriesColor } from './theme';
 import { useChart, type ChartContext } from './useChart';
 
@@ -15,7 +14,7 @@ export type TreemapNode = SeriesColor & {
 };
 
 export type TreemapProps = {
-  /** The parts of the whole, in any order; the chart places them largest first. Keep it stable (a constant or `useMemo`): the chart is rebuilt when it changes. */
+  /** The parts of the whole, in any order; the chart places them largest first. Keep it stable (a constant or `useMemo`). When only the values change and the parts keep their order by size, the rectangles resize in place; when a part is added, removed or changes rank, the chart is rebuilt. */
   data: TreemapNode[];
   /** The unit of the values, shown in the tooltip: `kWh`, `sq ft`. */
   unit: string;
@@ -37,17 +36,6 @@ export type TreemapProps = {
 
 /** Shares in the labels and tooltips, formatted with Intl (Rules → Content and layout). */
 const percent = new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 });
-
-/**
- * Each scheme's label color for a rectangle, by its slot: the palette's contrast text for that series
- * color (`getContrastText`), dark on the light hues and light on the dark ones, and for `chart.neutral` and `chart.seriesShade`.
- */
-const labelColors = Object.fromEntries(
-  (['light', 'dark'] as const).map((scheme) => {
-    const { palette } = createSchemeTheme(scheme);
-    return [scheme, { series: palette.chart.series.map((color) => palette.getContrastText(color)), neutral: palette.getContrastText(palette.chart.neutral), negative: palette.getContrastText(palette.chart.seriesShade) }];
-  }),
-) as Record<'light' | 'dark', { series: string[]; neutral: string; negative: string }>;
 
 /** The most rectangles a treemap shows: the number of `chart.series` colors (Rules → Charts). */
 const maxParts = 6;
@@ -71,14 +59,25 @@ function parts(data: TreemapNode[], otherLabel: string, group = true) {
  * palette's contrast text for its color; the tooltip gives every part's exact value.
  * Rectangles take `chart.series` colors, or a fixed `slot` for a product meaning. Past six parts,
  * the smallest are grouped into one neutral rectangle. It's one level deep: a click doesn't drill
- * in. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
+ * in. Live data works: when `data` changes only in its values, the rectangles resize in place. The chart sits in a `figure` named by `summary`. Put it in a `Card` under a `CardHeader`.
  *
  * @summary A treemap of up to six parts of a whole, sized by value and labeled with their shares, with the smallest grouped into Other.
  * @import import { Treemap } from 'src/charts/Treemap';
  */
 export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 160, inset = 2, group = true }: TreemapProps) {
+  // The data now on screen, read by `build`, and the chart's series, so new values resize the rectangles in place.
+  const latest = useRef(data);
+  const drawn = useRef<am5hierarchy.Treemap | null>(null);
+  useLayoutEffect(() => {
+    latest.current = data;
+  }, [data]);
+  // What the chart is built from: the parts in order of size with their colors, but not their values, so it's
+  // rebuilt only when a part is added, removed, recolored or changes rank.
+  const { kept, other } = parts(data, otherLabel, group);
+  const shape = JSON.stringify([kept.map(({ category, slot, neutral, negative }) => [category, slot, neutral, negative]), other?.category]);
+
   const build = useCallback(
-    ({ root, scheme, colors }: ChartContext) => {
+    ({ root, colors }: ChartContext) => {
       const series = root.container.children.push(
         am5hierarchy.Treemap.new(root, {
           valueField: 'value',
@@ -106,14 +105,14 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 16
       series.labels.template.setAll({ text: '{category}\n{share}', textAlign: 'center', oversizedBehavior: 'hide' });
       // Each label in the palette's contrast text for its rectangle's color.
       series.labels.template.adapters.add('fill', (value, target) => (target.dataItem?.dataContext as { label?: am5.Color } | undefined)?.label ?? value);
-      const { kept, other } = parts(data, otherLabel, group);
-      const total = data.reduce((sum, part) => sum + part.value, 0);
+      const current = latest.current;
+      const { kept, other } = parts(current, otherLabel, group);
+      const total = current.reduce((sum, part) => sum + part.value, 0);
       const share = (value: number) => (total ? percent.format(value / total) : '–');
       // Parts with a slot keep it, so a meaning is one color on every chart; the rest take the free slots, largest first.
       const fills = seriesColors(kept, colors);
       const slots = seriesSlots(kept, colors.series.length);
-      const labels = labelColors[scheme];
-      const label = (slot: number | 'neutral' | 'negative') => am5.color(typeof slot === 'string' ? labels[slot] : labels.series[slot]);
+      const label = (slot: number | 'neutral' | 'negative') => (typeof slot === 'string' ? colors.contrast[slot] : colors.contrast.series[slot]);
       series.data.setAll([
         {
           category: 'Whole',
@@ -124,10 +123,38 @@ export function Treemap({ data, unit, summary, otherLabel = 'Other', height = 16
         },
       ]);
       series.set('selectedDataItem', series.dataItems[0]);
+      drawn.current = series;
     },
-    [data, unit, otherLabel, group],
+    // The parts come through `latest`; `shape` is everything about them but their values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [shape, unit, otherLabel, group],
   );
   const ref = useChart(build);
+
+  // New values for the same parts resize the rectangles in place and rewrite their shares, rather than rebuilding the chart.
+  useEffect(() => {
+    const series = drawn.current;
+    if (!series || series.isDisposed()) return;
+    const { kept, other } = parts(data, otherLabel, group);
+    const total = data.reduce((sum, part) => sum + part.value, 0);
+    const values = new Map([...kept, ...(other ? [other] : [])].map(({ category, value }) => [category, value]));
+    for (const item of series.dataItems[0]?.get('children') ?? []) {
+      const context = item.dataContext as { category: string; value: number; share: string };
+      const value = values.get(context.category);
+      if (value === undefined) continue;
+      // Every share is of the new total, so each is rewritten, whether or not its own value moved.
+      const share = total ? percent.format(value / total) : '–';
+      if (share !== context.share) {
+        context.share = share;
+        item.get('label')?.text.markDirtyText();
+      }
+      if (value === item.get('value')) continue;
+      context.value = value;
+      // amCharts sizes a rectangle by its working value, so both are set.
+      item.set('value', value);
+      item.set('valueWorking', value);
+    }
+  }, [data, otherLabel, group]);
 
   return (
     <Box component="figure" aria-label={summary} sx={{ m: 0, px: inset, pb: inset }}>

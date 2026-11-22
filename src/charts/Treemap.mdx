@@ -31,7 +31,7 @@ import { Treemap } from 'src/charts/Treemap';
 </Card>;
 ```
 
-`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`), since the chart is rebuilt when it changes.
+`data` is a list of `{ category, value }`, in any order. Keep it stable (a constant or `useMemo`): when only its values change, the rectangles resize in place, and when its parts or their order by size change, the chart is rebuilt.
 
 Props, with their defaults:
 
@@ -48,6 +48,7 @@ Props, with their defaults:
 - **Parts.** Up to six rectangles, largest first, squarified and 2px apart, in `chart.series` order, each labeled with its name and share where it fits, in the palette's contrast text for its color.
 - **Grouped into Other.** With more than six parts, the five largest keep their rectangles and the rest are summed into one in `chart.neutral`, named by `otherLabel`. Say in the summary what "Other" holds.
 - **Ungrouped.** With `group={false}`, every part keeps its rectangle past six, drawn in one colour (`neutral` on every part), told apart by size and label, each named in its tooltip. For parts that aren't product meanings and are read by size, such as every property's floor area (Rules → Charts, Six series at most).
+- **Live.** For data that updates, hand the chart a new `data` array with the same parts: the rectangles resize in place and their shares follow, without the chart being rebuilt. A part that is added, removed or changes rank by size rebuilds the chart, so its colors stay largest first.
 - **Meanings.** Parts that stand for a product meaning (a work-order type, a utility) take their `slot`: spread `meaningColor(workOrderTypeSlots, type)` into each part, keyed on the API's name, so the meaning has one color on every chart. Parts without a slot take the free ones, largest first.
 
 ## Do and don't
