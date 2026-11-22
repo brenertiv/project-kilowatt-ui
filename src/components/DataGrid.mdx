@@ -1,0 +1,117 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as DataGridStories from './DataGrid.stories';
+
+<Meta
+  of={DataGridStories}
+  summary="MUI X's Data Grid for a table people work in: choose columns, filter, export, switch between a table and a list, or open a tree of rows. Straight in an outlined Card, like Table."
+/>
+
+# DataGrid
+
+A data grid is a table people work in: they choose its columns, filter and sort it, download it, read it as a list, or open and close a tree of rows. Kilowatt uses MUI X's `DataGridPro` from `@mui/x-data-grid-pro` (MUI X v9, on Material UI v9) with no wrapper; the theme differs from stock MUI X only as listed under MUI departures below. Props are MUI's: see the [Data Grid docs](https://mui.com/x/react-data-grid/) and the [DataGridPro API](https://mui.com/x/api/data-grid/data-grid-pro/).
+
+<Canvas of={DataGridStories.TableAndList} />
+
+## When to use
+
+- Use a data grid when people do more than read a table: show and hide columns, filter by any column, export the rows, switch to a list, or expand a tree.
+- Use `Table` for rows people only read, sort or select, and for a chart's text alternative. It's lighter, and it renders a real `table`.
+- Use the list view for the same rows on a narrow screen or where a row reads better as a name with two lines than as nine columns.
+- Use tree data for rows that hold other rows of the same columns: a team and its members, a property and its spaces.
+
+## Usage
+
+Put the grid straight in an outlined `Card` under a `CardHeader`, with no `CardContent`, inside a flex column so it sizes to its rows. Name it with `aria-label`. Import `src/mui/dataGridLicense` once in the app, before the first grid renders.
+
+```tsx
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { DataGridPro, type GridColDef } from '@mui/x-data-grid-pro';
+import { TruncatedText } from 'src/components/TruncatedText';
+import 'src/mui/dataGridLicense';
+
+const columns: GridColDef[] = [
+  { field: 'name', headerName: 'Name', flex: 1, minWidth: 160, hideable: false },
+  { field: 'title', headerName: 'Title', flex: 1, minWidth: 180 },
+  { field: 'properties', headerName: 'Properties', type: 'number', width: 120 },
+];
+
+<Card variant="outlined">
+  <CardHeader title={<TruncatedText>Team Members</TruncatedText>} />
+  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+    <DataGridPro aria-label="Team members" rows={rows} columns={columns} showToolbar disableRowSelectionOnClick hideFooter />
+  </Box>
+</Card>;
+```
+
+### License
+
+List view and tree data are in MUI X's Pro plan, so the grid comes from `@mui/x-data-grid-pro`, which needs a license key. Set it as `VITE_MUI_X_LICENSE` in `.env.local` (see `.env.example`); `src/mui/dataGridLicense` passes it to MUI. Without a key the grid works, under MUI's “Missing license key” watermark and a console message. Excel export and pasting from the clipboard are in the Premium plan, which Kilowatt doesn't use.
+
+### Content
+
+- **Text left, numbers right.** Give a number's column `type: 'number'`, which aligns its header and cells right, and format it with `Intl` in `valueFormatter`. The theme sets tabular figures on every cell.
+- **Give each column its type.** `number`, `date`, `singleSelect` (with `valueOptions`) and `boolean` give the filter panel the right operators and inputs, and sort by value rather than by the text shown.
+- **Format in `valueFormatter`, not `renderCell`,** where the cell is only text: the CSV and the printout take the formatted value, and a `renderCell` cell exports its raw value.
+- **A fact that was never recorded says so in words** (“Never” for a member who hasn't signed in), as in `Table`.
+- **Headers are sentence case**, and name what's in the column. Units sit in the header.
+- **The column that names the row can't be hidden**: set `hideable: false` on it.
+
+## Variants
+
+- **Table and list.** `listView` swaps the columns for one `listViewColumn`, a `GridListViewColDef` whose `renderCell` draws the whole row: the row's name in `fontWeightMedium` over a `text.secondary` line, with what people scan for at the end. Set `rowHeight` for the list (64 for two lines). Switch with an `exclusive` `ToggleButtonGroup` of icon buttons in the `CardHeader`'s `action`, `table_rows` and `format_list_bulleted`, each with an `aria-label`. Sorting and filters carry across the switch; editing doesn't work in the list.
+
+<Canvas of={DataGridStories.TableAndList} />
+
+- **Toolbar.** `showToolbar` adds MUI's toolbar: Columns, Filters, Export (Download as CSV, Print) and a search. Name the file with `slotProps.toolbar.csvOptions.fileName`, and set `utf8WithBom` so Excel reads accents and `escapeFormulas` so a cell that starts with `=` isn't run as a formula. Hide a column to start with in `initialState.columns.columnVisibilityModel`; keep one out of the export with `disableExport` on it.
+
+<Canvas of={DataGridStories.Toolbar} />
+
+- **Tree data.** `treeData` with `getTreeDataPath`, which returns each row's path from the top (`['Harborline Management', 'Jordan Whitlock']`). `groupingColDef` names and sizes the column that holds the tree, and `defaultGroupingExpansionDepth` opens levels to start with (`1` for the first, `-1` for all). A parent's row shows its count of children, and takes its own values in the other columns. Keep `getTreeDataPath` outside the component or in `useCallback`: a new function rebuilds the tree and closes every row.
+
+<Canvas of={DataGridStories.TreeData} />
+
+## Do and don't
+
+- Do put the grid straight in an outlined `Card`, with no `CardContent`, so its rows run edge to edge.
+- Don't wrap the grid in `Paper` or give it a border; the card's frame is the only one.
+- Do use `Table` when people only read the rows.
+- Don't reach for the grid for five rows of two columns; its toolbar and menus are weight a short table doesn't need.
+- Do set each column's `type`, so filters and sorting work on its value.
+- Don't format a number into a string in the rows; it then sorts and filters as text.
+- Do let the theme draw the grid's icons, surface and row lines.
+- Don't pass MUI's SVG icons into `slots`, or set a background or border color on the grid.
+- Do leave `density` off; grids are standard, as tables are `medium`.
+- Don't set `density="compact"` for a whole screen to fit more in; hide a column or let the grid scroll.
+- Do set `disableRowSelectionOnClick` unless selecting rows leads to an action.
+- Don't let a click on a row select it when nothing follows a selection.
+
+## MUI departures
+
+- `data-grid-surface`: the grid, its header and its pinned cells sit on `background.level3`, the card surface, instead of `background.paper`, and the grid has no border or radius of its own, so the card's frame is the only one.
+- `data-grid-row-border`: row lines use `divider` instead of MUI's mix of it with white or black, so they show on a card and match a table's.
+- `data-grid-icons`: the toolbar, sort arrows, column menu, filter panel and tree toggles use Material Symbols through `Icon` instead of MUI X's SVG icons.
+- `tabular-numerals`: every cell uses tabular digits, so a column of figures lines up.
+
+Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text and intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- The grid renders `role="grid"` (`treegrid` for tree data) with rows, column headers and cells, and arrow keys move between cells; Tab leaves the grid.
+- Name every grid with `aria-label` or `aria-labelledby`.
+- A tree row carries `aria-expanded` and `aria-level`; its toggle is a button, and Space on its cell opens and closes it.
+- The toolbar is one tab stop with arrow keys between its buttons, each named (Columns, Filters, Export, Search).
+- The view switch is a `ToggleButtonGroup` named “View”, its icon buttons named “Table” and “List”.
+- In the list view each row is one cell, so put what identifies the row first in its text, where a screen reader starts.
+- The grid draws rows as they scroll into view, so a page search or a screen reader's table commands reach only the rows on screen; for a long list people must read in full, offer the export.
+
+## Related
+
+- `Table` for rows people only read, sort or select.
+- `Card` for the frame around a grid.
+- `ToggleButton` for the table and list switch.
+- `AsyncContent` for a grid's loading, empty and failed states.
+- Rules → One border per edge for how a grid meets its card.
+
+<Stories includePrimary={false} />

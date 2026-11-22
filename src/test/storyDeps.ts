@@ -118,6 +118,8 @@ export const storyDeps = [
   '@mui/material/Typography',
   '@mui/material/useMediaQuery',
   '@mui/utils',
+  '@mui/x-data-grid-pro',
+  '@mui/x-license',
   '@tanstack/react-query',
   'axios',
   'i18next',

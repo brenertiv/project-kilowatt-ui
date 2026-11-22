@@ -1,5 +1,7 @@
 import type { ThemeOptions } from '@mui/material/styles';
+import type {} from '@mui/x-data-grid-pro/themeAugmentation';
 import { iconWeight } from '../icons';
+import { dataGridIconSlots } from './dataGridIcons';
 import './augmentation';
 import type { BorderLevels } from './augmentation';
 import { blueGrey, purple, red } from '@mui/material/colors';
@@ -416,6 +418,52 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'data-grid-surface',
+    area: 'Components',
+    components: ['DataGrid'],
+    title: 'The Data Grid sits on the card surface, with no frame of its own',
+    why: "MUI X paints the Data Grid, its header and its pinned cells in `background.paper` and draws a border around it, which suits a grid sitting on the page. Kilowatt's grids sit straight in outlined cards, like its tables, on `background.level3`: the stock grid reads as a grey panel inside the card, with a second frame inside the card's. Kilowatt paints the grid, header and pinned cells `background.level3` and removes the grid's border and radius, so the card's frame is the only one (Rules → One border per edge). A grid on any other surface sets `--DataGrid-t-color-background-base` and its header and pinned variables to that surface.",
+    options: () => ({
+      components: {
+        MuiDataGrid: {
+          styleOverrides: {
+            root: {
+              // The grid sets these variables on its own class; naming the root class again outranks it.
+              '&.MuiDataGrid-root': {
+                '--DataGrid-t-color-background-base': 'var(--mui-palette-background-level3)',
+                '--DataGrid-t-header-background-base': 'var(--mui-palette-background-level3)',
+                '--DataGrid-t-cell-background-pinned': 'var(--mui-palette-background-level3)',
+              },
+              border: 0,
+              borderRadius: 0,
+            },
+          },
+        },
+      },
+    }),
+  },
+  {
+    id: 'data-grid-row-border',
+    area: 'Components',
+    components: ['DataGrid'],
+    title: 'Data Grid rows divide with `divider`',
+    why: "MUI X draws the Data Grid's lines in the table cell's border color, MUI's mix of `divider` toward white in light and black in dark, which nearly disappears on Kilowatt's surfaces (`table-cell-border`). Kilowatt uses `divider` itself, so a grid's rows match a table's and the card frame around them.",
+    options: () => ({ components: { MuiDataGrid: { styleOverrides: { root: { '--DataGrid-rowBorderColor': 'var(--mui-palette-divider)' } } } } }),
+  },
+  {
+    id: 'data-grid-icons',
+    area: 'Icons',
+    components: ['DataGrid'],
+    title: "The Data Grid's icons are Material Symbols",
+    why: "MUI X ships its own SVG icons for the Data Grid's toolbar, sort arrows, column menu, filter panel and tree toggles, drawn heavier than Kilowatt's and outside its icon set (`icons`). Kilowatt sets the grid's icon slots to the same Material Symbols every other control uses, through `Icon`, so a grid's icons match the buttons beside it. The column resize handle, the loading spinner and the long-text cell's arrows aren't in the set and stay MUI's.",
+    convention: {
+      muiDefault: "MUI X's built-in SVG icons in every icon slot",
+      kilowatt: "Material Symbols through `Icon`, set as the grid's default `slots`; a `slots` prop on one grid merges over them",
+      where: 'src/mui/dataGridIcons.tsx',
+    },
+    options: () => ({ components: { MuiDataGrid: { defaultProps: { slots: dataGridIconSlots } } } }),
+  },
+  {
     id: 'regular-weight',
     area: 'Typography',
     title: 'Headings and body at regular weight',
@@ -745,10 +793,10 @@ export const departures: Departure[] = [
   },
   {
     id: 'tabular-numerals',
-    components: ['Table', 'TablePagination', 'Badge', 'Chip', 'Slider', 'Pagination'],
+    components: ['Table', 'TablePagination', 'DataGrid', 'Badge', 'Chip', 'Slider', 'Pagination'],
     area: 'Typography',
     title: 'Tabular numerals where numbers line up or change',
-    why: "MUI sets every digit proportionally, so columns of figures don't align and a value shifts sideways as it updates. Kilowatt shows readings, totals and counts everywhere, so the components that hold numbers (table cells, pagination, badges, chips, slider labels) use Roboto's tabular digits, each the same width. Running text keeps proportional digits, which sit better in a sentence.",
+    why: "MUI sets every digit proportionally, so columns of figures don't align and a value shifts sideways as it updates. Kilowatt shows readings, totals and counts everywhere, so the components that hold numbers (table and Data Grid cells, pagination, badges, chips, slider labels) use Roboto's tabular digits, each the same width. Running text keeps proportional digits, which sit better in a sentence.",
     convention: {
       muiDefault: 'Proportional digits everywhere',
       kilowatt: "Tabular digits in the components listed; on any other number that changes or lines up (a KPI, a meter reading, a timer, a column of figures in your own layout), set `sx={{ fontVariantNumeric: 'tabular-nums' }}`",
@@ -760,6 +808,7 @@ export const departures: Departure[] = [
         components: {
           MuiTableCell: { styleOverrides: { root: tabular } },
           MuiTablePagination: { styleOverrides: { root: tabular } },
+          MuiDataGrid: { styleOverrides: { cell: tabular } },
           MuiBadge: { styleOverrides: { badge: tabular } },
           MuiChip: { styleOverrides: { label: tabular } },
           MuiSlider: { styleOverrides: { valueLabel: tabular, markLabel: tabular } },
