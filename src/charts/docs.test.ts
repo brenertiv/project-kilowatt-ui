@@ -26,6 +26,13 @@ const charts: ChartName[] = [
   'AnnotatedChart',
   'ComboChart',
   'RangeChart',
+  'WaterfallChart',
+  'DumbbellChart',
+  'BulletChart',
+  'MekkoChart',
+  'ParetoChart',
+  'BubbleChart',
+  'StripPlot',
 ];
 
 /** The body of one `## heading` section. */

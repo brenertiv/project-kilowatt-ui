@@ -1,0 +1,112 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as ParetoChartStories from './ParetoChart.stories';
+
+<Meta
+  of={ParetoChartStories}
+  summary="Kilowatt's reference Pareto chart: amounts as columns, largest first, with their cumulative share of the total as a line and a threshold."
+/>
+
+# Pareto chart
+
+A Pareto chart shows which few items make up most of a total: annual savings per opportunity, sorted, with the cumulative share. `ParetoChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). It sorts the items largest first and plots their amounts as columns on the left axis, and their cumulative share, 0 to 100%, as a `chart.neutral` line on the right, with a dashed reference line at the threshold (80%). Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={ParetoChartStories.Opportunities} />
+
+## When to use
+
+- Use a Pareto chart to show which few items make up most of a total: savings by opportunity, cost by property, alerts by cause.
+- For a ranking where the share of the total doesn't matter, use a horizontal column chart.
+- For what moved a total from one value to another, use a waterfall chart.
+- For more than about fifteen items, group the smallest into one, or use a table.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { ParetoChart } from 'src/charts/ParetoChart';
+
+<Card variant="outlined">
+  <CardHeader title="Annual Savings by Opportunity" />
+  <ParetoChart
+    data={opportunities}
+    categoryField="opportunity"
+    valueField="savings"
+    name="Annual savings"
+    unit="USD"
+    summary="4 of 12 opportunities make up 80% of the annual savings on offer."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: the items in any order; the chart sorts them. Keep it stable (a constant or `useMemo`).
+- `categoryField`: the field that holds each item's name.
+- `valueField`: the field that holds each item's amount.
+- `name`: what the columns are, in the legend and tooltips.
+- `unit`: above the left axis and in the tooltips.
+- `summary`: one sentence, the figure's accessible name.
+- `cumulativeName`: what the line is. Default `'Cumulative share'`.
+- `threshold`: the share marked by a reference line, in percent, or `null`. Default `80`.
+- `height`: the plot's height in pixels. Default `260`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Savings by opportunity.** Annual savings per opportunity, largest first, with the cumulative share and the 80% threshold: the items left of where the line crosses it are the few that matter most.
+- **Without a threshold.** `threshold={null}` drops the reference line, for a total with no cut-off worth marking.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; it sits with the numbers, on the axis and in the tooltips.
+- Do keep the item names short, since each truncates to its column's width.
+- Don't pass long descriptions as names; the tooltip names each item in full, and a table can say more.
+- Do keep to one unit for the columns.
+- Don't mix amounts in different units; the cumulative share only means something for one total.
+
+## MUI departures
+
+- `chart-palette`: the columns take the first `chart.series` color, and the cumulative line takes `chart.neutral`, since it's context.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and its marks take `chart.series`, `chart.neutral` or the intents as this page says.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: axis labels on the left and right are left-aligned, 8px from the plot, so they line up with the card's title.
+- `legend-items`: legend items have no left padding, so the legend lines up with the card's title.
+- `legend-markers`: each legend item is marked by an 8px dot in its series' color.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: two units take the left and the right: the amounts' axis on the left, the share's on the right.
+- `axis-units`: each value axis has its unit above it, the amounts' and `%` (`axisUnit`).
+- `full-value-tooltips`: every column has a tooltip with its item, exact amount and unit, and every point of the line its cumulative share (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `legend-layout`: the legend sits below the plot and names the columns and the line, each with its unit.
+- `reference-lines`: the threshold is a dashed `text.secondary` line on the share axis, labeled at the plot's left edge.
+- `point-markers`: every item on the cumulative line is marked with a hollow dot, since each is one item's share.
+- `pareto-cumulative`: the items are sorted largest first, and the cumulative share is a `chart.neutral` line on a 0–100% right axis.
+
+## Accessibility
+
+- The legend names the columns and the line with their units, and the threshold is labeled with its value.
+- Item names truncate to their column's width; every column shows its item's full name and exact amount, and every point of the line its cumulative share, in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say how many items make up the threshold.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Column, `horizontal`, for a ranking.
+- Charts → Waterfall for what moved a total.
+- Charts → Combo for an amount and a second measure over time.
+
+<Stories includePrimary={false} />

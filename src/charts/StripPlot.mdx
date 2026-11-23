@@ -1,0 +1,107 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as StripPlotStories from './StripPlot.stories';
+
+<Meta
+  of={StripPlotStories}
+  summary="Kilowatt's reference strip plot: every item's value as a dot, one row per group, against a threshold."
+/>
+
+# Strip plot
+
+A strip plot shows every item's value, a row per group, so the spread and the outliers show: each property's ENERGY STAR score by type, against the score certification takes. `StripPlot` is Kilowatt's reference implementation, built on amCharts 5's scatter (`@amcharts/amcharts5/xy`, bullets with no lines) and run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Each item is a dot in the first series color, ringed in the card surface and spread up or down its row by a fixed amount so equal values stay apart; a threshold is a dashed line down the plot, named at its top. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={StripPlotStories.AgainstThreshold} />
+
+## When to use
+
+- Use a strip plot for one measure across many items, by group, where the spread matters: scores by property type, EUI by region.
+- For a few items' values, use a horizontal column chart.
+- For one total per group, use a column chart.
+- For items people look up by name, use a table.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { StripPlot } from 'src/charts/StripPlot';
+
+<Card variant="outlined">
+  <CardHeader title="ENERGY STAR Scores by Type" />
+  <StripPlot
+    data={properties}
+    categoryField="type"
+    valueField="score"
+    labelField="property"
+    name="ENERGY STAR score"
+    max={100}
+    references={[{ value: 75, label: 'Certification' }]}
+    summary="14 of 30 properties score 75 or more and can be certified."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: the items, one dot each. Keep it stable (a constant or `useMemo`).
+- `categoryField`: the field that holds each item's group, a row each.
+- `valueField`: the field that holds each item's value.
+- `labelField`: the field that holds each item's name, in its tooltip.
+- `name`: what the value is, in the tooltips.
+- `summary`: one sentence, the figure's accessible name.
+- `unit`: at the end of the value axis and in the tooltips. Default `''`.
+- `references`: thresholds, `{ value, label }` (`ReferenceLine`), each a dashed line. Default none.
+- `max`: the end of the scale. Default: the axis fits the data.
+- `height`: the plot's height in pixels. Default: 48px a group, plus the axis.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Against a threshold.** Each property's ENERGY STAR score, a row per type, on a scale to 100, with a dashed line at 75, the score certification takes.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; it sits with the numbers, on the axis and in the tooltips.
+- Do set `max` for a measure with a fixed end, such as a score.
+- Don't let a score's axis stop short of 100; a fitted axis moves the threshold from card to card.
+- Do keep the dots in one color, and let the threshold say which side counts.
+- Don't color dots by which side of the threshold they fall; their place against the line says it.
+
+## MUI departures
+
+- `chart-palette`: the dots take the first `chart.series` color, ringed in the card surface; a threshold takes `text.secondary`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and its marks take `chart.series`, `chart.neutral` or the intents as this page says.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: the group names down the left are left-aligned, so they line up with the card's title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: every dot has a tooltip with its item, group and exact value (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `strip-spread`: each dot is spread up or down its row by a fixed amount from its place in its group, and a threshold is a dashed `text.secondary` line named at the plot's top.
+
+## Accessibility
+
+- Each threshold is named with its value in text at its line.
+- Every dot shows its item, group and exact value in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say how many items clear the threshold and which group sits highest.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Column, `horizontal`, for a few items' values.
+- Charts → Bubble for items on three measures.
+- Charts → Gauge for one property's score.
+
+<Stories includePrimary={false} />

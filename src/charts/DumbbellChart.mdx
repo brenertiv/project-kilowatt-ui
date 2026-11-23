@@ -1,0 +1,109 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as DumbbellChartStories from './DumbbellChart.stories';
+
+<Meta
+  of={DumbbellChartStories}
+  summary="Kilowatt's reference dumbbell chart: each row's gap between a reference and a reading, colored by which side is worse, with what the gap means in words."
+/>
+
+# Dumbbell chart
+
+A dumbbell chart shows the gap between two values for each row: each property's emissions limit against its actual emissions, or the years from today to the year it strands. `DumbbellChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Each row is a line from a hollow dot at the reference (`from`) to a solid dot at the reading (`to`), in `error` where the reading is on the worse side and `chart.neutral` where it isn't; a note at the row's end says what the gap means, and a legend under the plot names each dot in words. The dots mark places rather than lengths, so the axis fits the rows. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={DumbbellChartStories.AgainstLimit} />
+
+## When to use
+
+- Use a dumbbell for each row's reading against its own reference: emissions against each property's limit, this year against last for each property, today against each property's stranding year.
+- For readings against one shared target, use a horizontal column chart with a reference line, or a bullet chart.
+- For one property's reading against a benchmark and its expected range, use a range chart.
+- For more than about fifteen rows, use a table.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { DumbbellChart } from 'src/charts/DumbbellChart';
+
+const rows = [
+  { category: '350 Park Avenue', from: 4100, to: 5300, note: '$322K fine' },
+  { category: '200 Vesey Street', from: 2900, to: 2500 },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Emissions Against 2026 Limits" />
+  <DumbbellChart
+    rows={rows}
+    fromName="Limit"
+    toName="Actual"
+    unit="tCO₂e"
+    worse="above"
+    summary="1 of 2 properties is over its 2026 emissions limit, for $322K in fines."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `rows`: the rows top to bottom, `{ category, from, to, note? }`. Keep it stable (a constant or `useMemo`).
+- `fromName`: what `from` is, in the legend and tooltips.
+- `toName`: what `to` is, in the legend and tooltips.
+- `unit`: at the end of the value axis and in the tooltips. Empty for years.
+- `summary`: one sentence, the figure's accessible name.
+- `worse`: `'above'`, `'below'` or `'none'`. Default `'none'`.
+- `valueFormat`: `'number'` or `'year'`, which writes years in full. Default `'number'`.
+- `height`: the plot's height in pixels. Default: 36px a row, plus the axis.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Against a limit.** Each property's limit (hollow) against its actual emissions (solid), largest overage first. Rows over their limit take `error` and say their fine at the end; rows within take `chart.neutral`.
+- **Time to stranding.** Today against each property's stranding year, soonest first. Years are written in full (`valueFormat="year"`), and every reading takes the first series color, since the gap isn't good or bad in itself. In the app it's the second tab of the same card.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; it sits with the numbers, on the axis and in the tooltips.
+- Do sort the rows by the gap, largest or soonest first.
+- Don't sort them by name; a ranking reads top down.
+- Do say what a gap means in a `note` where it has a cost (a fine).
+- Don't leave the cost to the color; the note and the legend say it in words.
+
+## MUI departures
+
+- `chart-palette`: the reference dot takes `text.secondary`; the reading and its line take `error` on the worse side and `chart.neutral` on the better, or the first `chart.series` color with no worse side.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and its marks take `chart.series`, `chart.neutral` or the intents as this page says.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: the row names down the left are left-aligned, so they line up with the card's title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K); years are written in full (`valueFormat="year"`).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: both dots and the line have a tooltip with the row, the exact value and unit, and the gap (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `dumbbell-gap`: the reference is a hollow `text.secondary` dot, the reading a solid dot colored by `worse`, joined by a 2px line in its color, with a `note` at the row's end and a legend in words under the plot; the value axis fits the rows, since the dots mark places, not lengths from 0.
+
+## Accessibility
+
+- The legend under the plot names each dot in words (Limit, Actual over limit, Actual within limit), and a row's note says what its gap costs, so nothing rests on color.
+- Each dot shows its row, exact value and the gap in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say how many rows are on the worse side and what it costs.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Bullet for each row's value against its target as a bar.
+- Charts → Range for one property's reading against its expected range.
+- Charts → Column, `horizontal`, for one value per row.
+
+<Stories includePrimary={false} />

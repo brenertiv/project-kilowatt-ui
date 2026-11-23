@@ -31,7 +31,14 @@ export type ChartName =
   | 'PartitionChart'
   | 'AnnotatedChart'
   | 'ComboChart'
-  | 'RangeChart';
+  | 'RangeChart'
+  | 'WaterfallChart'
+  | 'DumbbellChart'
+  | 'BulletChart'
+  | 'MekkoChart'
+  | 'ParetoChart'
+  | 'BubbleChart'
+  | 'StripPlot';
 
 /** What a theme entry's `apply` works with, for one chart root and color scheme. */
 export type ChartThemeContext = {
@@ -115,8 +122,21 @@ const all: ChartName[] = [
   'AnnotatedChart',
   'ComboChart',
   'RangeChart',
+  'WaterfallChart',
+  'DumbbellChart',
+  'BulletChart',
+  'MekkoChart',
+  'ParetoChart',
+  'BubbleChart',
+  'StripPlot',
 ];
 const xy: ChartName[] = ['LineChart', 'MonthLinesChart', 'ColumnChart', 'IntervalChart', 'ComboChart'];
+/** XY charts with a vertical value axis: a waterfall, a Mekko, a Pareto and a bubble chart, beside the time and column charts. */
+const vertical: ChartName[] = [...xy, 'WaterfallChart', 'MekkoChart', 'ParetoChart', 'BubbleChart'];
+/** XY charts whose rows run down the left: bars, dumbbells, bullets and strips. */
+const rowed: ChartName[] = ['DumbbellChart', 'BulletChart', 'StripPlot'];
+/** Charts with an amCharts legend. */
+const legended: ChartName[] = [...xy, 'RadarChart', 'MekkoChart', 'ParetoChart'];
 /** Charts off the XY grid that still draw gridlines, write axis numbers or carry a legend. */
 const gridded: ChartName[] = [...xy, 'RadarChart'];
 
@@ -173,7 +193,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Gridlines at full strength',
     why: "amCharts draws gridlines at a low opacity of its grid color. Kilowatt draws them at full strength in `border.level2`, a step past the divider (`border.level1`): asked for in review, so a chart's lines read on the card.",
-    charts: gridded,
+    charts: [...gridded, ...vertical.filter((chart) => !xy.includes(chart)), ...rowed],
     apply: ({ theme }) => {
       theme.rule('Grid').setAll({ strokeOpacity: 1 });
     },
@@ -204,7 +224,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Value-axis numbers left-aligned',
     why: "amCharts right-aligns a left value axis's numbers against the plot and pads every label 5px on both sides. Kilowatt left-aligns the numbers on both sides, with no padding on the outer side and 8px between the numbers and the plot: compact numbers are short, so none sits far from the plot, they line up with the unit above them, and a left axis lines up with the card's title.",
-    charts: xy,
+    charts: [...vertical, ...rowed],
     apply: ({ theme }) => {
       theme.rule('AxisLabel', ['y']).setAll({ centerX: 0, paddingLeft: 0, paddingRight: 8 });
       theme.rule('AxisLabel', ['y', 'opposite']).setAll({ paddingLeft: 8, paddingRight: 0 });
@@ -215,7 +235,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Legend items flush left',
     why: "amCharts pads each legend item 5px on every side. Kilowatt drops the left padding, so the first column's markers line up with the axis numbers and the card's title; the right padding keeps columns apart, and the top and bottom keep the hit area.",
-    charts: gridded,
+    charts: legended,
     apply: ({ theme }) => {
       theme.rule('Container', ['legend', 'item', 'itemcontainer']).setAll({ paddingLeft: 0 });
     },
@@ -225,7 +245,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Legend markers are small dots',
     why: "amCharts marks each legend item with an 18px square rounded at 3px. Kilowatt marks it with an 8px dot in the series' color, as the donut's and the segmented bar's legends mark their parts, so every legend reads the same and the marker doesn't outweigh its name.",
-    charts: gridded,
+    charts: legended,
     apply: ({ theme }) => {
       theme.rule('Container', ['legend', 'marker']).setAll({ width: 8, height: 8 });
       theme.rule('RoundedRectangle', ['legend', 'marker', 'rectangle']).setAll({ cornerRadiusTL: 4, cornerRadiusTR: 4, cornerRadiusBL: 4, cornerRadiusBR: 4 });
@@ -251,7 +271,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'theme',
     title: 'Compact axis numbers',
     why: "amCharts writes axis numbers in full with its own number format. Kilowatt writes them in `Intl.NumberFormat`'s compact notation in the viewer's locale (1.5K, 60K), so long numbers don't take the plot's width. It's the root's default number format, which value axes use; tooltips set their own and show the full value (`full-value-tooltips`).",
-    charts: [...gridded, 'GaugeChart', 'VitalsGauge', 'RangeChart'],
+    charts: [...gridded, 'GaugeChart', 'VitalsGauge', 'RangeChart', ...vertical.filter((chart) => !xy.includes(chart)), ...rowed],
     apply: ({ root }) => {
       root.numberFormatter.set('numberFormat', axisNumberFormat);
     },
@@ -336,7 +356,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'One value axis on the right',
     why: 'amCharts puts a value axis on the left. Kilowatt puts a chart\'s one value axis on the right; a chart with two units puts its first on the left and its second on the right, two at most.',
-    charts: xy,
+    charts: vertical,
     convention: {
       amchartsDefault: '`AxisRendererY` with `opposite: false`',
       kilowatt: '`opposite: true` for a single value axis; left then right for two units; along the bottom for horizontal bars',
@@ -349,7 +369,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'The unit above each value axis',
     why: "amCharts has no place for units; charts usually put them in a rotated axis title or the chart's heading. Kilowatt shows each value axis's unit as a small horizontal label above it, left-aligned with its numbers (`axisUnit`), so every number sits next to its unit and card headers stay title-only.",
-    charts: xy,
+    charts: vertical,
     convention: {
       amchartsDefault: 'No unit label; a rotated axis title if one is added',
       kilowatt: '`axisUnit(root, chart, axis, unit)` for every vertical value axis; a horizontal bar chart puts its unit at the end of its value axis, under the numbers',
@@ -388,7 +408,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'A legend below, up to three columns',
     why: "amCharts lays a legend out in one row that runs off the edge. Kilowatt's legend sits below the plot, full width, and wraps into up to three columns (`legend` from `src/charts/theme`), and appears only with more than one series.",
-    charts: gridded,
+    charts: legended,
     convention: {
       amchartsDefault: 'A single-row legend wherever it is pushed',
       kilowatt: '`legend(root)` below the plot, for two or more series',
@@ -401,7 +421,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'A stack ordered dark to light',
     why: "amCharts stacks series in the order they're added, so a stack's colors fall wherever the data's order puts them. Kilowatt orders a stack by its colors' lightness in the active scheme, across the whole stack whatever the ramps (Rules → Charts → A stack runs dark to light): darkest at the bottom of a column and lightest at the top, lightest at the left of a bar and darkest at the right, both reversed in dark. Every series keeps its own color, and the legend keeps the order the series are given in.",
-    charts: ['ColumnChart'],
+    charts: ['ColumnChart', 'MekkoChart'],
     convention: {
       amchartsDefault: 'Series stack in the order they are added',
       kilowatt: '`stackOrder` from `src/charts/stackOrder`: a `stacked` chart adds its series by lightness, for its direction and the scheme',
@@ -414,7 +434,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'Targets and benchmarks as dashed lines',
     why: "amCharts draws an axis range as a solid gridline with an axis label. Kilowatt draws a target or benchmark as a dashed line in `text.secondary`, labeled with its name, full value and unit at the plot's left edge on a plate of the card surface, over the series, so it reads as a reference rather than data, no line runs through its label, and the label never covers the latest values at the right. An `IntervalChart` target, which the readings are judged against as you zoom, keeps amCharts' own label for the line, centered on it at the right edge, so amCharts moves the two together.",
-    charts: ['LineChart', 'Sparkline', 'IntervalChart'],
+    charts: ['LineChart', 'Sparkline', 'IntervalChart', 'ParetoChart'],
     convention: {
       amchartsDefault: 'An axis range: a solid gridline in the grid color, its label among the axis numbers',
       kilowatt: '`references`, drawn by `referenceLines` from `src/charts/theme`: a dashed `text.secondary` line, labeled "Name: value unit" at the left edge of the plot on the card surface; an `IntervalChart` target is labeled by amCharts\' own axis-range label instead, centered on its line at the plot\'s right edge on `action.hover` (`onLine`)',
@@ -466,7 +486,7 @@ export const chartDepartures: ChartDeparture[] = [
     kind: 'convention',
     title: 'Markers only where they say something',
     why: "amCharts draws no markers until a bullet is added, and charts then tend to mark every point. Kilowatt draws none by default; `markers: 'last'` marks the latest reading, and `'all'` marks every point of sparse data, where each point is a reading, as `MonthLinesChart` marks every month so a lone month with data still shows. A marker is a 4px dot in the line's color (or its band's) ringed in the card surface, so it stays legible where lines cross.",
-    charts: ['LineChart', 'MonthLinesChart', 'Sparkline', 'RadarChart', 'ComboChart'],
+    charts: ['LineChart', 'MonthLinesChart', 'Sparkline', 'RadarChart', 'ComboChart', 'ParetoChart'],
     convention: {
       amchartsDefault: 'No bullets; when added, usually on every point',
       kilowatt: "`markers: 'last' | 'all'` on a `LineChart` series, and the last point of every `Sparkline`: a 4px dot ringed in the card surface",
@@ -630,5 +650,96 @@ export const chartDepartures: ChartDeparture[] = [
       where: 'Every reading shown against a benchmark and an expected range',
     },
     check: /colors\.status/,
+  },
+  {
+    id: 'waterfall-bridge',
+    kind: 'convention',
+    title: 'A waterfall colors its changes by which way is worse, and writes them signed',
+    why: "amCharts' waterfall demo colors each step from its color set, with no meaning in the color. A bridge's steps are deviations, so Kilowatt draws totals from 0 in the first series color and each change floating from the running total in `error` where it moves the worse way and `chart.neutral` where it moves the better way (Rules → Charts → deviation), writes each change signed above its column so the direction reads in words, and carries the running total from column to column with a dashed line in `text.secondary`. The value axis starts at 0, so a total's height is its amount, unless the changes would then be too small to read (a bridge of a few percent): it then starts at a round number below the lowest running total, totals stand from its foot, and each total is written above its column so its amount still reads in full.",
+    charts: ['WaterfallChart'],
+    convention: {
+      amchartsDefault: 'Floating columns colored from the `ColorSet`, with no labels and no connectors',
+      kilowatt: "`worse` on the chart: totals in `chart.series[0]`, changes in `error` or `chart.neutral`; a compact signed label above each change; a dashed `StepLineSeries` connector without risers; the value axis from 0, or from a round number below the lowest running total when the changes are under about a third of it, with every total written above its column",
+      where: 'Every bridge from one total to another',
+    },
+    check: /openValueYField/,
+  },
+  {
+    id: 'dumbbell-gap',
+    kind: 'convention',
+    title: 'A dumbbell is hollow at its reference and solid at its reading',
+    why: "amCharts' dumbbell demo draws both ends in two series colors with a gray line between. One end is the reference (a limit, today) and the other the reading, so Kilowatt draws the reference hollow in `text.secondary` and the reading solid, in `error` where it's on the worse side of its reference and `chart.neutral` where it isn't (or the first series color where neither side is worse), with the line between in the reading's color. A note at the row's end says what the gap means (a fine), and an HTML legend names each kind of dot in words, so the gap doesn't rest on color. The dots mark places rather than lengths from 0, so the value axis fits the rows, as a dot plot's does, and the gaps read large enough to compare.",
+    charts: ['DumbbellChart'],
+    convention: {
+      amchartsDefault: 'Two circle bullets in two series colors at the ends of a thin gray column',
+      kilowatt: '`fromName` as a hollow `text.secondary` dot, `toName` as a solid dot colored by `worse`, a 2px line in the same color, a `note` label at the far end, a value axis fitted to the rows, and a legend in words under the plot',
+      where: 'Every chart of a reading against its own reference, row by row',
+    },
+    check: /fromName/,
+  },
+  {
+    id: 'bullet-target',
+    kind: 'convention',
+    title: 'A bullet is a bar against a tick, on one track',
+    why: "amCharts' bullet chart draws a gradient of qualitative ranges behind each bar and the target as a dark line. Kilowatt keeps one track in `action.hover`, the range-band color, to the end of the scale where there is one (100%), since a gradient of ranges reads as a color scale; the bar takes the first series color, or `error` and `chart.neutral` by which side of its target is worse; and the target is a tick in `text.secondary`, the reference color, named in an HTML legend under the plot with each color the bars take, in words.",
+    charts: ['BulletChart'],
+    convention: {
+      amchartsDefault: 'A gradient of range columns behind each bar and a target line from the `ColorSet`',
+      kilowatt: '`max` as one `action.hover` track, the bar colored by `worse`, the `targetName` tick in `text.secondary`, and a legend in words under the plot',
+      where: 'Every value read against its own target, row by row',
+    },
+    check: /targetName/,
+  },
+  {
+    id: 'mekko-widths',
+    kind: 'convention',
+    title: 'A Mekko names its columns and parts them with the card surface',
+    why: "amCharts builds a Mekko from a stacked 100% chart with column widths set by an adapter, labels its columns along a value axis that means nothing to the reader, and draws parts edge to edge. Kilowatt names each column under it with its size (Fund I, 4.2M sq ft) in place of axis numbers, parts every rectangle with 2px of the card surface as a partition does, and stacks the parts dark to light like every stack, so widths, shares and names read at once.",
+    charts: ['MekkoChart'],
+    convention: {
+      amchartsDefault: 'Column widths by adapter, the category value axis labeled with numbers, parts touching',
+      kilowatt: '`widthField` sets each column\'s span on a hidden value axis; each column named with its compact size by an axis range; a 2px `surface` stroke; the share axis 0–100% on the right',
+      where: 'Every chart of wholes of different sizes split into the same parts',
+    },
+    check: /widthField/,
+  },
+  {
+    id: 'pareto-cumulative',
+    kind: 'convention',
+    title: 'A Pareto sorts itself, with its cumulative share as context',
+    why: "amCharts' Pareto demo takes its data in the order given and draws the cumulative line in a second series color. Kilowatt sorts the items largest first, draws the cumulative share on a 0–100% right axis in `chart.neutral`, since it's context for the columns, with every item marked by a hollow dot, and marks the threshold (80%) with a dashed reference line, so the few items that make up most of the total read at a glance.",
+    charts: ['ParetoChart'],
+    convention: {
+      amchartsDefault: 'Columns in data order and a cumulative line in the next series color',
+      kilowatt: 'Rows sorted by `valueField`, the `cumulative` share in `chart.neutral` on a 0–100% right axis with hollow markers, and `threshold` as a reference line',
+      where: 'Every ranking of contributions to a total',
+    },
+    check: /cumulative/,
+  },
+  {
+    id: 'bubble-area',
+    kind: 'convention',
+    title: "A bubble's area is its amount",
+    why: "amCharts sizes bubbles with a heat rule on the radius, so a bubble with twice the amount has four times the area and reads as four times as much. Kilowatt sets each bubble's radius from the square root of its share of the largest, so its area is its amount, with a floor that keeps every bubble big enough to rest a pointer on; rings each in the card surface and draws the largest first, so overlaps stay legible; starts both axes at 0; names the three measures in a caption under the plot; and names its groups in an HTML legend marked by small dots, since amCharts would mark each with a whole bubble.",
+    charts: ['BubbleChart'],
+    convention: {
+      amchartsDefault: "`heatRules` on the circle's `radius`, linear in the value",
+      kilowatt: '`radius` from `Math.sqrt` of the size over the largest, 5px to 28px; a `surface` ring; largest drawn first; both axes from 0; a caption naming `x`, `y` and `size`; an HTML legend for `groups`',
+      where: 'Every bubble chart',
+    },
+    check: /Math\.sqrt/,
+  },
+  {
+    id: 'strip-spread',
+    kind: 'convention',
+    title: "A strip plot spreads its dots by a fixed amount",
+    why: "amCharts' scatter places every dot on its row's center, so items with the same value hide each other, and examples that spread them do it at random, which moves the dots on every render. Kilowatt spreads each dot up or down its row by a fixed amount from its place in its group, so equal values stay apart and the plot is the same every time; a threshold is a dashed line down the plot in `text.secondary`, named at its top on a plate of the card surface.",
+    charts: ['StripPlot'],
+    convention: {
+      amchartsDefault: 'Dots on the row center, or a random jitter',
+      kilowatt: "Each bullet's `locationY` from its index in its group; `references` as dashed axis ranges named at the plot's top",
+      where: "Every chart of many items' values by group",
+    },
+    check: /locationY/,
   },
 ];
