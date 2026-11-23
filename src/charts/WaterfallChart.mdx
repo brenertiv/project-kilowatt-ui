@@ -1,0 +1,110 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as WaterfallChartStories from './WaterfallChart.stories';
+
+<Meta
+  of={WaterfallChartStories}
+  summary="Kilowatt's reference waterfall chart: a total, the signed changes that move it, colored by which way is worse, and the total they come to."
+/>
+
+# Waterfall chart
+
+A waterfall (bridge) chart shows how a total moved from one value to another: last month's utility cost, what changed it, and this month's. `WaterfallChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Totals stand in the first series color, each written above its column; each change floats from the running total, in `error` where it moves the worse way and `chart.neutral` where it moves the better way, and is written signed above its column. A dashed line carries the running total from column to column. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={WaterfallChartStories.CostBridge} />
+
+## When to use
+
+- Use a waterfall for what moved a total from one value to another: a cost bridge by driver (rate, weather, consumption, properties added or sold), or savings from identified to realised by stage.
+- For a total's parts at one point, with nothing moving it, use a donut or a stacked column.
+- For the same total period after period, use a column or line chart.
+- For more than about eight changes, group the smallest into one, or use a table.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { WaterfallChart } from 'src/charts/WaterfallChart';
+
+const steps = [
+  { label: 'Aug 2026', value: 412600, total: true },
+  { label: 'Rate', value: 18400 },
+  { label: 'Weather', value: -9200 },
+  { label: 'Sep 2026', total: true },
+];
+
+<Card variant="outlined">
+  <CardHeader title="What Changed Utility Cost" />
+  <WaterfallChart
+    steps={steps}
+    unit="USD"
+    worse="increase"
+    summary="Utility cost rose from $412,600 in August to $421,800 in September, mostly from a higher rate."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `steps`: the columns in order, `{ label, value?, total? }`. A total with no value is the running total. Keep it stable (a constant or `useMemo`).
+- `unit`: above the value axis and in the tooltips.
+- `worse`: `'increase'` for a cost, `'decrease'` for savings.
+- `summary`: one sentence, the figure's accessible name.
+- `height`: the plot's height in pixels. Default `240`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Cost bridge.** A starting total, the drivers that moved it, and the closing total. Increases are worse (`worse="increase"`), so they take `error`, and decreases `chart.neutral`.
+- **Savings by stage.** A total and subtotals between the stages (identified, accepted, implemented, realised), with what fell away between them. Each drop is savings lost (`worse="decrease"`), so it takes `error`.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; it sits with the numbers, on the axis and in the tooltips.
+- Do start and end with a total, and give each stage of a funnel its own subtotal.
+- Don't leave the closing total for readers to add up; add a total step with no value and the chart sums it.
+- Do order the changes as the reader explains them: largest first, or in the order they happen.
+- Don't put more than about eight changes in one bridge; group the smallest into one change, or use a table.
+- Do let the chart start its axis above 0 for a bridge of a few percent; it does so itself, and writes every total above its column.
+- Don't set a minimum of your own; a hand-set axis moves from card to card.
+
+## MUI departures
+
+- `chart-palette`: totals take the first `chart.series` color; changes take `error` on the worse side and `chart.neutral` on the better, the deviation roles; the connector takes `text.secondary`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles; totals take `chart.series` and changes the deviation roles, `error` and `chart.neutral`.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: axis labels on the left and right are left-aligned, 8px from the plot, so they line up with the card's title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: the chart's one value axis sits on the right, from 0, or from a round number below the lowest running total when the changes are small.
+- `axis-units`: each vertical value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `full-value-tooltips`: every column has a tooltip with its name and its exact amount, a change's signed (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `waterfall-bridge`: totals in the first series color, changes floating in `error` or `chart.neutral` by `worse`, every amount written above its column (changes signed), joined by a dashed `text.secondary` connector; the axis starts above 0 only when the changes would be too small to read.
+
+## Accessibility
+
+- Every column's amount is written above it, each change signed (+18K, −9.2K), so a change's direction doesn't rest on its color and a total reads in full even when the axis starts above 0.
+- Every column shows its name and exact amount in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say both totals and the largest changes.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Column for a total period after period.
+- Charts → Donut for a total's parts at one point.
+- Charts → Pareto for which items make up most of a total.
+
+<Stories includePrimary={false} />

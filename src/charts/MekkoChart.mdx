@@ -1,0 +1,117 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as MekkoChartStories from './MekkoChart.stories';
+
+<Meta
+  of={MekkoChartStories}
+  summary="Kilowatt's reference Mekko chart: columns as wide as their size, each stacked to 100% by the same parts."
+/>
+
+# Mekko chart
+
+A Mekko (Marimekko) chart shows wholes of different sizes split into the same parts: each fund as wide as its floor area, stacked by the share of each property type. `MekkoChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Each column's width is its share of the total, its parts stack to 100% in `chart.series` colors, ordered dark to light, and every rectangle is parted from its neighbors by 2px of the card surface. Each column is named under it with its size. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={MekkoChartStories.FundsByType} />
+
+## When to use
+
+- Use a Mekko for a few wholes of different sizes split into the same parts, where both the sizes and the shares matter: funds by floor area and property type.
+- For wholes of about equal size, use a 100% stacked column chart.
+- For one whole's parts, use a donut or a treemap.
+- For more than about six columns or six parts, use a table.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { MekkoChart } from 'src/charts/MekkoChart';
+
+const funds = [
+  { fund: 'Core Fund I', area: 4200000, office: 64, retail: 36 },
+  { fund: 'Value-Add Fund II', area: 2600000, office: 28, retail: 72 },
+];
+const parts = [
+  { field: 'office', name: 'Office' },
+  { field: 'retail', name: 'Retail' },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Floor Area by Fund and Type" />
+  <MekkoChart
+    data={funds}
+    categoryField="fund"
+    widthField="area"
+    widthUnit="sq ft"
+    parts={parts}
+    summary="Core Fund I holds 4.2M of the portfolio's 6.8M square feet, 64% of it office."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: the columns left to right, each with its name, its size and a share per part. Keep it stable (a constant or `useMemo`).
+- `categoryField`: the field that holds each column's name.
+- `widthField`: the field that holds each column's size.
+- `widthUnit`: the size's unit, under each column's name and in the tooltips.
+- `parts`: `{ field, name }` in legend order, each with an optional `slot` (`SeriesColor`). Up to six.
+- `summary`: one sentence, the figure's accessible name.
+- `height`: the plot's height in pixels. Default `280`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Funds by property type.** One column per fund, as wide as its floor area, stacked by the share of each type. The parts stack dark to light like every stack; the legend keeps the order `parts` gives.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; it sits with the numbers, on the axis and in the tooltips.
+- Do sort the columns largest first, so widths read as a ranking.
+- Don't give a part its own color per column; a part keeps its color across every column.
+- Do give each row's shares in percent, adding up to 100.
+- Don't pass amounts as shares; work out the shares first, and the tooltips give the amounts back.
+
+## MUI departures
+
+- `chart-palette`: the parts take `chart.series` in order or by `slot`; the gaps between them are the card surface.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and its marks take `chart.series`, `chart.neutral` or the intents as this page says.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: axis labels on the left and right are left-aligned, 8px from the plot, so they line up with the card's title.
+- `legend-items`: legend items have no left padding, so the legend lines up with the card's title.
+- `legend-markers`: each legend item is marked by an 8px dot in its series' color.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: the share axis, 0 to 100%, sits on the right; the axis across is named by its columns instead of numbers.
+- `axis-units`: the share axis has `%` above it, left-aligned with its numbers (`axisUnit`).
+- `full-value-tooltips`: every rectangle has a tooltip with its column, part, share and amount (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `legend-layout`: the legend sits below the plot in up to three columns.
+- `stack-order`: the parts stack dark to light from the bottom, reversed in dark (`stackOrder`), and the legend keeps the order `parts` gives.
+- `mekko-widths`: each column spans its `widthField` share of the total, is named under it with its compact size, and its parts are parted by 2px of the card surface.
+
+## Accessibility
+
+- Each column is named in text under it with its size, truncated where the column is narrow, and the legend names every part; every rectangle's tooltip names its column in full.
+- Every rectangle shows its column, part, share and amount in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say the largest column and its main part.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Column, `stacked`, for wholes of about equal size.
+- Charts → Treemap for one whole's parts in a wide card.
+- Charts → Partition for a hierarchy that adds up at every level.
+
+<Stories includePrimary={false} />

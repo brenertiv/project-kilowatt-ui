@@ -1,0 +1,107 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as BubbleChartStories from './BubbleChart.stories';
+
+<Meta
+  of={BubbleChartStories}
+  summary="Kilowatt's reference bubble chart: items placed by two measures and sized by area by a third, optionally colored by group."
+/>
+
+# Bubble chart
+
+A bubble chart places each item by two measures and sizes it by a third: each opportunity's upfront cost across, its annual savings up, and the emissions it avoids as its area. `BubbleChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). A bubble's area, not its radius, is its amount; bubbles take the first series color or a color per group, ringed in the card surface and drawn largest first. Both axes start at 0, and a caption under the plot names the three measures. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={BubbleChartStories.CostAndSavings} />
+
+## When to use
+
+- Use a bubble chart to compare items on three measures at once, where where they sit matters: opportunities by cost, savings and emissions avoided.
+- For two measures, use the same chart with the size even, or a table.
+- For one measure across items, use a column chart.
+- For more than about thirty items, or bubbles that hide each other, use a table with sorting.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { BubbleChart } from 'src/charts/BubbleChart';
+
+<Card variant="outlined">
+  <CardHeader title="Opportunities by Cost and Savings" />
+  <BubbleChart
+    data={opportunities}
+    labelField="opportunity"
+    x={{ field: 'cost', name: 'Upfront cost', unit: 'USD' }}
+    y={{ field: 'savings', name: 'Annual savings', unit: 'USD' }}
+    size={{ field: 'avoided', name: 'Avoided emissions', unit: 'tCO₂e/yr' }}
+    summary="The cheapest opportunities save the most for what they cost."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `data`: the items, one bubble each. Keep it stable (a constant or `useMemo`).
+- `labelField`: the field that holds each item's name, in its tooltip.
+- `x`: the measure across, `{ field, name, unit }` (`BubbleMeasure`).
+- `y`: the measure up.
+- `size`: the measure each bubble's area shows.
+- `summary`: one sentence, the figure's accessible name.
+- `groupField`: the field that holds each item's group. Default: none.
+- `groups`: `{ value, name? }` in legend order, each with an optional `slot` (`SeriesColor`). Up to six.
+- `height`: the plot's height in pixels. Default `320`.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Cost against savings.** Every opportunity in the first series color: where it sits and how big it is are the point.
+- **Grouped by kind.** `groupField` and `groups` color the bubbles by the kind of measure, in `chart.series` order, named in a legend under the plot.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; it sits with the numbers, on the axis and in the tooltips.
+- Do name all three measures; the caption under the plot does it from `x`, `y` and `size`.
+- Don't rely on the axes to say what they measure; they carry only their units.
+- Do group by color only when the groups matter to the question.
+- Don't color every bubble differently; give each item a name in its tooltip instead.
+
+## MUI departures
+
+- `chart-palette`: bubbles take the first `chart.series` color, or `chart.series` in order or by `slot` per group, ringed in the card surface.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles, and its marks take `chart.series`, `chart.neutral` or the intents as this page says.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: axis labels on the left and right are left-aligned, 8px from the plot, so they line up with the card's title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `value-axis-side`: the vertical value axis sits on the right; the horizontal one along the bottom has its unit at its end.
+- `axis-units`: the vertical value axis has its unit above it (`axisUnit`); the caption names both measures.
+- `full-value-tooltips`: every bubble has a tooltip with its name and all three measures, exact and with their units (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `bubble-area`: a bubble's radius is the square root of its share of the largest, so its area is its amount, from 5px to 28px, ringed in the card surface and drawn largest first; groups are named in an HTML legend under the plot.
+
+## Accessibility
+
+- The caption under the plot names the three measures and their units in text.
+- Every bubble shows its name and all three measures in a tooltip on hover.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say which items stand out and why.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Pareto for which items make up most of one total.
+- Charts → Strip plot for one measure across many items by group.
+- Charts → Column for one measure across a few items.
+
+<Stories includePrimary={false} />

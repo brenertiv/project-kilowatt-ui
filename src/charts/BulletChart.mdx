@@ -1,0 +1,111 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as BulletChartStories from './BulletChart.stories';
+
+<Meta
+  of={BulletChartStories}
+  summary="Kilowatt's reference bullet chart: each row's value as a bar against its target as a tick, colored by which side is worse."
+/>
+
+# Bullet chart
+
+A bullet chart shows each row's value against its target: realised savings against projected, certified floor area against the whole portfolio, spend against budget. `BulletChart` is Kilowatt's reference implementation: amCharts 5 (`@amcharts/amcharts5/xy`) run through `useChart`, so it takes the chart theme for the active color scheme (Rules → Charts), inside MUI's `Card` (Material UI v9). Each value is a bar from 0 and its target a tick across the row in `text.secondary`; with `worse`, bars on the worse side take `error` and the rest `chart.neutral`; with `max`, a track runs to the end of the scale. One row makes a progress bar against a target. Enertiv's app rebuilds its charts from this one rather than importing it.
+
+<Canvas of={BulletChartStories.AgainstProjection} />
+
+## When to use
+
+- Use a bullet chart for values each read against their own target: savings against projection, spend against budget, coverage against 100%.
+- Use one row for a single reading's progress toward a target on a fixed scale, such as carbon-zero progress against the pathway.
+- For a reading's gap to a reference where both ends matter as values, use a dumbbell chart.
+- For one property's reading against a benchmark and an expected range, use a range chart.
+
+## Usage
+
+```tsx
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import { BulletChart } from 'src/charts/BulletChart';
+
+const rows = [
+  { category: '350 Park Avenue', value: 141000, target: 180000 },
+  { category: '200 Vesey Street', value: 172000, target: 159000 },
+];
+
+<Card variant="outlined">
+  <CardHeader title="Realised Savings by Property" />
+  <BulletChart
+    rows={rows}
+    name="Realised"
+    targetName="Projected"
+    unit="USD"
+    worse="below"
+    summary="1 of 2 properties has realised less than its projected savings."
+  />
+</Card>;
+```
+
+Props, with their defaults:
+
+- `rows`: the rows top to bottom, `{ category, value, target }`. Keep it stable (a constant or `useMemo`).
+- `name`: what the bar is, in the legend and tooltips.
+- `targetName`: what the tick is, in the legend and tooltips.
+- `unit`: at the end of the value axis and in the tooltips.
+- `summary`: one sentence, the figure's accessible name.
+- `worse`: `'above'`, `'below'` or `'none'`. Default `'none'`.
+- `max`: the end of the scale, with a track to it behind every bar. Default: none.
+- `height`: the plot's height in pixels. Default: 40px a row, plus 72px for the axis.
+- `inset`: the padding at the sides and bottom, `2` (16px), `1` (8px) or `0`. Default `2`.
+
+## Variants
+
+- **Against a projection.** Realised savings per property against what was projected: bars short of their tick take `error` (`worse="below"`).
+- **Share of a whole.** Each certification's share of floor area on a track to 100% (`max={100}`). Neither side is worse, so the bars take the first series color.
+- **Against a budget.** Spend so far this year against budget: bars over their tick take `error` (`worse="above"`). In a table, the same bar sits in a column.
+- **Carbon-zero progress.** One row: the portfolio's cut in emissions since its baseline on a track to 100%, against where its pathway puts it this year.
+
+## Do and don't
+
+- Do put the chart in an outlined `Card` (`variant="outlined"`) under a title-only `CardHeader` that says what's measured, straight in the `Card` with no `CardContent`: the chart pads itself through `inset`. The page sets the period.
+- Don't put the unit in the card header or a subtitle; it sits with the numbers, on the axis and in the tooltips.
+- Do give every row its own target, even when they share one.
+- Don't draw a shared target as a tick per row when it's one number; use a reference line on a column chart.
+- Do set `max` for a measure with a fixed end (a share, a score).
+- Don't set `max` for an amount with no end; the axis fits the data.
+
+## MUI departures
+
+- `chart-palette`: bars take the first `chart.series` color, or `error` on the worse side and `chart.neutral` on the better; the tick takes `text.secondary`, and the track `action.hover`.
+
+Theme-wide departures (the surface levels the card sits on, the theme radius) apply too; see Foundations → MUI departures.
+
+## amCharts departures
+
+How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; Foundations → amCharts departures has the reasons.
+
+- `chart-colors`: the chart's chrome takes the palette's roles; bars take `chart.series` or the deviation roles, the tick `text.secondary` and the track `action.hover`.
+- `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
+- `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
+- `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
+- `value-axis-labels`: the row names down the left are left-aligned, so they line up with the card's title.
+- `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
+- `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
+- `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
+- `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
+- `full-value-tooltips`: each bar and tick has a tooltip with its row and exact value, and the bar its share of the target (`tooltipNumberFormat`).
+- `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
+- `bullet-target`: one `action.hover` track to `max`, the bar colored by `worse`, the target a `text.secondary` tick, and a legend in words under the plot.
+
+## Accessibility
+
+- The legend under the plot names the tick and each color the bars take in words (Realised, short of projected), and a bar's length against its tick shows the same, so nothing rests on color.
+- Each bar shows its exact value and its share of the target in a tooltip on hover, and each tick its target.
+- The chart draws on a canvas, so the `figure` around it is named by `summary` through `aria-label`. Say how many rows miss their target.
+- For exact values, offer the data as a table beside the chart.
+
+## Related
+
+- Charts → Dumbbell for each row's reading against its own reference as two dots.
+- Charts → Range for one property's reading against its expected range.
+- Charts → Gauge for one reading on a fixed scale of worse to better.
+
+<Stories includePrimary={false} />

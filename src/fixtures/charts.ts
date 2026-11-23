@@ -277,3 +277,97 @@ export const buildingTrends = radarBuildings.map((building, b) => {
   });
   return { building, rows };
 });
+
+/** The portfolio's utility cost from August to September 2026, in US dollars: August's total, what changed it, and September's total, for a cost bridge. */
+export const costBridge = [
+  { label: 'Aug 2026', value: 412_600, total: true },
+  { label: 'Rate', value: 18_400 },
+  { label: 'Weather', value: -9_200 },
+  { label: 'Consumption', value: 6_100 },
+  { label: 'Properties added', value: 22_800 },
+  { label: 'Properties sold', value: -15_400 },
+  { label: 'Sep 2026', total: true },
+];
+
+/** The portfolio's annual savings opportunities, in US dollars a year, from identified to realised: each total, and what fell away between them. */
+export const savingsBridge = [
+  { label: 'Identified', value: 1_240_000, total: true },
+  { label: 'Dismissed', value: -310_000 },
+  { label: 'Accepted', total: true },
+  { label: 'Not yet implemented', value: -280_000 },
+  { label: 'Implemented', total: true },
+  { label: 'Not yet realised', value: -95_000 },
+  { label: 'Realised', total: true },
+];
+
+/** The fine per metric ton of CO₂e over a property's limit under Local Law 97, in US dollars. */
+export const finePerTon = 268;
+
+/** Each building's 2026 emissions limit and its emissions over the last 12 months, in metric tons of CO₂e, with the fine the overage would bring. */
+export const emissionsLimits = radarBuildings.map((building, b) => {
+  const limit = Math.round(2_400 + 1_900 * Math.abs(Math.cos(b * 1.4 + 0.3)));
+  const actual = Math.round(limit * (0.82 + 0.34 * Math.abs(Math.sin(b * 2.3 + 0.8))));
+  return { building, limit, actual, fine: Math.max(0, actual - limit) * finePerTon };
+});
+
+/** The year each building's emissions cross its CRREM pathway (it strands), from the current year, 2026. */
+export const currentYear = 2026;
+export const strandingYears = radarBuildings.map((building, b) => ({ building, year: currentYear + 2 + Math.round(14 * Math.abs(Math.sin(b * 1.7 + 0.6))) }));
+
+/** Each building's realised annual savings against what its measures projected, in US dollars. */
+export const savingsByProperty = radarBuildings.slice(0, 6).map((building, b) => {
+  const projected = Math.round((180_000 - b * 21_000) / 1_000) * 1_000;
+  return { building, projected, realised: Math.round((projected * (0.62 + 0.5 * Math.abs(Math.sin(b * 1.9 + 0.2)))) / 1_000) * 1_000 };
+});
+
+/** The share of the portfolio's floor area each certification covers, in percent. */
+export const certificationCoverage = [
+  { certification: 'ENERGY STAR', share: 68 },
+  { certification: 'LEED', share: 54 },
+  { certification: 'Fitwel', share: 31 },
+  { certification: 'WELL', share: 22 },
+  { certification: 'BREEAM', share: 9 },
+];
+
+/** Each building's spend so far this year against its budget for the same months, in US dollars. */
+export const spendAgainstBudget = buildings.map((building, b) => {
+  const budget = Math.round((1_420_000 - b * 140_000) / 1_000) * 1_000;
+  return { building, budget, actual: Math.round((budget * (0.9 + 0.17 * Math.sin(b * 2.1 + 0.5))) / 1_000) * 1_000 };
+});
+
+/** The portfolio's progress toward carbon zero: its cut in emissions since its 2019 baseline, in percent, against where its pathway puts it for 2026. */
+export const carbonProgress = { reduction: 31, pathway: 38 };
+
+/** The portfolio's funds, each with its floor area in square feet and the share of that floor area by property type, in percent. */
+export const fundMix = [
+  { fund: 'Core Fund I', area: 4_200_000, office: 64, multifamily: 18, retail: 12, industrial: 6 },
+  { fund: 'Value-Add Fund II', area: 2_600_000, office: 28, multifamily: 44, retail: 20, industrial: 8 },
+  { fund: 'Industrial Fund III', area: 1_900_000, office: 6, multifamily: 0, retail: 9, industrial: 85 },
+  { fund: 'Opportunity Fund IV', area: 900_000, office: 35, multifamily: 25, retail: 30, industrial: 10 },
+];
+
+/** The portfolio's open savings opportunities: each one's annual savings and upfront cost in US dollars, the emissions it avoids each year in metric tons of CO₂e, and its kind. */
+export const opportunities = [
+  { opportunity: 'Chiller plant optimization', savings: 186_000, cost: 420_000, avoided: 610, kind: 'Controls' },
+  { opportunity: 'LED retrofit, 6 properties', savings: 142_000, cost: 380_000, avoided: 470, kind: 'Lighting' },
+  { opportunity: 'BMS schedule tuning', savings: 98_000, cost: 40_000, avoided: 330, kind: 'Controls' },
+  { opportunity: 'Heat pump conversion', savings: 76_000, cost: 1_150_000, avoided: 920, kind: 'Electrification' },
+  { opportunity: 'VFDs on AHU fans', savings: 64_000, cost: 160_000, avoided: 210, kind: 'Equipment' },
+  { opportunity: 'Demand response enrollment', savings: 41_000, cost: 12_000, avoided: 40, kind: 'Controls' },
+  { opportunity: 'Rooftop solar, 3 properties', savings: 38_000, cost: 520_000, avoided: 260, kind: 'Electrification' },
+  { opportunity: 'Steam trap repair', savings: 27_000, cost: 35_000, avoided: 150, kind: 'Equipment' },
+  { opportunity: 'Garage lighting sensors', savings: 18_000, cost: 26_000, avoided: 60, kind: 'Lighting' },
+  { opportunity: 'Low-flow fixtures', savings: 12_000, cost: 48_000, avoided: 15, kind: 'Equipment' },
+  { opportunity: 'Window film, 2 properties', savings: 9_000, cost: 70_000, avoided: 30, kind: 'Equipment' },
+  { opportunity: 'Tenant submetering', savings: 6_000, cost: 55_000, avoided: 20, kind: 'Controls' },
+];
+
+/** The ENERGY STAR score at or above which a property can be certified. */
+export const certificationScore = 75;
+
+/** Each property's latest ENERGY STAR score (1–100), with its type: 30 properties for a strip plot. */
+export const energyStarByProperty = Array.from({ length: 30 }, (_, i) => {
+  const type = (['Office', 'Multifamily', 'Retail', 'Industrial'] as const)[i % 4];
+  const center = { Office: 74, Multifamily: 62, Retail: 55, Industrial: 81 }[type];
+  return { property: `Property ${String(i + 1).padStart(2, '0')}`, type, score: Math.max(1, Math.min(100, Math.round(center + 22 * Math.sin(i * 2.7 + 0.4)))) };
+});
