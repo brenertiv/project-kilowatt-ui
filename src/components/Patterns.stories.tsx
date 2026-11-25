@@ -109,7 +109,7 @@ export const RowActionDisabled: StoryObj<typeof RowAction> = {
   },
 };
 
-/** `ExportShare` with every action: Export CSV downloads the rows `csv` returns, Export PDF prints, Share copies the page's link; each reports through `notify`. */
+/** `ExportShare` with every action, as on a report (a page header takes Share alone): Export CSV downloads the rows `csv` returns, Export PDF prints, Share copies the page's link; each reports through `notify`. */
 export const Export: StoryObj<typeof ExportShare> = {
   name: 'Export and share',
   args: {

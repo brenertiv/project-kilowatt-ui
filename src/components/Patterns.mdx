@@ -3,12 +3,12 @@ import * as PatternsStories from './Patterns.stories';
 
 <Meta
   of={PatternsStories}
-  summary="Kilowatt's page patterns: NotBuiltYet (a disabled action with why beside it), WidgetScopeIdle (a widget at a scope it can't take), RowAction (a row's action, disabled with its reason in a tooltip) and ExportShare (Export CSV, Export PDF and Share)."
+  summary="Kilowatt's page patterns: NotBuiltYet (a disabled action with why beside it), WidgetScopeIdle (a widget at a scope it can't take), RowAction (a row's action, disabled with its reason in a tooltip) and ExportShare (Share, and a report's Export PDF)."
 />
 
 # Patterns
 
-Four small patterns a page repeats, each composed once from MUI's `Button`, `Tooltip`, `Stack` and `Typography` (`@mui/material`, Material UI v9) and Kilowatt's `AsyncContent`, so every page answers the same situation the same way: `NotBuiltYet` for an action whose destination isn't built, `WidgetScopeIdle` for a widget at a scope it can't take, `RowAction` for a table row's action, and `ExportShare` for a page's Export and Share. They're Kilowatt's own; the props of the parts are MUI's: see the [Button API](https://mui.com/material-ui/api/button/) and [Tooltip API](https://mui.com/material-ui/api/tooltip/).
+Four small patterns a page repeats, each composed once from MUI's `Button`, `Tooltip`, `Stack` and `Typography` (`@mui/material`, Material UI v9) and Kilowatt's `AsyncContent`, so every page answers the same situation the same way: `NotBuiltYet` for an action whose destination isn't built, `WidgetScopeIdle` for a widget at a scope it can't take, `RowAction` for a table row's action, and `ExportShare` for a page's Share and a report's downloads. They're Kilowatt's own; the props of the parts are MUI's: see the [Button API](https://mui.com/material-ui/api/button/) and [Tooltip API](https://mui.com/material-ui/api/tooltip/).
 
 <Canvas of={PatternsStories.NotBuilt} />
 
@@ -17,7 +17,7 @@ Four small patterns a page repeats, each composed once from MUI's `Button`, `Too
 - Use `NotBuiltYet` where an action leads somewhere that doesn't exist yet: the button stays, disabled, and `{template} isn’t built yet` sits beside it in words. For an action that's unavailable for another reason, write that reason instead, in the same place.
 - Use `WidgetScopeIdle` as a dashboard widget's card body when the page's scope isn't one the widget can draw (a property-level chart while the page is on a group of groups). The card keeps its place and height. For data that's missing at a scope the widget does take, use `AsyncContent`'s empty state.
 - Use `RowAction` for a text button in a table row, whether or not the row itself opens on click. When the role or the row's state doesn't allow the action, pass `disabledReason`; the button disables and the reason shows in a tooltip. For an icon-only row action, use `IconButton` with an `aria-label` and the same `Tooltip` around a `span`.
-- Use `ExportShare` on a page that exports or shares: Export CSV for tables and figures, Export PDF for reports (the browser's print), Share for the page's link, which carries its scope, period and filters. Give it `notify` so the result lands in the page's `Snackbar`. Turn `share` off where the page already has its own Share.
+- Use `ExportShare` in a page header for Share alone, which copies the page's link with its scope, period and filters. A page or dashboard header has no Export: a table's rows are exported from the table's own toolbar (Data Grid → Toolbar), so the person sees and shapes what they export first (Rules → Content and layout). A report, which is itself the document, keeps its own downloads: there `ExportShare` adds Export PDF (the browser's print) and, for a report's figures, Export CSV. Give it `notify` so the result lands in the page's `Snackbar`. Turn `share` off where the page already has its own Share.
 - For the states of data itself (loading, empty, error, no access), use `AsyncContent`.
 
 ## Usage
@@ -32,6 +32,10 @@ import { ExportShare, NotBuiltYet, RowAction, WidgetScopeIdle } from 'src/compon
 
 <RowAction label="Assign" onClick={assign} disabledReason={canAssign ? undefined : 'Only an admin can assign a work order.'} />
 
+// A page header: Share only.
+<ExportShare notify={(message) => setToast(message)} />
+
+// A report, which keeps its own downloads.
 <ExportShare
   csv={() => ({ filename: 'open-work-orders.csv', rows: [['Work order', 'Property'], ...rows] })}
   pdf
@@ -61,7 +65,8 @@ import { ExportShare, NotBuiltYet, RowAction, WidgetScopeIdle } from 'src/compon
 - Don't handle the row's and the action's clicks on the row alone; the action would open the row too.
 - Do report every export and share through `notify`, so the person hears the result.
 - Don't make Share copy silently; a copied link that no one is told about looks like nothing happened.
-- Do keep Export CSV, Export PDF and Share as text buttons in a row, in that order.
+- Do keep Export CSV, Export PDF and Share as text buttons in a row, in that order, on a report.
+- Don't put Export CSV or Export PDF in a page or dashboard header; export a table from its Data Grid toolbar.
 - Don't make one of them contained; the page's main action is elsewhere.
 
 ## MUI departures

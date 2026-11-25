@@ -1,6 +1,6 @@
 /**
  * Small patterns a page repeats: an action whose destination isn't built, a widget at a scope it can't take,
- * a table row's action, and a page's Export and Share. Each is stock MUI composed the way the Rules ask
+ * a table row's action, and a page's Share with a report's downloads. Each is stock MUI composed the way the Rules ask
  * (a reason in words beside a disabled control, never color alone; a disabled button's reason in a `Tooltip`
  * around a `span`), so pages share one answer rather than each building its own.
  */
@@ -128,9 +128,11 @@ export type ExportShareProps = {
  * A page's Export and Share: Export CSV downloads the rows `csv` returns (through `toCsv`), Export PDF
  * opens the browser's print dialog, and Share copies the page's URL, which carries its scope, period and
  * filters, to the clipboard. Each reports what happened through `notify`, so the page can show it in a
- * `Snackbar`. Text buttons in a row, for a page header's right side or a card's actions.
+ * `Snackbar`. Text buttons in a row. A page or dashboard header takes Share alone: a table's rows are
+ * exported from its Data Grid toolbar, never from the page header. Only a report, which is itself the
+ * document, adds Export CSV and Export PDF.
  *
- * @summary Export CSV, Export PDF and Share buttons for a page, reporting through `notify`.
+ * @summary Share for a page header, plus Export CSV and Export PDF on a report, reporting through `notify`.
  * @import import { ExportShare } from 'src/components/patterns';
  */
 export function ExportShare({ csv, pdf, notify, disabled, share: withShare = true }: ExportShareProps) {

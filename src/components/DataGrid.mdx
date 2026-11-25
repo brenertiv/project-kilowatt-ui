@@ -64,7 +64,7 @@ List view and tree data are in MUI X's Pro plan, so the grid comes from `@mui/x-
 
 <Canvas of={DataGridStories.TableAndList} />
 
-- **Toolbar.** `showToolbar` adds MUI's toolbar: Columns, Filters, Export (Download as CSV, Print) and a search. Name the file with `slotProps.toolbar.csvOptions.fileName`, and set `utf8WithBom` so Excel reads accents and `escapeFormulas` so a cell that starts with `=` isn't run as a formula. Hide a column to start with in `initialState.columns.columnVisibilityModel`; keep one out of the export with `disableExport` on it.
+- **Toolbar.** `showToolbar` adds MUI's toolbar: Columns, Filters, Export (Download as CSV, Print) and a search. Name the file with `slotProps.toolbar.csvOptions.fileName`, and set `utf8WithBom` so Excel reads accents and `escapeFormulas` so a cell that starts with `=` isn't run as a formula. Hide a column to start with in `initialState.columns.columnVisibilityModel`; keep one out of the export with `disableExport` on it. This toolbar is the only place a table's rows are exported: a page or dashboard header has no Export of its own, so the person sees and shapes the table before they download it (Rules → Content and layout).
 
 <Canvas of={DataGridStories.Toolbar} />
 
