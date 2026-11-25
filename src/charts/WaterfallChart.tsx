@@ -92,8 +92,8 @@ export function WaterfallChart({ steps, unit, worse, summary, height = 240, inse
       const span = Math.max(...levels) - low;
       const step = span > 0 ? 10 ** Math.floor(Math.log10(span)) : 1;
       const floor = span > 0 && low > span * 2 ? Math.floor((low - span) / step) * step : 0;
-      // A chart's one value axis sits on the right.
-      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: floor, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+      // A chart's one value axis sits on the left.
+      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: floor, renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }));
       axisUnit(root, chart, yAxis, unit);
       // The running total after each column, carried to the next one by the dashed connector; the last has none.
       const leveled = rows.map((row, i) => ({ ...row, open: row.total ? floor : row.open, level: i < rows.length - 1 ? row.close : undefined }));

@@ -42,7 +42,7 @@ const noMonths: StillBilling[] = [];
 /**
  * A line per year over the twelve months, for a year-over-year chart, which `LineChart` can't draw since its months sit
  * on one date axis. Built as the reference charts are (Rules → Charts): amCharts through `useChart`, the lines in
- * `chart.series` order through `seriesColors`, the unit above the value axis on the right, a legend past one line, the
+ * `chart.series` order through `seriesColors`, the unit above the value axis on the left, a legend past one line, the
  * full value in each tooltip, a dot on every month so a lone month with data still shows, and a gap where a month has
  * no data, never a line across it. A trailing month still being billed (`stillBilling`) is dashed on the newest year's
  * line and says so in its tooltip and under the chart. With `onMissingClick`, a month no year has a value for hands its
@@ -56,8 +56,8 @@ export function MonthLinesChart({ data, categoryField, series, unit, summary, st
     ({ root, colors }: ChartContext) => {
       const chart = root.container.children.push(am5xy.XYChart.new(root, { layout: root.verticalLayout, paddingLeft: 0, paddingRight: 0 }));
       const xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30 }) }));
-      // A chart's one value axis sits on the right, as the references' do.
-      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+      // A chart's one value axis sits on the left, as the references' do.
+      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }));
       axisUnit(root, chart, yAxis, unit);
       const strokes = seriesColors(series, colors);
       // The months still being billed are the newest year's: the last line.

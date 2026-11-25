@@ -119,8 +119,8 @@ function buildEnergyChart({ root, colors }: ChartContext) {
   const xAxis = chart.xAxes.push(
     am5xy.DateAxis.new(root, { baseInterval: { timeUnit: 'day', count: 1 }, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 60 }) }),
   );
-  // One value axis, on the right, with its unit above it.
-  const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+  // One value axis, on the left, with its unit above it.
+  const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }));
   axisUnit(root, chart, yAxis, 'kWh');
   const line = (field: 'current' | 'previous', name: string, color: am5.Color) => {
     const series = chart.series.push(

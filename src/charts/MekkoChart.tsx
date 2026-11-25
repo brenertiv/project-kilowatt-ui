@@ -57,8 +57,8 @@ export function MekkoChart({ data, categoryField, widthField, widthUnit, parts, 
       const xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, { min: 0, max: total, strictMinMax: true, renderer: am5xy.AxisRendererX.new(root, {}) }));
       xAxis.get('renderer').labels.template.set('forceHidden', true);
       xAxis.get('renderer').grid.template.set('forceHidden', true);
-      // Up: the share of each column, 0 to 100%, on the right as a chart's one value axis is.
-      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, max: 100, strictMinMax: true, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+      // Up: the share of each column, 0 to 100%, on the left as a chart's one value axis is.
+      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, max: 100, strictMinMax: true, renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }));
       axisUnit(root, chart, yAxis, '%');
 
       // Each column's span across the total, named under it with its size.

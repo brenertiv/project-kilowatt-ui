@@ -8,7 +8,7 @@ import * as MonthLinesChartStories from './MonthLinesChart.stories';
 
 # MonthLinesChart
 
-`MonthLinesChart` draws a line per year across the twelve months, for a year-over-year chart: each year's January over every other January. `LineChart` can't draw it, since its months sit on one date axis. It's built as the reference charts are (Rules → Charts): amCharts 5 through `useChart`, the lines in `chart.series` order through `seriesColors`, the unit above the value axis on the right, a legend past one line, the full value in every tooltip, a dot on every month so a lone month with data still shows, and a gap where a month has no data, never a line across it. It sits in a `figure` named by `summary`, in an outlined MUI `Card` (`@mui/material`, Material UI v9) under a `CardHeader`.
+`MonthLinesChart` draws a line per year across the twelve months, for a year-over-year chart: each year's January over every other January. `LineChart` can't draw it, since its months sit on one date axis. It's built as the reference charts are (Rules → Charts): amCharts 5 through `useChart`, the lines in `chart.series` order through `seriesColors`, the unit above the value axis on the left, a legend past one line, the full value in every tooltip, a dot on every month so a lone month with data still shows, and a gap where a month has no data, never a line across it. It sits in a `figure` named by `summary`, in an outlined MUI `Card` (`@mui/material`, Material UI v9) under a `CardHeader`.
 
 <Canvas of={MonthLinesChartStories.YearOverYear} />
 
@@ -76,14 +76,14 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
 - `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
 - `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
-- `value-axis-labels`: value-axis numbers are left-aligned, 8px from the plot.
+- `value-axis-labels`: value-axis numbers are right-aligned against the plot, 8px from it.
 - `legend-items`: legend items have no left padding, so the legend lines up with the axis and the title.
 - `legend-markers`: each legend item is marked by an 8px dot in its series' color, as the donut's legend is.
 - `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
 - `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
 - `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
-- `value-axis-side`: the one value axis sits on the right.
-- `axis-units`: the value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `value-axis-side`: the one value axis sits on the left.
+- `axis-units`: the value axis has its unit above it, aligned with its numbers (`axisUnit`).
 - `full-value-tooltips`: every point has a tooltip with the year, the month, the exact value and the unit (`tooltipNumberFormat`).
 - `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
 - `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
