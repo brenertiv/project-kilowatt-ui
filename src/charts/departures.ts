@@ -222,12 +222,15 @@ export const chartDepartures: ChartDeparture[] = [
   {
     id: 'value-axis-labels',
     kind: 'theme',
-    title: 'Value-axis numbers left-aligned',
-    why: "amCharts right-aligns a left value axis's numbers against the plot and pads every label 5px on both sides. Kilowatt left-aligns the numbers on both sides, with no padding on the outer side and 8px between the numbers and the plot: compact numbers are short, so none sits far from the plot, they line up with the unit above them, and a left axis lines up with the card's title.",
+    title: 'Value-axis numbers aligned to the card\'s edge',
+    why: "amCharts right-aligns a left value axis's numbers against the plot and pads every label 5px on both sides. Kilowatt aligns the numbers to the card's outer edge instead: left-aligned on a left axis and right-aligned on a right one, with no padding on the outer side and 8px between the numbers and the plot. Compact numbers are short, so none sits far from the plot; they line up with the unit above them, and a left axis lines up with the card's title.",
     charts: [...vertical, ...rowed],
     apply: ({ theme }) => {
       theme.rule('AxisLabel', ['y']).setAll({ centerX: 0, paddingLeft: 0, paddingRight: 8 });
-      theme.rule('AxisLabel', ['y', 'opposite']).setAll({ paddingLeft: 8, paddingRight: 0 });
+      const right = theme.rule('AxisLabel', ['y', 'opposite']);
+      right.setAll({ paddingLeft: 8, paddingRight: 0 });
+      // amCharts pins a right axis's labels to the plot, so each is moved out to end at the axis's outer edge.
+      right.adapters.add('x', (x, label) => (label.parent ? label.parent.innerWidth() - label.width() : x));
     },
   },
   {
@@ -354,12 +357,12 @@ export const chartDepartures: ChartDeparture[] = [
   {
     id: 'value-axis-side',
     kind: 'convention',
-    title: 'One value axis on the right',
-    why: 'amCharts puts a value axis on the left. Kilowatt puts a chart\'s one value axis on the right; a chart with two units puts its first on the left and its second on the right, two at most.',
+    title: 'A second unit on the right',
+    why: 'amCharts puts every value axis on the left. Kilowatt keeps a chart\'s one value axis on the left, in line with the card\'s title, and puts a second unit\'s axis on the right, so each unit has its own side; two at most.',
     charts: vertical,
     convention: {
-      amchartsDefault: '`AxisRendererY` with `opposite: false`',
-      kilowatt: '`opposite: true` for a single value axis; left then right for two units; along the bottom for horizontal bars',
+      amchartsDefault: '`AxisRendererY` with `opposite: false` for every value axis',
+      kilowatt: '`opposite: false` for a single value axis; left then right (`opposite: true`) for two units; along the bottom for horizontal bars',
       where: 'Every value axis',
     },
     check: /opposite:/,
@@ -368,7 +371,7 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'axis-units',
     kind: 'convention',
     title: 'The unit above each value axis',
-    why: "amCharts has no place for units; charts usually put them in a rotated axis title or the chart's heading. Kilowatt shows each value axis's unit as a small horizontal label above it, left-aligned with its numbers (`axisUnit`), so every number sits next to its unit and card headers stay title-only.",
+    why: "amCharts has no place for units; charts usually put them in a rotated axis title or the chart's heading. Kilowatt shows each value axis's unit as a small horizontal label above it, aligned with its numbers at the card's edge (`axisUnit`), so every number sits next to its unit and card headers stay title-only.",
     charts: vertical,
     convention: {
       amchartsDefault: 'No unit label; a rotated axis title if one is added',
@@ -433,11 +436,11 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'reference-lines',
     kind: 'convention',
     title: 'Targets and benchmarks as dashed lines',
-    why: "amCharts draws an axis range as a solid gridline with an axis label. Kilowatt draws a target or benchmark as a dashed line in `text.secondary`, labeled with its name, full value and unit at the plot's left edge on a plate of the card surface, over the series, so it reads as a reference rather than data, no line runs through its label, and the label never covers the latest values at the right. An `IntervalChart` target, which the readings are judged against as you zoom, keeps amCharts' own label for the line, centered on it at the right edge, so amCharts moves the two together.",
+    why: "amCharts draws an axis range as a solid gridline with an axis label. Kilowatt draws a target or benchmark as a dashed line in `text.secondary`, labeled with its name, full value and unit at the plot's left edge on a plate of the card surface, over the series, so it reads as a reference rather than data, no line runs through its label, and the label never covers the latest values at the right. An `IntervalChart` target, which the readings are judged against as you zoom, keeps amCharts' own label for the line, centered on it at the edge beside the value axis, so amCharts moves the two together.",
     charts: ['LineChart', 'Sparkline', 'IntervalChart', 'ParetoChart'],
     convention: {
       amchartsDefault: 'An axis range: a solid gridline in the grid color, its label among the axis numbers',
-      kilowatt: '`references`, drawn by `referenceLines` from `src/charts/theme`: a dashed `text.secondary` line, labeled "Name: value unit" at the left edge of the plot on the card surface; an `IntervalChart` target is labeled by amCharts\' own axis-range label instead, centered on its line at the plot\'s right edge on `action.hover` (`onLine`)',
+      kilowatt: '`references`, drawn by `referenceLines` from `src/charts/theme`: a dashed `text.secondary` line, labeled "Name: value unit" at the left edge of the plot on the card surface; an `IntervalChart` target is labeled by amCharts\' own axis-range label instead, centered on its line at the plot\'s edge beside the value axis on `action.hover` (`onLine`)',
       where: 'Every target, benchmark or threshold line',
     },
     check: /referenceLines\(/,
@@ -698,7 +701,7 @@ export const chartDepartures: ChartDeparture[] = [
     charts: ['MekkoChart'],
     convention: {
       amchartsDefault: 'Column widths by adapter, the category value axis labeled with numbers, parts touching',
-      kilowatt: '`widthField` sets each column\'s span on a hidden value axis; each column named with its compact size by an axis range; a 2px `surface` stroke; the share axis 0–100% on the right',
+      kilowatt: '`widthField` sets each column\'s span on a hidden value axis; each column named with its compact size by an axis range; a 2px `surface` stroke; the share axis 0–100% on the left',
       where: 'Every chart of wholes of different sizes split into the same parts',
     },
     check: /widthField/,

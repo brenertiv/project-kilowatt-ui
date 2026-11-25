@@ -16,6 +16,7 @@ function recorder() {
     setAll: () => rules.push(key),
     set: () => rules.push(key),
     states: { create: (state: string) => rules.push(`${key}:${state}`) },
+    adapters: { add: (setting: string) => rules.push(`${key}@${setting}`) },
   });
   const theme = { rule: (name: string, tags: string[] = []) => settings([name, ...tags].join('.')) } as unknown as am5.Theme;
   const root = {

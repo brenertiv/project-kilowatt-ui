@@ -133,7 +133,7 @@ export function IntervalChart({
       const updateZoomed = () => setZoomed((xAxis.get('start') ?? 0) > 0.0001 || (xAxis.get('end') ?? 1) < 0.9999);
       xAxis.on('start', updateZoomed);
       xAxis.on('end', updateZoomed);
-      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }));
       axisUnit(root, chart, yAxis, unit);
       if (target && series.filter(({ neutral }) => !neutral).length > 1) {
         console.warn('An IntervalChart with a target has more than one colored line; highlight one line against its target (Rules → Charts).');

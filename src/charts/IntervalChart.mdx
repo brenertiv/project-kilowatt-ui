@@ -49,7 +49,7 @@ Set `aggregate` by what the readings measure, so a grouped point means the same 
 <IntervalChart data={use} series={[{ field: 'use', name: 'Energy use' }]} unit="kWh" aggregate="sum" summary="…" />
 ```
 
-A target the readings are held to, such as a demand limit, takes `target`: a dashed reference line whose name and value sit on a faint plate centered on the line, at the plot's right edge beside the value axis (amCharts' own label for the line, which it moves with the line), and the readings past it highlighted. Set `past: 'below'` for a minimum to keep rather than a limit not to exceed:
+A target the readings are held to, such as a demand limit, takes `target`: a dashed reference line whose name and value sit on a faint plate centered on the line, at the plot's left edge beside the value axis (amCharts' own label for the line, which it moves with the line), and the readings past it highlighted. Set `past: 'below'` for a minimum to keep rather than a limit not to exceed:
 
 ```tsx
 <IntervalChart data={readings} series={series} unit="kW" aggregate="high" target={{ value: 1300, label: 'Demand limit' }} summary="…" />
@@ -93,7 +93,7 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `chart-type`: labels are in the theme's font at the `caption` size, in `text.secondary`.
 - `chart-gridlines`: gridlines are full strength in `border.level2`, a step past the divider, so they read on the card.
 - `chart-tooltips`: tooltips sit on the menu surface with `text.primary`, outlined and rounded like a menu.
-- `value-axis-labels`: value-axis numbers are left-aligned, 8px from the plot.
+- `value-axis-labels`: value-axis numbers are left-aligned, 8px from the plot, so they line up with the card's title.
 - `legend-items`: legend items have no left padding, so the legend lines up with the axis and the title.
 - `legend-markers`: each legend item is marked by an 8px dot in its series' color, as the donut's legend is.
 - `compact-axis-numbers`: axis numbers are compact in the viewer's locale (1.5K, 60K).
@@ -101,13 +101,13 @@ How this chart differs from stock amCharts 5, from `src/charts/departures.ts`; F
 - `scrollbar-selection`: the scrollbar is tinted faintly with `action.hover`, square, and the range in view is marked like a selected item, `primary` at `action.selectedOpacity`, square with no outline.
 - `reduced-motion`: the chart animates only when the user hasn't asked for reduced motion.
 - `chart-card`: the chart sits straight in an outlined `Card` under a title-only `CardHeader` and pads itself 16px (`inset`).
-- `value-axis-side`: the value axis sits on the right.
-- `axis-units`: the value axis has its unit above it, left-aligned with its numbers (`axisUnit`).
+- `value-axis-side`: the value axis sits on the left.
+- `axis-units`: the value axis has its unit above it, aligned with its numbers (`axisUnit`).
 - `full-value-tooltips`: every point has a tooltip with its exact value and unit (`tooltipNumberFormat`); the cursor's date shows on the date axis, written for the interval in view.
 - `number-separators`: a tooltip's exact value takes the viewer's thousands and decimal separators, as the axis numbers do.
 - `chart-text-alternative`: the `figure` around the chart is named by `summary` (`aria-label`).
 - `legend-layout`: the legend sits below the plot in up to three columns, for two or more series.
-- `reference-lines`: a `target` is a dashed `text.secondary` line, labeled with name, full value and unit by amCharts' own axis-range label: centered on the line at the plot's right edge, on a plate of `action.hover`.
+- `reference-lines`: a `target` is a dashed `text.secondary` line, labeled with name, full value and unit by amCharts' own axis-range label: centered on the line at the plot's left edge, beside the value axis, on a plate of `action.hover`.
 - `data-grouping`: readings group as the chart zooms out, by `aggregate`, and the tooltip names the grouping ("daily average").
 - `zoom-controls`: zoom with a two-finger swipe, a pinch or the wheel over the plot, pan with a sideways swipe, drag to zoom to a range, and an MUI `IconButton` to show the whole period.
 

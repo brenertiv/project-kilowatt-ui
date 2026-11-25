@@ -67,7 +67,7 @@ export type LineChartProps = {
   data: Record<string, number>[];
   /** The lines, in legend order. Up to six colored lines, plus any `neutral` ones. Keep it stable, like `data`. */
   series: LineSeries[];
-  /** The unit of the values, shown above the value axis and in the tooltip: `kWh`, `°F`. The axis sits on the right, or on the left when the chart has a `rightUnit`. */
+  /** The unit of the values, shown above the value axis and in the tooltip: `kWh`, `°F`. The axis sits on the left. */
   unit: string;
   /** The unit of the `right` lines, for a chart with two units: it adds a right value axis with this unit above it, and every line's legend name carries its unit. Default none. */
   rightUnit?: string;
@@ -151,9 +151,9 @@ export function LineChart({
       );
       // A label at the plot's left edge would sit half outside the chart, so none is drawn there.
       xAxis.get('renderer').labels.template.set('minPosition', 0.02);
-      // One value axis sits on the right; with a second unit, the first moves to the left and the second takes the right.
+      // One value axis sits on the left; a second unit takes the right.
       const yAxis = chart.yAxes.push(
-        am5xy.ValueAxis.new(root, { min: 0, ...(max !== undefined ? { max, strictMinMax: true } : {}), renderer: am5xy.AxisRendererY.new(root, { opposite: !rightUnit }) }),
+        am5xy.ValueAxis.new(root, { min: 0, ...(max !== undefined ? { max, strictMinMax: true } : {}), renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }),
       );
       axisUnit(root, chart, yAxis, unit);
       // The second unit's axis: labels on the right, placed on the left axis's gridlines so the plot keeps one grid.

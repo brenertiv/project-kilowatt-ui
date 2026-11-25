@@ -32,7 +32,7 @@ export type BubbleChartProps = {
   labelField: string;
   /** The measure across, along the bottom: `Upfront cost`. */
   x: BubbleMeasure;
-  /** The measure up, on the right: `Annual savings`. */
+  /** The measure up, on the left: `Annual savings`. */
   y: BubbleMeasure;
   /** The measure each bubble's area shows: `Avoided emissions`. */
   size: BubbleMeasure;
@@ -75,7 +75,7 @@ export function BubbleChart({ data, labelField, x, y, size, summary, groupField,
       xAxis.get('renderer').labels.template.set('maxPosition', 0.97);
       // The across unit sits at the value axis's end, under its numbers.
       xAxis.children.push(am5.Label.new(root, { text: x.unit, x: am5.p100, centerX: am5.p100, paddingTop: 4, paddingRight: 0 }));
-      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, extraMax: 0.1, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+      const yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, extraMax: 0.1, renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }));
       axisUnit(root, chart, yAxis, y.unit);
 
       // A bubble's area is its size, so its radius is the square root of its share of the largest.

@@ -123,8 +123,8 @@ export function ColumnChart({
         categoryAxis = chart.xAxes.push(
           am5xy.CategoryAxis.new(root, { categoryField, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30, ...cells }) }),
         );
-        // A chart's one value axis sits on the right.
-        valueAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+        // A chart's one value axis sits on the left.
+        valueAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, { opposite: false }) }));
         axisUnit(root, chart, valueAxis, unit);
         // Long category names (building addresses) wrap under their column instead of running into the next one.
         categoryAxis.get('renderer').labels.template.setAll({ oversizedBehavior: 'wrap', maxWidth: 88, textAlign: 'center' });
