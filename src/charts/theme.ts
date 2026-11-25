@@ -187,8 +187,8 @@ const unitRows = new WeakMap<am5xy.XYChart, am5.Container>();
 
 /**
  * The unit of one value axis, as a small label above it, read horizontally, so every number on the axis
- * sits next to its unit (Rules → Charts → Units). The label is aligned with the axis's numbers at the chart's
- * outer edge, left-aligned on a left axis and right-aligned on a right one, and follows it if the chart resizes; an axis narrower than its unit widens to fit it. Call it once per value axis, after
+ * sits next to its unit (Rules → Charts → Units). The label is aligned with the axis's numbers against the plot,
+ * right-aligned on a left axis and left-aligned on a right one, and follows it if the chart resizes; an axis narrower than its unit widens to fit it. Call it once per value axis, after
  * pushing the axis to `chart.yAxes`. Two units at most; past two, split the chart.
  *
  * @param root - The chart's root.
@@ -204,15 +204,16 @@ export function axisUnit(root: am5.Root, chart: am5xy.XYChart, axis: am5xy.Axis<
   }
   const label = row.children.push(am5.Label.new(root, { text: unit, paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0 }));
   const place = () => {
-    // A left axis's numbers start at the chart's edge and a right axis's end at it, each 8px from the plot on
-    // its inner side (the `value-axis-labels` departure), so the unit takes the same outer edge.
+    // An axis's numbers sit flush against the plot, 8px from it (the `value-axis-labels` departure): a left
+    // axis's end there and a right axis's start there, so the unit takes the same inner edge.
     const right = axis.parent === chart.rightAxesContainer;
     const first = axis.get('renderer').labels.values[0];
     const inset = (right ? first?.get('paddingLeft') : first?.get('paddingRight')) ?? 0;
     // A unit wider than the axis's numbers ("kWh" over "60K") widens the axis, so it isn't cut off at the chart's edge.
     const needed = Math.ceil(inset + label.width());
     if ((axis.get('minWidth') ?? 0) < needed) axis.set('minWidth', needed);
-    label.set('x', right ? chart.leftAxesContainer.width() + chart.plotContainer.width() + axis.width() - label.width() : 0);
+    const plotStart = chart.leftAxesContainer.width();
+    label.set('x', right ? plotStart + chart.plotContainer.width() + inset : plotStart - inset - label.width());
   };
   chart.leftAxesContainer.events.on('boundschanged', place);
   axis.events.on('boundschanged', place);

@@ -222,15 +222,13 @@ export const chartDepartures: ChartDeparture[] = [
   {
     id: 'value-axis-labels',
     kind: 'theme',
-    title: 'Value-axis numbers aligned to the card\'s edge',
-    why: "amCharts right-aligns a left value axis's numbers against the plot and pads every label 5px on both sides. Kilowatt aligns the numbers to the card's outer edge instead: left-aligned on a left axis and right-aligned on a right one, with no padding on the outer side and 8px between the numbers and the plot. Compact numbers are short, so none sits far from the plot; they line up with the unit above them, and a left axis lines up with the card's title.",
+    title: 'Value-axis numbers 8px from the plot',
+    why: "amCharts pads every axis label 5px on both sides. Kilowatt keeps amCharts' alignment, numbers flush against the plot on both sides (right-aligned on a left axis, left-aligned on a right one), with 8px between the numbers and the plot and no padding on the outer side, so the unit above lines up with them. Row names down the left of a bar chart are left-aligned instead, so they line up with the card's title.",
     charts: [...vertical, ...rowed],
     apply: ({ theme }) => {
-      theme.rule('AxisLabel', ['y']).setAll({ centerX: 0, paddingLeft: 0, paddingRight: 8 });
-      const right = theme.rule('AxisLabel', ['y', 'opposite']);
-      right.setAll({ paddingLeft: 8, paddingRight: 0 });
-      // amCharts pins a right axis's labels to the plot, so each is moved out to end at the axis's outer edge.
-      right.adapters.add('x', (x, label) => (label.parent ? label.parent.innerWidth() - label.width() : x));
+      theme.rule('AxisLabel', ['y']).setAll({ paddingLeft: 0, paddingRight: 8 });
+      theme.rule('AxisLabel', ['y', 'opposite']).setAll({ paddingLeft: 8, paddingRight: 0 });
+      theme.rule('AxisLabel', ['y', 'category']).setAll({ centerX: 0 });
     },
   },
   {
@@ -358,7 +356,7 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'value-axis-side',
     kind: 'convention',
     title: 'A second unit on the right',
-    why: 'amCharts puts every value axis on the left. Kilowatt keeps a chart\'s one value axis on the left, in line with the card\'s title, and puts a second unit\'s axis on the right, so each unit has its own side; two at most.',
+    why: 'amCharts puts every value axis on the left. Kilowatt keeps a chart\'s one value axis on the left, where amCharts puts it, and puts a second unit\'s axis on the right, so each unit has its own side; two at most.',
     charts: vertical,
     convention: {
       amchartsDefault: '`AxisRendererY` with `opposite: false` for every value axis',
@@ -371,7 +369,7 @@ export const chartDepartures: ChartDeparture[] = [
     id: 'axis-units',
     kind: 'convention',
     title: 'The unit above each value axis',
-    why: "amCharts has no place for units; charts usually put them in a rotated axis title or the chart's heading. Kilowatt shows each value axis's unit as a small horizontal label above it, aligned with its numbers at the card's edge (`axisUnit`), so every number sits next to its unit and card headers stay title-only.",
+    why: "amCharts has no place for units; charts usually put them in a rotated axis title or the chart's heading. Kilowatt shows each value axis's unit as a small horizontal label above it, aligned with its numbers against the plot (`axisUnit`), so every number sits next to its unit and card headers stay title-only.",
     charts: vertical,
     convention: {
       amchartsDefault: 'No unit label; a rotated axis title if one is added',
