@@ -64,7 +64,7 @@ export const Vertical: Story = {
   args: { orientation: 'vertical', children: actions },
 };
 
-/** MUI's three sizes, set once on the group. Keep `medium`, the default; another size is for a one-off instance. */
+/** MUI's three sizes, set once on the group. Keep `small`, the default; another size is for a one-off instance. */
 export const Sizes: Story = {
   render: (args) => (
     <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>

@@ -96,12 +96,11 @@ To check: wherever a rounded element sits within 16px of a rounded container's c
 
 ## Component size
 
-Every component with a `size` prop uses `medium`: buttons, icon buttons, button and toggle groups, Fabs, text fields, selects, autocompletes, checkboxes, radios, switches, sliders, ratings, chips, tables and pagination. It's MUI's default everywhere (the `medium-size` departure makes it Fab's too), so leave `size` off.
+Every control with a `size` prop uses `small`: buttons, icon buttons, button and toggle groups, Fabs, text fields, selects, autocompletes, checkboxes, radios, switches, sliders, ratings, chips and pagination. The `small-size` departure makes it the theme default for each of them (fields through `FormControl`), so leave `size` off. Field text stays at 16px, so iOS doesn't zoom on focus (Typography → Inputs stay at 16px). Tables aren't controls: they stay at MUI's `medium`.
 
-- **One-offs only.** Set `small` or `large` on a single instance that needs it, such as one control squeezed into a table cell, and say why in a comment. Don't make another size the pattern for a screen, a section or a component type.
-- **Don't write the default.** `size="medium"` is noise; leave it out.
+- **One-offs only.** Set `medium` or `large` on a single instance that needs it, such as a chip that marks a card's corner, and say why in a comment. Don't make another size the pattern for a screen, a section or a component type.
+- **Don't write the default.** `size="small"` is noise; leave it out.
 - **One size per group.** Controls that sit together (a toolbar, a form row, a filter bar) share one size, so an override applies to the whole group or not at all.
-- **A filter bar may take `small`, together.** A page's filter bar (the selects, the period field and any other control in it) may set `size="small"` on every control at once, as one group, so the bar sits lower (40px rather than 56px) above the content it filters. Text stays at 16px, so iOS doesn't zoom on focus (Typography → Inputs stay at 16px). Tabs above the bar have no size and stay as MUI draws them. This is the one pattern, not a one-off, that takes `small`; say so in a comment where the bar is built.
 
 ## Typography
 

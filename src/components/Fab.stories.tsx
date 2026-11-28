@@ -49,7 +49,7 @@ export const Extended: Story = {
   ),
 };
 
-/** MUI's three sizes. `medium` is the default (MUI's is `large`); another size is for a one-off instance. */
+/** MUI's three sizes. `small` is the default (MUI's is `large`); another size is for a one-off instance. */
 export const Sizes: Story = {
   render: (args) => (
     <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>

@@ -101,12 +101,12 @@ export const Adornments: Story = {
   ),
 };
 
-/** MUI's two sizes. Keep `medium`, the default; `small` is for a one-off instance. */
+/** MUI's two sizes. Keep `small`, the default; `medium` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-      <TextField label="Small" size="small" />
-      <TextField label="Medium" />
+      <TextField label="Small" />
+      <TextField label="Medium" size="medium" />
     </Stack>
   ),
 };

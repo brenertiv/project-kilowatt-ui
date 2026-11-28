@@ -126,7 +126,7 @@ function CardGrid() {
           <MonthBarsLegend inline />
         </Stack>
         {/* Small, beside the caption, as a filters row may be (Rules → Component size). */}
-        <TextField select size="small" label="Sort By" value={sort} onChange={(event) => setSort(event.target.value as Sort)} sx={{ minWidth: (t) => t.spacing(22) }}>
+        <TextField select label="Sort By" value={sort} onChange={(event) => setSort(event.target.value as Sort)} sx={{ minWidth: (t) => t.spacing(22) }}>
           {(Object.keys(sortLabels) as Sort[]).map((value) => (
             <MenuItem key={value} value={value}>
               {sortLabels[value]}

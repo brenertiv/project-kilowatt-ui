@@ -115,12 +115,12 @@ export const Disabled: Story = {
   args: { 'aria-label': 'Lighting Level', defaultValue: 40, disabled: true },
 };
 
-/** MUI's two sizes. Keep `medium`, the default; `small` is for a one-off instance. */
+/** MUI's two sizes. Keep `small`, the default; `medium` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack spacing={2}>
-      <Slider size="small" defaultValue={30} aria-label="Small" />
-      <Slider defaultValue={60} aria-label="Medium" />
+      <Slider defaultValue={30} aria-label="Small" />
+      <Slider size="medium" defaultValue={60} aria-label="Medium" />
     </Stack>
   ),
 };

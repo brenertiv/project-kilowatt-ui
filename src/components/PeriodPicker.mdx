@@ -50,8 +50,8 @@ const [period, setPeriod] = useState<Period>('ytd');
 
 - Do give each preset its exact months, so the list shows them under its name and a viewer knows what "year to date" covers.
 - Don't name a preset by a relative phrase alone with no months behind it; the months are what the page's numbers cover.
-- Do keep the field at the default size, `medium` (Rules → Component size), like the fields beside it.
-- Don't set `size="small"` to fit a crowded bar; set it only when every field in that bar is small, so the controls stay one size.
+- Do keep the field at the default size, `small` (Rules → Component size), like the fields beside it.
+- Don't set `size="medium"` on it alone; set it only when every field in that bar is medium, so the controls stay one size.
 - Do end the custom range at the last complete month, so a range never includes a partial month.
 - Don't use it for a single date or a range of days; use a date picker.
 - Do anchor the popover at the right (`anchor="right"`) when the field is the last control in a bar.
@@ -62,7 +62,7 @@ const [period, setPeriod] = useState<Period>('ytd');
 ## MUI departures
 
 - `control-outlines`: the field and the month selects take the control outline; Cancel and Apply are a text and a contained button, so they have none.
-- `medium-size`: the field, the selects, the buttons and the close button are at the default medium size; `size` passes through to the field only.
+- `small-size`: the field, the selects, the buttons and the close button are at the default small size; `size` passes through to the field only.
 - `button-text-case`: Cancel and Apply are in Title Case.
 - `button-text-weight`: Cancel and Apply are at the button weight.
 - `flat-buttons`: Apply is contained with no elevation.

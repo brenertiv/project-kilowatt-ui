@@ -58,7 +58,7 @@ export function CompletenessCard({ title, subheader, open, status, caption, rows
         action={
           status && (
             <Box sx={{ display: 'flex', alignItems: 'center', height: (t) => t.spacing(5) }}>
-              <Chip size="small" color={status.color} variant="outlined" label={status.label} />
+              <Chip color={status.color} variant="outlined" label={status.label} />
             </Box>
           )
         }

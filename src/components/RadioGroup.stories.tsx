@@ -86,12 +86,12 @@ export const Disabled: Story = {
   ),
 };
 
-/** MUI's two sizes on `Radio`. Keep `medium`, the default; `small` is for a one-off instance. */
+/** MUI's two sizes on `Radio`. Keep `small`, the default; `medium` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <RadioGroup row aria-label="Sizes" name="sizes" defaultValue="small">
-      <FormControlLabel value="small" control={<Radio size="small" />} label="Small" />
-      <FormControlLabel value="medium" control={<Radio />} label="Medium" />
+      <FormControlLabel value="small" control={<Radio />} label="Small" />
+      <FormControlLabel value="medium" control={<Radio size="medium" />} label="Medium" />
     </RadioGroup>
   ),
 };

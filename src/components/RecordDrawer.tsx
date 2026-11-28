@@ -227,8 +227,7 @@ export function RecordDrawer({ record, onClose, onSave, onConfirm, action, mainA
         <Typography ref={heading} variant="h6" component="h2" tabIndex={-1} noWrap sx={{ minWidth: 0, outline: 'none' }}>
           {record.name}
         </Typography>
-        {/* A small chip beside a heading, one-off (Rules → Component size). */}
-        <Chip size="small" variant="outlined" label={record.kind} />
+        <Chip variant="outlined" label={record.kind} />
         <Box sx={{ flex: 1 }} />
         {action && (
           <Button onClick={() => guard(action.onClick)} sx={{ flexShrink: 0 }}>
@@ -429,12 +428,12 @@ function GroupView({ group, editing, draft, setDraft, onEdit, onSave, onCancel, 
                     {field.provenance}
                   </Typography>
                   {field.confirm && group.editable && onConfirm && (
-                    // Confirm or correct, on the value's own row. Small: a one-off pair inside a table cell (Rules → Component size).
+                    // Confirm or correct, on the value's own row.
                     <Stack direction="row" sx={{ gap: 1, mt: 0.5 }}>
-                      <Button size="small" variant="outlined" startIcon={<Icon name="check" />} onClick={() => onConfirm(field)}>
+                      <Button variant="outlined" startIcon={<Icon name="check" />} onClick={() => onConfirm(field)}>
                         Confirm
                       </Button>
-                      <Button size="small" startIcon={<Icon name="edit" />} onClick={onEdit}>
+                      <Button startIcon={<Icon name="edit" />} onClick={onEdit}>
                         Correct
                       </Button>
                     </Stack>

@@ -328,7 +328,8 @@ export const PartlyAccessibleGroup: Story = {
     await expect(within(portfolios).getByRole('button', { name: /^Canal District/ })).toHaveTextContent('2 of 9 properties');
     await expect(within(portfolios).getByRole('button', { name: /^Ridgeline/ })).toHaveTextContent('1 property');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Browse Canal District' }));
-    await expect(within(dialog).getByText('Canal District · 2 of 9 properties')).toBeVisible();
+    // The dialog may still be fading in.
+    await waitFor(() => expect(within(dialog).getByText('Canal District · 2 of 9 properties')).toBeVisible());
   },
 };
 
@@ -348,7 +349,7 @@ export const InactiveProperty: Story = {
   },
 };
 
-/** `trigger="button"` for a form that asks for properties: one outlined button across the form's width, as tall as the medium text field beside it. It opens Change Scope. */
+/** `trigger="button"` for a form that asks for properties: one outlined button across the form's width, as tall as the text field beside it. It opens Change Scope. */
 export const FormButton: Story = {
   name: 'Form button',
   args: { trigger: 'button', value: { level: 'group', id: 'east' }, shortcut: false },

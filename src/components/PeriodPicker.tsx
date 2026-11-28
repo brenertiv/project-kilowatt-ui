@@ -50,7 +50,7 @@ export type PeriodPickerProps = {
   label?: string;
   /** Stretches the field to its container's width. Default `false`. */
   fullWidth?: boolean;
-  /** The field's size, passed to `TextField`. Leave it at the default, `'medium'`; set `'small'` only to match a one-off bar of small fields (Rules → Component size). */
+  /** The field's size, passed to `TextField`. Leave it at the theme default, `'small'`; set `'medium'` only for a one-off instance (Rules → Component size). */
   size?: 'small' | 'medium';
   /** Which edge of the field the popover lines up with: `'left'`, or `'right'` for a field that is the last control in a bar, so the popover opens inward rather than past the page's edge. Default `'left'`. */
   anchor?: 'left' | 'right';

@@ -121,7 +121,7 @@ export const IntentsOnSurfaces: Story = {
             </Typography>
           ))}
           {intents.map((intent) => (
-            <Button key={intent} size="small" variant="contained" color={intent}>
+            <Button key={intent} variant="contained" color={intent}>
               {intentLabels[intent]}
             </Button>
           ))}
