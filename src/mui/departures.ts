@@ -815,7 +815,7 @@ export const departures: Departure[] = [
     components: ['Tabs', 'Tab'],
     area: 'Components',
     title: 'Tabs sit in a track, the selected one on a raised segment',
-    why: "MUI marks the selected tab with a 2px primary line under it, on a strip with no edge of its own, which reads as part of the surface below and needs a divider to hold it. Kilowatt draws tabs as a segmented control: the tabs sit in a track of `background.level1`, the recessed surface a step below the frame, and the selected one sits on a segment of `background.level5`, the highest surface, edged in `border.level1`, so the track reads as sunk and the segment as raised in both schemes (a tint such as `action.hover` lightens in dark, which would sink the segment instead). The segment is MUI's own indicator, filled out to the tab's size, so it still slides between tabs (stilled under reduced motion). The segment takes the theme radius and sits 8px inside the track, which rounds at twice it, as a card does around its buttons (Rules → Concentric corners). The track hugs its tabs, except `variant=\"fullWidth\"`, which spans its container. The selected label is `text.primary` instead of `primary`, since the segment, not the color, marks it; the others stay `text.secondary`.",
+    why: "MUI marks the selected tab with a 2px primary line under it, on a strip with no edge of its own, which reads as part of the surface below and needs a divider to hold it. Kilowatt draws tabs as a segmented control: the tabs sit in a track of `background.level1`, the recessed surface a step below the frame, and the selected one sits on a segment of `background.level5`, the highest surface, edged in `border.level1`, so the track reads as sunk and the segment as raised in both schemes (a tint such as `action.hover` lightens in dark, which would sink the segment instead). The segment is MUI's own indicator, filled out to the tab's size, so it still slides between tabs (stilled under reduced motion). The segment takes the theme radius and sits 4px inside the track, which rounds at one and a half times it, the segment's radius plus the gap (Rules → Concentric corners). Tabs have no `size` prop, so the segments are drawn at the small size the controls take (`small-size`): 32px tall with 12px across, close to a small button, which makes the track 40px, as tall as the small fields (an icon above its label makes a taller tab). The track hugs its tabs, except `variant=\"fullWidth\"`, which spans its container. The selected label is `text.primary` instead of `primary`, since the segment, not the color, marks it; the others stay `text.secondary`.",
     options: () => ({
       components: {
         MuiTabs: {
@@ -825,8 +825,10 @@ export const departures: Departure[] = [
               isolation: 'isolate',
               width: 'fit-content',
               maxWidth: '100%',
-              padding: 'var(--mui-spacing)',
-              borderRadius: 'calc(2 * var(--mui-shape-borderRadius))',
+              // MUI's 48px minimum would hold the track above its 32px tabs.
+              minHeight: 0,
+              padding: 'calc(0.5 * var(--mui-spacing))',
+              borderRadius: 'calc(1.5 * var(--mui-shape-borderRadius))',
               backgroundColor: 'var(--mui-palette-background-level1)',
               '&:has(.MuiTab-fullWidth)': { width: '100%' },
             },
@@ -847,7 +849,15 @@ export const departures: Departure[] = [
           },
         },
         MuiTab: {
-          styleOverrides: { root: { '&.MuiTab-textColorPrimary.Mui-selected': { color: 'var(--mui-palette-text-primary)' } } },
+          styleOverrides: {
+            // Small, as the controls are: a 32px segment, so the track is 40px.
+            root: {
+              minHeight: 'calc(4 * var(--mui-spacing))',
+              padding: 'calc(0.5 * var(--mui-spacing)) calc(1.5 * var(--mui-spacing))',
+              '&.MuiTab-textColorPrimary.Mui-selected': { color: 'var(--mui-palette-text-primary)' },
+            },
+            labelIcon: { minHeight: 'calc(4 * var(--mui-spacing))', paddingTop: 'calc(0.5 * var(--mui-spacing))', paddingBottom: 'calc(0.5 * var(--mui-spacing))' },
+          },
         },
       },
     }),

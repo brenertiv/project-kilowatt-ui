@@ -114,6 +114,8 @@ function ViewMenu<T extends string>({ value, options, onChange }: NonNullable<Fi
           aria-controls={anchor ? menuId : undefined}
           aria-expanded={Boolean(anchor)}
           onClick={(event) => setAnchor(event.currentTarget)}
+          // Medium, 40px, as tall as the small fields beside it.
+          size="medium"
           sx={{ flexShrink: 0 }}
         >
           <Icon name={current.icon} />

@@ -81,7 +81,7 @@ Advisory: check for this while building a component or layout, as part of the wo
 
 The theme has one corner radius, `shape.borderRadius` (8px), and every rounded component takes it, buttons and icon buttons included. In `sx`, `borderRadius` counts in theme radii: `1` is 8px, `1.5` is 12px.
 
-All buttons, icon buttons and other rounded components share that one radius, and it changes only in one place: the `shape-radius` departure. Don't give one intent, variant or instance its own radius, in a theme override or in `sx`. The one exception is a container whose controls always sit close to its corners: its departure rounds it at a whole multiple of the theme radius (`calc(2 * var(--mui-shape-borderRadius))`), as `card-radius` does for cards. `tokens.test.ts` fails any component override that rounds with anything else.
+All buttons, icon buttons and other rounded components share that one radius, and it changes only in one place: the `shape-radius` departure. Don't give one intent, variant or instance its own radius, in a theme override or in `sx`. The one exception is a container whose controls always sit close to its corners: its departure rounds it at a multiple of the theme radius in half steps (`calc(2 * var(--mui-shape-borderRadius))`), as `card-radius` does for cards at 16px and `segmented-tabs` for the tab track at 12px (`calc(1.5 * …)`). `tokens.test.ts` fails any component override that rounds with anything else.
 
 When a rounded element sits close inside a rounded container, their corners are concentric: the container's radius is the element's radius plus the gap between them.
 
@@ -96,7 +96,7 @@ To check: wherever a rounded element sits within 16px of a rounded container's c
 
 ## Component size
 
-Every control with a `size` prop uses `small`: buttons, icon buttons, button and toggle groups, Fabs, text fields, selects, autocompletes, checkboxes, radios, switches, sliders, ratings, chips and pagination. The `small-size` departure makes it the theme default for each of them (fields through `FormControl`), so leave `size` off. Field text stays at 16px, so iOS doesn't zoom on focus (Typography → Inputs stay at 16px). Tables aren't controls: they stay at MUI's `medium`.
+Every control with a `size` prop uses `small`: buttons, icon buttons, button and toggle groups, Fabs, text fields, selects, autocompletes, checkboxes, radios, switches, sliders, ratings, chips and pagination. The `small-size` departure makes it the theme default for each of them (fields through `FormControl`), so leave `size` off. Field text stays at 16px, so iOS doesn't zoom on focus (Typography → Inputs stay at 16px). Tabs have no `size` prop; `segmented-tabs` draws them at the small size, 32px tall in a 40px track. Tables aren't controls: they stay at MUI's `medium`.
 
 - **One-offs only.** Set `medium` or `large` on a single instance that needs it, such as a chip that marks a card's corner, and say why in a comment. Don't make another size the pattern for a screen, a section or a component type.
 - **Don't write the default.** `size="small"` is noise; leave it out.
