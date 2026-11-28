@@ -630,7 +630,7 @@ export const departures: Departure[] = [
       'Radio', 'Rating', 'Select', 'Slider', 'Switch', 'TextField', 'ToggleButton', 'ToggleButtonGroup',
     ],
     title: 'Small controls by default',
-    why: "MUI defaults its controls to `medium` (Fab to `large`) and leaves the choice to each screen, so sizes drift from page to page. Kilowatt defaults every control with a `size` prop to `small`, for denser product screens, and keeps `medium` and `large` for one-off instances. Fields set it through FormControl, so TextField, Select and the fields inside them follow; Autocomplete sets its own. Text in fields stays at 16px, so iOS doesn't zoom on focus. Tables aren't controls and stay at MUI's `medium`.",
+    why: "MUI defaults its controls to `medium` (Fab to `large`) and leaves the choice to each screen, so sizes drift from page to page. Kilowatt defaults every control with a `size` prop to `small`, for denser product screens, and keeps `medium` and `large` for one-off instances. Fields set it through FormControl, so TextField, Select and the fields inside them follow; Autocomplete sets its own. Text in controls and fields is 14px (`control-text`). Tables aren't controls and stay at MUI's `medium`.",
     convention: {
       muiDefault: 'Controls default to `medium` (Fab to `large`); MUI leaves the size to each screen',
       kilowatt: 'Leave `size` at `small`, the default; set `medium` or `large` only for a one-off instance',
@@ -656,6 +656,31 @@ export const departures: Departure[] = [
         MuiToggleButtonGroup: { defaultProps: { size: 'small' } },
       },
     }),
+  },
+  {
+    id: 'control-text',
+    area: 'Typography',
+    components: [
+      'Autocomplete', 'Button', 'ButtonGroup', 'Checkbox', 'Chip', 'FormControl', 'FormControlLabel', 'InputBase', 'InputLabel',
+      'OutlinedInput', 'Radio', 'Select', 'Switch', 'TextField', 'ToggleButton', 'ToggleButtonGroup',
+    ],
+    title: 'One text size for controls and fields',
+    why: "At the small size MUI sets button, toggle button and chip text at 13px, tabs and pagination at 14px, and field text, field labels and control labels in `body1`, 16px, so a row of controls reads in three sizes. Kilowatt sets all of it at 14px, `body2`'s size, the size tabs and pagination already have. Fields go back to 16px on a touch screen (`pointer: coarse`), so Safari on iOS doesn't zoom the page when one is focused. Fields keep their height at either size: their line is 23px, MUI's 1.4375em of 16px, set in rem so it no longer follows the text. Small buttons and toggle buttons take a 24px line instead of MUI's 1.75, so they stay on whole pixels: a small button is 32px, as tall as a tab, and a toggle button 40px, as tall as a field.",
+    options: () => {
+      const text = '0.875rem';
+      const touch = { '@media (pointer: coarse)': { fontSize: '1rem' } };
+      return {
+        components: {
+          MuiButton: { styleOverrides: { root: { '&.MuiButton-sizeSmall': { fontSize: text, lineHeight: '1.5rem' } } } },
+          MuiToggleButton: { styleOverrides: { root: { '&.MuiToggleButton-sizeSmall': { fontSize: text, lineHeight: '1.5rem' } } } },
+          MuiChip: { styleOverrides: { root: { fontSize: text } } },
+          MuiFormControlLabel: { styleOverrides: { root: { '& .MuiFormControlLabel-label': { fontSize: text } } } },
+          MuiInputBase: { styleOverrides: { root: { fontSize: text, lineHeight: '1.4375rem', ...touch }, input: { height: '1.4375rem' } } },
+          MuiInputLabel: { styleOverrides: { root: { fontSize: text, lineHeight: '1.4375rem', ...touch } } },
+          MuiSelect: { styleOverrides: { select: { minHeight: '1.4375rem' } } },
+        },
+      };
+    },
   },
   {
     id: 'secondary-brand',

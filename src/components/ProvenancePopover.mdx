@@ -92,6 +92,7 @@ const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: '
 - `icons`: the `info` icon on the number, the `close` icon on the sheet's button and the `expand_more` on Show the Figures are `Icon` from `src/icons`, Material Symbols at weight 300.
 - `link-underline`: a source's link has no underline; it is told apart by its color. The number's own underline is the figure's, in `border.level2`, not a link's.
 - `small-size`: the sheet's Close button and Show the Figures stay at `small`, the default.
+- `control-text`: the text in its controls and fields is 14px, instead of MUI's 13px for buttons and chips and 16px for fields; fields are 16px on a touch screen so iOS doesn't zoom on focus.
 - `paper-surface-levels`: the popover and the bottom sheet sit on their elevation's surface level, as every `Popover` and `Drawer` does, in place of MUI's white light surface and its dark-scheme overlay.
 
 The number's underline (`border.level2`), its hover tint (`action.hover`) and the rows' type (`caption` terms in `text.secondary`, `body2` details) are existing theme roles. Theme-wide departures (CSS variables, the theme radius, surface and border levels, the text colors) apply too; see Foundations → MUI departures.
