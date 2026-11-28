@@ -792,6 +792,48 @@ export const departures: Departure[] = [
     }),
   },
   {
+    id: 'segmented-tabs',
+    components: ['Tabs', 'Tab'],
+    area: 'Components',
+    title: 'Tabs sit in a track, the selected one on a raised segment',
+    why: "MUI marks the selected tab with a 2px primary line under it, on a strip with no edge of its own, which reads as part of the surface below and needs a divider to hold it. Kilowatt draws tabs as a segmented control: the tabs sit in a track of `background.level1`, the recessed surface a step below the frame, and the selected one sits on a segment of `background.level5`, the highest surface, edged in `border.level1`, so the track reads as sunk and the segment as raised in both schemes (a tint such as `action.hover` lightens in dark, which would sink the segment instead). The segment is MUI's own indicator, filled out to the tab's size, so it still slides between tabs (stilled under reduced motion). The segment takes the theme radius and sits 8px inside the track, which rounds at twice it, as a card does around its buttons (Rules → Concentric corners). The track hugs its tabs, except `variant=\"fullWidth\"`, which spans its container. The selected label is `text.primary` instead of `primary`, since the segment, not the color, marks it; the others stay `text.secondary`.",
+    options: () => ({
+      components: {
+        MuiTabs: {
+          styleOverrides: {
+            root: {
+              // A stacking context, so the segment (z-index -1) paints above the track and below the labels.
+              isolation: 'isolate',
+              width: 'fit-content',
+              maxWidth: '100%',
+              padding: 'var(--mui-spacing)',
+              borderRadius: 'calc(2 * var(--mui-shape-borderRadius))',
+              backgroundColor: 'var(--mui-palette-background-level1)',
+              '&:has(.MuiTab-fullWidth)': { width: '100%' },
+            },
+            // MUI sets the indicator's start and size inline (left and width across, top and height down);
+            // the other axis fills the tab.
+            indicator: {
+              zIndex: -1,
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              width: 'auto',
+              height: 'auto',
+              borderRadius: 'var(--mui-shape-borderRadius)',
+              backgroundColor: 'var(--mui-palette-background-level5)',
+              border: '1px solid var(--mui-palette-border-level1)',
+            },
+          },
+        },
+        MuiTab: {
+          styleOverrides: { root: { '&.MuiTab-textColorPrimary.Mui-selected': { color: 'var(--mui-palette-text-primary)' } } },
+        },
+      },
+    }),
+  },
+  {
     id: 'tabular-numerals',
     components: ['Table', 'TablePagination', 'DataGrid', 'Badge', 'Chip', 'Slider', 'Pagination'],
     area: 'Typography',

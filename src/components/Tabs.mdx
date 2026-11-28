@@ -1,0 +1,78 @@
+import { Canvas, Meta, Stories } from '@storybook/addon-docs/blocks';
+import * as TabsStories from './Tabs.stories';
+
+<Meta
+  of={TabsStories}
+  summary="MUI's Tabs and Tab for switching between views of one thing, drawn as a segmented control: a recessed track with the open tab on a raised segment."
+/>
+
+# Tabs
+
+Tabs switch between views of one thing, one view at a time: a record and its activity, a building's usage and its cost. Kilowatt uses MUI's `Tabs` and `Tab` from `@mui/material` (Material UI v9) with no wrapper; the theme draws them as a segmented control, the tabs in a recessed track and the open one on a raised segment. Props are MUI's: see the [Tabs API](https://mui.com/material-ui/api/tabs/) and [Tab API](https://mui.com/material-ui/api/tab/).
+
+<Canvas of={TabsStories.Basic} />
+
+## When to use
+
+- Use tabs to switch between views of one object or page section, each with its own panel.
+- To switch how the same data is shown (a chart's time range, chart or table), use `ToggleButtonGroup`.
+- To narrow a list, use `FilterBar`.
+- To go to another page, use the rail or a `Link`; a tab never navigates away.
+
+## Usage
+
+```tsx
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+
+<Tabs value={tab} onChange={(_, next) => setTab(next)} aria-label="Settings Sections">
+  <Tab value="account" label="Account" id="settings-tab-account" aria-controls="settings-panel-account" />
+  <Tab value="password" label="Password" id="settings-tab-password" aria-controls="settings-panel-password" />
+</Tabs>;
+```
+
+## Variants
+
+- `standard` (MUI's default): the track hugs its tabs.
+- `fullWidth`: the tabs share their container's width equally, and the track spans it.
+- `scrollable`: for more tabs than fit; add `scrollButtons="auto"` so the arrows show only while the tabs overflow.
+- `icon` with `iconPosition="start"` puts an icon beside a label.
+
+## States
+
+- Selected: the open tab sits on the raised segment, its label in `text.primary` and its icon filled; the segment slides to the tab that opens.
+- `disabled` on a `Tab`: the view isn't available. Say why nearby.
+
+## Do and don't
+
+- Do write tab labels in Title Case, short enough to sit on one line.
+- Don't case labels with `textTransform`; the theme shows them as written.
+- Do give `Tabs` an `aria-label`, and tie each `Tab` to its panel with `id` and `aria-controls`.
+- Don't use tabs to filter a list or to change a chart's range; use `FilterBar` or `ToggleButtonGroup`.
+- Do let the track hug its tabs, or use `variant="fullWidth"` when the tabs should fill their container.
+- Don't add horizontal padding to `Tabs` through `sx`; it pads the track. Space it with margin.
+- Do let the segment show the open tab.
+- Don't restyle the indicator or set `indicatorColor`; the segment is the indicator.
+
+## MUI departures
+
+- `segmented-tabs`: the tabs sit in a track of `background.level1`, rounded at 16px, and the open one sits on a raised segment of `background.level5` edged in `border.level1`, at the theme radius and 8px inside the track, instead of MUI's 2px primary line. The open label is `text.primary` instead of `primary`.
+- `button-text-case`: labels are shown as written, not uppercased, and written in Title Case.
+- `button-text-weight`: labels are regular weight (400) instead of MUI's medium (500).
+- `selected-fills-icons`: the open tab's icon renders filled, the others outlined.
+- `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue, 2px outside the tab, instead of MUI's background tint alone.
+
+Theme-wide departures (CSS variables, the 8px corner radius, surface and border levels, the navy primary and the other intent colors) apply too; see Foundations → MUI departures.
+
+## Accessibility
+
+- `Tabs` renders `role="tablist"` and each `Tab` `role="tab"` with `aria-selected`; the arrow keys move between tabs.
+- Name the tablist with `aria-label`, give each panel `role="tabpanel"` and `aria-labelledby`, and each tab `aria-controls` pointing to its panel.
+- The segment's slide is a CSS transition, stilled under reduced motion.
+
+## Related
+
+- `ToggleButton` for switching how the same data is shown.
+- `Record drawer`, whose Record and Activity tabs use this style.
+
+<Stories includePrimary={false} />

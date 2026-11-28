@@ -239,7 +239,7 @@ export function RecordDrawer({ record, onClose, onSave, onConfirm, action, mainA
           <Icon name="close" />
         </IconButton>
       </Stack>
-      <Tabs value={tab} onChange={(_, next: 'record' | 'activity') => guard(() => setTab(next))} aria-label="Record Sections" sx={{ px: 2 }}>
+      <Tabs value={tab} onChange={(_, next: 'record' | 'activity') => guard(() => setTab(next))} aria-label="Record Sections" sx={{ mx: 2, mb: 1.5 }}>
         <Tab value="record" label="Record" id={`${id}-tab-record`} aria-controls={`${id}-panel-record`} />
         <Tab value="activity" label="Activity" id={`${id}-tab-activity`} aria-controls={`${id}-panel-activity`} />
       </Tabs>
