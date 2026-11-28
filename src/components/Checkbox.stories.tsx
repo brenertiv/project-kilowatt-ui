@@ -118,7 +118,7 @@ export const Disabled: Story = {
   ),
 };
 
-/** MUI's three sizes. Keep `medium`, the default; another size is for a one-off instance. */
+/** MUI's three sizes. Keep `small`, the default; another size is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>

@@ -136,7 +136,7 @@ export type ScopePickerProps = {
   shortcut?: string | false;
   /**
    * How the picker is drawn. `'crumbs'` is the header's crumbs. `'button'` is one outlined button across its
-   * container's width, naming the current level, for a form that asks for properties; it is as tall as a medium text
+   * container's width, naming the current level, for a form that asks for properties; it is as tall as a small text
    * field and opens Change Scope at that level, as the phone's one button does. Default `'crumbs'`.
    */
   trigger?: 'crumbs' | 'button';
@@ -592,7 +592,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
   );
 
   // In a form: MUI's outlined button at the field's full width, the level's icon before its name and the chevron at its
-  // end, as tall as a medium text field (56px) with its 16px text, so it lines up with the fields it sits among.
+  // end, as tall as a small text field (40px, the default) with its 16px text, so it lines up with the fields it sits among.
   if (trigger === 'button') {
     return (
       <>
@@ -605,7 +605,7 @@ export function ScopePicker({ groups, properties, value, onChange, recent = [], 
           aria-haspopup="dialog"
           aria-expanded={step !== null}
           onClick={() => setStep(property ? 'properties' : 'groups')}
-          sx={{ justifyContent: 'flex-start', minHeight: (theme) => theme.spacing(7), typography: 'body1', '& .MuiButton-endIcon': { ml: 'auto' } }}
+          sx={{ justifyContent: 'flex-start', minHeight: (theme) => theme.spacing(5), typography: 'body1', '& .MuiButton-endIcon': { ml: 'auto' } }}
         >
           <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {here.name}
@@ -774,7 +774,7 @@ function ScopeFilterView({ properties, value, onChange, compact }: ScopeFilterVi
 
   return (
     <Stack sx={{ gap: 2, minHeight: 0, flex: 1 }}>
-      {/* The criteria, one row of medium fields on wide screens (Rules → Component size: one size per group); below `md`
+      {/* The criteria, one row of fields on wide screens (Rules → Component size: one size per group); below `md`
           Location and Type take a row each and the two area bounds share one, so the table keeps its room on phones. */}
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: 'minmax(0, 1fr) minmax(0, 1fr)', md: 'minmax(0, 2fr) minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr)' } }}>
         <Autocomplete
@@ -1178,7 +1178,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
                 </ListItemIcon>
                 <ListItemText primary={property.name} secondary={property.city} />
                 {/* A sold or inactive property says so after its name. */}
-                {property.inactive && <Chip size="small" variant="outlined" label="Inactive" sx={{ ml: 1 }} />}
+                {property.inactive && <Chip variant="outlined" label="Inactive" sx={{ ml: 1 }} />}
                 {check(scope)}
               </ListItemButton>
             </ListItem>
@@ -1297,7 +1297,7 @@ function ScopeDialog({ open, step, fullScreen, groups, properties, value, recent
                       </ListItemIcon>
                       <ListItemText primary={property.name} secondary={[group?.name, property.address ?? property.city].filter(Boolean).join(' · ')} />
                       {/* A sold or inactive property says so after its name. */}
-                      {property.inactive && <Chip size="small" variant="outlined" label="Inactive" sx={{ ml: 1 }} />}
+                      {property.inactive && <Chip variant="outlined" label="Inactive" sx={{ ml: 1 }} />}
                       {check(scope)}
                     </ListItemButton>
                   </ListItem>

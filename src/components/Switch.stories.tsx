@@ -65,12 +65,12 @@ export const Disabled: Story = {
   ),
 };
 
-/** MUI's two sizes. Keep `medium`, the default; `small` is for a one-off instance. */
+/** MUI's two sizes. Keep `small`, the default; `medium` is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-      <FormControlLabel control={<Switch size="small" defaultChecked />} label="Small" />
-      <FormControlLabel control={<Switch defaultChecked />} label="Medium" />
+      <FormControlLabel control={<Switch defaultChecked />} label="Small" />
+      <FormControlLabel control={<Switch size="medium" defaultChecked />} label="Medium" />
     </Stack>
   ),
 };

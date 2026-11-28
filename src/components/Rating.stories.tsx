@@ -56,12 +56,12 @@ export const Disabled: Story = {
   args: { name: 'disabled-rating', value: 2, disabled: true },
 };
 
-/** MUI's three sizes. Keep `medium`, the default; another size is for a one-off instance. */
+/** MUI's three sizes. Keep `small`, the default; another size is for a one-off instance. */
 export const Sizes: Story = {
   render: () => (
     <Stack spacing={1}>
-      <Rating name="size-small" defaultValue={3} size="small" />
-      <Rating name="size-medium" defaultValue={3} />
+      <Rating name="size-small" defaultValue={3} />
+      <Rating name="size-medium" defaultValue={3} size="medium" />
       <Rating name="size-large" defaultValue={3} size="large" />
     </Stack>
   ),

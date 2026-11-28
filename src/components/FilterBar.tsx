@@ -73,8 +73,6 @@ const compactRow = 200 + barGap + filtersFieldWidth + barGap + viewWidth;
 function FiltersField({ set, expanded, onOpen, grow }: { set: number; expanded: boolean; onOpen: (anchor: HTMLElement) => void; grow: boolean }) {
   return (
     <TextField
-      // Small with the rest of the bar (Rules → Component size: a filter bar may take small, together).
-      size="small"
       label="Filters"
       value={set === 0 ? 'None' : `${new Intl.NumberFormat().format(set)} set`}
       onClick={(event) => onOpen(event.currentTarget)}
@@ -190,7 +188,7 @@ export function FilterBar<T extends string = string>({ label = 'Filters', filter
           {before && <Box sx={{ flex: 1, minWidth: 0 }}>{before}</Box>}
           {period && (
             <Box sx={{ flex: periodOwnRow ? '1 0 100%' : 1, minWidth: 0 }}>
-              <PeriodPicker {...period} fullWidth size="small" />
+              <PeriodPicker {...period} fullWidth />
             </Box>
           )}
           {filters && (
@@ -286,7 +284,7 @@ export function FilterBar<T extends string = string>({ label = 'Filters', filter
       <Stack direction="row" sx={{ gap: 2, alignItems: 'center', flex: 1, minWidth: 0 }}>
         {filters?.render(false)}
       </Stack>
-      {period && <PeriodPicker {...period} size="small" />}
+      {period && <PeriodPicker {...period} />}
       {viewMenu}
     </Stack>
   );

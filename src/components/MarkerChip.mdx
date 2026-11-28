@@ -42,7 +42,7 @@ import { MarkedCard, MarkerChip } from 'src/components/MarkerChip';
 ## Variants
 
 - **On a card's corner:** `size="medium"`, the default (32px), in `MarkedCard`, over the card's top-left corner and outside its bounds, so it widens to the right over the title rather than pushing it.
-- **Beside a title or in a row:** `size="small"` (24px), on the title's line or in the row's cell, a one-off small chip as Rules → Component size allows.
+- **Beside a title or in a row:** `size="small"` (24px), on the title's line or in the row's cell, the theme's default chip size.
 
 ## States
 
@@ -62,7 +62,7 @@ import { MarkedCard, MarkerChip } from 'src/components/MarkerChip';
 
 ## MUI departures
 
-- `medium-size`: the chip stays at `medium` (32px) on a card's corner; `small` (24px) beside a title or in a row is the one-off size Rules → Component size allows.
+- `small-size`: MarkerChip sets the chip's size itself: `medium` (32px), its own default, on a card's corner, and `small` (24px) beside a title or in a row.
 - `focus-ring`: keyboard focus is a 2px ring in `palette.control.focus`, the brand blue, around the chip.
 - `tabular-numerals`: the label's figures are tabular, as on every `Chip`; the widened label sets them too, since a dollar value or a count is data.
 

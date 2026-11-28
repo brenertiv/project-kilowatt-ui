@@ -137,7 +137,7 @@ import { TruncatedText } from 'src/components/TruncatedText';
 - Don't show 0, a blank or a bare dash for a value that doesn't exist; 0 is a value, and a bare dash gives no reason.
 - Do return to the first page when the sort, search or a filter changes, by passing `usePagedRows` its reset key.
 - Don't leave a reader on a later page of a list whose order or rows just changed; they'd miss its start.
-- Do leave `size` off; tables are `medium` like every other component.
+- Do leave `size` off; tables stay at MUI's `medium` (they aren't controls, so `small-size` doesn't apply).
 - Don't set `size="small"` for a whole screen to fit more in; drop a column or let the table scroll, and keep `small` for a one-off with a comment saying why.
 - Do use `hover` on a row only when clicking the row does something.
 - Don't make a row clickable without a link or button inside it; a keyboard can't reach a row, so give it a control as well.
@@ -150,7 +150,6 @@ import { TruncatedText } from 'src/components/TruncatedText';
 
 ## MUI departures
 
-- `medium-size`: tables stay at `medium`, MUI's default, so leave `size` off; `small` is for a one-off instance.
 - `tabular-numerals`: every table cell uses tabular digits, so a column of figures lines up.
 - `table-cell-border`: row lines use `divider` instead of MUI's mix of it with white or black, so they show on a card and match its frame.
 - `table-sticky-header`: a sticky header sits on `background.level3`, the card surface, instead of `background.default`, the page color.

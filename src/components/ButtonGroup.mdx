@@ -33,7 +33,7 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 
 ## Variants
 
-`variant` (`outlined`, MUI's default; `contained`; `text`), `color` and `size` are set once on the group and apply to every button. `size` stays `medium`, the default, except for a one-off instance (Rules → Component size). `orientation="vertical"` stacks the buttons. MUI squares the corners where buttons meet, so the group's outer corners keep the theme radius.
+`variant` (`outlined`, MUI's default; `contained`; `text`), `color` and `size` are set once on the group and apply to every button. `size` stays `small`, the default, except for a one-off instance (Rules → Component size). `orientation="vertical"` stacks the buttons. MUI squares the corners where buttons meet, so the group's outer corners keep the theme radius.
 
 An outlined split button that sits on a panel surface (`background.level1`, a docked panel) takes `background.level5`, the lightest surface, under both halves (`sx={{ bgcolor: 'background.level5' }}` on the group), so the panel's one creating action stands out on it. The buttons stay outlined and transparent, so each half's hover tint still shows over the fill. On the page or a card an outlined group has no fill.
 
@@ -60,7 +60,7 @@ An outlined split button that sits on a panel surface (`background.level1`, a do
 
 ## MUI departures
 
-- `medium-size`: leave `size` at `medium`, the default; set `small` or `large` only for a one-off instance.
+- `small-size`: leave `size` at `small`, the default; set `medium` or `large` only for a one-off instance.
 - `control-outlines`: a primary outlined group's outline is `palette.control.border`, the outline shared with inputs and toggle buttons (slate 600 in light, navy 400 in dark).
 - `flat-buttons`: a contained group has no shadow; `disableElevation` is on by default.
 

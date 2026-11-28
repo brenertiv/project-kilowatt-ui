@@ -27,7 +27,7 @@ function PageFilters() {
         count: 1,
         set: type === 'all' ? 0 : 1,
         render: (fullWidth) => (
-          <TextField select size="small" label="Property Type" value={type} onChange={(event) => setType(event.target.value)} fullWidth={fullWidth} sx={fullWidth ? undefined : { minWidth: filterWidth }}>
+          <TextField select label="Property Type" value={type} onChange={(event) => setType(event.target.value)} fullWidth={fullWidth} sx={fullWidth ? undefined : { minWidth: filterWidth }}>
             <MenuItem value="all">All</MenuItem>
             <MenuItem value="office">Office</MenuItem>
           </TextField>

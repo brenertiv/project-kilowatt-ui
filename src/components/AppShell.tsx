@@ -495,13 +495,11 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
       </Stack>
       {panel.actions && <Box sx={{ mx: 2, mb: 2 }}>{panel.actions}</Box>}
       {panel.filter?.inline && (
-        // The filter in words, one field under the actions, All first, so it fits one row at any panel width. Small,
-        // as a page's filter bar may be, since it narrows the list under it (Rules → Component size).
+        // The filter in words, one field under the actions, All first, so it fits one row at any panel width.
         <Box sx={{ px: 2, pb: 2 }}>
           <TextField
             select
             fullWidth
-            size="small"
             label={panel.filter.label}
             value={kind ?? 'all'}
             onChange={(event) => setKind(event.target.value === 'all' ? null : event.target.value)}
@@ -563,11 +561,9 @@ function SectionPanel({ section, page, width, toggle, onChoose }: SectionPanelPr
                   <Icon name={open ? 'expand_more' : 'chevron_right'} fontSize="small" />
                 </ButtonBase>
                 {group.add && (
-                  // Small, as a one-off: it sits in a caption-height row.
                   <Tooltip title={group.add.label}>
                     <IconButton
                       className="group-add"
-                      size="small"
                       aria-label={group.add.label}
                       onClick={group.add.onClick}
                       sx={{ position: 'absolute', right: (theme) => theme.spacing(1) }}

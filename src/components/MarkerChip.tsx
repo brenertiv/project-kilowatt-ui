@@ -56,7 +56,7 @@ export function MarkerChip({ icon, label, 'aria-label': ariaLabel, 'aria-haspopu
   const margin = small ? 0.375 : 0.5;
   return (
     <Chip
-      size={small ? 'small' : undefined}
+      size={size}
       icon={<Icon name={icon} />}
       label={
         <Collapse orientation="horizontal" in={canHover && pointed}>

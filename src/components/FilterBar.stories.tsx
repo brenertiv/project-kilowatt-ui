@@ -39,7 +39,7 @@ function Bar({ filters, period, view, fold, search }: Parts) {
   const [chosen, setChosen] = useState<Period>('ytd');
   const [layout, setLayout] = useState<'cards' | 'table'>('cards');
   const select = (label: string, value: string, onChange: (next: string) => void, options: string[], fullWidth: boolean) => (
-    <TextField select size="small" label={label} value={value} onChange={(event) => onChange(event.target.value)} fullWidth={fullWidth} sx={fullWidth ? undefined : { minWidth: filterWidth }}>
+    <TextField select label={label} value={value} onChange={(event) => onChange(event.target.value)} fullWidth={fullWidth} sx={fullWidth ? undefined : { minWidth: filterWidth }}>
       <MenuItem value="all">All</MenuItem>
       {options.map((option) => (
         <MenuItem key={option} value={option}>
@@ -74,7 +74,6 @@ function Bar({ filters, period, view, fold, search }: Parts) {
       before={
         search ? (
           <TextField
-            size="small"
             fullWidth
             placeholder="Search"
             value={query}
